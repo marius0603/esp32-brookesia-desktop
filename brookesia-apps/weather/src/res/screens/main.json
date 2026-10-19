@@ -1,0 +1,3654 @@
+{
+  "type": "viewScreen",
+  "id": "main",
+  "commonProps": {
+    "scrollable": false
+  },
+  "style": {
+    "bgColor": "#081421",
+    "bgGradientColor": "#142b43",
+    "bgGradientDirection": "vertical",
+    "padding": 0
+  },
+  "bindings": {
+    "style.bgColor": "sky",
+    "style.bgGradientColor": "sky_bottom"
+  },
+  "children": [
+    {
+      "type": "container",
+      "id": "backdrop",
+      "commonProps": {
+        "clickable": false,
+        "scrollable": false,
+        "hidden": false
+      },
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "children": [
+        {
+          "type": "image",
+          "id": "rain",
+          "commonProps": {
+            "clickable": false,
+            "hidden": true
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "imageProps": {
+            "src": "${image.rain_glass}",
+            "innerAlign": "contain"
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden",
+            "placement.y": "y"
+          }
+        },
+        {
+          "type": "container",
+          "id": "sun",
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false,
+            "hidden": true
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 326,
+            "y": 64,
+            "width": 88,
+            "height": 88
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 160,
+            "bgColor": "#ffce65",
+            "radius": 44
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          },
+          "children": []
+        },
+        {
+          "type": "container",
+          "id": "moon",
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false,
+            "hidden": true
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 330,
+            "y": 70,
+            "width": 72,
+            "height": 72
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 150,
+            "bgColor": "#d3e9ff",
+            "radius": 36
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "shadow",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 18,
+                "y": -8,
+                "width": 66,
+                "height": 66
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 255,
+                "bgColor": "#102038",
+                "radius": 33
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "clouds",
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false,
+            "hidden": true
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "c0",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 310,
+                "y": 74,
+                "width": 120,
+                "height": 85
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 45,
+                "bgColor": "#adc1d3",
+                "radius": 42
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "c1",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 282,
+                "y": 119,
+                "width": 170,
+                "height": 62
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 45,
+                "bgColor": "#adc1d3",
+                "radius": 32
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "fog",
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false,
+            "hidden": true
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "f0",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": -20,
+                "y": 60,
+                "width": 520,
+                "height": 70
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 18,
+                "bgColor": "#c6dce3",
+                "radius": 35
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "f1",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": -20,
+                "y": 175,
+                "width": 520,
+                "height": 70
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 18,
+                "bgColor": "#c6dce3",
+                "radius": 35
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "f2",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": -20,
+                "y": 290,
+                "width": 520,
+                "height": 70
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 18,
+                "bgColor": "#c6dce3",
+                "radius": 35
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "f3",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": -20,
+                "y": 405,
+                "width": 520,
+                "height": 70
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 18,
+                "bgColor": "#c6dce3",
+                "radius": 35
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "snow",
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false,
+            "hidden": true
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "s0",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 29,
+                "y": 24,
+                "width": 4,
+                "height": 4
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s1",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 112,
+                "y": 85,
+                "width": 5,
+                "height": 5
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s2",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 195,
+                "y": 146,
+                "width": 6,
+                "height": 6
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s3",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 278,
+                "y": 207,
+                "width": 4,
+                "height": 4
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s4",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 361,
+                "y": 268,
+                "width": 5,
+                "height": 5
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s5",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 444,
+                "y": 329,
+                "width": 6,
+                "height": 6
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s6",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 77,
+                "y": 390,
+                "width": 4,
+                "height": 4
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s7",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 160,
+                "y": 1,
+                "width": 5,
+                "height": 5
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s8",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 243,
+                "y": 62,
+                "width": 6,
+                "height": 6
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s9",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 326,
+                "y": 123,
+                "width": 4,
+                "height": 4
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s10",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 409,
+                "y": 184,
+                "width": 5,
+                "height": 5
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s11",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 42,
+                "y": 245,
+                "width": 6,
+                "height": 6
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s12",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 125,
+                "y": 306,
+                "width": 4,
+                "height": 4
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s13",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 208,
+                "y": 367,
+                "width": 5,
+                "height": 5
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s14",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 291,
+                "y": 428,
+                "width": 6,
+                "height": 6
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s15",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 374,
+                "y": 39,
+                "width": 4,
+                "height": 4
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s16",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 7,
+                "y": 100,
+                "width": 5,
+                "height": 5
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s17",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 90,
+                "y": 161,
+                "width": 6,
+                "height": 6
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s18",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 173,
+                "y": 222,
+                "width": 4,
+                "height": 4
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "s19",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": false
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 256,
+                "y": 283,
+                "width": 5,
+                "height": 5
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 140,
+                "bgColor": "#d6ecff",
+                "radius": 5
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "shade",
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false,
+            "hidden": false
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 45,
+            "bgColor": "#020913"
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          },
+          "children": []
+        },
+        {
+          "type": "image",
+          "id": "drop0",
+          "commonProps": {
+            "clickable": false,
+            "hidden": true
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 40,
+            "y": 30,
+            "width": 20,
+            "height": 48
+          },
+          "imageProps": {
+            "src": "${image.sliding_drop}",
+            "innerAlign": "contain"
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden",
+            "placement.y": "y"
+          }
+        },
+        {
+          "type": "image",
+          "id": "drop1",
+          "commonProps": {
+            "clickable": false,
+            "hidden": true
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 96,
+            "y": 140,
+            "width": 20,
+            "height": 48
+          },
+          "imageProps": {
+            "src": "${image.sliding_drop}",
+            "innerAlign": "contain"
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden",
+            "placement.y": "y"
+          }
+        },
+        {
+          "type": "image",
+          "id": "drop2",
+          "commonProps": {
+            "clickable": false,
+            "hidden": true
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 366,
+            "y": 250,
+            "width": 20,
+            "height": 48
+          },
+          "imageProps": {
+            "src": "${image.sliding_drop}",
+            "innerAlign": "contain"
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden",
+            "placement.y": "y"
+          }
+        },
+        {
+          "type": "image",
+          "id": "drop3",
+          "commonProps": {
+            "clickable": false,
+            "hidden": true
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 420,
+            "y": 360,
+            "width": 20,
+            "height": 48
+          },
+          "imageProps": {
+            "src": "${image.sliding_drop}",
+            "innerAlign": "contain"
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden",
+            "placement.y": "y"
+          }
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "content",
+      "commonProps": {
+        "scrollable": false
+      },
+      "placement": {
+        "mode": "absolute",
+        "x": 30,
+        "y": 34,
+        "width": 420,
+        "height": 412
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0
+      },
+      "layout": {
+        "type": "flex",
+        "flexFlow": "column",
+        "mainAlign": "center",
+        "crossAlign": "center",
+        "gap": 10
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "temperature",
+          "commonProps": {
+            "clickable": false
+          },
+          "placement": {
+            "width": 320,
+            "height": "wrap"
+          },
+          "style": {
+            "textColor": "#ffffff",
+            "font": "${font.zh_CN}",
+            "fontSize": 68,
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "--°C"
+          }
+        },
+        {
+          "type": "label",
+          "id": "humidity",
+          "commonProps": {
+            "clickable": false
+          },
+          "placement": {
+            "width": 320,
+            "height": "wrap"
+          },
+          "style": {
+            "textColor": "#c6e5ef",
+            "font": "${font.zh_CN}",
+            "fontSize": 30,
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "湿度 --%"
+          }
+        },
+        {
+          "type": "label",
+          "id": "condition",
+          "commonProps": {
+            "clickable": false
+          },
+          "placement": {
+            "width": 350,
+            "height": "wrap"
+          },
+          "style": {
+            "textColor": "#ffda83",
+            "font": "${font.zh_CN}",
+            "fontSize": 32,
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "等待联网获取天气"
+          }
+        },
+        {
+          "type": "container",
+          "id": "hourly",
+          "commonProps": {
+            "scrollable": true,
+            "clickable": true
+          },
+          "placement": {
+            "width": 352,
+            "height": 116
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 4,
+            "borderWidth": 0
+          },
+          "layout": {
+            "type": "flex",
+            "flexFlow": "row",
+            "mainAlign": "start",
+            "crossAlign": "center",
+            "gap": 8
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "h0",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h1",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h2",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h3",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h4",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h5",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h6",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h7",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h8",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h9",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h10",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h11",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h12",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h13",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h14",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h15",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h16",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h17",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h18",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h19",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h20",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h21",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h22",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "h23",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "placement": {
+                "width": 60,
+                "height": 104
+              },
+              "style": {
+                "bgColor": "#102b42",
+                "bgOpacity": 160,
+                "radius": 16,
+                "padding": 4,
+                "borderWidth": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "mainAlign": "center",
+                "crossAlign": "center",
+                "gap": 3
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "time",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--:--"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "width": 26,
+                    "height": 26
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "imageProps": {
+                    "src": "${image.wx_cloud}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#abc8de",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 12,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "width": "match",
+                    "height": "wrap"
+                  },
+                  "style": {
+                    "textColor": "#e6effa",
+                    "font": "${font.zh_CN}",
+                    "fontSize": 17,
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "--°"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "source",
+          "commonProps": {
+            "clickable": false
+          },
+          "placement": {
+            "width": 220,
+            "height": "wrap"
+          },
+          "style": {
+            "textColor": "#8ca7bb",
+            "font": "${font.zh_CN}",
+            "fontSize": 12,
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "Open-Meteo"
+          }
+        }
+      ]
+    }
+  ]
+}

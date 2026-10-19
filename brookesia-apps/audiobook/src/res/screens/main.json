@@ -1,0 +1,543 @@
+{
+  "type": "viewScreen",
+  "id": "main",
+  "commonProps": {
+    "scrollable": false
+  },
+  "style": {
+    "bgColor": "#0c1222",
+    "padding": 28
+  },
+  "layout": {
+    "type": "flex",
+    "flexFlow": "column",
+    "mainAlign": "center",
+    "crossAlign": "center",
+    "gap": 6
+  },
+  "children": [
+    {
+      "type": "label",
+      "id": "title",
+      "placement": {
+        "width": 320,
+        "height": 34
+      },
+      "style": {
+        "textColor": "#e9ebfa",
+        "font": "${font.zh_CN}",
+        "fontSize": 28,
+        "textAlign": "center"
+      },
+      "labelProps": {
+        "text": "听书"
+      }
+    },
+    {
+      "type": "label",
+      "id": "chapter",
+      "placement": {
+        "width": 320,
+        "height": 50
+      },
+      "style": {
+        "textColor": "#e9ebfa",
+        "font": "${font.zh_CN}",
+        "fontSize": 22,
+        "textAlign": "center"
+      },
+      "labelProps": {
+        "text": "装卡后扫描章节"
+      }
+    },
+    {
+      "type": "label",
+      "id": "progress",
+      "placement": {
+        "width": 320,
+        "height": 28
+      },
+      "style": {
+        "textColor": "#e9ebfa",
+        "font": "${font.zh_CN}",
+        "fontSize": 22,
+        "textAlign": "center"
+      },
+      "labelProps": {
+        "text": "0:00:00"
+      }
+    },
+    {
+      "type": "label",
+      "id": "status",
+      "placement": {
+        "width": 320,
+        "height": 24
+      },
+      "style": {
+        "textColor": "#bbc6e0",
+        "font": "${font.zh_CN}",
+        "fontSize": 16,
+        "textAlign": "center"
+      },
+      "labelProps": {
+        "text": "准备播放器"
+      }
+    },
+    {
+      "type": "container",
+      "id": "transport",
+      "placement": {
+        "width": 320,
+        "height": 44
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "layout": {
+        "type": "flex",
+        "flexFlow": "row",
+        "mainAlign": "spaceBetween",
+        "crossAlign": "center"
+      },
+      "children": [
+        {
+          "type": "button",
+          "id": "previous",
+          "placement": {
+            "width": 100,
+            "height": 42
+          },
+          "style": {
+            "bgColor": "#263756",
+            "radius": 13,
+            "padding": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "previous"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#ffffff"
+              },
+              "labelProps": {
+                "text": "上一章"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "toggle",
+          "placement": {
+            "width": 104,
+            "height": 42
+          },
+          "style": {
+            "bgColor": "#263756",
+            "radius": 13,
+            "padding": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "toggle"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#ffffff"
+              },
+              "labelProps": {
+                "text": "播放"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "next",
+          "placement": {
+            "width": 100,
+            "height": 42
+          },
+          "style": {
+            "bgColor": "#263756",
+            "radius": 13,
+            "padding": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "next"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#ffffff"
+              },
+              "labelProps": {
+                "text": "下一章"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "seek",
+      "placement": {
+        "width": 320,
+        "height": 44
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "layout": {
+        "type": "flex",
+        "flexFlow": "row",
+        "mainAlign": "spaceBetween",
+        "crossAlign": "center"
+      },
+      "children": [
+        {
+          "type": "button",
+          "id": "back",
+          "placement": {
+            "width": 156,
+            "height": 42
+          },
+          "style": {
+            "bgColor": "#263756",
+            "radius": 13,
+            "padding": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "back"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#ffffff"
+              },
+              "labelProps": {
+                "text": "后退30秒"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "forward",
+          "placement": {
+            "width": 156,
+            "height": 42
+          },
+          "style": {
+            "bgColor": "#263756",
+            "radius": 13,
+            "padding": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "forward"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#ffffff"
+              },
+              "labelProps": {
+                "text": "前进30秒"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "sound",
+      "placement": {
+        "width": 320,
+        "height": 44
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "layout": {
+        "type": "flex",
+        "flexFlow": "row",
+        "mainAlign": "spaceBetween",
+        "crossAlign": "center"
+      },
+      "children": [
+        {
+          "type": "button",
+          "id": "quieter",
+          "placement": {
+            "width": 104,
+            "height": 42
+          },
+          "style": {
+            "bgColor": "#263756",
+            "radius": 13,
+            "padding": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "quieter"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#ffffff"
+              },
+              "labelProps": {
+                "text": "音量 -"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "louder",
+          "placement": {
+            "width": 104,
+            "height": 42
+          },
+          "style": {
+            "bgColor": "#263756",
+            "radius": 13,
+            "padding": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "louder"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#ffffff"
+              },
+              "labelProps": {
+                "text": "音量 +"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "label",
+      "id": "volume",
+      "placement": {
+        "width": 320,
+        "height": 22
+      },
+      "style": {
+        "textColor": "#e9ebfa",
+        "font": "${font.zh_CN}",
+        "fontSize": 16,
+        "textAlign": "center"
+      },
+      "labelProps": {
+        "text": "音量 --%"
+      }
+    },
+    {
+      "type": "container",
+      "id": "tools",
+      "placement": {
+        "width": 320,
+        "height": 44
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "layout": {
+        "type": "flex",
+        "flexFlow": "row",
+        "mainAlign": "spaceBetween",
+        "crossAlign": "center"
+      },
+      "children": [
+        {
+          "type": "button",
+          "id": "scan",
+          "placement": {
+            "width": 156,
+            "height": 42
+          },
+          "style": {
+            "bgColor": "#263756",
+            "radius": 13,
+            "padding": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "scan"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#ffffff"
+              },
+              "labelProps": {
+                "text": "扫描章节"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "test",
+          "placement": {
+            "width": 156,
+            "height": 42
+          },
+          "style": {
+            "bgColor": "#263756",
+            "radius": 13,
+            "padding": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "test"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#ffffff"
+              },
+              "labelProps": {
+                "text": "测试喇叭"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

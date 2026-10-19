@@ -1,0 +1,34 @@
+{
+  "package": {
+    "id": "local.weather",
+    "name": {
+      "en": "Weather",
+      "zh_CN": "天气"
+    },
+    "version": "0.2.2",
+    "visible": true,
+    "systems": [
+      "super"
+    ]
+  },
+  "runtime": {
+    "type": "JavaScript",
+    "entry": "app/main.js",
+    "resource_dir": "res",
+    "arguments": []
+  },
+  "services": [
+    {
+      "name": "Http",
+      "version": "0.8.2"
+    },
+    {
+      "name": "Wifi",
+      "version": "0.8.2"
+    },
+    {
+      "name": "Storage",
+      "version": "0.8.3"
+    }
+  ]
+}

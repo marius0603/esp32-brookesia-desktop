@@ -1,0 +1,10 @@
+{
+  "codex_path": "",
+  "poll_seconds": 60,
+  "stale_seconds": 180,
+  "serial_port": "auto",
+  "baudrate": 115200,
+  "warning_percent": 20,
+  "critical_percent": 10,
+  "device_protocol": "brookesia"
+}

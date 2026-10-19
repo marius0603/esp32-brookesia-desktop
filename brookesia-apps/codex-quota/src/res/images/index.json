@@ -1,0 +1,29 @@
+{
+  "type": "imageSet",
+  "images": [
+    {
+      "id": "launcher_icon",
+      "src": "launcher_icon.png",
+      "width": 92,
+      "height": 92
+    },
+    {
+      "id": "pac_open",
+      "src": "pac_open.png",
+      "width": 30,
+      "height": 30
+    },
+    {
+      "id": "pac_mid",
+      "src": "pac_mid.png",
+      "width": 30,
+      "height": 30
+    },
+    {
+      "id": "pac_closed",
+      "src": "pac_closed.png",
+      "width": 30,
+      "height": 30
+    }
+  ]
+}

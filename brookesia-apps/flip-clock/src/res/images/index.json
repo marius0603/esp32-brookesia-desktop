@@ -1,0 +1,143 @@
+{
+  "type": "imageSet",
+  "images": [
+    {
+      "id": "big_top_0",
+      "src": "big_top_0.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_bottom_0",
+      "src": "big_bottom_0.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_top_1",
+      "src": "big_top_1.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_bottom_1",
+      "src": "big_bottom_1.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_top_2",
+      "src": "big_top_2.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_bottom_2",
+      "src": "big_bottom_2.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_top_3",
+      "src": "big_top_3.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_bottom_3",
+      "src": "big_bottom_3.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_top_4",
+      "src": "big_top_4.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_bottom_4",
+      "src": "big_bottom_4.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_top_5",
+      "src": "big_top_5.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_bottom_5",
+      "src": "big_bottom_5.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_top_6",
+      "src": "big_top_6.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_bottom_6",
+      "src": "big_bottom_6.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_top_7",
+      "src": "big_top_7.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_bottom_7",
+      "src": "big_bottom_7.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_top_8",
+      "src": "big_top_8.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_bottom_8",
+      "src": "big_bottom_8.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_top_9",
+      "src": "big_top_9.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_bottom_9",
+      "src": "big_bottom_9.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_top_-",
+      "src": "big_top_-.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "big_bottom_-",
+      "src": "big_bottom_-.png",
+      "width": 92,
+      "height": 75
+    },
+    {
+      "id": "launcher_icon",
+      "src": "launcher_icon.png",
+      "width": 92,
+      "height": 92
+    }
+  ]
+}

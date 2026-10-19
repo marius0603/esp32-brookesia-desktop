@@ -1,0 +1,2 @@
+pyserial==3.5
+-e ./vendor-source/brookesia-usb

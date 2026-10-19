@@ -1,0 +1,5 @@
+key,type,encoding,value
+quota_ui,namespace,,
+selected,data,u8,0
+brightness,data,u8,70
+volume,data,u8,35

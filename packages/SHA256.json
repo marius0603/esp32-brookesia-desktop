@@ -1,0 +1,8 @@
+{
+  "packages/apps/local.audiobook.debug.0.1.1.bpk": "1d53d45e29afe12888bcdebe880547c6ec8ddc40aa5b130a2c24f27a96a11b3e",
+  "packages/apps/local.codex.quota.debug.0.2.2.bpk": "4123694a849607a4c2b9372aaaed50a8356d051103eca623e2b97e1828171832",
+  "packages/apps/local.flipclock.debug.0.1.1.bpk": "f3fccd93f55cdf79769d9ec6cc37d894d90693937587b0f4458f361d40dbd570",
+  "packages/apps/local.weather.debug.0.2.2.bpk": "ceb636157d20cfc466b661867b4943f9084d9582be15914de928df64c183b4c8",
+  "packages/firmware/brookesia-0.8.3-s3.3-app.bin": "ed6ef0038743e2e09c40401577b2996543367732d1d7ed99fb798b2932591137",
+  "packages/firmware/partition-table.bin": "6ecc475482596b4fc81b6558dc0f00019d08d983c71ad5b20adbf9477e167baf"
+}

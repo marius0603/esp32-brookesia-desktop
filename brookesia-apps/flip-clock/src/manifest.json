@@ -1,0 +1,30 @@
+{
+  "package": {
+    "id": "local.flipclock",
+    "name": {
+      "en": "Flip Clock",
+      "zh_CN": "翻页时钟"
+    },
+    "version": "0.1.1",
+    "visible": true,
+    "systems": [
+      "super"
+    ]
+  },
+  "runtime": {
+    "type": "JavaScript",
+    "entry": "app/main.js",
+    "resource_dir": "res",
+    "arguments": []
+  },
+  "services": [
+    {
+      "name": "SNTP",
+      "version": "0.8.2"
+    },
+    {
+      "name": "Storage",
+      "version": "0.8.3"
+    }
+  ]
+}

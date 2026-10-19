@@ -1,0 +1,99 @@
+diff --git a/hal/brookesia_hal_adaptor/src/display/lcd_touch_impl.cpp b/hal/brookesia_hal_adaptor/src/display/lcd_touch_impl.cpp
+index 307579f..8272a7a 100644
+--- a/hal/brookesia_hal_adaptor/src/display/lcd_touch_impl.cpp
++++ b/hal/brookesia_hal_adaptor/src/display/lcd_touch_impl.cpp
+@@ -4,6 +4,7 @@
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ #include <array>
++#include <cstring>
+ #include "brookesia/hal_adaptor/macro_configs.h"
+ #if !BROOKESIA_HAL_ADAPTOR_DISPLAY_LCD_TOUCH_IMPL_ENABLE_DEBUG_LOG
+ #   define BROOKESIA_LOG_DISABLE_DEBUG_TRACE 1
+@@ -45,7 +46,11 @@ display::TouchIface::Info generate_info()
+     return display::TouchIface::Info {
+         .x_max = config->touch_config.x_max,
+         .y_max = config->touch_config.y_max,
+-        .max_points = static_cast<uint8_t>(CONFIG_ESP_LCD_TOUCH_MAX_POINTS),
++        // The CST9217 driver decodes a single point. Advertising the generic
++        // five-point limit creates four redundant LVGL input devices.
++        .max_points = static_cast<uint8_t>(
++            config->chip && std::strcmp(config->chip, "cst9217") == 0 ? 1 : CONFIG_ESP_LCD_TOUCH_MAX_POINTS
++        ),
+         .operation_mode = GPIO_IS_VALID_GPIO(config->touch_config.int_gpio_num) ?
+         display::TouchIface::OperationMode::Interrupt : display::TouchIface::OperationMode::Polling,
+         .group_id = DisplayDevice::LCD_GROUP_ID,
+@@ -101,7 +106,7 @@ bool I2cDisplayTouchImpl::read_points(std::vector<display::TouchIface::Point> &p
+ 
+     uint8_t count = 0;
+     std::array<esp_lcd_touch_point_data_t, CONFIG_ESP_LCD_TOUCH_MAX_POINTS> data;
+-    bool get_ret = esp_lcd_touch_get_data(touch_handle, data.data(), &count, CONFIG_ESP_LCD_TOUCH_MAX_POINTS);
++    esp_err_t get_ret = esp_lcd_touch_get_data(touch_handle, data.data(), &count, CONFIG_ESP_LCD_TOUCH_MAX_POINTS);
+     BROOKESIA_CHECK_ESP_ERR_RETURN(get_ret, false, "Failed to get touch data");
+ 
+     points.resize(count);
+diff --git a/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_devices.yaml b/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_devices.yaml
+index de650ea..9b86df6 100755
+--- a/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_devices.yaml
++++ b/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_devices.yaml
+@@ -110,9 +110,9 @@ devices:
+         rst_gpio_num: 40
+         int_gpio_num: 11                  # Interrupt GPIO (BSP_LCD_TOUCH_INT)
+         flags:
+-          swap_xy: true
++          swap_xy: false
+           mirror_x: false
+-          mirror_y: true
++          mirror_y: false
+     peripherals:
+       - name: i2c_master
+         i2c_addr: [0xb4]
+@@ -123,7 +123,7 @@ devices:
+     version: default
+     config:
+       vfs_config:
+-        format_if_mount_failed: true
++        format_if_mount_failed: false
+       sub_config:
+         bus_width: 1                      # 1, 4, or 8 for slot 0; 1 or 4 for slot 1
+         slot_flags: "SDMMC_SLOT_FLAG_INTERNAL_PULLUP" # SDMMC_SLOT_FLAG_INTERNAL_PULLUP, SDMMC_SLOT_FLAG_WP_ACTIVE_HIGH, SDMMC_SLOT_FLAG_UHS1
+diff --git a/service/media/brookesia_service_audio/src/audio_playback.cpp b/service/media/brookesia_service_audio/src/audio_playback.cpp
+index 497042e..373b79d 100644
+--- a/service/media/brookesia_service_audio/src/audio_playback.cpp
++++ b/service/media/brookesia_service_audio/src/audio_playback.cpp
+@@ -34,17 +34,25 @@ bool AudioPlayback::on_start()
+ 
+     initialize_control_default_state();
+ 
+-    auto playback_handle = hal::acquire_interface<hal::audio::PlaybackIface>(
+-                               hal::audio::PlaybackIface::get_default_instance_name()
+-                           );
++    auto playback_handle = hal::has_interface(hal::audio::PlaybackIface::NAME) ?
++                           hal::acquire_interface<hal::audio::PlaybackIface>(
++                               hal::audio::PlaybackIface::get_default_instance_name()) :
++                           hal::InterfaceHandle<hal::audio::PlaybackIface>{};
+     auto playback_iface = playback_handle.get();
+-    BROOKESIA_CHECK_NULL_RETURN(playback_iface, false, "Failed to get audio playback interface");
+-    BROOKESIA_CHECK_FALSE_RETURN(
+-    playback_iface->open([this](AudioPlayState state) {
+-        on_playback_event(state);
+-    }),
+-    false, "Failed to open audio playback"
+-    );
++    // Codec-only S3 products keep volume/mute controls without a media decoder.
++    // Playback operations already reject a missing playback_iface_.
++    if (!playback_iface) {
++        BROOKESIA_CHECK_FALSE_RETURN(ensure_player_iface(), false, "Failed to get audio codec interface");
++        BROOKESIA_CHECK_FALSE_RETURN(apply_control_state_to_hal(), false, "Failed to apply codec controls");
++        BROOKESIA_LOGI("Codec controls enabled; media URL playback is unavailable");
++    } else {
++        BROOKESIA_CHECK_FALSE_RETURN(
++        playback_iface->open([this](AudioPlayState state) {
++            on_playback_event(state);
++        }),
++        false, "Failed to open audio playback"
++        );
++    }
+ 
+     play_state_ = AudioPlayState::Idle;
+     pause_requested_ = false;

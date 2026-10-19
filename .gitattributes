@@ -1,0 +1,15 @@
+* text=auto
+*.patch text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.cpp text eol=lf
+*.hpp text eol=lf
+*.c text eol=lf
+*.h text eol=lf
+*.ps1 text eol=crlf
+*.png binary
+*.ttf binary
+*.bin binary
+*.bpk binary
+

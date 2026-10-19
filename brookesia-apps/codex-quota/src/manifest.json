@@ -1,0 +1,26 @@
+{
+  "package": {
+    "id": "local.codex.quota",
+    "name": {
+      "en": "Codex Quota",
+      "zh_CN": "Codex 额度"
+    },
+    "version": "0.2.2",
+    "visible": true,
+    "systems": [
+      "super"
+    ]
+  },
+  "runtime": {
+    "type": "JavaScript",
+    "entry": "app/main.js",
+    "resource_dir": "res",
+    "arguments": []
+  },
+  "services": [
+    {
+      "name": "Storage",
+      "version": "0.8.3"
+    }
+  ]
+}

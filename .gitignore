@@ -1,0 +1,31 @@
+# Generated upstream checkout and toolchains; reconstruct with tools/prepare_workspace.py.
+/esp-brookesia-v08/
+/esp-idf-v6.0.2/
+/i6/
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/*.log
+**/*.egg-info/
+**/node_modules/
+**/build/
+**/managed_components/
+**/runtime/
+**/vendor/
+**/tools/cache/
+**/tools/idf-tools/
+**/tools/esp-idf*/
+**/tools/bsp-reference/
+**/sdkconfig
+**/sdkconfig.old
+**/sdkconfig.*.old
+brookesia-apps/*/dist/
+codex-quota-monitor/artifacts/
+# Personal auth/config files must never enter the repository.
+auth.json
+.env
+.env.*
+*.pem
+*.key
+*full-16MB.bin
+
