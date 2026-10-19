@@ -1,0 +1,5 @@
+dependencies:
+  espressif/esp_lcd_co5300: ^2
+  brookesia_hal_custom:
+    override_path: D:\chatgpt_data\esp-brookesia-v08\hal\brookesia_hal_boards\boards\waveshare\esp32_s3_touch_amoled_2_16/components/brookesia_hal_custom
+  waveshare/esp_lcd_touch_cst9217: ^1

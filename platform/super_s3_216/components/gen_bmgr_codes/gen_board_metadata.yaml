@@ -1,0 +1,100 @@
+version: 1
+board: esp32_s3_touch_amoled_2_16
+chip: esp32s3
+
+devices:
+  axp2101_power_manager:
+    type: custom
+    peripherals:
+    - i2c_master
+
+  audio_dac:
+    type: audio_codec
+    peripherals:
+    - gpio_pa_control
+    - i2s_audio_out
+    - i2c_master
+
+  audio_adc:
+    type: audio_codec
+    peripherals:
+    - i2s_audio_in
+    - i2c_master
+
+  display_lcd:
+    type: display_lcd
+    sub_type: spi
+    peripherals:
+    - spi_display
+    dependencies:
+      espressif/esp_lcd_co5300: ^2
+      brookesia_hal_custom:
+        override_path: ${BOARD_PATH}/components/brookesia_hal_custom
+    io:
+      reset_gpio_num: 39
+      cs_gpio_num: 12
+
+  lcd_touch:
+    type: lcd_touch
+    sub_type: i2c
+    peripherals:
+    - i2c_master
+    dependencies:
+      waveshare/esp_lcd_touch_cst9217: ^1
+    io:
+      rst_gpio_num: 40
+      int_gpio_num: 11
+
+  fs_sdcard:
+    type: fs_fat
+    sub_type: sdmmc
+    io:
+      clk: 2
+      cmd: 1
+      d0: 3
+
+peripherals:
+  i2c_master:
+    type: i2c
+    role: master
+    io:
+      sda_io_num: 15
+      scl_io_num: 14
+
+  i2s_audio_out:
+    type: i2s
+    role: master
+    format: std-out
+    io:
+      mclk: 42
+      bclk: 9
+      ws: 45
+      dout: 8
+      din: 10
+
+  i2s_audio_in:
+    type: i2s
+    role: master
+    format: std-in
+    io:
+      mclk: 42
+      bclk: 9
+      ws: 45
+      dout: 8
+      din: 10
+
+  gpio_pa_control:
+    type: gpio
+    role: io
+    io:
+      pin: 46
+
+  spi_display:
+    type: spi
+    role: master
+    io:
+      mosi_io_num: 4
+      miso_io_num: 5
+      sclk_io_num: 38
+      quadwp_io_num: 6
+      quadhd_io_num: 7
