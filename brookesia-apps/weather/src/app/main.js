@@ -4,11 +4,12 @@
 const SHANGHAI = {city:'上海', latitude:31.2304, longitude:121.4737, origin:'默认城市'};
 const CACHE = '/littlefs/weather-cache.json', SETTINGS = '/littlefs/weather-settings.json';
 const STATE = '/littlefs/weather-state.json', REFRESH_MS = 10*60*1000, STALE_MS = 30*60*1000;
-let gui, storage, http, wifi, timer;
+let gui, storage, http, wifi, timer, modes;
+let screenAsleep=false, fxProbe=null;
 let mode = 'shanghai', location = SHANGHAI, data = null, receivedAt = 0;
 let connected = false, paused = false, pending = null, nextFetch = 0, failures = 0;
 let lastRequest = 0, error = '', status = '等待联网', rendered = {};
-let fxScene='', fxTimer=0, fxStarted=0, fxFrames=0, fxError='';
+let fxScene='', fxTimer=0, tickTimer=0, fxLastTick=0, fxElapsed=0, fxInterval=250, fxFrames=0, fxError='', fxValues={};
 
 function call(handle, name, args) {
   const result = JSON.parse(brookesia.call_function(handle, name, JSON.stringify(args || {})));
@@ -72,10 +73,17 @@ function binding(path,key,value) { return {Path:path,Key:key,Value:String(value)
 function stopFx() {
   if (fxTimer) { try { call(timer,'Stop',{TimerId:fxTimer}); } catch(_) {} fxTimer=0; }
 }
+function stopTick() {
+  if (tickTimer) { try { call(timer,'Stop',{TimerId:tickTimer}); } catch(_) {} tickTimer=0; }
+}
+function startTick() {
+  if (!tickTimer) tickTimer=call(timer,'StartPeriodic',{Name:'weather',IntervalMs:5000});
+}
 function applyScene() {
   if (paused) return;
+  if(screenAsleep){stopFx();return;}
   const scene=data?sceneFor(data.current.weather_code,data.current.is_day):'idle';
-  if (scene===fxScene) return;
+  if (scene===fxScene && (scene==='idle' || fxTimer)) return;
   stopFx();
   const colors={idle:['#081421','#142b43'],clear_day:['#143953','#071925'],clear_night:['#080e24','#122b43'],
     cloudy_day:['#263c4e','#102130'],cloudy_night:['#122030','#060e1c'],rain:['#122d40','#081421'],
@@ -84,23 +92,61 @@ function applyScene() {
   const updates=[binding('/main','sky',c[0]),binding('/main','sky_bottom',c[1]),
     binding('/main/backdrop/rain','hidden',!rain),binding('/main/backdrop/sun','hidden',scene!=='clear_day'),
     binding('/main/backdrop/moon','hidden',scene!=='clear_night'),
+    binding('/main/backdrop/stars','hidden',scene!=='clear_night' && scene!=='cloudy_night'),
     binding('/main/backdrop/clouds','hidden',scene.indexOf('cloudy')!==0),
     binding('/main/backdrop/fog','hidden',scene!=='fog'),binding('/main/backdrop/snow','hidden',scene!=='snow')];
   for (let i=0;i<4;i++) updates.push(binding('/main/backdrop/drop'+i,'hidden',!rain));
   try {
-    updateBindings(updates); fxScene=scene; fxStarted=Date.now(); fxFrames=0; fxError='';
-    if (rain) fxTimer=call(timer,'StartPeriodic',{Name:'weather_fx',IntervalMs:125});
+    updateBindings(updates); fxScene=scene; fxLastTick=Date.now(); fxElapsed=0; fxFrames=0; fxError='';fxValues={};fxProbe=null;
+    fxInterval=rain?125:250;
+    if (scene!=='idle') fxTimer=call(timer,'StartPeriodic',{Name:'weather_fx',IntervalMs:fxInterval});
   } catch(e) { fxError=String(e); }
 }
 function animateFx() {
-  if (paused || !fxTimer || (fxScene!=='rain' && fxScene!=='storm')) return;
-  const elapsed=(Date.now()-fxStarted)/1000, speeds=[12,18,10,16], updates=[];
-  for (let i=0;i<4;i++) updates.push(binding('/main/backdrop/drop'+i,'y',Math.floor((i*110+80+elapsed*speeds[i])%576)-48));
-  try { updateBindings(updates); fxFrames++; if (fxFrames===8) persistState(); }
+  if (paused || !fxTimer) return;
+  const now=Date.now(),delta=now-fxLastTick;fxLastTick=now;
+  fxElapsed+=(delta>=0 && delta<=1000?delta:fxInterval)/1000;
+  const elapsed=fxElapsed, updates=[];
+  function add(path,key,value) {
+    value=Math.round(value);const id=path+'/'+key;
+    if(fxValues[id]!==value){updates.push(binding('/main/backdrop/'+path,key,value));fxValues[id]=value;}
+  }
+  if (fxScene==='rain'||fxScene==='storm') {
+    const speeds=[12,18,10,16];
+    for(let i=0;i<4;i++)add('drop'+i,'y',Math.floor((i*110+80+elapsed*speeds[i])%576)-48);
+  } else if (fxScene.indexOf('cloudy')===0) {
+    add('clouds/c0','x',310+42*Math.sin(elapsed/2.5));add('clouds/c0','y',74+9*Math.sin(elapsed/3));
+    add('clouds/c1','x',282+34*Math.sin(elapsed/3+1.8));add('clouds/c1','y',119+7*Math.sin(elapsed/4+1));
+  } else if (fxScene==='clear_day') {
+    add('sun','opacity',205+50*Math.sin(elapsed/1.8));add('sun','y',64+10*Math.sin(elapsed/2.5));
+  } else if (fxScene==='clear_night') {
+    add('moon','opacity',210+45*Math.sin(elapsed/2));add('moon','y',70+10*Math.sin(elapsed/2.5));
+  } else if (fxScene==='fog') {
+    for(let i=0;i<4;i++){
+      add('fog/f'+i,'x',-20+12*Math.sin(elapsed/7+i));add('fog/f'+i,'opacity',220+30*Math.sin(elapsed/5+i));
+    }
+  } else if (fxScene==='snow') {
+    add('snow','x',6*Math.sin(elapsed/9));
+    for(let i=0;i<20;i++)add('snow/s'+i,'y',((24+i*61)%450+elapsed*(8+i%5*2))%520-8);
+  }
+  if(fxScene==='clear_night' || fxScene==='cloudy_night'){
+    for(let i=0;i<8;i++)add('stars/s'+i,'opacity',145+110*Math.sin(elapsed*2+i*1.7));
+    const phase=elapsed%12;
+    add('stars/shooting','opacity',phase<2?245:0);
+    add('stars/shooting','x',250+phase*80);add('stars/shooting','y',26+phase*46);
+  }
+  try {
+    if(updates.length)updateBindings(updates);fxFrames++;
+    if(fxFrames===8 || fxFrames===40){
+      const path=fxScene.indexOf('cloudy')===0?'clouds/c0':fxScene==='clear_night'?'moon':fxScene==='clear_day'?'sun':fxScene==='snow'?'snow/s0':fxScene==='fog'?'fog/f0':'drop0';
+      try{fxProbe={path:path,frame:call(gui,'GetViewFrame',{Path:'/main/backdrop/'+path}),expected:fxValues[path+'/y'],tick:fxFrames};}catch(_){}
+      persistState();
+    }
+  }
   catch(e) { fxError=String(e);stopFx();persistState(); }
 }
 function persistState() {
-  write(STATE,{version:2,background:fxScene,fx_frames:fxFrames,fx_error:fxError,hourly_count:data?hours24(data).length:0,status:status,error:error,connected:connected,mode:mode,location:location,
+  write(STATE,{version:3,background:fxScene,screen_asleep:screenAsleep,fx_probe:fxProbe,fx_frames:fxFrames,fx_error:fxError,fx_active:!!fxTimer,fx_interval_ms:fxInterval,paused:paused,hourly_count:data?hours24(data).length:0,status:status,error:error,connected:connected,mode:mode,location:location,
     pending:pending?pending.kind:null,last_weather_request_id:lastRequest,
     received_at:receivedAt,source_time:data?data.current.time:null,
     temperature:data?data.current.temperature_2m:null,ui_updated:!paused && !!data});
@@ -176,6 +222,8 @@ function handleResponse(items) {
 }
 function tick() {
   try {
+    if(modes){try{const state=call(modes,'GetState'),asleep=!!(state && state.screen_asleep);if(asleep!==screenAsleep){screenAsleep=asleep;applyScene();persistState();}}catch(_){}}
+    if(screenAsleep)stopFx();
     const online=call(wifi,'GetGeneralState',{})==='Connected';
     if (!online) {
       const offlineStatus=data?'网络断开，显示缓存':'等待 Wi-Fi 连接';
@@ -190,6 +238,7 @@ function tick() {
 }
 globalThis.brookesia_app = {
   on_start() {
+    try{modes=brookesia.start_service('DeviceModes');}catch(_){}
     gui=brookesia.start_service('SystemGui'); storage=brookesia.start_service('Storage');
     wifi=brookesia.start_service('Wifi'); http=brookesia.start_service('Http'); timer=brookesia.start_service('SystemTimer');
     for (const event of ['RequestCompleted','RequestFailed','RequestCanceled']) brookesia.subscribe_event(http,event);
@@ -199,19 +248,20 @@ globalThis.brookesia_app = {
     if (cache && cache.version===2 && cache.mode===mode) {
       try { data=validateWeather(cache.data); location=cache.location || SHANGHAI; receivedAt=cache.received_at || 0; status='显示上次天气'; } catch (_) {}
     }
-    paused=false; rendered={}; render(); call(timer,'StartPeriodic',{Name:'weather',IntervalMs:5000}); tick(); return true;
+    stopFx();stopTick();fxScene='';paused=false;rendered={};render();startTick();tick();return true;
   },
-  on_timer(id,name) { if (name==='weather_fx') animateFx(); else tick(); return true; },
+  on_timer(id,name) { if(paused)return true;if (name==='weather_fx') animateFx(); else tick(); return true; },
   on_event(service,event,json) {
+    if(paused)return true;
     try {
       if (service==='Http') handleResponse(JSON.parse(json));
       else if (service==='Wifi') tick();
     } catch(e) { failed(String(e)); }
     return true;
   },
-  on_pause() { paused=true;stopFx();return true; },
-  on_resume() { paused=false; rendered={};fxScene=''; render(); tick(); persistState(); return true; },
-  on_stop() { stopFx();cancelPending(); return true; }
+  on_pause() { paused=true;stopFx();stopTick();cancelPending();persistState();return true; },
+  on_resume() { paused=false;rendered={};fxScene='';render();startTick();tick();persistState();return true; },
+  on_stop() { paused=true;stopFx();stopTick();cancelPending();persistState();return true; }
 };
 
 })();

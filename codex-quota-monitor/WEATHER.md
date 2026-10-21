@@ -1,13 +1,13 @@
 # 天气 App
 
-当前版本：local.weather 0.2.2，运行于已部署的 ESP-Brookesia 0.8 本地适配系统 s3.2。
-源码：D:/chatgpt_data/brookesia-apps/weather。
+当前版本：local.weather 0.2.5，运行于 ESP-Brookesia 本地适配系统 s3.15。
+源码：仓库 brookesia-apps/weather。
 
 界面只显示当前温度、湿度、天气状况，以及可横向滑动的 24 个逐小时预报卡片。
 湿度字号 30、天气状况字号 32；不显示“未来24小时”标题、体感、风速、三日预报或操作按钮。
 默认查询上海（31.2304, 121.4737）。联网后由开发板直接通过校验证书的 HTTPS 获取数据，
 不依赖电脑提供天气。应用打开后每 10 分钟刷新；联网状态变化会触发检查与重取。
-后台暂停动画，返回应用时恢复；离线保留缓存并在天气文字前标明“缓存”。
+后台停止动画和联网轮询，返回应用时恢复；离线保留缓存并在天气文字前标明“缓存”。
 
 ## 背景
 
@@ -24,10 +24,10 @@
 在 codex-quota-monitor 目录执行：
 
 ```powershell
-.venv\Scripts\python.exe tools/build_brookesia_app.py ..\brookesia-apps\weather
+.venv\Scripts\python.exe tools/build_brookesia_app.py ..\brookesia-apps\weather --compact-json
 .\stop.ps1
 # 等待后台采集器退出，再操作串口
-.venv\Scripts\python.exe tools/install_runtime_app.py ..\brookesia-apps\weather\dist\local.weather.debug.0.2.2.bpk
+.venv\Scripts\python.exe tools/install_runtime_app.py ..\brookesia-apps\weather\dist\local.weather.debug.0.2.4.bpk
 .venv\Scripts\python.exe tools/verify_weather.py
 .\start.ps1
 ```
@@ -42,7 +42,7 @@ after 5000 ms，删除工作仍会完成。遇到该错误，应等几秒并重�
 新数据。用户确认“显示正常，滑动流畅”。绘图日志记录平均约 11.1 ms，最大约 15.7 ms，
 该结果是当时场景的绘图周期，不能当成所有场景的持续帧率。
 
-JavaScript 八项测试覆盖缺失值、天气码、异步联网、刷新间隔、失败退避、断线重连、
+JavaScript 十项测试覆盖缺失值、天气码、异步联网、刷新间隔、失败退避、断线重连、
 缓存恢复、定位标记、24 小时数据选择、雨滴更新及后台暂停。
 0.2.1 调整上述字号并删除标题；0.2.2 隔离脚本作用域，修复重复打开时的变量声明冲突。
 设备安装和验证证据见 runtime/weather-*。
@@ -60,3 +60,33 @@ SyntaxError: redeclaration of SHANGHAI。0.2.2 使用立即执行函数隔离应
 保留 globalThis.brookesia_app 生命周期入口；同一 VM 重复求值的回归测试通过。
 额度 App 的同类 gui 重复声明错误同时修复。两个 App 各连续重开 6 次，共 12 次全部通过。
 最终设备重开检查见 runtime/runtime-reopen-verification.json。
+
+## 0.2.4 动态背景与资源
+
+旧版仅在雨、雷雨时启动动画；实际多云天气因此看上去静止。新版为云层加入漂移，
+晴天加入呼吸与浮动，晴夜加入浮动、星光和周期流星，雾层横移，雪粒下落。雨和雷雨保持 125ms 更新，
+其他场景 250ms 更新；仅提交发生变化的整数位置、透明度绑定，最大每批 21 项。
+使用现有图片与图元，不新增大位图；动态透明度使用固件支持的 style.opacity。
+暂停或关闭时停止两个定时器并取消 HTTP 请求，重新打开会重新建立动画。
+诊断状态仅在开始、变化及第八、四十帧保存，不逐帧写 Flash；校时跳变不会造成动画大幅跳动。
+
+构建添加 --compact-json，仅压缩打包目录中的 JSON，不改变源码格式与语义；
+0.2.3 的资源 JSON 由 113492 字节降至 43515 字节；0.2.4 增加星光图元后，120695 字节压缩为 46345 字节。保留压缩 PNG，不转换为未压缩 LVGL 图。
+当前设备文件系统空余由 303104 字节增加至 372736 字节（约 364KiB）。
+多云页短时实测内部堆空余约 45KiB、PSRAM 空余约 3.66MiB；这些是当时快照，
+不是长时间运行的最低余量。较大的图片缓存和其余应用的 JSON 仍有优化空间。
+
+0.2.3 历史实机检查：当时多云场景启用 250ms 动画，连续两次关闭再打开均重新
+启动动画，离开后 fx_active=false。九项脚本回归及资源打包一致性检查通过，
+家长 PIN 保留；短时天气页内部堆余量 46547 字节、PSRAM 余量 3841960 字节。
+
+晴夜有星光闪烁、月亮浮动和周期流星，多云的云层移动幅度已增加。固件 s3.14 息屏后暂停动画，唤醒后自动恢复。诊断状态包含实际原生视图位置 fx_probe，便于区分计时器运行和画面实际更新。
+
+## 0.2.5 遮挡与月牙修复
+
+实体屏幕此前没有动画的原因是全屏遮罩使用了不受支持的 bgOpacity；引擎因此按不透明背景绘制遮罩。
+本版移除全部 70 处该字段，在遮罩上明确使用受支持的 opacity=45。
+不仅检查计时器与坐标，还通过原生 GetWeatherLayers 验证遮罩实际透明度为 45/255、后续没有不透明整屏覆盖层。
+月亮改用已有的透明月牙 PNG，去除两个半透明圆叠加造成的圆形底色。
+星星改成四角星图元；掠过的小星星不再带有矩形横条尾迹。
+12 项脚本检查覆盖这些资源规则和生命周期行为。保留压缩 PNG，不增加大位图。

@@ -1,0 +1,34 @@
+{
+  "package": {
+    "id": "local.voiceassistant",
+    "name": {
+      "en": "Voice Assistant",
+      "zh_CN": "智能助手"
+    },
+    "version": "0.1.0",
+    "visible": true,
+    "systems": [
+      "super"
+    ]
+  },
+  "runtime": {
+    "type": "JavaScript",
+    "entry": "app/main.js",
+    "resource_dir": "res",
+    "arguments": []
+  },
+  "services": [
+    {
+      "name": "VoiceAssistant",
+      "version": "0.1.0"
+    },
+    {
+      "name": "AudioPlayback",
+      "version": "0.8.2"
+    },
+    {
+      "name": "Audiobook",
+      "version": "0.1.0"
+    }
+  ]
+}

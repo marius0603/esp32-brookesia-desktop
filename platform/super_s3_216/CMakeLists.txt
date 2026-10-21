@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 3.16)
 
 option(CCACHE_ENABLE "Use ccache to accelerate repeat ESP-IDF builds" ON)
 
-set(PROJECT_VER "0.8.3-s3.3")
+set(PROJECT_VER "0.8.3-s3.15")
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
 # Work around esp-idf-configdep mapping CONFIG_ESP_LVGL_ADAPTER_PARTIAL_AUX_IMG_CACHE
@@ -24,6 +24,8 @@ endif()
 
 project(brookesia_s3_216)
 
+include(${CMAKE_CURRENT_LIST_DIR}/overrides/audio_dma.cmake)
+
 # Temporary workaround for `espressif__mcp-c-sdk` stringop-truncation warning
 idf_build_set_property(COMPILE_OPTIONS -Wno-error=stringop-truncation APPEND)
 
@@ -36,3 +38,10 @@ foreach(render_component lvgl__lvgl brookesia_gui_lvgl)
     target_compile_options(${render_lib} PRIVATE -O2)
 endforeach()
 target_compile_options(freetype PRIVATE -O2)
+
+# esp_xiaozhi 0.1.2 uses this bool in C expressions, where disabled Kconfig
+# symbols are otherwise undefined. Keep its task stack internal on this board.
+if(NOT CONFIG_XIAOZHI_STACK_IN_PSRAM)
+    idf_component_get_property(xiaozhi_lib espressif__esp_xiaozhi COMPONENT_LIB)
+    target_compile_definitions(${xiaozhi_lib} PRIVATE CONFIG_XIAOZHI_STACK_IN_PSRAM=0)
+endif()

@@ -1,8 +1,20 @@
 {
-  "packages/apps/local.audiobook.debug.0.1.1.bpk": "1d53d45e29afe12888bcdebe880547c6ec8ddc40aa5b130a2c24f27a96a11b3e",
+  "packages/apps/local.audiobook.debug.0.1.1.bpk": "e30acf927d7f6593eaebb3f2726bd63ee6880a58660e365448ca2aaab3fe4d7a",
+  "packages/apps/local.childmode.debug.0.1.0.bpk": "37f9a6cb57d9414006cada7a0496acef6a9232255baa84b1e8aecb6b0ac68b7e",
   "packages/apps/local.codex.quota.debug.0.2.2.bpk": "4123694a849607a4c2b9372aaaed50a8356d051103eca623e2b97e1828171832",
   "packages/apps/local.flipclock.debug.0.1.1.bpk": "f3fccd93f55cdf79769d9ec6cc37d894d90693937587b0f4458f361d40dbd570",
+  "packages/apps/local.voiceassistant.debug.0.1.0.bpk": "5cf6737f7fa9070c445059d5605490bb67103add0fa2784b2b6f75ef69e25ab9",
   "packages/apps/local.weather.debug.0.2.2.bpk": "ceb636157d20cfc466b661867b4943f9084d9582be15914de928df64c183b4c8",
+  "packages/firmware/brookesia-0.8.3-s3.11-app.bin": "a36dcbea05e1593cbebe2f892aaea916d6d30a20053ae93383b08da993fba257",
   "packages/firmware/brookesia-0.8.3-s3.3-app.bin": "ed6ef0038743e2e09c40401577b2996543367732d1d7ed99fb798b2932591137",
-  "packages/firmware/partition-table.bin": "6ecc475482596b4fc81b6558dc0f00019d08d983c71ad5b20adbf9477e167baf"
+  "packages/firmware/brookesia-0.8.3-s3.6-app.bin": "777ce209f5c84c495de1926c512795b2b5291356adde9a2cb96d74f1db0afe0b",
+  "packages/firmware/brookesia-0.8.3-s3.8-app.bin": "da4fe11396008ca78c5157cec35d8a072d7f79282a3982f3ba8140f08b6422a8",
+  "packages/firmware/partition-table.bin": "6ecc475482596b4fc81b6558dc0f00019d08d983c71ad5b20adbf9477e167baf",
+  "packages/firmware/brookesia-0.8.3-s3.12-app.bin": "bbdb4515cd75748be900d31b72e7d42b7ab28a7d3ba58eeb29ff55062d53481b",
+  "packages/firmware/brookesia-0.8.3-s3.13-app.bin": "734b72e5d373bae8bced6a91de0f3cfc182b541346fd586d7e5ec1d09a036b94",
+  "packages/apps/local.weather.debug.0.2.3.bpk": "f6179fdd549b0d5902e0a985b6b6817c96d708ffec0ad3c64dcd95381933ee62",
+  "packages/apps/local.weather.debug.0.2.4.bpk": "9da210f6df835849c3844d6b23d9223ffca061fdfc0191af13c012ab18c28bb5",
+  "packages/firmware/brookesia-0.8.3-s3.14-app.bin": "dd592e7d85adec63cfd114ef523911b360001c479b41708a29aa8f70d33cc918",
+  "packages/firmware/brookesia-0.8.3-s3.15-app.bin": "0f38ac34082c24a29b8e235de6c2c5aae155608d03743d8e3b59236ad93a2a26",
+  "packages/apps/local.weather.debug.0.2.5.bpk": "964c3c309398936010266cb2c59e41e0e8ce5da7f753f562858617dc38dd6f06"
 }

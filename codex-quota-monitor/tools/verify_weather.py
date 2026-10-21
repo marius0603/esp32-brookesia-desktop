@@ -30,12 +30,12 @@ with StableUsbClient('COM5', timeout=30) as client:
         raise RuntimeError('Weather state timed out')
     apps = client.call('SystemCore', 'ListApps', {})['result']
     app = next(item for item in apps if item['manifest']['id']=='local.weather')
-    assert app['manifest']['version']=='0.2.2'
+    assert app['manifest']['version']=='0.2.5'
     report['app_id'] = app['app_id']
     client.call('SystemCore', 'StartApp', {'AppId':app['app_id']})
-    report['initial'] = wait_for(lambda value: value.get('version')==2 and value.get('received_at') and
+    report['initial'] = wait_for(lambda value: value.get('version')==3 and value.get('received_at') and
         value.get('hourly_count')==24 and value.get('ui_updated') and not value.get('pending') and
-        (value.get('background') not in ('rain','storm') or value.get('fx_frames',0)>=8))
+        value.get('fx_active') and value.get('fx_frames',0)>=8)
     assert not report['initial']['fx_error']
     print(json.dumps(report['initial'],ensure_ascii=False),flush=True)
     if args.network_test:
@@ -58,5 +58,5 @@ with StableUsbClient('COM5', timeout=30) as client:
     assert report['active_app']['app_id']==app['app_id'] and report['active_app']['state']=='Running'
     assert not report['active_app']['last_error']
     report['storage_capacity'] = client.call('Storage','GetFileSystemCapacity',{'MountPoint':'/littlefs'})['result']
-(ROOT/'runtime/weather-verification-0.2.2.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+(ROOT/'runtime/weather-verification-0.2.5.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
 print('Weather verification passed')

@@ -1,0 +1,60 @@
+{
+  "id": "cream-handdrawn-v1",
+  "display": [
+    480,
+    480
+  ],
+  "icon_size": [
+    96,
+    96
+  ],
+  "icons": {
+    "brookesia.general.settings": "settings.png",
+    "brookesia.general.files": "files.png",
+    "brookesia.general.app_store": "app-store.png",
+    "local.codex.quota": "quota.png",
+    "local.weather": "weather.png",
+    "local.audiobook": "audiobook.png",
+    "local.flipclock": "flipclock.png",
+    "local.voiceassistant": "assistant.png"
+  },
+  "wallpaper": "wallpaper.jpg",
+  "files": {
+    "settings.png": {
+      "bytes": 15867,
+      "sha256": "121b7f0191a938696c4b5093890fca55957bde25566739b457705be54efe9d7d"
+    },
+    "files.png": {
+      "bytes": 13962,
+      "sha256": "77586f5a7ceee49c034a8a1e46b6b1bab98f882aa5fc750b8d6577302be03e18"
+    },
+    "app-store.png": {
+      "bytes": 14835,
+      "sha256": "ce4a479f935879058f0be11d2039f6ed42f2492dd163a573c61557531ff20188"
+    },
+    "quota.png": {
+      "bytes": 14522,
+      "sha256": "3714f4abbfe5d3b04d43c4132697ab0a47342d28cc9c95aa233a000e1c5440fb"
+    },
+    "weather.png": {
+      "bytes": 15574,
+      "sha256": "8fc3ccc2586a6c33288ae7e1a892f61649351e196eeabd7f7d0cd6d797cc4ce1"
+    },
+    "audiobook.png": {
+      "bytes": 16116,
+      "sha256": "af6cb34b5b0e381e695b70f967d4258448e26933016980276e345f59a980122e"
+    },
+    "flipclock.png": {
+      "bytes": 14355,
+      "sha256": "504a81f81718f4af996d741ef926aabadfbc9b6c5289059e95c4657054f73263"
+    },
+    "assistant.png": {
+      "bytes": 16343,
+      "sha256": "ffe1559652c4bc3ffda5dc4c3364c2314e675c25c1130399490a7aec5abcaa15"
+    },
+    "wallpaper.jpg": {
+      "bytes": 23144,
+      "sha256": "7b4dce04585787143235373df35bad7f96bd5579b4431805db55748c541b4b3d"
+    }
+  }
+}

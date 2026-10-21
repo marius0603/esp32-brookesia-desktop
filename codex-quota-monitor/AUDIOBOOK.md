@@ -59,3 +59,11 @@ s3.2 升级前镜像位于 `artifacts/brookesia-s3.2-before-audiobook`。
 0.1.1 将音量减号从字体缺失的 U+2212 改为 ASCII 连字符，更新后启动正常。
 证据：runtime/audiobook-verification.json、audiobook-layout-0.1.1.json、audiobook-flash.log。
 SD 文件读取、MP3/WAV 持续播放和实机断点续播等待装卡后验证。
+
+## SD 卡验证（2026-10-20）
+
+已挂载约 64GB FATFS SD 卡到 `/sdcard`，容量 63,832,162,304 字节。已创建 `/sdcard/audiobooks`，临时文本写入、读取比对和清理通过；Audiobook.List 确认识别到卡，目前没有书籍章节。
+
+生成并临时复制了一段 2 秒、16kHz、单声道 PCM16 WAV 到 SD 卡，通过听书应用持有服务后播放：状态 Ended、进度 2 秒、输出 PCM 64,000 字节、无错误。测试后删除自建测试文件，恢复原音量和书签。尚未验证实际 MP3 书籍或长时间播放。
+
+证据：本机私有 `runtime/sdcard-ready.json`、`runtime/sdcard-playback-verification.json`。SD 卡和音频驱动无需重新烧录固件。

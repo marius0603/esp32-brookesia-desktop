@@ -1,13 +1,14 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
 const code=fs.readFileSync(path.join(__dirname,'../src/app/main.js'),'utf8');
-let calls=[],texts={},stored={},tracks=[],mounted=false;
+let calls=[],texts={},stored={},tracks=[],mounted=false,volume=20,volumeCap=100;
 let state={path:'',state:'Idle',position:0,duration:0,active:false},now=20000;
 class Clock extends Date{static now(){return now;}}
 const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>n,call_function(h,n,s){
  const a=JSON.parse(s);calls.push({h,n,a});let data=null;
  if(n==='FSReadText'){if(!stored[a.Path])return JSON.stringify({success:false,error:'missing'});data=stored[a.Path];}
  if(n==='FSWriteText')stored[a.Path]=a.Data;
- if(n==='GetVolume')data=20;
+ if(n==='SetVolume')volume=Math.min(volumeCap,a.Volume);
+ if(n==='GetVolume')data=volume;
  if(n==='List')data={mounted,tracks};
  if(n==='GetState')data=state;
  if(n==='SetText')texts[a.Path]=a.Text;
@@ -29,4 +30,5 @@ ctx.brookesia_app.on_resume();ctx.brookesia_app.on_action('next');assert.equal(s
 ctx.brookesia_app.on_stop();assert.equal(state.active,false);
 vm.runInContext(code,ctx);ctx.brookesia_app.on_start();ctx.brookesia_app.on_action('toggle');assert.equal(state.path,tracks[1].path);
 for(let i=0;i<30;i++)ctx.brookesia_app.on_action('louder');assert.equal(calls.filter(c=>c.n==='SetVolume').at(-1).a.Volume,100);
+volumeCap=30;ctx.brookesia_app.on_action('louder');assert.equal(texts['/main/volume'],'音量 30%');
 console.log('Audiobook regression passed: no card, playback/pause, bookmark, background, chapter change, volume bounds and retained context');

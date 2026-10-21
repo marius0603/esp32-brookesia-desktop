@@ -6,6 +6,6 @@ module.exports = {
     releasePath: 'dist',
     signRoot: 'sign',
   },
-  // I2: default PNG→LVGL .bin conversion during brookesia build (path relative to sourceRoot).
-  convertImages: 'res/images',
+  // Retain compressed PNG assets to save the board's limited Flash filesystem.
+  convertImages: false,
 };

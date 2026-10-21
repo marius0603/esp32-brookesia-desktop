@@ -11,6 +11,11 @@
 #include "private/utils.hpp"
 #include "general_services.hpp"
 #include "audiobook/audiobook.hpp"
+#include "voice_assistant/voice_assistant.hpp"
+#include "auto_rotation/auto_rotation.hpp"
+#include "device_modes/device_modes.hpp"
+#include "child_mode/child_mode.hpp"
+#include "sd_resources/sd_resources.hpp"
 
 using namespace esp_brookesia;
 
@@ -26,6 +31,11 @@ bool GeneralServices::init()
     auto &service_manager = service::ServiceManager::get_instance();
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.init(), false, "Failed to initialize service manager");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_audiobook_service()), false, "Failed to register audiobook service");
+    BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_voice_assistant_service()), false, "Failed to register voice assistant service");
+    BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_device_modes_service()), false, "Failed to register device modes");
+    BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_auto_rotation_service()), false, "Failed to register auto rotation service");
+    BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_child_mode_service()), false, "Failed to register child mode service");
+    BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_sd_resources_service()), false, "Failed to register SD resource service");
 
     BROOKESIA_CHECK_FALSE_RETURN(init_audio(), false, "Failed to initialize audio");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.start(), false, "Failed to start service manager");
@@ -83,6 +93,15 @@ bool GeneralServices::init_audio()
 
 bool GeneralServices::start_audio_services()
 {
+    static auto child_binding = service::ServiceManager::get_instance().bind("ChildMode");
+    BROOKESIA_CHECK_FALSE_RETURN(child_binding.is_valid(), false, "Failed to bind child policy service");
+    // Called after the LVGL display source has started. Keep orientation sensing
+    // alive even when no app is using audio or the Settings app is closed.
+    static auto modes_binding = service::ServiceManager::get_instance().bind("DeviceModes");
+    BROOKESIA_CHECK_FALSE_RETURN(modes_binding.is_valid(), false, "Failed to bind device modes");
+    static auto rotation_binding = service::ServiceManager::get_instance().bind("AutoRotation");
+    BROOKESIA_CHECK_FALSE_RETURN(rotation_binding.is_valid(), false, "Failed to bind auto rotation service");
+
     if (!AudioPlaybackHelper::is_available()) {
         BROOKESIA_LOGW("Audio playback service is not available");
         return true;
@@ -91,6 +110,9 @@ bool GeneralServices::start_audio_services()
     auto &service_manager = service::ServiceManager::get_instance();
     static auto playback_binding = service_manager.bind(AudioPlaybackHelper::get_name().data());
     BROOKESIA_CHECK_FALSE_RETURN(playback_binding.is_valid(), false, "Failed to bind audio playback service");
+    // Keep the service object alive while an app's asynchronous Disconnect finishes.
+    static auto assistant_binding = service_manager.bind("VoiceAssistant");
+    BROOKESIA_CHECK_FALSE_RETURN(assistant_binding.is_valid(), false, "Failed to bind voice assistant service");
 
     return true;
 }

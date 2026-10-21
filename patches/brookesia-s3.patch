@@ -1,5 +1,684 @@
+diff --git a/app/brookesia_app_settings/package/res/screens/display.json b/app/brookesia_app_settings/package/res/screens/display.json
+index 30a27ed..b8a2ad6 100644
+--- a/app/brookesia_app_settings/package/res/screens/display.json
++++ b/app/brookesia_app_settings/package/res/screens/display.json
+@@ -1,193 +1 @@
+-{
+-    "type": "viewScreen",
+-    "id": "display",
+-    "mountMode": "dynamic",
+-    "commonProps": {
+-        "scrollable": false
+-    },
+-    "styleRefs": [
+-        "app.page"
+-    ],
+-    "children": [
+-        {
+-            "type": "container",
+-            "id": "page",
+-            "commonProps": {
+-                "scrollable": true
+-            },
+-            "layout": {
+-                "type": "flex",
+-                "flexFlow": "column",
+-                "gap": "${constant.settings.layout.pageGap}"
+-            },
+-            "placement": {
+-                "mode": "absolute",
+-                "x": "${constant.settings.layout.pageX}",
+-                "y": "${constant.settings.layout.pageY}",
+-                "width": "${constant.settings.layout.pageWidth}",
+-                "height": "${constant.settings.layout.pageHeight}"
+-            },
+-            "children": [
+-                {
+-                    "type": "container",
+-                    "id": "theme_modes",
+-                    "layout": {
+-                        "type": "flex",
+-                        "flexFlow": "rowWrap",
+-                        "gap": "${constant.settings.layout.cardGap}",
+-                        "mainAlign": "start",
+-                        "crossAlign": "start"
+-                    },
+-                    "placement": {
+-                        "mode": "flow",
+-                        "width": "match",
+-                        "height": "wrap",
+-                        "alignSelf": "stretch"
+-                    },
+-                    "children": [
+-                        {
+-                            "type": "templateRef",
+-                            "id": "light_mode",
+-                            "templateId": "theme_mode_card",
+-                            "overrides": {
+-                                ".": {
+-                                    "events": [
+-                                        {
+-                                            "type": "clicked",
+-                                            "action": "settings.display.light"
+-                                        }
+-                                    ],
+-                                    "placement": {
+-                                        "mode": "flow",
+-                                        "alignSelf": "stretch"
+-                                    }
+-                                },
+-                                "preview": {
+-                                    "style": {
+-                                        "bgColor": "${color.bg.base}",
+-                                        "radius": "18dp"
+-                                    }
+-                                },
+-                                "label": {
+-                                    "labelProps": {
+-                                        "text": "Light mode"
+-                                    },
+-                                    "styleRefs": [
+-                                        "app.cardTitle"
+-                                    ],
+-                                    "bindings": {
+-                                        "labelProps.text": "labelProps.text",
+-                                        "style.textColor": "textColor"
+-                                    }
+-                                }
+-                            }
+-                        },
+-                        {
+-                            "type": "templateRef",
+-                            "id": "dark_mode",
+-                            "templateId": "theme_mode_card",
+-                            "overrides": {
+-                                ".": {
+-                                    "events": [
+-                                        {
+-                                            "type": "clicked",
+-                                            "action": "settings.display.dark"
+-                                        }
+-                                    ],
+-                                    "placement": {
+-                                        "mode": "flow",
+-                                        "alignSelf": "stretch"
+-                                    }
+-                                },
+-                                "preview": {
+-                                    "style": {
+-                                        "bgColor": "${color.bg.overlay}",
+-                                        "radius": "18dp"
+-                                    }
+-                                },
+-                                "label": {
+-                                    "labelProps": {
+-                                        "text": "Dark mode"
+-                                    },
+-                                    "styleRefs": [
+-                                        "app.cardTitle"
+-                                    ],
+-                                    "bindings": {
+-                                        "labelProps.text": "labelProps.text",
+-                                        "style.textColor": "textColor"
+-                                    }
+-                                }
+-                            }
+-                        }
+-                    ]
+-                },
+-                {
+-                    "type": "label",
+-                    "id": "brightness_caption",
+-                    "styleRefs": [
+-                        "app.caption"
+-                    ],
+-                    "labelProps": {
+-                        "text": "Brightness level"
+-                    },
+-                    "placement": {
+-                        "mode": "flow"
+-                    },
+-                    "bindings": {
+-                        "labelProps.text": "labelProps.text"
+-                    }
+-                },
+-                {
+-                    "type": "templateRef",
+-                    "id": "brightness_card",
+-                    "templateId": "settings_card",
+-                    "overrides": {
+-                        ".": {
+-                            "style": {
+-                                "padding": "${constant.settings.layout.cardPadding}"
+-                            },
+-                            "layout": {
+-                                "gap": "${constant.settings.layout.cardGap}"
+-                            },
+-                            "placement": {
+-                                "mode": "flow",
+-                                "width": "match",
+-                                "height": "wrap",
+-                                "alignSelf": "stretch"
+-                            }
+-                        }
+-                    },
+-                    "slots": {
+-                        "content": [
+-                            {
+-                                "type": "templateRef",
+-                                "id": "brightness_row",
+-                                "templateId": "slider_row",
+-                                "overrides": {
+-                                    "title": {
+-                                        "labelProps": {
+-                                            "text": "Screen brightness"
+-                                        }
+-                                    },
+-                                    "slider": {
+-                                        "events": [
+-                                            {
+-                                                "type": "valueChanged",
+-                                                "action": "settings.display.brightness"
+-                                            }
+-                                        ],
+-                                        "rangeProps": {
+-                                            "min": 0,
+-                                            "max": 100,
+-                                            "value": 72
+-                                        }
+-                                    }
+-                                }
+-                            }
+-                        ]
+-                    }
+-                }
+-            ]
+-        }
+-    ]
+-}
++{"type":"viewScreen","id":"display","mountMode":"dynamic","commonProps":{"scrollable":false},"styleRefs":["app.page"],"children":[{"type":"container","id":"page","commonProps":{"scrollable":true},"layout":{"type":"flex","flexFlow":"column","gap":"${constant.settings.layout.pageGap}"},"placement":{"mode":"absolute","x":"${constant.settings.layout.pageX}","y":"${constant.settings.layout.pageY}","width":"${constant.settings.layout.pageWidth}","height":"${constant.settings.layout.pageHeight}"},"children":[{"type":"templateRef","id":"auto_rotation_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_rotation","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动旋转"}},"text/subtitle":{"labelProps":{"text":"关闭后锁定当前方向"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_rotation"}]}}}]}},{"type":"templateRef","id":"device_modes_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_sleep","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动息屏"}},"text/subtitle":{"labelProps":{"text":"无操作 10 分钟后息屏，轻触唤醒"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_sleep"}]}}}]}},{"type":"container","id":"theme_modes","layout":{"type":"flex","flexFlow":"rowWrap","gap":"${constant.settings.layout.cardGap}","mainAlign":"start","crossAlign":"start"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"},"children":[{"type":"templateRef","id":"light_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.light"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.base}","radius":"18dp"}},"label":{"labelProps":{"text":"Light mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}},{"type":"templateRef","id":"dark_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.dark"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.overlay}","radius":"18dp"}},"label":{"labelProps":{"text":"Dark mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}}]},{"type":"label","id":"brightness_caption","styleRefs":["app.caption"],"labelProps":{"text":"Brightness level"},"placement":{"mode":"flow"},"bindings":{"labelProps.text":"labelProps.text"}},{"type":"templateRef","id":"brightness_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"${constant.settings.layout.cardGap}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"brightness_row","templateId":"slider_row","overrides":{"title":{"labelProps":{"text":"Screen brightness"}},"slider":{"events":[{"type":"valueChanged","action":"settings.display.brightness"}],"rangeProps":{"min":0,"max":100,"value":72}}}}]}}]}]}
+diff --git a/app/brookesia_app_settings/package/res/screens/sound.json b/app/brookesia_app_settings/package/res/screens/sound.json
+index 4792f20..5252b93 100644
+--- a/app/brookesia_app_settings/package/res/screens/sound.json
++++ b/app/brookesia_app_settings/package/res/screens/sound.json
+@@ -1,173 +1 @@
+-{
+-    "type": "viewScreen",
+-    "id": "sound",
+-    "mountMode": "dynamic",
+-    "commonProps": {
+-        "scrollable": false
+-    },
+-    "styleRefs": [
+-        "app.page"
+-    ],
+-    "children": [
+-        {
+-            "type": "container",
+-            "id": "page",
+-            "commonProps": {
+-                "scrollable": true
+-            },
+-            "layout": {
+-                "type": "flex",
+-                "flexFlow": "column",
+-                "gap": "${constant.settings.layout.pageGap}"
+-            },
+-            "placement": {
+-                "mode": "absolute",
+-                "x": "${constant.settings.layout.pageX}",
+-                "y": "${constant.settings.layout.pageY}",
+-                "width": "${constant.settings.layout.pageWidth}",
+-                "height": "${constant.settings.layout.pageHeight}"
+-            },
+-            "children": [
+-                {
+-                    "type": "templateRef",
+-                    "id": "volume_card",
+-                    "templateId": "settings_card",
+-                    "overrides": {
+-                        ".": {
+-                            "style": {
+-                                "padding": "${constant.settings.layout.cardPadding}"
+-                            },
+-                            "layout": {
+-                                "gap": "10dp"
+-                            },
+-                            "placement": {
+-                                "mode": "flow",
+-                                "width": "match",
+-                                "height": "wrap",
+-                                "alignSelf": "stretch"
+-                            }
+-                        }
+-                    },
+-                    "slots": {
+-                        "content": [
+-                            {
+-                                "type": "templateRef",
+-                                "id": "media_volume_row",
+-                                "templateId": "slider_row",
+-                                "overrides": {
+-                                    "title": {
+-                                        "labelProps": {
+-                                            "text": "Volume"
+-                                        }
+-                                    },
+-                                    "slider": {
+-                                        "events": [
+-                                            {
+-                                                "type": "valueChanged",
+-                                                "action": "settings.sound.volume"
+-                                            }
+-                                        ],
+-                                        "rangeProps": {
+-                                            "min": 0,
+-                                            "max": 100,
+-                                            "value": 42
+-                                        }
+-                                    }
+-                                }
+-                            }
+-                        ]
+-                    }
+-                },
+-                {
+-                    "type": "label",
+-                    "id": "options_caption",
+-                    "styleRefs": [
+-                        "app.caption"
+-                    ],
+-                    "labelProps": {
+-                        "text": "Sound options"
+-                    },
+-                    "placement": {
+-                        "mode": "flow"
+-                    },
+-                    "bindings": {
+-                        "labelProps.text": "labelProps.text"
+-                    }
+-                },
+-                {
+-                    "type": "templateRef",
+-                    "id": "silent_card",
+-                    "templateId": "settings_card",
+-                    "overrides": {
+-                        ".": {
+-                            "style": {
+-                                "padding": "${constant.settings.layout.cardPadding}"
+-                            },
+-                            "layout": {
+-                                "gap": "10dp"
+-                            },
+-                            "placement": {
+-                                "mode": "flow",
+-                                "width": "match",
+-                                "height": "wrap",
+-                                "alignSelf": "stretch"
+-                            }
+-                        }
+-                    },
+-                    "slots": {
+-                        "content": [
+-                            {
+-                                "type": "templateRef",
+-                                "id": "silent_mode",
+-                                "templateId": "switch_row",
+-                                "overrides": {
+-                                    ".": {
+-                                        "placement": {
+-                                            "mode": "flow",
+-                                            "width": "match",
+-                                            "height": "${constant.settings.layout.rowHeight}",
+-                                            "alignSelf": "stretch"
+-                                        }
+-                                    },
+-                                    "text": {
+-                                        "layout": {
+-                                            "type": "flex",
+-                                            "flexFlow": "column",
+-                                            "mainAlign": "center",
+-                                            "crossAlign": "start",
+-                                            "gap": "0dp"
+-                                        }
+-                                    },
+-                                    "text/title": {
+-                                        "labelProps": {
+-                                            "text": "Mute"
+-                                        }
+-                                    },
+-                                    "text/subtitle": {
+-                                        "commonProps": {
+-                                            "hidden": true
+-                                        },
+-                                        "labelProps": {
+-                                            "text": ""
+-                                        }
+-                                    },
+-                                    "toggle": {
+-                                        "events": [
+-                                            {
+-                                                "type": "valueChanged",
+-                                                "action": "settings.sound.mute"
+-                                            }
+-                                        ],
+-                                        "toggleProps": {
+-                                            "checked": true
+-                                        }
+-                                    }
+-                                }
+-                            }
+-                        ]
+-                    }
+-                }
+-            ]
+-        }
+-    ]
+-}
++{"type":"viewScreen","id":"sound","mountMode":"dynamic","commonProps":{"scrollable":false},"styleRefs":["app.page"],"children":[{"type":"container","id":"page","commonProps":{"scrollable":true},"layout":{"type":"flex","flexFlow":"column","gap":"${constant.settings.layout.pageGap}"},"placement":{"mode":"absolute","x":"${constant.settings.layout.pageX}","y":"${constant.settings.layout.pageY}","width":"${constant.settings.layout.pageWidth}","height":"${constant.settings.layout.pageHeight}"},"children":[{"type":"templateRef","id":"volume_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"10dp"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"media_volume_row","templateId":"slider_row","overrides":{"title":{"labelProps":{"text":"Volume"}},"slider":{"events":[{"type":"valueChanged","action":"settings.sound.volume"}],"rangeProps":{"min":0,"max":100,"value":42}}}}]}},{"type":"label","id":"options_caption","styleRefs":["app.caption"],"labelProps":{"text":"Sound options"},"placement":{"mode":"flow"},"bindings":{"labelProps.text":"labelProps.text"}},{"type":"templateRef","id":"silent_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"10dp"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"silent_mode","templateId":"switch_row","overrides":{".":{"placement":{"mode":"flow","width":"match","height":"${constant.settings.layout.rowHeight}","alignSelf":"stretch"}},"text":{"layout":{"type":"flex","flexFlow":"column","mainAlign":"center","crossAlign":"start","gap":"0dp"}},"text/title":{"labelProps":{"text":"Mute"}},"text/subtitle":{"commonProps":{"hidden":true},"labelProps":{"text":""}},"toggle":{"events":[{"type":"valueChanged","action":"settings.sound.mute"}],"toggleProps":{"checked":true}}}}]}},{"type":"templateRef","id":"quiet_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"},"layout":{"type":"flex","flexFlow":"column","gap":"12dp"}}},"slots":{"content":[{"type":"templateRef","id":"quiet_enabled","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"定时勿扰"}},"text/subtitle":{"labelProps":{"text":"24 小时制 · 小时 : 分钟"}},"toggle":{"toggleProps":{"checked":false},"events":[{"type":"valueChanged","action":"settings.sound.quiet_enabled"}]}}},{"type":"container","id":"start","commonProps":{"scrollable":false},"layout":{"type":"flex","flexFlow":"row","gap":"8dp","crossAlign":"center"},"placement":{"mode":"flow","width":"match","height":"56dp"},"style":{"padding":0},"children":[{"type":"label","id":"title","styleRefs":["app.cardTitle"],"labelProps":{"text":"开始时间"},"placement":{"mode":"flow","width":"104dp","height":"wrap"}},{"type":"dropdown","id":"hour","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"],"selectedIndex":22},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_start_hour"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}},{"type":"label","id":"colon","labelProps":{"text":":"},"styleRefs":["app.cardTitle"],"style":{"fontSize":24},"placement":{"mode":"flow","width":"12dp","height":"wrap"}},{"type":"dropdown","id":"minute","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59"],"selectedIndex":0},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_start_minute"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}}]},{"type":"container","id":"end","commonProps":{"scrollable":false},"layout":{"type":"flex","flexFlow":"row","gap":"8dp","crossAlign":"center"},"placement":{"mode":"flow","width":"match","height":"56dp"},"style":{"padding":0},"children":[{"type":"label","id":"title","styleRefs":["app.cardTitle"],"labelProps":{"text":"结束时间"},"placement":{"mode":"flow","width":"104dp","height":"wrap"}},{"type":"dropdown","id":"hour","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"],"selectedIndex":7},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_end_hour"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}},{"type":"label","id":"colon","labelProps":{"text":":"},"styleRefs":["app.cardTitle"],"style":{"fontSize":24},"placement":{"mode":"flow","width":"12dp","height":"wrap"}},{"type":"dropdown","id":"minute","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59"],"selectedIndex":0},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_end_minute"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}}]},{"type":"label","id":"status","styleRefs":["app.caption"],"labelProps":{"text":"北京时间 · 起止相同为全天静音"},"bindings":{"labelProps.text":"text"},"placement":{"mode":"flow","width":"match","height":"wrap"}}]}}]}]}
+diff --git a/app/brookesia_app_settings/src/app/lifecycle.ipp b/app/brookesia_app_settings/src/app/lifecycle.ipp
+index dd90da0..70dbd7b 100644
+--- a/app/brookesia_app_settings/src/app/lifecycle.ipp
++++ b/app/brookesia_app_settings/src/app/lifecycle.ipp
+@@ -90,6 +90,7 @@ std::expected<void, std::string> SettingsApp::on_start(system::core::AppContext
+ 
+     auto stage_started_at = SteadyClock::now();
+     context_ = &context;
++    (void)context.timer().start_delayed("quiet_hours_refresh",1000);
+     const auto active_gui = context.gui().get_theme_language();
+     current_locale_ = normalize_locale(active_gui.language);
+     current_theme_id_ = active_gui.theme_id == THEME_DARK ? THEME_DARK : THEME_LIGHT;
+@@ -308,6 +309,10 @@ std::expected<void, std::string> SettingsApp::on_timer(
+ )
+ {
+     BROOKESIA_LOG_TRACE_GUARD_WITH_THIS();
++    if(name=="quiet_hours_refresh"){
++        if(context_){if(current_page_==PAGE_SOUND)(void)refresh_sound_state(context);(void)context.timer().start_delayed("quiet_hours_refresh",1000);}
++        return {};
++    }
+     if (name == WIFI_SCAN_RETRY_TIMER_NAME) {
+         if (timer_id != pending_wifi_scan_retry_timer_id_) {
+             BROOKESIA_LOGW(
+@@ -630,7 +635,41 @@ std::expected<void, std::string> SettingsApp::subscribe_actions(system::core::Ap
+     }
+ 
+     std::vector<system::core::GuiActionHandlerSubscription> subscriptions;
+-    subscriptions.reserve(19);
++    subscriptions.reserve(20);
++    subscriptions.push_back({.action="settings.display.auto_sleep",.handler=[this](const gui::Event &event){
++        auto checked=event.get_bool("checked");
++        if(context_ && checked && brookesia_board_set_auto_sleep){brookesia_board_set_auto_sleep(*checked);(void)refresh_display_state(*context_);}
++    }});
++    subscriptions.push_back({.action="settings.sound.quiet_enabled",.handler=[this](const gui::Event &event){
++        auto checked=event.get_bool("checked");
++        if(context_ && checked && brookesia_board_set_quiet_hours && brookesia_board_quiet_start && brookesia_board_quiet_end){
++            brookesia_board_set_quiet_hours(*checked,brookesia_board_quiet_start(),brookesia_board_quiet_end());(void)refresh_sound_state(*context_);
++        }
++    }});
++    for(const auto *part:{"start_hour","start_minute","end_hour","end_minute"}){
++        subscriptions.push_back({.action=std::string("settings.sound.quiet_")+part,.handler=[this,part](const gui::Event &event){
++            const auto value=event.get_int64("selectedIndex");
++            if(!context_ || !value || !brookesia_board_set_quiet_hours || !brookesia_board_quiet_enabled || !brookesia_board_quiet_start || !brookesia_board_quiet_end)return;
++            int start=brookesia_board_quiet_start(),end=brookesia_board_quiet_end();
++            const std::string_view field=part;const int limit=field.ends_with("hour")?24:60;
++            if(*value<0 || *value>=limit)return;
++            int &target=field.starts_with("start")?start:end;
++            target=field.ends_with("hour")?int(*value)*60+target%60:target/60*60+int(*value);
++            brookesia_board_set_quiet_hours(brookesia_board_quiet_enabled(),start,end);(void)refresh_sound_state(*context_);
++        }});
++    }
++
++    subscriptions.push_back({
++        .action = "settings.display.auto_rotation",
++        .handler = [this](const gui::Event &event) {
++            auto checked = event.get_bool("checked");
++            if (context_ && checked && brookesia_board_auto_rotation_set_enabled &&
++                    brookesia_board_auto_rotation_available && brookesia_board_auto_rotation_available()) {
++                brookesia_board_auto_rotation_set_enabled(*checked);
++                (void)refresh_display_state(*context_);
++            }
++        },
++    });
+     subscriptions.push_back({
+         .action = ACTION_DEBUG_DEVICE_NAME_CLICK,
+         .handler = [this](const gui::Event &) {
+diff --git a/app/brookesia_app_settings/src/private/settings_app_internal.hpp b/app/brookesia_app_settings/src/private/settings_app_internal.hpp
+index 8d0b14e..bc21a67 100644
+--- a/app/brookesia_app_settings/src/private/settings_app_internal.hpp
++++ b/app/brookesia_app_settings/src/private/settings_app_internal.hpp
+@@ -5,6 +5,22 @@
+  */
+ #pragma once
+ 
++extern "C" bool brookesia_board_do_not_disturb() __attribute__((weak));
++extern "C" bool brookesia_board_auto_sleep_enabled() __attribute__((weak));
++extern "C" void brookesia_board_set_do_not_disturb(bool) __attribute__((weak));
++extern "C" void brookesia_board_set_auto_sleep(bool) __attribute__((weak));
++
++extern "C" bool brookesia_board_quiet_enabled() __attribute__((weak));
++extern "C" int brookesia_board_quiet_start() __attribute__((weak));
++extern "C" int brookesia_board_quiet_end() __attribute__((weak));
++extern "C" int brookesia_board_local_minute() __attribute__((weak));
++extern "C" void brookesia_board_set_quiet_hours(bool,int,int) __attribute__((weak));
++
++// Optional board feature, absent on products without an orientation sensor.
++extern "C" bool brookesia_board_auto_rotation_available() __attribute__((weak));
++extern "C" bool brookesia_board_auto_rotation_enabled() __attribute__((weak));
++extern "C" void brookesia_board_auto_rotation_set_enabled(bool) __attribute__((weak));
++
+ #include <array>
+ #include <chrono>
+ #include <cstdint>
+diff --git a/app/brookesia_app_settings/src/service/device.ipp b/app/brookesia_app_settings/src/service/device.ipp
+index 4d350ae..402cd8a 100644
+--- a/app/brookesia_app_settings/src/service/device.ipp
++++ b/app/brookesia_app_settings/src/service/device.ipp
+@@ -320,6 +320,21 @@ std::expected<void, std::string> SettingsApp::refresh_display_state(system::core
+     const bool enabled = device_ui_state_.display_service_ready && device_ui_state_.display_backlight_supported;
+     std::vector<gui::BindingValueUpdate> updates;
+     add_control_state_updates(updates, DISPLAY_BRIGHTNESS_ROW_PATH, DISPLAY_BRIGHTNESS_SLIDER_PATH, enabled);
++    const std::string mode_row="/display/page/device_modes_card/";
++    add_binding_update(updates,mode_row+"auto_sleep/toggle","checked",brookesia_board_auto_sleep_enabled && brookesia_board_auto_sleep_enabled()?"true":"false");
++    const std::string rotation_row = "/display/page/auto_rotation_card/auto_rotation";
++    const bool rotation_available = brookesia_board_auto_rotation_available &&
++                                    brookesia_board_auto_rotation_available();
++    const bool rotation_enabled = brookesia_board_auto_rotation_enabled &&
++                                  brookesia_board_auto_rotation_enabled();
++    add_control_state_updates(updates, rotation_row, rotation_row + "/toggle", rotation_available);
++    add_binding_update(updates, rotation_row + "/toggle", "checked", rotation_enabled ? "true" : "false");
++    const bool chinese = current_locale_ == "zh_CN";
++    add_binding_update(updates, rotation_row + "/text/title", "labelProps.text",
++                       chinese ? "自动旋转" : "Automatic rotation");
++    add_binding_update(updates, rotation_row + "/text/subtitle", "labelProps.text",
++                       rotation_available ? (chinese ? "关闭后锁定当前方向" : "Turn off to lock direction") :
++                       (chinese ? "重力感应不可用" : "Gravity sensor unavailable"));
+     add_binding_update(
+         updates,
+         DISPLAY_BRIGHTNESS_SLIDER_PATH,
+@@ -333,6 +348,18 @@ std::expected<void, std::string> SettingsApp::refresh_sound_state(system::core::
+ {
+     const bool enabled = device_ui_state_.audio_service_ready && device_ui_state_.audio_player_supported;
+     std::vector<gui::BindingValueUpdate> updates;
++    if(brookesia_board_quiet_enabled && brookesia_board_quiet_start && brookesia_board_quiet_end){
++        const std::string base="/sound/page/quiet_card/";
++        const int start=brookesia_board_quiet_start(),end=brookesia_board_quiet_end();
++        add_binding_update(updates,base+"quiet_enabled/toggle","checked",brookesia_board_quiet_enabled()?"true":"false");
++        add_binding_update(updates,base+"start/hour","selected",std::to_string(start/60));
++        add_binding_update(updates,base+"start/minute","selected",std::to_string(start%60));
++        add_binding_update(updates,base+"end/hour","selected",std::to_string(end/60));
++        add_binding_update(updates,base+"end/minute","selected",std::to_string(end%60));
++        const bool synced=brookesia_board_local_minute && brookesia_board_local_minute()>=0;
++        const bool active=brookesia_board_do_not_disturb && brookesia_board_do_not_disturb();
++        add_binding_update(updates,base+"status","text",!synced?"北京时间 · 等待网络校时":active?(start==end?"北京时间 · 正在全天静音":"北京时间 · 正在静音"):"北京时间 · 当前不在静音时段");
++    }
+     add_control_state_updates(updates, SOUND_VOLUME_ROW_PATH, SOUND_VOLUME_SLIDER_PATH, enabled);
+     add_control_state_updates(updates, SOUND_MUTE_ROW_PATH, SOUND_MUTE_TOGGLE_PATH, enabled);
+     add_binding_update(
+diff --git a/gui/brookesia_gui_interface/src/runtime_document.cpp b/gui/brookesia_gui_interface/src/runtime_document.cpp
+index 819a72f..04c114b 100644
+--- a/gui/brookesia_gui_interface/src/runtime_document.cpp
++++ b/gui/brookesia_gui_interface/src/runtime_document.cpp
+@@ -5,6 +5,8 @@
+  */
+ #include "private/runtime_impl.hpp"
+ 
++extern "C" bool brookesia_board_image_needs_resolution(const char *) __attribute__((weak));
++
+ namespace esp_brookesia::gui {
+ 
+ std::shared_ptr<Runtime::Impl::NodeRecord::InteractionState> Runtime::Impl::find_interaction_state(
+@@ -775,7 +777,9 @@ std::expected<RuntimeImageResource, std::string> Runtime::Impl::resolve_image_re
+         resource = global_it->second;
+     }
+ 
+-    if ((resource.width <= 0 || resource.height <= 0) && backend != nullptr) {
++    if ((resource.width <= 0 || resource.height <= 0 ||
++            (brookesia_board_image_needs_resolution &&
++             brookesia_board_image_needs_resolution(resource.primary_src.c_str()))) && backend != nullptr) {
+         auto resolved = backend->resolve_image_resource(resource);
+         if (!resolved) {
+             return std::unexpected("Failed to resolve image resource '" + std::string(image_id) + "': " +
+diff --git a/gui/brookesia_gui_interface/src/runtime_resources.cpp b/gui/brookesia_gui_interface/src/runtime_resources.cpp
+index 5957887..ddcea23 100644
+--- a/gui/brookesia_gui_interface/src/runtime_resources.cpp
++++ b/gui/brookesia_gui_interface/src/runtime_resources.cpp
+@@ -5,6 +5,8 @@
+  */
+ #include "private/runtime_impl.hpp"
+ 
++extern "C" bool brookesia_board_image_needs_resolution(const char *) __attribute__((weak));
++
+ namespace esp_brookesia::gui {
+ 
+ std::expected<void, std::string> Runtime::Impl::load_theme(const ThemeAsset &theme)
+@@ -442,7 +444,9 @@ std::expected<void, std::string> Runtime::Impl::register_image(const RuntimeImag
+         return std::unexpected("Image resource must define primary_src or native_src");
+     }
+     RuntimeImageResource resolved_resource = resource;
+-    if ((resolved_resource.width <= 0 || resolved_resource.height <= 0) && backend != nullptr) {
++    if ((resolved_resource.width <= 0 || resolved_resource.height <= 0 ||
++            (brookesia_board_image_needs_resolution &&
++             brookesia_board_image_needs_resolution(resolved_resource.primary_src.c_str()))) && backend != nullptr) {
+         auto resolved = backend->resolve_image_resource(resolved_resource);
+         if (!resolved) {
+             return std::unexpected(
+diff --git a/gui/brookesia_gui_lvgl/src/props.cpp b/gui/brookesia_gui_lvgl/src/props.cpp
+index c7dd23f..e2be1bc 100644
+--- a/gui/brookesia_gui_lvgl/src/props.cpp
++++ b/gui/brookesia_gui_lvgl/src/props.cpp
+@@ -5,6 +5,8 @@
+  */
+ #include <string_view>
+ 
++extern "C" const char *brookesia_board_image_path(const char *) __attribute__((weak));
++
+ #include "private/props_impl.hpp"
+ // lv_image_cache_drop() lives in an instance header that lvgl.h does not aggregate.
+ #if __has_include("lvgl/src/misc/cache/instance/lv_image_cache.h")
+@@ -33,6 +35,15 @@ std::expected<std::shared_ptr<BinaryImageSource>, std::string> load_image_source
+ 
+ std::expected<RuntimeImageResource, std::string> resolve_image_resource(RuntimeImageResource resource)
+ {
++    if (resource.native_src == 0 && brookesia_board_image_path) {
++        const char *selected = brookesia_board_image_path(resource.primary_src.c_str());
++        if (selected && resource.primary_src != selected) {
++            resource.primary_src = selected;
++            // The internal fallback can use a different size or image format.
++            resource.width = 0;
++            resource.height = 0;
++        }
++    }
+     if (resource.native_src != 0 || (resource.width > 0 && resource.height > 0)) {
+         return resource;
+     }
+diff --git a/gui/brookesia_gui_lvgl/src/style_base.cpp b/gui/brookesia_gui_lvgl/src/style_base.cpp
+index 2ce6a00..2f2e955 100644
+--- a/gui/brookesia_gui_lvgl/src/style_base.cpp
++++ b/gui/brookesia_gui_lvgl/src/style_base.cpp
+@@ -57,6 +57,32 @@ void apply_style_colors(Record &record, const ResolvedStyle &style)
+         lv_style_remove_prop(&record.style, LV_STYLE_TEXT_COLOR);
+     }
+ 
++    // Dropdown lists live outside the dropdown object and need its palette
++    // explicitly, just as they need its resolved font below.
++    if (record.type == NodeType::Dropdown) {
++        if (auto *list = lv_dropdown_get_list(record.object)) {
++            if (bg_color.has_value()) {
++                lv_obj_set_style_bg_color(list, lv_color_hex(*bg_color), LV_PART_MAIN);
++                lv_obj_set_style_bg_opa(list, LV_OPA_COVER, LV_PART_MAIN);
++            }
++            if (text_color.has_value()) {
++                lv_obj_set_style_text_color(list, lv_color_hex(*text_color), LV_PART_MAIN);
++            }
++            for (const auto state : {LV_STATE_DEFAULT, LV_STATE_CHECKED, LV_STATE_PRESSED}) {
++                const auto selector = static_cast<lv_style_selector_t>(LV_PART_SELECTED) |
++                                      static_cast<lv_style_selector_t>(state);
++                if (bg_color.has_value()) {
++                    lv_obj_set_style_bg_color(list, lv_color_hex(*bg_color), selector);
++                    lv_obj_set_style_bg_opa(list, LV_OPA_COVER, selector);
++                }
++                if (text_color.has_value()) {
++                    lv_obj_set_style_text_color(list, lv_color_hex(*text_color), selector);
++                }
++                lv_obj_set_style_text_decor(list, LV_TEXT_DECOR_UNDERLINE, selector);
++            }
++        }
++    }
++
+     auto border_color = parse_color(style.style.border_color().value_or(""));
+     if (border_color.has_value()) {
+         lv_style_set_border_color(&record.style, lv_color_hex(*border_color));
+@@ -190,6 +216,23 @@ void apply_style_font(BackendImpl &impl, Record &record, const ResolvedStyle &st
+             !style.resolved_font.primary_src.empty() || style.resolved_font.kind == "imageFont") {
+         auto *font = get_font(impl, record, style);
+         lv_style_set_text_font(&record.style, font);
++        if(record.type==NodeType::Dropdown){
++            // The popup is a separate LVGL object; it does not inherit the
++            // dropdown's resolved font. Keep normal and selected rows readable.
++            if(auto *list=lv_dropdown_get_list(record.object)){
++                lv_obj_set_style_text_font(list,font,LV_PART_MAIN);
++                lv_obj_set_style_text_font(list,font,LV_PART_SELECTED);
++                lv_obj_set_style_text_line_space(list,10,LV_PART_MAIN);
++                lv_obj_set_style_text_line_space(list,10,LV_PART_SELECTED);
++                lv_obj_set_style_max_height(list,240,LV_PART_MAIN);
++                lv_obj_set_style_pad_top(list,8,LV_PART_MAIN);
++                lv_obj_set_style_pad_bottom(list,8,LV_PART_MAIN);
++            }
++            lv_font_glyph_dsc_t glyph{};
++            const bool has_arrow=font && lv_font_get_glyph_dsc(font,&glyph,0xf078,0) && !glyph.is_placeholder;
++            lv_dropdown_set_symbol(record.object,has_arrow?LV_SYMBOL_DOWN:nullptr);
++        }
++
+         BROOKESIA_LOGD(
+             "Applied text font: node='%1%', requested_font_id='%2%', resolved_font_id='%3%', primary_src='%4%', "
+             "font_size=%5%, cache_key='%6%', lv_font=%7%",
+diff --git a/hal/brookesia_hal_adaptor/src/audio/codec_player_impl.cpp b/hal/brookesia_hal_adaptor/src/audio/codec_player_impl.cpp
+index 0b9d900..618a0ee 100644
+--- a/hal/brookesia_hal_adaptor/src/audio/codec_player_impl.cpp
++++ b/hal/brookesia_hal_adaptor/src/audio/codec_player_impl.cpp
+@@ -18,6 +18,9 @@
+ #include "driver/gpio.h"
+ #include "esp_codec_dev.h"
+ 
++extern "C" int brookesia_board_volume_filter(int) __attribute__((weak));
++extern "C" int brookesia_child_cap_volume(int) __attribute__((weak));
++
+ namespace esp_brookesia::hal {
+ 
+ constexpr uint8_t VOLUME_DEFAULT = 75;
+@@ -205,6 +208,10 @@ bool AudioCodecPlayerImpl::set_volume_internal(uint8_t volume, bool force)
+ 
+     // Clamp target volume to [VOLUME_MIN, VOLUME_MAX]
+     auto volume_clamped = std::clamp<uint8_t>(volume, VOLUME_MIN, VOLUME_MAX);
++    if (brookesia_child_cap_volume) {
++        volume_clamped = static_cast<uint8_t>(brookesia_child_cap_volume(volume_clamped));
++    }
++    if(brookesia_board_volume_filter)volume_clamped=static_cast<uint8_t>(brookesia_board_volume_filter(volume_clamped));
+     if (volume_clamped != volume) {
+         BROOKESIA_LOGW(
+             "Target volume(%1%) is out of range [%2%, %3%], clamp to %4%", volume, VOLUME_MIN, VOLUME_MAX, volume_clamped
 diff --git a/hal/brookesia_hal_adaptor/src/display/lcd_touch_impl.cpp b/hal/brookesia_hal_adaptor/src/display/lcd_touch_impl.cpp
-index 307579f..8272a7a 100644
+index 307579f..d6b4db9 100644
 --- a/hal/brookesia_hal_adaptor/src/display/lcd_touch_impl.cpp
 +++ b/hal/brookesia_hal_adaptor/src/display/lcd_touch_impl.cpp
 @@ -4,6 +4,7 @@
@@ -10,7 +689,18 @@ index 307579f..8272a7a 100644
  #include "brookesia/hal_adaptor/macro_configs.h"
  #if !BROOKESIA_HAL_ADAPTOR_DISPLAY_LCD_TOUCH_IMPL_ENABLE_DEBUG_LOG
  #   define BROOKESIA_LOG_DISABLE_DEBUG_TRACE 1
-@@ -45,7 +46,11 @@ display::TouchIface::Info generate_info()
+@@ -17,6 +18,10 @@
+ #include "brookesia/hal_adaptor/board_manager.h"
+ #include "esp_lcd_touch.h"
+ 
++// Optional board orientation hook; transform before LVGL and gesture handling.
++extern "C" bool brookesia_board_filter_touch(bool) __attribute__((weak));
++extern "C" void brookesia_board_touch_transform(int16_t *, int16_t *) __attribute__((weak));
++
+ namespace esp_brookesia::hal {
+ 
+ namespace {
+@@ -45,7 +50,11 @@ display::TouchIface::Info generate_info()
      return display::TouchIface::Info {
          .x_max = config->touch_config.x_max,
          .y_max = config->touch_config.y_max,
@@ -23,7 +713,7 @@ index 307579f..8272a7a 100644
          .operation_mode = GPIO_IS_VALID_GPIO(config->touch_config.int_gpio_num) ?
          display::TouchIface::OperationMode::Interrupt : display::TouchIface::OperationMode::Polling,
          .group_id = DisplayDevice::LCD_GROUP_ID,
-@@ -101,7 +106,7 @@ bool I2cDisplayTouchImpl::read_points(std::vector<display::TouchIface::Point> &p
+@@ -101,9 +110,10 @@ bool I2cDisplayTouchImpl::read_points(std::vector<display::TouchIface::Point> &p
  
      uint8_t count = 0;
      std::array<esp_lcd_touch_point_data_t, CONFIG_ESP_LCD_TOUCH_MAX_POINTS> data;
@@ -31,7 +721,20 @@ index 307579f..8272a7a 100644
 +    esp_err_t get_ret = esp_lcd_touch_get_data(touch_handle, data.data(), &count, CONFIG_ESP_LCD_TOUCH_MAX_POINTS);
      BROOKESIA_CHECK_ESP_ERR_RETURN(get_ret, false, "Failed to get touch data");
  
++    if(brookesia_board_filter_touch && brookesia_board_filter_touch(count>0))count=0;
      points.resize(count);
+     if (count == 0) {
+         BROOKESIA_LOGD("No touch points detected");
+@@ -117,6 +127,9 @@ bool I2cDisplayTouchImpl::read_points(std::vector<display::TouchIface::Point> &p
+             .pressure = static_cast<uint16_t>(data[i].strength),
+             .track_id = data[i].track_id,
+         };
++        if (brookesia_board_touch_transform) {
++            brookesia_board_touch_transform(&points[i].x, &points[i].y);
++        }
+     }
+ 
+     return true;
 diff --git a/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_devices.yaml b/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_devices.yaml
 index de650ea..9b86df6 100755
 --- a/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_devices.yaml
@@ -97,3 +800,158 @@ index 497042e..373b79d 100644
  
      play_state_ = AudioPlayState::Idle;
      pause_requested_ = false;
+diff --git a/service/media/brookesia_service_audio/src/audio_playback_control.cpp b/service/media/brookesia_service_audio/src/audio_playback_control.cpp
+index c8456ca..b5b0c83 100644
+--- a/service/media/brookesia_service_audio/src/audio_playback_control.cpp
++++ b/service/media/brookesia_service_audio/src/audio_playback_control.cpp
+@@ -9,6 +9,9 @@
+ #include <string_view>
+ #include <vector>
+ 
++extern "C" bool brookesia_board_do_not_disturb() __attribute__((weak));
++extern "C" int brookesia_child_cap_volume(int) __attribute__((weak));
++
+ #include "boost/format.hpp"
+ #include "brookesia/hal_interface/interface.hpp"
+ #include "brookesia/service_audio/macro_configs.h"
+@@ -79,7 +82,11 @@ std::expected<void, std::string> AudioPlayback::function_set_volume(double volum
+         return std::unexpected(volume_result.error());
+     }
+ 
+-    const auto target_volume = volume_result.value();
++    // Keep the previous user volume intact while the board is in DND.
++    if(brookesia_board_do_not_disturb && brookesia_board_do_not_disturb())return {};
++
++    const auto target_volume = brookesia_child_cap_volume ?
++                              static_cast<uint8_t>(brookesia_child_cap_volume(volume_result.value())) : volume_result.value();
+     if (target_volume == desired_volume_) {
+         return {};
+     }
+@@ -102,7 +109,8 @@ std::expected<double, std::string> AudioPlayback::function_get_volume()
+         return std::unexpected("Audio player interface is not available");
+     }
+ 
+-    return static_cast<double>(desired_volume_);
++    if(brookesia_board_do_not_disturb && brookesia_board_do_not_disturb())return 0.;
++    return static_cast<double>(brookesia_child_cap_volume ? brookesia_child_cap_volume(desired_volume_) : desired_volume_);
+ }
+ 
+ std::expected<void, std::string> AudioPlayback::function_set_mute(bool enable)
+diff --git a/system/brookesia_system_core/src/app/app.cpp b/system/brookesia_system_core/src/app/app.cpp
+index 39d0bb8..1fc50dc 100644
+--- a/system/brookesia_system_core/src/app/app.cpp
++++ b/system/brookesia_system_core/src/app/app.cpp
+@@ -11,6 +11,8 @@
+ #include <string>
+ #include <utility>
+ 
++extern "C" bool brookesia_child_requires_internal(const char *) __attribute__((weak));
++
+ #include "brookesia/system_core/app/iapp.hpp"
+ #include "brookesia/system_core/app/package.hpp"
+ #include "brookesia/system_core/system/system.hpp"
+@@ -1190,6 +1192,14 @@ std::expected<AppId, std::string> System::install_runtime_app_package(
+         app_root = app_root_result->lexically_normal();
+     }
+ 
++    if (!installed && brookesia_child_requires_internal &&
++            brookesia_child_requires_internal(package_manifest->id.c_str())) {
++        const auto layout = get_storage_layout();
++        if (!layout.internal.available || layout.internal.root_path.empty()) {
++            return std::unexpected("Parent controls require internal storage");
++        }
++        app_root = std::filesystem::path(layout.internal.root_path) / "apps";
++    }
+     auto app_root_result = service::helper::Storage::fs_mkdir(app_root.generic_string(), STORAGE_FS_TIMEOUT_MS);
+     if (!app_root_result) {
+         return std::unexpected(
+diff --git a/system/brookesia_system_core/src/app/manager.cpp b/system/brookesia_system_core/src/app/manager.cpp
+index 4f3953d..46e8542 100644
+--- a/system/brookesia_system_core/src/app/manager.cpp
++++ b/system/brookesia_system_core/src/app/manager.cpp
+@@ -13,6 +13,9 @@
+ #include <string_view>
+ #include <utility>
+ 
++extern "C" bool brookesia_child_visible(const char *) __attribute__((weak));
++extern "C" const char *brookesia_child_launch_error(const char *) __attribute__((weak));
++
+ #include "brookesia/system_core/macro_configs.h"
+ #if !BROOKESIA_SYSTEM_CORE_SYSTEM_ENABLE_DEBUG_LOG
+ #   define BROOKESIA_LOG_DISABLE_DEBUG_TRACE 1
+@@ -605,6 +608,11 @@ std::expected<void, std::string> System::start_app(AppId app_id, const AppStartO
+         return std::unexpected(record_result.error());
+     }
+     auto &record = *record_result.value();
++    if (brookesia_child_launch_error) {
++        if (const char *reason = brookesia_child_launch_error(record.info.manifest.id.c_str())) {
++            return std::unexpected(reason);
++        }
++    }
+     if (record.info.state == AppState::Running) {
+         return {};
+     }
+@@ -1655,6 +1663,9 @@ std::vector<AppInfo> System::list_apps() const
+     apps.reserve(impl_->apps_.size());
+     for (const auto &[_, record] : impl_->apps_) {
+         apps.push_back(record.info);
++        if (brookesia_child_visible && !brookesia_child_visible(record.info.manifest.id.c_str())) {
++            apps.back().manifest.visible = false;
++        }
+     }
+     return apps;
+ }
+diff --git a/system/brookesia_system_core/src/system/resources.cpp b/system/brookesia_system_core/src/system/resources.cpp
+index 4057f51..93b5f30 100644
+--- a/system/brookesia_system_core/src/system/resources.cpp
++++ b/system/brookesia_system_core/src/system/resources.cpp
+@@ -142,6 +142,19 @@ std::optional<std::filesystem::path> find_icon_descriptor_path(
+     }
+ 
+     for (const auto &dir : make_icon_search_dirs(manifest, resource_dir)) {
++        // Standard app packages keep the launcher entry in images/index.json.
++        // Probe that small descriptor directly before the recursive FSList scan:
++        // LittleFS directory enumeration can time out during cold startup.
++        const auto index_path = dir / "index.json";
++        auto index_info = service::helper::Storage::fs_stat(index_path.generic_string(), STORAGE_FS_TIMEOUT_MS);
++        if (index_info && index_info->exists && index_info->type == service::helper::Storage::FileType::File) {
++            auto images = gui::parse_image_asset_set_file(index_path.generic_string());
++            if (images && std::any_of(images->begin(), images->end(), [&manifest](const gui::ImageAsset &image) {
++                    return image.id == manifest.icon_id;
++                })) {
++                return index_path;
++            }
++        }
+         std::vector<std::filesystem::path> descriptor_paths;
+         auto collect_result = collect_image_descriptor_paths(dir, descriptor_paths);
+         if (!collect_result) {
+diff --git a/system/brookesia_system_super/src/shell_display_routing.cpp b/system/brookesia_system_super/src/shell_display_routing.cpp
+index 927e196..7d2ff19 100644
+--- a/system/brookesia_system_super/src/shell_display_routing.cpp
++++ b/system/brookesia_system_super/src/shell_display_routing.cpp
+@@ -14,6 +14,9 @@
+ #include <utility>
+ #include <vector>
+ 
++extern "C" unsigned brookesia_child_revision() __attribute__((weak));
++extern "C" void brookesia_child_foreground(const char *, unsigned) __attribute__((weak));
++
+ #include "brookesia/service_manager/dataflow/registry.hpp"
+ #include "private/shell_app.hpp"
+ #include "private/system_constants.hpp"
+@@ -230,6 +233,15 @@ void ShellApp::clear_display_source_restore_records()
+ 
+ std::expected<void, std::string> ShellApp::set_foreground_app(const std::optional<core::AppInfo> &app)
+ {
++    if (brookesia_child_foreground) {
++        brookesia_child_foreground(app ? app->manifest.id.c_str() : "", app ? app->app_id : 0);
++    }
++    static unsigned policy_revision = 0;
++    if (context_ && brookesia_child_revision && policy_revision != brookesia_child_revision()) {
++        auto result = refresh_launcher();
++        if (!result) return result;
++        policy_revision = brookesia_child_revision();
++    }
+     const bool next_foreground_is_shell = !app.has_value() || (app->app_id == owner_.shell_app_id_);
+     const bool should_reset_gesture = gesture_tracking_ || gesture_exit_armed_ || gesture_exit_triggered_ ||
+                                       gesture_exit_hold_timer_id_ != core::INVALID_TIMER_ID ||

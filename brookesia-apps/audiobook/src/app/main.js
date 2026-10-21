@@ -42,7 +42,7 @@ function action(name){
   }else if(name==='back'||name==='forward'){
     if(playing&&playing.active&&playing.path!=='@tone')call(audio,'Seek',{Seconds:Math.max(0,playing.position+(name==='back'?-30:30))});
   }else if(name==='quieter'||name==='louder'){
-    volume=Math.max(0,Math.min(100,volume+(name==='quieter'?-5:5)));call(brookesia.start_service('AudioPlayback'),'SetVolume',{Volume:volume});text('volume','音量 '+volume+'%');
+    const playback=brookesia.start_service('AudioPlayback');volume=Math.max(0,Math.min(100,volume+(name==='quieter'?-5:5)));call(playback,'SetVolume',{Volume:volume});volume=call(playback,'GetVolume');text('volume','音量 '+volume+'%');
   }
 }
 globalThis.brookesia_app={

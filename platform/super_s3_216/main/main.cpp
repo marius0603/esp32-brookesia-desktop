@@ -12,6 +12,7 @@
 #include "brookesia/system_super.hpp"
 #include "modules/general_services.hpp"
 #include "modules/display.hpp"
+#include "modules/child_mode/child_mode.hpp"
 
 using namespace esp_brookesia;
 
@@ -56,6 +57,7 @@ extern "C" void app_main(void)
                        heap_caps_get_free_size(MALLOC_CAP_INTERNAL), heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
         auto init_result = system_instance->init(std::move(config));
         BROOKESIA_CHECK_FALSE_EXIT(init_result, "System init failed: %1%", init_result.error());
+        child_mode_attach_system(system_instance.get());
         auto start_result = system_instance->start();
         BROOKESIA_CHECK_FALSE_EXIT(start_result, "System start failed: %1%", start_result.error());
 

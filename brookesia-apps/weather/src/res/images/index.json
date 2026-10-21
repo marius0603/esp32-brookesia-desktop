@@ -3,9 +3,9 @@
   "images": [
     {
       "id": "launcher_icon",
-      "src": "launcher_icon.png",
-      "width": 92,
-      "height": 92
+      "src": "/littlefs/themes/cream-handdrawn-v1/weather.png",
+      "width": 96,
+      "height": 96
     },
     {
       "id": "rain_glass",

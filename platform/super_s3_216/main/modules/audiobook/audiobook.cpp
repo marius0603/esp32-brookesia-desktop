@@ -1,4 +1,6 @@
 #include "audiobook.hpp"
+#include "../child_mode/child_mode.hpp"
+#include "../audio_ownership.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cmath>
@@ -69,6 +71,7 @@ private:
     }
     void on_stop() override { stop(); }
     std::expected<void,std::string> play(const std::string &path, double start) {
+        if(!child_mode_audiobook_allowed())return std::unexpected("听书已被家长限制，或已到休息时间");
         if (path!="@tone" && !permitted(path)) return std::unexpected("Only MP3/WAV under /sdcard/audiobooks is supported");
         if (!std::isfinite(start) || start<0 || start>86400) return std::unexpected("Invalid playback position");
         if (path!="@tone") {
@@ -76,12 +79,13 @@ private:
             if (stat(path.c_str(),&st)!=0 || !S_ISREG(st.st_mode)) return std::unexpected("Audio file is missing; check SD card");
         }
         auto stopped=stop(); if(!stopped) return stopped;
+        if(!local_audio::claim(local_audio::Audiobook))return std::unexpected("Voice assistant is using audio; close it first");
         {std::lock_guard<std::mutex> lock(mutex_);path_=path;state_="Loading";error_.clear();}
         position_=0;duration_=0;bytes_=0;cancel_=false;paused_=false;seek_=static_cast<int32_t>(start);live_=true;
         TaskHandle_t task=nullptr;
         if (xTaskCreatePinnedToCore([](void *ctx){static_cast<Audiobook *>(ctx)->run();vTaskDelete(nullptr);},
               "audiobook",12288,this,4,&task,0)!=pdPASS) {
-            live_=false;state("Error","Not enough internal RAM for audio task");return std::unexpected("Audio task allocation failed");
+            local_audio::release(local_audio::Audiobook);live_=false;state("Error","Not enough internal RAM for audio task");return std::unexpected("Audio task allocation failed");
         }
         return {};
     }
@@ -161,6 +165,7 @@ private:
             if(codec->is_pa_on_off_supported())codec->set_pa_on_off(true);
             state("Playing");
             while(!cancel_) {
+                if(!child_mode_audiobook_allowed())break;
                 int32_t requested=seek_.exchange(-1);
                 if(requested>=0){
                     uint64_t target=static_cast<uint64_t>(requested)*rate;
@@ -189,7 +194,7 @@ private:
         if(wavopen)drwav_uninit(wav);
         audio_free(mp3,nullptr);audio_free(wav,nullptr);audio_free(pcm,nullptr);
         if(!failed)state(eof?"Ended":"Stopped");
-        codec.reset();live_=false;
+        codec.reset();local_audio::release(local_audio::Audiobook);live_=false;
     }
 };
 }
