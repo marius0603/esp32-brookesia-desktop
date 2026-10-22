@@ -26,13 +26,19 @@
 # 位于 codex-quota-monitor，先停止占用串口的额度同步
 .\stop.ps1
 .venv\Scripts\python.exe tools/deploy_deep_sleep_settings.py ..
+# 必须重启开发板再打开设置；仅关闭/重开设置不能清除开机预加载的 DOM。
 .venv\Scripts\python.exe tools/verify_deep_sleep.py
 ```
 
 部署只更新 `display.json`，先把原文件备份到 SD，再以校验过的 USB 传输替换。
+Settings 启用了开机 DOM 预加载，因此部署后必须先重启设备，新入口才会显示；关闭应用不会清除这份缓存。
 `DeviceModes.TestDeepSleep` 使用相同流程，但额外提供 20 秒恢复计时器；测试期间不要触摸屏幕或按唤醒键。测试脚本核对真实定时唤醒原因、RTC 入睡计数和原有设置。
 `DeviceModes.DeepSleepNow` 和屏幕按钮不启用计时器；`GetState.deep_sleep` 可读取入睡请求、最近唤醒原因与外部唤醒 GPIO 位图。
 测试结束并确认设备已唤醒后，恢复 `.\start.ps1`。
+
+2026-10-22 实机确认：重启加载新版设置后入口可见，用户通过屏幕确认进入深睡并轻触唤醒。
+读取到 `wake_cause=3`（EXT1）、`wake_pins=2048`（GPIO11），网络恢复为 `Connected`，10 分钟自动息屏仍开启。
+这是深睡后正常重新启动桌面，不保留 RAM 中的应用运行现场。
 
 硬件引脚参见[微雪板卡资料](https://docs.waveshare.net/ESP32-S3-Touch-AMOLED-2.16/)，
 深睡及 EXT1 唤醒行为参见[ESP-IDF 6.0.2 文档](https://docs.espressif.com/projects/esp-idf/en/v6.0.2/esp32s3/api-reference/system/sleep_modes.html)。

@@ -18,6 +18,7 @@ def main():
     with WallpaperClient('COM5',timeout=25) as c:
         c.hello()
         def call(s,f,p=None):return c.call(s,f,p or {})['result']
+        assert 'deep_sleep' in call('DeviceModes','GetState'), 'Flash s3.18 or later before deploying this entry'
         apps=call('SystemCore','ListApps')
         app=next(a for a in apps if a['manifest']['id']=='brookesia.general.settings')
         call('SystemCore','RequestCloseApp',{'AppId':app['app_id']});time.sleep(1)
@@ -28,8 +29,9 @@ def main():
         c.transfer('put',source,'deep-sleep-display.json',True)
         call('Storage','FSRename',{'From':'/littlefs/usb/deep-sleep-display.json','To':target})
         assert call('Storage','FSStat',{'Path':target})['size']==source.stat().st_size
-        print('Settings display updated; original backed up to SD',flush=True)
-        report={'backup':backup,'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
+        print('Settings display updated; original backed up to SD. Restart the board before opening Settings: its DOM is preloaded at boot.',flush=True)
+        report={'backup':backup,'sha256':hashlib.sha256(source.read_bytes()).hexdigest(),
+                'restart_required':True,'reason':'Native Settings DOM is preloaded at boot'}
         (Path(__file__).resolve().parents[1]/'runtime/deep-sleep-deployment.json').write_text(json.dumps(report,indent=2))
 
 
