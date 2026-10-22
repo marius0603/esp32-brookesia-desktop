@@ -1,5 +1,17 @@
+diff --git a/app/brookesia_app_settings/include/brookesia/app_settings/settings_app.hpp b/app/brookesia_app_settings/include/brookesia/app_settings/settings_app.hpp
+index 6d62e2f..fe1ee3c 100644
+--- a/app/brookesia_app_settings/include/brookesia/app_settings/settings_app.hpp
++++ b/app/brookesia_app_settings/include/brookesia/app_settings/settings_app.hpp
+@@ -233,6 +233,7 @@ private:
+         Language,
+         Theme,
+         Failure,
++        DeepSleep,
+     };
+     std::expected<void, std::string> show_restart_prompt(
+         system::core::AppContext &context,
 diff --git a/app/brookesia_app_settings/package/res/screens/display.json b/app/brookesia_app_settings/package/res/screens/display.json
-index 30a27ed..b8a2ad6 100644
+index 30a27ed..f8a5b28 100644
 --- a/app/brookesia_app_settings/package/res/screens/display.json
 +++ b/app/brookesia_app_settings/package/res/screens/display.json
 @@ -1,193 +1 @@
@@ -196,7 +208,7 @@ index 30a27ed..b8a2ad6 100644
 -        }
 -    ]
 -}
-+{"type":"viewScreen","id":"display","mountMode":"dynamic","commonProps":{"scrollable":false},"styleRefs":["app.page"],"children":[{"type":"container","id":"page","commonProps":{"scrollable":true},"layout":{"type":"flex","flexFlow":"column","gap":"${constant.settings.layout.pageGap}"},"placement":{"mode":"absolute","x":"${constant.settings.layout.pageX}","y":"${constant.settings.layout.pageY}","width":"${constant.settings.layout.pageWidth}","height":"${constant.settings.layout.pageHeight}"},"children":[{"type":"templateRef","id":"auto_rotation_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_rotation","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动旋转"}},"text/subtitle":{"labelProps":{"text":"关闭后锁定当前方向"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_rotation"}]}}}]}},{"type":"templateRef","id":"device_modes_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_sleep","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动息屏"}},"text/subtitle":{"labelProps":{"text":"无操作 10 分钟后息屏，轻触唤醒"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_sleep"}]}}}]}},{"type":"container","id":"theme_modes","layout":{"type":"flex","flexFlow":"rowWrap","gap":"${constant.settings.layout.cardGap}","mainAlign":"start","crossAlign":"start"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"},"children":[{"type":"templateRef","id":"light_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.light"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.base}","radius":"18dp"}},"label":{"labelProps":{"text":"Light mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}},{"type":"templateRef","id":"dark_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.dark"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.overlay}","radius":"18dp"}},"label":{"labelProps":{"text":"Dark mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}}]},{"type":"label","id":"brightness_caption","styleRefs":["app.caption"],"labelProps":{"text":"Brightness level"},"placement":{"mode":"flow"},"bindings":{"labelProps.text":"labelProps.text"}},{"type":"templateRef","id":"brightness_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"${constant.settings.layout.cardGap}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"brightness_row","templateId":"slider_row","overrides":{"title":{"labelProps":{"text":"Screen brightness"}},"slider":{"events":[{"type":"valueChanged","action":"settings.display.brightness"}],"rangeProps":{"min":0,"max":100,"value":72}}}}]}}]}]}
++{"type":"viewScreen","id":"display","mountMode":"dynamic","commonProps":{"scrollable":false},"styleRefs":["app.page"],"children":[{"type":"container","id":"page","commonProps":{"scrollable":true},"layout":{"type":"flex","flexFlow":"column","gap":"${constant.settings.layout.pageGap}"},"placement":{"mode":"absolute","x":"${constant.settings.layout.pageX}","y":"${constant.settings.layout.pageY}","width":"${constant.settings.layout.pageWidth}","height":"${constant.settings.layout.pageHeight}"},"children":[{"type":"templateRef","id":"auto_rotation_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_rotation","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动旋转"}},"text/subtitle":{"labelProps":{"text":"关闭后锁定当前方向"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_rotation"}]}}}]}},{"type":"templateRef","id":"device_modes_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_sleep","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动息屏"}},"text/subtitle":{"labelProps":{"text":"无操作 10 分钟后息屏，轻触唤醒"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_sleep"}]}}}]}},{"type":"templateRef","id":"deep_sleep_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"deep_sleep","templateId":"setting_row","overrides":{".":{"commonProps":{"clickable":true},"events":[{"type":"clicked","action":"settings.display.deep_sleep"}]},"title":{"labelProps":{"text":"深度睡眠"}},"value":{"labelProps":{"text":""}}}},{"type":"label","id":"hint","labelProps":{"text":"停止联网与音频，轻触屏幕唤醒"},"styleRefs":["app.caption"],"placement":{"mode":"flow","width":"match","height":"wrap"}}]}},{"type":"container","id":"theme_modes","layout":{"type":"flex","flexFlow":"rowWrap","gap":"${constant.settings.layout.cardGap}","mainAlign":"start","crossAlign":"start"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"},"children":[{"type":"templateRef","id":"light_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.light"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.base}","radius":"18dp"}},"label":{"labelProps":{"text":"Light mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}},{"type":"templateRef","id":"dark_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.dark"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.overlay}","radius":"18dp"}},"label":{"labelProps":{"text":"Dark mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}}]},{"type":"label","id":"brightness_caption","styleRefs":["app.caption"],"labelProps":{"text":"Brightness level"},"placement":{"mode":"flow"},"bindings":{"labelProps.text":"labelProps.text"}},{"type":"templateRef","id":"brightness_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"${constant.settings.layout.cardGap}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"brightness_row","templateId":"slider_row","overrides":{"title":{"labelProps":{"text":"Screen brightness"}},"slider":{"events":[{"type":"valueChanged","action":"settings.display.brightness"}],"rangeProps":{"min":0,"max":100,"value":72}}}}]}}]}]}
 diff --git a/app/brookesia_app_settings/package/res/screens/sound.json b/app/brookesia_app_settings/package/res/screens/sound.json
 index 4792f20..5252b93 100644
 --- a/app/brookesia_app_settings/package/res/screens/sound.json
@@ -377,7 +389,7 @@ index 4792f20..5252b93 100644
 -}
 +{"type":"viewScreen","id":"sound","mountMode":"dynamic","commonProps":{"scrollable":false},"styleRefs":["app.page"],"children":[{"type":"container","id":"page","commonProps":{"scrollable":true},"layout":{"type":"flex","flexFlow":"column","gap":"${constant.settings.layout.pageGap}"},"placement":{"mode":"absolute","x":"${constant.settings.layout.pageX}","y":"${constant.settings.layout.pageY}","width":"${constant.settings.layout.pageWidth}","height":"${constant.settings.layout.pageHeight}"},"children":[{"type":"templateRef","id":"volume_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"10dp"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"media_volume_row","templateId":"slider_row","overrides":{"title":{"labelProps":{"text":"Volume"}},"slider":{"events":[{"type":"valueChanged","action":"settings.sound.volume"}],"rangeProps":{"min":0,"max":100,"value":42}}}}]}},{"type":"label","id":"options_caption","styleRefs":["app.caption"],"labelProps":{"text":"Sound options"},"placement":{"mode":"flow"},"bindings":{"labelProps.text":"labelProps.text"}},{"type":"templateRef","id":"silent_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"10dp"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"silent_mode","templateId":"switch_row","overrides":{".":{"placement":{"mode":"flow","width":"match","height":"${constant.settings.layout.rowHeight}","alignSelf":"stretch"}},"text":{"layout":{"type":"flex","flexFlow":"column","mainAlign":"center","crossAlign":"start","gap":"0dp"}},"text/title":{"labelProps":{"text":"Mute"}},"text/subtitle":{"commonProps":{"hidden":true},"labelProps":{"text":""}},"toggle":{"events":[{"type":"valueChanged","action":"settings.sound.mute"}],"toggleProps":{"checked":true}}}}]}},{"type":"templateRef","id":"quiet_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"},"layout":{"type":"flex","flexFlow":"column","gap":"12dp"}}},"slots":{"content":[{"type":"templateRef","id":"quiet_enabled","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"定时勿扰"}},"text/subtitle":{"labelProps":{"text":"24 小时制 · 小时 : 分钟"}},"toggle":{"toggleProps":{"checked":false},"events":[{"type":"valueChanged","action":"settings.sound.quiet_enabled"}]}}},{"type":"container","id":"start","commonProps":{"scrollable":false},"layout":{"type":"flex","flexFlow":"row","gap":"8dp","crossAlign":"center"},"placement":{"mode":"flow","width":"match","height":"56dp"},"style":{"padding":0},"children":[{"type":"label","id":"title","styleRefs":["app.cardTitle"],"labelProps":{"text":"开始时间"},"placement":{"mode":"flow","width":"104dp","height":"wrap"}},{"type":"dropdown","id":"hour","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"],"selectedIndex":22},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_start_hour"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}},{"type":"label","id":"colon","labelProps":{"text":":"},"styleRefs":["app.cardTitle"],"style":{"fontSize":24},"placement":{"mode":"flow","width":"12dp","height":"wrap"}},{"type":"dropdown","id":"minute","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59"],"selectedIndex":0},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_start_minute"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}}]},{"type":"container","id":"end","commonProps":{"scrollable":false},"layout":{"type":"flex","flexFlow":"row","gap":"8dp","crossAlign":"center"},"placement":{"mode":"flow","width":"match","height":"56dp"},"style":{"padding":0},"children":[{"type":"label","id":"title","styleRefs":["app.cardTitle"],"labelProps":{"text":"结束时间"},"placement":{"mode":"flow","width":"104dp","height":"wrap"}},{"type":"dropdown","id":"hour","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"],"selectedIndex":7},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_end_hour"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}},{"type":"label","id":"colon","labelProps":{"text":":"},"styleRefs":["app.cardTitle"],"style":{"fontSize":24},"placement":{"mode":"flow","width":"12dp","height":"wrap"}},{"type":"dropdown","id":"minute","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59"],"selectedIndex":0},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_end_minute"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}}]},{"type":"label","id":"status","styleRefs":["app.caption"],"labelProps":{"text":"北京时间 · 起止相同为全天静音"},"bindings":{"labelProps.text":"text"},"placement":{"mode":"flow","width":"match","height":"wrap"}}]}}]}]}
 diff --git a/app/brookesia_app_settings/src/app/lifecycle.ipp b/app/brookesia_app_settings/src/app/lifecycle.ipp
-index dd90da0..70dbd7b 100644
+index dd90da0..9a8deef 100644
 --- a/app/brookesia_app_settings/src/app/lifecycle.ipp
 +++ b/app/brookesia_app_settings/src/app/lifecycle.ipp
 @@ -90,6 +90,7 @@ std::expected<void, std::string> SettingsApp::on_start(system::core::AppContext
@@ -399,12 +411,20 @@ index dd90da0..70dbd7b 100644
      if (name == WIFI_SCAN_RETRY_TIMER_NAME) {
          if (timer_id != pending_wifi_scan_retry_timer_id_) {
              BROOKESIA_LOGW(
-@@ -630,7 +635,41 @@ std::expected<void, std::string> SettingsApp::subscribe_actions(system::core::Ap
+@@ -630,7 +635,49 @@ std::expected<void, std::string> SettingsApp::subscribe_actions(system::core::Ap
      }
  
      std::vector<system::core::GuiActionHandlerSubscription> subscriptions;
 -    subscriptions.reserve(19);
 +    subscriptions.reserve(20);
++    subscriptions.push_back({.action="settings.display.deep_sleep",.handler=[this](const gui::Event &){
++        if(!context_)return;
++        restart_prompt_kind_=RestartPromptKind::DeepSleep;
++        ensure_message_dialog(*context_,"进入深度睡眠？网络与音频将停止。轻触屏幕或按自定义键唤醒，唤醒后重新启动。",
++            system::core::MessageDialogIcon::Question,0,{
++                {.text="进入睡眠",.role=system::core::MessageDialogButtonRole::Accept},
++                {.text="取消",.role=system::core::MessageDialogButtonRole::Reject}});
++    }});
 +    subscriptions.push_back({.action="settings.display.auto_sleep",.handler=[this](const gui::Event &event){
 +        auto checked=event.get_bool("checked");
 +        if(context_ && checked && brookesia_board_set_auto_sleep){brookesia_board_set_auto_sleep(*checked);(void)refresh_display_state(*context_);}
@@ -442,14 +462,43 @@ index dd90da0..70dbd7b 100644
      subscriptions.push_back({
          .action = ACTION_DEBUG_DEVICE_NAME_CLICK,
          .handler = [this](const gui::Event &) {
+diff --git a/app/brookesia_app_settings/src/i18n/language_theme.ipp b/app/brookesia_app_settings/src/i18n/language_theme.ipp
+index eeaabcc..d02a0d6 100644
+--- a/app/brookesia_app_settings/src/i18n/language_theme.ipp
++++ b/app/brookesia_app_settings/src/i18n/language_theme.ipp
+@@ -204,6 +204,9 @@ void SettingsApp::handle_restart_dialog_result(
+     }
+     if (result.reason != system::core::MessageDialogCloseReason::Button || result.button_index != 0) {
+         restart_prompt_kind_ = RestartPromptKind::None;
++        if (kind == RestartPromptKind::DeepSleep) {
++            return;
++        }
+         if (kind == RestartPromptKind::Language) {
+             (void)refresh_language_state(context);
+         } else {
+@@ -211,6 +214,13 @@ void SettingsApp::handle_restart_dialog_result(
+         }
+         return;
+     }
++    if (kind == RestartPromptKind::DeepSleep) {
++        restart_prompt_kind_=RestartPromptKind::None;
++        if (!brookesia_board_request_deep_sleep || brookesia_board_request_deep_sleep(0)!=0) {
++            ensure_message_dialog(context,"无法进入深度睡眠，请稍后重试。",system::core::MessageDialogIcon::Warning,3000,{});
++        }
++        return;
++    }
+     if (restart_in_progress_) {
+         return;
+     }
 diff --git a/app/brookesia_app_settings/src/private/settings_app_internal.hpp b/app/brookesia_app_settings/src/private/settings_app_internal.hpp
-index 8d0b14e..bc21a67 100644
+index 8d0b14e..a211a77 100644
 --- a/app/brookesia_app_settings/src/private/settings_app_internal.hpp
 +++ b/app/brookesia_app_settings/src/private/settings_app_internal.hpp
-@@ -5,6 +5,22 @@
+@@ -5,6 +5,23 @@
   */
  #pragma once
  
++extern "C" int brookesia_board_request_deep_sleep(unsigned) __attribute__((weak));
 +extern "C" bool brookesia_board_do_not_disturb() __attribute__((weak));
 +extern "C" bool brookesia_board_auto_sleep_enabled() __attribute__((weak));
 +extern "C" void brookesia_board_set_do_not_disturb(bool) __attribute__((weak));

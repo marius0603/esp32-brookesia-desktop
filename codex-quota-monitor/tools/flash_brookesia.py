@@ -30,7 +30,7 @@ def main():
     if factory['mac']!=prior['mac']: raise SystemExit('Backups belong to different boards')
     build=PROJECT/'build'
     desc=json.loads((build/'project_description.json').read_text())
-    if desc['project_name']!='brookesia_s3_216' or desc['project_version'] not in {'0.8.3-s3.1','0.8.3-s3.2','0.8.3-s3.3','0.8.3-s3.4','0.8.3-s3.5','0.8.3-s3.6','0.8.3-s3.7','0.8.3-s3.8','0.8.3-s3.9','0.8.3-s3.10','0.8.3-s3.11','0.8.3-s3.12','0.8.3-s3.13','0.8.3-s3.14','0.8.3-s3.15','0.8.3-s3.16','0.8.3-s3.17'}:
+    if desc['project_name']!='brookesia_s3_216' or desc['project_version'] not in {'0.8.3-s3.1','0.8.3-s3.2','0.8.3-s3.3','0.8.3-s3.4','0.8.3-s3.5','0.8.3-s3.6','0.8.3-s3.7','0.8.3-s3.8','0.8.3-s3.9','0.8.3-s3.10','0.8.3-s3.11','0.8.3-s3.12','0.8.3-s3.13','0.8.3-s3.14','0.8.3-s3.15','0.8.3-s3.16','0.8.3-s3.17','0.8.3-s3.18'}:
         raise SystemExit('Unexpected build')
     config=json.loads((build/'flasher_args.json').read_text())
     if not any('littlefs_data' in filename for filename in config['flash_files'].values()):

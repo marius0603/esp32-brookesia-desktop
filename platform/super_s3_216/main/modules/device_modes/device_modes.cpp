@@ -14,6 +14,7 @@
 #include "nvs.h"
 #include "lvgl.h"
 #include "../display.hpp"
+#include "deep_sleep.hpp"
 
 using namespace esp_brookesia;
 using namespace esp_brookesia::service;
@@ -39,7 +40,7 @@ private:
         ready=true;return true;
     }
     boost::json::object state() {
-        return {{"auto_sleep_enabled",automatic.load()},{"timeout_seconds",600},
+        return {{"deep_sleep",board_deep_sleep_state()},{"auto_sleep_enabled",automatic.load()},{"timeout_seconds",600},
                 {"screen_asleep",asleep.load()},{"do_not_disturb",dnd.load()},
                 {"manual_do_not_disturb",manual_dnd.load()},{"quiet_hours_enabled",quiet_enabled.load()},
                 {"quiet_start_minute",quiet_start.load()},{"quiet_end_minute",quiet_end.load()},
@@ -105,7 +106,9 @@ private:
                 {"SetDoNotDisturb","Mute speaker while retaining its volume",{{"Enabled","Enabled",FunctionValueType::Boolean}}},
                 {"SetQuietHours","Set daily quiet hours in Beijing time",{{"Enabled","Schedule enabled",FunctionValueType::Boolean},{"StartMinute","0-1439 inclusive",FunctionValueType::Number},{"EndMinute","0-1439 exclusive; equal means all day",FunctionValueType::Number}}},
                 {"SleepNow","Turn screen off without stopping apps",{}},
-                {"Wake","Wake screen for maintenance",{}}};
+                {"Wake","Wake screen for maintenance",{}},
+                {"DeepSleepNow","Stop apps and enter deep sleep; touch/key wakes",{}},
+                {"TestDeepSleep","Deep sleep with a 20 second recovery timer",{}}};
     }
     FunctionHandlerList get_function_handlers() override {
         return {{"ProfileRefresh",[](FunctionParameterMap &&p)->FunctionResult{
@@ -121,7 +124,9 @@ private:
                     if(!std::isfinite(a)||!std::isfinite(b)||a<0||a>=1440||b<0||b>=1440||std::floor(a)!=a||std::floor(b)!=b)return {.success=false,.error_message="Times must be whole minutes from 0 to 1439"};
                     brookesia_board_set_quiet_hours(std::get<bool>(p.at("Enabled")),int(a),int(b));return {.success=true};}},
                 {"SleepNow",[](FunctionParameterMap &&)->FunctionResult{sleep_requested=true;return {.success=true};}},
-                {"Wake",[](FunctionParameterMap &&)->FunctionResult{wake_requested=true;return {.success=true};}}};
+                {"Wake",[](FunctionParameterMap &&)->FunctionResult{wake_requested=true;return {.success=true};}},
+                {"DeepSleepNow",[](FunctionParameterMap &&)->FunctionResult{const auto e=brookesia_board_request_deep_sleep(0);return {.success=e==ESP_OK,.error_message=e==ESP_OK?"":esp_err_to_name(e)};}},
+                {"TestDeepSleep",[](FunctionParameterMap &&)->FunctionResult{const auto e=brookesia_board_request_deep_sleep(20);return {.success=e==ESP_OK,.error_message=e==ESP_OK?"":esp_err_to_name(e)};}}};
     }
 };
 }
@@ -145,6 +150,7 @@ extern "C" int brookesia_board_volume_filter(int volume){if(!dnd)desired_volume=
 // HAL calls this even on release. Consume the entire first contact so waking
 // cannot also click an app, submit a PIN or start microphone recording.
 extern "C" bool brookesia_board_filter_touch(bool pressed){
+    if(brookesia_board_deep_sleep_pending())return true;
     if(!pressed){consume_touch=false;return false;}
     last_touch_ms=now_ms();
     if(asleep){wake_requested=true;if(!consume_touch.exchange(true))++swallowed;}

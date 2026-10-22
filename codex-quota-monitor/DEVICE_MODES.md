@@ -9,6 +9,34 @@
 息屏保留应用、Wi-Fi 和音频播放；天气动画停止绘制，唤醒后最多 5 秒恢复。
 这是显示息屏，不是关机或深度睡眠，后台任务仍运行。
 
+## 手动深度睡眠（s3.18 起）
+
+入口：**设置 → 显示 → 深度睡眠**。确认提示后才开始，不替换 10 分钟自动息屏。
+先关闭除桌面外的应用，停止听书/语音连接，检查设置保存，再关闭屏幕与 Wi-Fi，进入 ESP32-S3 Deep-sleep。
+准备期间暂不接收触摸，也不允许启动新的音频任务；准备失败会取消深睡，恢复显示并在诊断状态记录错误。
+
+唤醒源配置为触摸中断 GPIO11 和自定义按键 GPIO18 的低电平。
+中间 PWR 键仍由电源管理芯片控制，保持原有开关机行为；不把它当作直接连接 MCU 的短按唤醒键。
+唤醒会重新启动桌面与网络，保留已保存的设置和小智绑定，不恢复应用在 RAM 中的运行现场。
+触摸芯片、PMU 以及部分外设继续供电；这是主控深睡，不代表整板断电，整机休眠电流尚未测量。
+
+需要先烧录新版应用分区，再增量更新已有 Settings 的显示资源：
+
+```powershell
+# 位于 codex-quota-monitor，先停止占用串口的额度同步
+.\stop.ps1
+.venv\Scripts\python.exe tools/deploy_deep_sleep_settings.py ..
+.venv\Scripts\python.exe tools/verify_deep_sleep.py
+```
+
+部署只更新 `display.json`，先把原文件备份到 SD，再以校验过的 USB 传输替换。
+`DeviceModes.TestDeepSleep` 使用相同流程，但额外提供 20 秒恢复计时器；测试期间不要触摸屏幕或按唤醒键。测试脚本核对真实定时唤醒原因、RTC 入睡计数和原有设置。
+`DeviceModes.DeepSleepNow` 和屏幕按钮不启用计时器；`GetState.deep_sleep` 可读取入睡请求、最近唤醒原因与外部唤醒 GPIO 位图。
+测试结束并确认设备已唤醒后，恢复 `.\start.ps1`。
+
+硬件引脚参见[微雪板卡资料](https://docs.waveshare.net/ESP32-S3-Touch-AMOLED-2.16/)，
+深睡及 EXT1 唤醒行为参见[ESP-IDF 6.0.2 文档](https://docs.espressif.com/projects/esp-idf/en/v6.0.2/esp32s3/api-reference/system/sleep_modes.html)。
+
 ## 定时勿扰
 
 入口：**设置 → 声音 → 定时勿扰**。显示设置中不再提供勿扰开关。

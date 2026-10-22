@@ -13,11 +13,13 @@
 #include "modules/general_services.hpp"
 #include "modules/display.hpp"
 #include "modules/child_mode/child_mode.hpp"
+#include "modules/device_modes/deep_sleep.hpp"
 
 using namespace esp_brookesia;
 
 extern "C" void app_main(void)
 {
+    board_deep_sleep_boot();
     BROOKESIA_LOGI("\n\n=== System Example ===\n");
 
     auto setup_task = []() {
