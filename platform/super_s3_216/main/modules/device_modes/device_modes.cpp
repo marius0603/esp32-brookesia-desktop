@@ -13,6 +13,7 @@
 #include "esp_timer.h"
 #include "nvs.h"
 #include "lvgl.h"
+#include "../display.hpp"
 
 using namespace esp_brookesia;
 using namespace esp_brookesia::service;
@@ -97,7 +98,8 @@ private:
         esp_lv_adapter_unlock();return {.success=true,.data=FunctionValue(boost::json::object{{"layers",std::move(layers)}})};
     }
     std::vector<FunctionSchema> get_function_schemas() override {
-        return {{"GetWeatherLayers","Read visible native layer opacity for weather diagnostics",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Visible surfaces"}},
+        return {{"ProfileRefresh","Measure native full-screen refresh",{{"Force","Force one whole-screen redraw",FunctionValueType::Boolean}},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Refresh timing"}},
+                {"GetWeatherLayers","Read visible native layer opacity for weather diagnostics",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Visible surfaces"}},
                 {"GetState","Get screen and sound mode state",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Modes"}},
                 {"SetAutoSleep","Enable ten minute inactivity timeout",{{"Enabled","Enabled",FunctionValueType::Boolean}}},
                 {"SetDoNotDisturb","Mute speaker while retaining its volume",{{"Enabled","Enabled",FunctionValueType::Boolean}}},
@@ -106,7 +108,11 @@ private:
                 {"Wake","Wake screen for maintenance",{}}};
     }
     FunctionHandlerList get_function_handlers() override {
-        return {{"GetWeatherLayers",[this](FunctionParameterMap &&)->FunctionResult{return visual_layers();}},
+        return {{"ProfileRefresh",[](FunctionParameterMap &&p)->FunctionResult{
+                    if(esp_lv_adapter_lock(1000)!=ESP_OK)return {.success=false,.error_message="GUI busy"};
+                    auto result=board_display_profile(std::get<bool>(p.at("Force")));
+                    esp_lv_adapter_unlock();return {.success=true,.data=FunctionValue(std::move(result))};}},
+                {"GetWeatherLayers",[this](FunctionParameterMap &&)->FunctionResult{return visual_layers();}},
                 {"GetState",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(state())};}},
                 {"SetAutoSleep",[](FunctionParameterMap &&p)->FunctionResult{brookesia_board_set_auto_sleep(std::get<bool>(p.at("Enabled")));return {.success=true};}},
                 {"SetDoNotDisturb",[](FunctionParameterMap &&p)->FunctionResult{brookesia_board_set_do_not_disturb(std::get<bool>(p.at("Enabled")));return {.success=true};}},

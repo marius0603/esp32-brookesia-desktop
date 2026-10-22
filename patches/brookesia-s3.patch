@@ -562,6 +562,30 @@ index 5957887..ddcea23 100644
          auto resolved = backend->resolve_image_resource(resolved_resource);
          if (!resolved) {
              return std::unexpected(
+diff --git a/gui/brookesia_gui_lvgl/include/brookesia/gui_lvgl/display_source.hpp b/gui/brookesia_gui_lvgl/include/brookesia/gui_lvgl/display_source.hpp
+index 2a677f8..e37bd3d 100644
+--- a/gui/brookesia_gui_lvgl/include/brookesia/gui_lvgl/display_source.hpp
++++ b/gui/brookesia_gui_lvgl/include/brookesia/gui_lvgl/display_source.hpp
+@@ -42,4 +42,5 @@ struct DisplaySourceConfig {
+     bool stack_in_psram = (BROOKESIA_GUI_LVGL_DISPLAY_SOURCE_DEFAULT_TASK_STACK_IN_PSRAM != 0);
+     uint16_t buffer_height = static_cast<uint16_t>(BROOKESIA_GUI_LVGL_DISPLAY_SOURCE_DEFAULT_BUFFER_HEIGHT);
+     bool require_double_buffer = (BROOKESIA_GUI_LVGL_DISPLAY_SOURCE_DEFAULT_REQUIRE_DOUBLE_BUFFER != 0);
++    bool buffer_in_psram = false;
+ };
+diff --git a/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp b/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp
+index 95fadf5..03d90b3 100644
+--- a/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp
++++ b/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp
+@@ -406,6 +406,9 @@ bool DisplaySourceImpl::start_lvgl_adapter(const DisplaySourceConfig &config)
+     }
+     display_config.profile.require_double_buffer = config.require_double_buffer;
+     display_config.profile.buffer_height = config.buffer_height;
++    if (panel_specific.bus_type == hal::display::PanelIface::BusType::Generic) {
++        display_config.profile.use_psram = config.buffer_in_psram;
++    }
+ #pragma GCC diagnostic pop
+     BROOKESIA_LOGI(
+         "LVGL Display source uses bus %1%, frame buffers=%2%, tear mode=%3%",
 diff --git a/gui/brookesia_gui_lvgl/src/props.cpp b/gui/brookesia_gui_lvgl/src/props.cpp
 index c7dd23f..e2be1bc 100644
 --- a/gui/brookesia_gui_lvgl/src/props.cpp

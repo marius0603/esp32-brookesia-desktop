@@ -18,5 +18,6 @@
   "packages/firmware/brookesia-0.8.3-s3.15-app.bin": "0f38ac34082c24a29b8e235de6c2c5aae155608d03743d8e3b59236ad93a2a26",
   "packages/apps/local.weather.debug.0.2.5.bpk": "964c3c309398936010266cb2c59e41e0e8ce5da7f753f562858617dc38dd6f06",
   "packages/firmware/brookesia-0.8.3-s3.16-app.bin": "49429e19ca4da2d382b47438bb0665f164ee7fd4eb7cd9d7efc87ee544d54589",
-  "packages/apps/local.weather.debug.0.2.6.bpk": "edde59ee5da4b5f07911e2a2d789494e0e1b6c73315549723f5b4ac928d1b9b4"
+  "packages/apps/local.weather.debug.0.2.6.bpk": "edde59ee5da4b5f07911e2a2d789494e0e1b6c73315549723f5b4ac928d1b9b4",
+  "packages/firmware/brookesia-0.8.3-s3.17-app.bin": "233a029fa8f47f02ff391e49dc7e597d00fe9b3bab3144fb166dc2325ced5e07"
 }

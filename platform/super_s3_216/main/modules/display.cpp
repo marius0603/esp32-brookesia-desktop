@@ -41,9 +41,35 @@ struct RenderStats {
     uint32_t count = 0;
 };
 RenderStats render_stats;
+struct RefreshStats {
+    int64_t started = 0, last_us = 0, max_us = 0, wait_started = 0, wait_us = 0;
+    uint32_t count = 0, strips = 0, last_strips = 0;
+} refresh_stats;
 
 void render_event(lv_event_t *event)
 {
+    const auto code = lv_event_get_code(event);
+    const auto now = esp_timer_get_time();
+    if (code == LV_EVENT_REFR_START) {
+        refresh_stats.started = now;
+        refresh_stats.strips = 0;
+        refresh_stats.wait_us = 0;
+    } else if (code == LV_EVENT_REFR_READY && refresh_stats.started) {
+        if (refresh_stats.strips) {
+            refresh_stats.last_us = now-refresh_stats.started;
+            refresh_stats.max_us = std::max(refresh_stats.max_us, refresh_stats.last_us);
+            refresh_stats.last_strips = refresh_stats.strips;
+            ++refresh_stats.count;
+        }
+        refresh_stats.started = 0;
+    } else if (code == LV_EVENT_FLUSH_START) {
+        ++refresh_stats.strips;
+    } else if (code == LV_EVENT_FLUSH_WAIT_START) {
+        refresh_stats.wait_started = now;
+    } else if (code == LV_EVENT_FLUSH_WAIT_FINISH && refresh_stats.wait_started) {
+        refresh_stats.wait_us += now-refresh_stats.wait_started;
+        refresh_stats.wait_started = 0;
+    }
     if (lv_event_get_code(event) == LV_EVENT_RENDER_START) {
         render_stats.started_us = esp_timer_get_time();
     } else if (lv_event_get_code(event) == LV_EVENT_RENDER_READY && render_stats.started_us != 0) {
@@ -67,6 +93,21 @@ void log_render_stats(lv_timer_t *)
 }
 
 } // namespace
+
+boost::json::object board_display_profile(bool force_refresh)
+{
+    auto *display = LvglDisplaySource::get_instance().display();
+    int64_t forced_us = 0;
+    if (force_refresh && display) {
+        lv_obj_invalidate(lv_display_get_screen_active(display));
+        const auto started = esp_timer_get_time();
+        lv_refr_now(display);
+        forced_us = esp_timer_get_time()-started;
+    }
+    return {{"refresh_count",refresh_stats.count},{"last_refresh_us",refresh_stats.last_us},
+            {"max_refresh_us",refresh_stats.max_us},{"last_strips",refresh_stats.last_strips},
+            {"flush_wait_us",refresh_stats.wait_us},{"forced_refresh_us",forced_us}};
+}
 
 bool Display::start(const Config &config)
 {
@@ -136,6 +177,12 @@ bool Display::start_lvgl_display_source(int core_id)
     gui::lvgl::DisplaySourceConfig config{};
     config.output_name = "";
     config.task_core_id = core_id;
+    // Compose a whole screen before the SPI driver sends its short DMA chunks.
+    // The previous 32-line buffers exposed every slow software-rendered strip.
+    // One PSRAM buffer also releases the two 30 KiB internal draw buffers.
+    config.buffer_height = display_height_;
+    config.require_double_buffer = false;
+    config.buffer_in_psram = true;
 
     auto &source = LvglDisplaySource::get_instance();
     BROOKESIA_CHECK_FALSE_RETURN(source.start(config), false, "Failed to start LVGL Display source");
@@ -143,6 +190,10 @@ bool Display::start_lvgl_display_source(int core_id)
     esp_lv_adapter_lock(-1);
     lv_display_add_event_cb(source.display(), render_event, LV_EVENT_RENDER_START, nullptr);
     lv_display_add_event_cb(source.display(), render_event, LV_EVENT_RENDER_READY, nullptr);
+    for (auto code : {LV_EVENT_REFR_START, LV_EVENT_REFR_READY, LV_EVENT_FLUSH_START,
+                      LV_EVENT_FLUSH_WAIT_START, LV_EVENT_FLUSH_WAIT_FINISH}) {
+        lv_display_add_event_cb(source.display(), render_event, code, nullptr);
+    }
     lv_timer_create(log_render_stats, 5000, nullptr);
     esp_lv_adapter_unlock();
 

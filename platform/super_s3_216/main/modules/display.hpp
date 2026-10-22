@@ -12,6 +12,9 @@
 #include "brookesia/service_helper/media/display.hpp"
 #include "brookesia/service_manager/service/manager.hpp"
 
+// Called with the LVGL lock held; reports whole refreshes, not individual strips.
+boost::json::object board_display_profile(bool force_refresh);
+
 class Display {
 public:
     using GestureData = esp_brookesia::service::helper::Display::TouchGestureConfig;

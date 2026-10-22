@@ -27,7 +27,14 @@ def main():
                 time.sleep(.1)
             raise AssertionError('App transition did not finish')
         def wallpaper():
-            layers = call('DeviceModes', 'GetWeatherLayers')['layers']
+            try:
+                layers = call('DeviceModes', 'GetWeatherLayers')['layers']
+            except RuntimeError as error:
+                # A full redraw can hold LVGL longer than this diagnostic's
+                # 100 ms lock timeout. The outer wait remains bounded to 15 s.
+                if str(error) == 'call_failed: GUI busy':
+                    return None
+                raise
             node = next((n for n in layers if n['kind'] == 'wallpaper'), None)
             if not node:
                 return None

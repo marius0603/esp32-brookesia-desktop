@@ -20,7 +20,15 @@ def main():
         def call(service, name, params=None):
             return client.call(service, name, params or {})['result']
         def frame(phase):
-            layers = call('DeviceModes', 'GetWeatherLayers')['layers']
+            deadline = time.monotonic()+2
+            while True:
+                try:
+                    layers = call('DeviceModes', 'GetWeatherLayers')['layers']
+                    break
+                except RuntimeError as error:
+                    if str(error) != 'call_failed: GUI busy' or time.monotonic() >= deadline:
+                        raise
+                    time.sleep(.1)
             node = next((n for n in layers if n['kind'] == 'wallpaper'), None)
             if node is None and phase.startswith('app_'):
                 # Shell switches its bottom screen flow while an app is open.
