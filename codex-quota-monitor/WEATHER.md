@@ -90,3 +90,14 @@ SyntaxError: redeclaration of SHANGHAI。0.2.2 使用立即执行函数隔离应
 月亮改用已有的透明月牙 PNG，去除两个半透明圆叠加造成的圆形底色。
 星星改成四角星图元；掠过的小星星不再带有矩形横条尾迹。
 12 项脚本检查覆盖这些资源规则和生命周期行为。保留压缩 PNG，不增加大位图。
+# 0.2.6 云朵外形修复
+
+动态云层使用已有的透明云形图片 `wx_cloud.png`，替换两个纯色椭圆容器；继续沿原路径漂移，云形内部有填色。
+完整 BPK 随仓库提供。已有 0.2.5 设备若文件区不足以完整重装，可先停止额度采集器，执行：
+
+```powershell
+# 位于 codex-quota-monitor，SD 卡已安装
+.venv\Scripts\python.exe tools/deploy_weather_clouds.py --port COM5
+```
+
+工具核对新旧包除了界面与版本描述之外完全一致，将旧文件备份到 SD 后仅更新这两个文件；重启后发现版本 0.2.6。

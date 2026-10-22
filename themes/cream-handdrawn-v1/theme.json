@@ -55,6 +55,11 @@
     "wallpaper.jpg": {
       "bytes": 23144,
       "sha256": "7b4dce04585787143235373df35bad7f96bd5579b4431805db55748c541b4b3d"
+    },
+    "wallpaper-486-rgb565.bin": {
+      "bytes": 89233,
+      "sha256": "f438191420ea6d4902f763e5b17355c052c2133261388be2127af7d84d1e1d0a"
     }
-  }
+  },
+  "wallpaper_render": "wallpaper-486-rgb565.bin"
 }

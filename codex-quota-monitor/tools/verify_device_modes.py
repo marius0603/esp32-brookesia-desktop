@@ -77,7 +77,7 @@ def main():
             assert report['wake']['panel_errors']==0
             apps=call('SystemCore','ListApps')
             weather=next(a for a in apps if a['manifest']['id']=='local.weather')
-            assert weather['manifest']['version']=='0.2.5'
+            assert weather['manifest']['version']=='0.2.6'
             call('SystemCore','StartApp',{'AppId':weather['app_id']})
             def weather_state():return json.loads(call('Storage','FSReadText',{'Path':'/littlefs/weather-state.json'}))
             a=wait(lambda:(s:=weather_state()) and (s.get('fx_probe') or {}).get('tick')==8 and s)

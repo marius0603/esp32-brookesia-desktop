@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 3.16)
 
 option(CCACHE_ENABLE "Use ccache to accelerate repeat ESP-IDF builds" ON)
 
-set(PROJECT_VER "0.8.3-s3.15")
+set(PROJECT_VER "0.8.3-s3.16")
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
 # Work around esp-idf-configdep mapping CONFIG_ESP_LVGL_ADAPTER_PARTIAL_AUX_IMG_CACHE
@@ -25,6 +25,7 @@ endif()
 project(brookesia_s3_216)
 
 include(${CMAKE_CURRENT_LIST_DIR}/overrides/audio_dma.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/overrides/lvgl_rle.cmake)
 
 # Temporary workaround for `espressif__mcp-c-sdk` stringop-truncation warning
 idf_build_set_property(COMPILE_OPTIONS -Wno-error=stringop-truncation APPEND)

@@ -61,6 +61,15 @@ private:
             lv_area_t area{};lv_obj_get_coords(object,&area);const int w=lv_area_get_width(&area),h=lv_area_get_height(&area);
             const char *kind=color==0x020913?"shade":color==0xd3e9ff?"moon":color==0xffce65?"sun":color==0xadc1d3?"cloud":"surface";
             ++order;
+            if(layers.size()<32 && lv_obj_check_type(object,&lv_image_class) && w==486 && h==486){
+                const auto *source=lv_image_get_src(object);
+                const auto *image=source && lv_image_src_get_type(source)==LV_IMAGE_SRC_VARIABLE?static_cast<const lv_image_dsc_t *>(source):nullptr;
+                layers.push_back(boost::json::object{{"kind","wallpaper"},{"x",area.x1},{"y",area.y1},
+                    {"width",w},{"height",h},{"effective_opacity",effective},
+                    {"pixel_format",image?int(image->header.cf):0},{"source_width",image?int(image->header.w):0},
+                    {"source_height",image?int(image->header.h):0},{"scale_x",lv_image_get_scale_x(object)},
+                    {"scale_y",lv_image_get_scale_y(object)}});
+            }
             if(layers.size()<32 && lv_obj_check_type(object,&lv_dropdown_class)){
                 const auto count=lv_dropdown_get_option_count(object);
                 if(count==24 || count==60){

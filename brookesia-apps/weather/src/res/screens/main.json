@@ -144,7 +144,7 @@
           },
           "children": [
             {
-              "type": "container",
+              "type": "image",
               "id": "c0",
               "commonProps": {
                 "clickable": false,
@@ -156,24 +156,25 @@
                 "x": 310,
                 "y": 74,
                 "width": 120,
-                "height": 85
+                "height": 96
               },
               "style": {
                 "padding": 0,
                 "borderWidth": 0,
-                "bgColor": "#adc1d3",
-                "radius": 42,
-                "opacity": 135
+                "opacity": 200
               },
               "bindings": {
                 "commonProps.hidden": "hidden",
                 "placement.x": "x",
                 "placement.y": "y"
               },
-              "children": []
+              "imageProps": {
+                "src": "${image.wx_cloud}",
+                "innerAlign": "contain"
+              }
             },
             {
-              "type": "container",
+              "type": "image",
               "id": "c1",
               "commonProps": {
                 "clickable": false,
@@ -185,21 +186,22 @@
                 "x": 282,
                 "y": 119,
                 "width": 170,
-                "height": 62
+                "height": 110
               },
               "style": {
                 "padding": 0,
                 "borderWidth": 0,
-                "bgColor": "#adc1d3",
-                "radius": 32,
-                "opacity": 135
+                "opacity": 165
               },
               "bindings": {
                 "commonProps.hidden": "hidden",
                 "placement.x": "x",
                 "placement.y": "y"
               },
-              "children": []
+              "imageProps": {
+                "src": "${image.wx_cloud}",
+                "innerAlign": "contain"
+              }
             }
           ]
         },

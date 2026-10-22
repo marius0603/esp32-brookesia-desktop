@@ -18,6 +18,7 @@ from quota_monitor.brookesia import StableUsbClient
 FLASH='/littlefs/themes/cream-handdrawn-v1'
 SD='/sdcard/themes/cream-handdrawn-v1'
 NAMES={'settings.png','files.png','app-store.png','quota.png','weather.png','audiobook.png','flipclock.png','assistant.png','wallpaper.jpg'}
+OPTIONAL={'wallpaper-486-rgb565.bin'}
 
 def main():
     parser=argparse.ArgumentParser()
@@ -43,7 +44,7 @@ def main():
         def save(report):args.record.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
         if args.action=='stage':
             manifest=json.loads((args.theme/'theme.json').read_text(encoding='utf-8'))
-            assert manifest['id']=='cream-handdrawn-v1' and set(manifest['files'])==NAMES
+            assert manifest['id']=='cream-handdrawn-v1' and NAMES <= set(manifest['files']) <= NAMES|OPTIONAL
             for name,entry in manifest['files'].items():
                 data=(args.theme/name).read_bytes()
                 assert len(data)==entry['bytes'] and hashlib.sha256(data).hexdigest()==entry['sha256']
@@ -57,18 +58,18 @@ def main():
                     storage('FSCopyTree',{'From':FLASH+'/'+name,'To':destination+'/'+name,'Overwrite':True})
                     info=stat(destination+'/'+name);assert info['exists'] and info['size']==entry['bytes']
             report['staged']=True;save(report)
-            print('Nine theme assets copied to SD and backed up. Reboot SD-aware firmware before commit.')
+            print('Theme assets copied to SD and backed up. Reboot SD-aware firmware before commit.')
             return
         report=json.loads(args.record.read_text(encoding='utf-8'))
-        assert report['staged'] and set(report['files'])==NAMES
+        assert report['staged'] and NAMES <= set(report['files']) <= NAMES|OPTIONAL
         assert report['backup'].startswith('/sdcard/resource-backups/')
         if args.action=='restore':
-            for name in NAMES:
+            for name in report['files']:
                 storage('FSCopyTree',{'From':report['backup']+'/'+name,'To':FLASH+'/'+name,'Overwrite':True})
             print('Flash theme copies restored; restart to refresh images.');return
         resources=c.call('SdResources','GetState',{})['result']
         assert resources['sd_resolutions']>0,'Restart first so actual GUI loads use SD'
-        assert all(f['on_sd'] and f['exists'] for f in resources['files']),resources
+        assert all(f['on_sd'] and f['exists'] for f in resources['files'] if f['name'] in report['files']),resources
         for name,entry in report['files'].items():
             for root in [SD,report['backup']]:
                 info=stat(root+'/'+name);assert info['exists'] and info['size']==entry['bytes']

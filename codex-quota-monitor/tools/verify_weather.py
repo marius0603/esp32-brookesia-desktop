@@ -30,7 +30,7 @@ with StableUsbClient('COM5', timeout=30) as client:
         raise RuntimeError('Weather state timed out')
     apps = client.call('SystemCore', 'ListApps', {})['result']
     app = next(item for item in apps if item['manifest']['id']=='local.weather')
-    assert app['manifest']['version']=='0.2.5'
+    assert app['manifest']['version']=='0.2.6'
     report['app_id'] = app['app_id']
     client.call('SystemCore', 'StartApp', {'AppId':app['app_id']})
     report['initial'] = wait_for(lambda value: value.get('version')==3 and value.get('received_at') and
@@ -58,5 +58,5 @@ with StableUsbClient('COM5', timeout=30) as client:
     assert report['active_app']['app_id']==app['app_id'] and report['active_app']['state']=='Running'
     assert not report['active_app']['last_error']
     report['storage_capacity'] = client.call('Storage','GetFileSystemCapacity',{'MountPoint':'/littlefs'})['result']
-(ROOT/'runtime/weather-verification-0.2.5.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+(ROOT/'runtime/weather-verification-0.2.6.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
 print('Weather verification passed')

@@ -143,5 +143,12 @@ test('moon uses the existing transparent crescent asset and stars have no rectan
   assert.ok(shooting.children.some(c=>c.id==='vertical'));assert.ok(shooting.children.some(c=>c.id==='horizontal'));assert.ok(!shooting.style.bgColor);
 });
 
+test('cloud layers use filled transparent cloud artwork rather than oval containers',()=>{
+  for(const id of ['c0','c1']){
+    const n=nodes['/main/backdrop/clouds/'+id];assert.equal(n.type,'image');
+    assert.equal(n.imageProps.src,'${image.wx_cloud}');assert.ok(!n.style.bgColor && !n.children);
+    assert.ok(n.style.opacity>=160);assert.equal(n.bindings['placement.x'],'x');assert.equal(n.bindings['placement.y'],'y');
+  }
+});
 test('re-evaluating app in retained JavaScript context does not redeclare globals',()=>{const c=vm.createContext({});vm.runInContext(code,c);vm.runInContext(code,c);assert.equal(typeof c.brookesia_app.on_start,'function');});
 console.log(count+' weather tests passed');

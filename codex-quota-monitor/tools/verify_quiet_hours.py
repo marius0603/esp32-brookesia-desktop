@@ -29,7 +29,7 @@ def main():
             call('DeviceModes','Wake');call('DeviceModes','SetDoNotDisturb',{'Enabled':False});quiet(False,1320,420)
             call('AudioPlayback','SetVolume',{'Volume':18})
             apps=call('SystemCore','ListApps');weather=next(a for a in apps if a['manifest']['id']=='local.weather')
-            assert weather['manifest']['version']=='0.2.5'
+            assert weather['manifest']['version']=='0.2.6'
             call('SystemCore','RequestCloseApp',{'AppId':weather['app_id']});time.sleep(.7)
             call('SystemCore','StartApp',{'AppId':weather['app_id']})
             wait(lambda:(a:=call('SystemCore','GetActiveApp')).get('app_id')==weather['app_id'] and a.get('state')=='Running')

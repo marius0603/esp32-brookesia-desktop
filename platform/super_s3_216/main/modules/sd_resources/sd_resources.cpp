@@ -18,6 +18,8 @@ constexpr Asset assets[]{
     ASSET("audiobook","local.audiobook","png"),
     ASSET("flipclock","local.flipclock","png"),
     ASSET("assistant","local.voiceassistant","png"),
+    {"wallpaper-486-rgb565.bin","/littlefs/themes/cream-handdrawn-v1/wallpaper-486-rgb565.bin",
+     "/sdcard/themes/cream-handdrawn-v1/wallpaper-486-rgb565.bin","/littlefs/themes/cream-handdrawn-v1/wallpaper.jpg"},
     {"wallpaper.jpg","/littlefs/themes/cream-handdrawn-v1/wallpaper.jpg",
      "/sdcard/themes/cream-handdrawn-v1/wallpaper.jpg","/littlefs/themes/cream-handdrawn-v1/wallpaper.jpg"}
 };

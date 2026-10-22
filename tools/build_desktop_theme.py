@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from PIL import Image
+from build_wallpaper_render import export_wallpaper, RENDER_NAME
 
 ROOT = Path(__file__).resolve().parents[1]
 ICONS = {
@@ -36,10 +37,12 @@ def main():
         image.convert('RGB').resize((480, 480), Image.Resampling.LANCZOS).save(
             wallpaper, quality=88, subsampling=0, optimize=True)
     assets.append(wallpaper)
+    assets.append(export_wallpaper(wallpaper, args.output / RENDER_NAME))
     manifest = {
         'id': 'cream-handdrawn-v1', 'display': [480, 480], 'icon_size': [96, 96],
         'icons': {app: f'{name}.png' for app, name in ICONS.items()},
         'wallpaper': 'wallpaper.jpg',
+        'wallpaper_render': RENDER_NAME,
         'files': {p.name: {'bytes': p.stat().st_size,
                          'sha256': hashlib.sha256(p.read_bytes()).hexdigest()} for p in assets},
     }

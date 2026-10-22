@@ -591,6 +591,58 @@ index c7dd23f..e2be1bc 100644
      if (resource.native_src != 0 || (resource.width > 0 && resource.height > 0)) {
          return resource;
      }
+diff --git a/gui/brookesia_gui_lvgl/src/props_image.cpp b/gui/brookesia_gui_lvgl/src/props_image.cpp
+index f083f6d..fc9e2f6 100644
+--- a/gui/brookesia_gui_lvgl/src/props_image.cpp
++++ b/gui/brookesia_gui_lvgl/src/props_image.cpp
+@@ -4,6 +4,11 @@
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ #include "private/props_impl.hpp"
++#if __has_include("lvgl/src/libs/rle/lv_rle.h")
++#include "lvgl/src/libs/rle/lv_rle.h"
++#else
++#include "src/libs/rle/lv_rle.h"
++#endif
+ 
+ namespace esp_brookesia::gui::lvgl::props_detail {
+ 
+@@ -232,8 +237,33 @@ std::expected<std::shared_ptr<BinaryImageSource>, std::string> load_binary_image
+     source->descriptor.header.h = read_le16(source->data, 6);
+     source->descriptor.header.stride = read_le16(source->data, 8);
+     source->descriptor.header.reserved_2 = 0;
+-    source->descriptor.data_size = static_cast<uint32_t>(source->data.size() - 12);
+-    source->descriptor.data = source->data.data() + 12;
++    if(source->descriptor.header.flags & LV_IMAGE_FLAGS_COMPRESSED) {
++#if LV_USE_RLE
++        const auto le32=[&](size_t at){return uint32_t(source->data[at]) |
++            (uint32_t(source->data[at+1])<<8) | (uint32_t(source->data[at+2])<<16) |
++            (uint32_t(source->data[at+3])<<24);};
++        const auto &header=source->descriptor.header;
++        if(source->data.size()<24 || header.cf!=LV_COLOR_FORMAT_RGB565 ||
++                header.w==0 || header.h==0 || header.w>1024 || header.h>1024 ||
++                header.stride!=header.w*2 || le32(12)!=1 ||
++                le32(16)!=source->data.size()-24 || le32(20)!=uint32_t(header.stride)*header.h) {
++            return std::unexpected("Invalid RLE RGB565 image: " + path);
++        }
++        std::vector<uint8_t> pixels(le32(20));
++        if(lv_rle_decompress(source->data.data()+24,le32(16),pixels.data(),pixels.size(),2)!=pixels.size()) {
++            return std::unexpected("RLE image decode failed: " + path);
++        }
++        source->data=std::move(pixels);
++        source->descriptor.header.flags=static_cast<uint16_t>(source->descriptor.header.flags & ~uint32_t(LV_IMAGE_FLAGS_COMPRESSED));
++        source->descriptor.data_size=static_cast<uint32_t>(source->data.size());
++        source->descriptor.data=source->data.data();
++#else
++        return std::unexpected("RLE image support is disabled: " + path);
++#endif
++    } else {
++        source->descriptor.data_size = static_cast<uint32_t>(source->data.size() - 12);
++        source->descriptor.data = source->data.data() + 12;
++    }
+     source->descriptor.reserved = nullptr;
+     source->descriptor.reserved_2 = nullptr;
+     return source;
 diff --git a/gui/brookesia_gui_lvgl/src/style_base.cpp b/gui/brookesia_gui_lvgl/src/style_base.cpp
 index 2ce6a00..2f2e955 100644
 --- a/gui/brookesia_gui_lvgl/src/style_base.cpp
@@ -925,6 +977,48 @@ index 4057f51..93b5f30 100644
          std::vector<std::filesystem::path> descriptor_paths;
          auto collect_result = collect_image_descriptor_paths(dir, descriptor_paths);
          if (!collect_result) {
+diff --git a/system/brookesia_system_super/src/private/shell_app.hpp b/system/brookesia_system_super/src/private/shell_app.hpp
+index d69f82f..83bb1a2 100644
+--- a/system/brookesia_system_super/src/private/shell_app.hpp
++++ b/system/brookesia_system_super/src/private/shell_app.hpp
+@@ -161,6 +161,7 @@ private:
+     void subscribe_sntp_events();
+     void disconnect_sntp_events();
+     void refresh_status_clock();
++    void refresh_wallpaper_shift();
+     void schedule_status_clock_timer();
+     void stop_status_clock_timer();
+     void handle_display_touch_gesture(const service::Display::TouchGestureInfo &info);
+@@ -214,6 +215,8 @@ private:
+     core::TimerId gesture_exit_hold_timer_id_ = core::INVALID_TIMER_ID;
+     core::TimerId status_peek_auto_hide_timer_id_ = core::INVALID_TIMER_ID;
+     core::TimerId status_clock_timer_id_ = core::INVALID_TIMER_ID;
++    std::optional<std::chrono::steady_clock::time_point> wallpaper_next_shift_;
++    unsigned wallpaper_shift_step_ = 0;
+     std::vector<gui::ScopedConnection> overlay_action_connections_;
+     std::vector<gui::ScopedConnection> launcher_action_connections_;
+     std::vector<gui::ScopedConnection> keyboard_action_connections_;
+diff --git a/system/brookesia_system_super/src/shell_app.cpp b/system/brookesia_system_super/src/shell_app.cpp
+index 921352a..c6cf6ab 100644
+--- a/system/brookesia_system_super/src/shell_app.cpp
++++ b/system/brookesia_system_super/src/shell_app.cpp
+@@ -156,6 +156,8 @@ std::expected<void, std::string> ShellApp::on_stop(core::AppContext &context)
+     unmount_overlay();
+     applied_i18n_locale_.clear();
+     release_display_operation();
++    wallpaper_next_shift_.reset();
++    wallpaper_shift_step_ = 0;
+     context_ = nullptr;
+     return {};
+ }
+@@ -191,6 +193,7 @@ std::expected<void, std::string> ShellApp::on_timer(
+     if (name == SUPER_STATUS_CLOCK_TIMER_NAME && timer_id == status_clock_timer_id_) {
+         status_clock_timer_id_ = core::INVALID_TIMER_ID;
+         refresh_status_clock();
++        refresh_wallpaper_shift();
+         schedule_status_clock_timer();
+         return {};
+     }
 diff --git a/system/brookesia_system_super/src/shell_display_routing.cpp b/system/brookesia_system_super/src/shell_display_routing.cpp
 index 927e196..7d2ff19 100644
 --- a/system/brookesia_system_super/src/shell_display_routing.cpp
@@ -955,3 +1049,67 @@ index 927e196..7d2ff19 100644
      const bool next_foreground_is_shell = !app.has_value() || (app->app_id == owner_.shell_app_id_);
      const bool should_reset_gesture = gesture_tracking_ || gesture_exit_armed_ || gesture_exit_triggered_ ||
                                        gesture_exit_hold_timer_id_ != core::INVALID_TIMER_ID ||
+diff --git a/system/brookesia_system_super/src/shell_status.cpp b/system/brookesia_system_super/src/shell_status.cpp
+index e156b9a..d0c4d84 100644
+--- a/system/brookesia_system_super/src/shell_status.cpp
++++ b/system/brookesia_system_super/src/shell_status.cpp
+@@ -21,6 +21,8 @@
+ #include "private/system_constants.hpp"
+ #include "private/utils.hpp"
+ 
++extern "C" bool brookesia_board_screen_asleep() __attribute__((weak));
++
+ namespace esp_brookesia::system::super {
+ namespace {
+ 
+@@ -266,6 +268,50 @@ void ShellApp::refresh_status_clock()
+     }
+ }
+ 
++void ShellApp::refresh_wallpaper_shift()
++{
++    if (context_ == nullptr) {
++        return;
++    }
++    const auto now = std::chrono::steady_clock::now();
++    constexpr auto interval = std::chrono::seconds(60);
++    // Reuse the status timer; only visible, awake desktop time advances motion.
++    if (!foreground_is_shell_ || !system_ui_expanded_ ||
++            (brookesia_board_screen_asleep && brookesia_board_screen_asleep())) {
++        wallpaper_next_shift_ = now + interval;
++        return;
++    }
++    if (!wallpaper_next_shift_) {
++        wallpaper_next_shift_ = now + interval;
++        return;
++    }
++    if (now < *wallpaper_next_shift_) {
++        return;
++    }
++    wallpaper_next_shift_ = now + interval;
++    constexpr const char *path = "/background/cream_wallpaper";
++    const auto frame = context_->gui().get_view_frame(path);
++    // Only move an opted-in, oversized wallpaper. Legacy/custom backgrounds
++    // without the safe margin remain untouched and never expose blank edges.
++    if (!frame || frame->width != 486 || frame->height != 486) {
++        return;
++    }
++    static constexpr int offsets[][2] = {
++        {0, 0}, {3, 0}, {3, 3}, {0, 3}, {-3, 3},
++        {-3, 0}, {-3, -3}, {0, -3}, {3, -3}
++    };
++    const unsigned next = (wallpaper_shift_step_ + 1) % 9;
++    const auto result = context_->gui().set_binding_values({
++        {.absolute_path = path, .key = "wallpaper_x", .value = std::to_string(-3 + offsets[next][0])},
++        {.absolute_path = path, .key = "wallpaper_y", .value = std::to_string(-3 + offsets[next][1])},
++    });
++    if (result) {
++        wallpaper_shift_step_ = next;
++    } else {
++        BROOKESIA_LOGW("Wallpaper shift skipped: %1%", result.error());
++    }
++}
++
+ void ShellApp::schedule_status_clock_timer()
+ {
+     if (context_ == nullptr || status_clock_timer_id_ != core::INVALID_TIMER_ID) {

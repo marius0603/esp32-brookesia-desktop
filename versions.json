@@ -2,13 +2,13 @@
   "upstream": "https://github.com/espressif/esp-brookesia.git",
   "commit": "68ac00e7aa9012cd8cbf0cbf6bee155801db0e8c",
   "esp_idf": "6.0.2",
-  "firmware": "0.8.3-s3.15",
+  "firmware": "0.8.3-s3.16",
   "toolkit": "1.0.1",
   "apps": {
     "local.audiobook": "0.1.1",
     "local.codex.quota": "0.2.2",
     "local.flipclock": "0.1.1",
-    "local.weather": "0.2.5",
+    "local.weather": "0.2.6",
     "local.voiceassistant": "0.1.0",
     "local.childmode": "0.1.0"
   },

@@ -106,20 +106,23 @@ def main():
         path = f'{SHELL}/images/index.json'
         images = json.loads(originals[path])
         images['images'] = [i for i in images['images'] if i['id'] != 'cream.wallpaper']
-        images['images'].append({'id': 'cream.wallpaper', 'src': f'{base}/{manifest["wallpaper"]}',
-                                 'width': 480, 'height': 480})
+        wallpaper_name = manifest.get('wallpaper_render', manifest['wallpaper'])
+        wallpaper_size = 486 if 'wallpaper_render' in manifest else 480
+        images['images'].append({'id': 'cream.wallpaper', 'src': f'{base}/{wallpaper_name}',
+                                 'width': wallpaper_size, 'height': wallpaper_size})
         updates[path] = images
         background = json.loads(originals[f'{SHELL}/screens/background.json'])
         background['style'].update(bgColor='#fff1dc', bgOpacity=255)
         background['children'] = [{
             'type': 'image', 'id': 'cream_wallpaper',
             'commonProps': {'clickable': False, 'scrollable': False},
-            'placement': {'mode': 'absolute', 'x': 0, 'y': 0, 'width': 'match', 'height': 'match'},
+            'placement': {'mode': 'absolute', 'x': -3, 'y': -3, 'width': 486, 'height': 486},
+            'bindings': {'placement.x': 'wallpaper_x', 'placement.y': 'wallpaper_y'},
             'imageProps': {'src': '${image.cream.wallpaper}', 'innerAlign': 'cover'},
         }]
         updates[f'{SHELL}/screens/background.json'] = background
         styles = {'type': 'styleSet', 'styles': {
-            'shell.desktop': {'bgColor': '#fff1dc', 'bgOpacity': 0},
+            'shell.desktop': {'bgColor': ''},
             'shell.launcherAppLabel': {'textColor': '#42291f', 'fontSize': '12sp'},
             'shell.launcherAppButton': {'bgColor': '', 'bgOpacity': 0, 'borderWidth': '0dp', 'radius': '18dp'},
             'shell.launcherIconTile': {'bgColor': '', 'bgOpacity': 0, 'borderWidth': '0dp',
