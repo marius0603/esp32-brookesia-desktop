@@ -1,4 +1,4 @@
-"""Update only the Settings display resource after the s3.18 app-only flash."""
+"""Update only the Settings display resource after the s3.19 app-only flash."""
 from datetime import datetime
 import hashlib
 import json
@@ -18,7 +18,7 @@ def main():
     with WallpaperClient('COM5',timeout=25) as c:
         c.hello()
         def call(s,f,p=None):return c.call(s,f,p or {})['result']
-        assert 'deep_sleep' in call('DeviceModes','GetState'), 'Flash s3.18 or later before deploying this entry'
+        assert 'auto_deep_sleep_minutes' in call('DeviceModes','GetState'), 'Flash s3.19 or later before deploying the duration picker'
         apps=call('SystemCore','ListApps')
         app=next(a for a in apps if a['manifest']['id']=='brookesia.general.settings')
         call('SystemCore','RequestCloseApp',{'AppId':app['app_id']});time.sleep(1)

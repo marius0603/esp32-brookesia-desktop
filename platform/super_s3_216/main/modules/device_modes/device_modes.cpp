@@ -15,6 +15,8 @@
 #include "lvgl.h"
 #include "../display.hpp"
 #include "deep_sleep.hpp"
+#include "idle_deep_sleep.hpp"
+#include "../audio_ownership.hpp"
 
 using namespace esp_brookesia;
 using namespace esp_brookesia::service;
@@ -26,6 +28,9 @@ std::atomic<bool> dirty{false}, audio_dirty{false};
 std::atomic<int> desired_volume{75};
 std::atomic<bool> manual_dnd{false},quiet_enabled{false};
 std::atomic<int> quiet_start{1320},quiet_end{420};
+std::atomic<int> deep_minutes{0};
+std::atomic<uint32_t> deep_activity_ms{0};
+std::atomic<bool> preferences_loaded{false},test_idle_deep{false};
 int local_minute(){const time_t now=time(nullptr);if(now<1735689600)return -1;const time_t local=now+8*3600;tm t{};gmtime_r(&local,&t);return t.tm_hour*60+t.tm_min;}
 void update_quiet(){const bool active=manual_dnd || (quiet_enabled && quiet_hours::contains(local_minute(),quiet_start,quiet_end));if(dnd.exchange(active)!=active)audio_dirty=true;}
 std::atomic<uint32_t> last_touch_ms{0}, sleeps{0}, wakes{0}, swallowed{0}, panel_errors{0};
@@ -41,6 +46,9 @@ private:
     }
     boost::json::object state() {
         return {{"deep_sleep",board_deep_sleep_state()},{"auto_sleep_enabled",automatic.load()},{"timeout_seconds",600},
+                {"auto_deep_sleep_minutes",deep_minutes.load()},{"auto_deep_sleep_audio_busy",local_audio::busy()},
+                {"auto_deep_sleep_remaining_seconds",idle_deep_sleep::remaining(now_ms(),deep_activity_ms.load(),deep_minutes.load()*60)},
+                {"preferences_loaded",preferences_loaded.load()},{"test_idle_deep_sleep",test_idle_deep.load()},
                 {"screen_asleep",asleep.load()},{"do_not_disturb",dnd.load()},
                 {"manual_do_not_disturb",manual_dnd.load()},{"quiet_hours_enabled",quiet_enabled.load()},
                 {"quiet_start_minute",quiet_start.load()},{"quiet_end_minute",quiet_end.load()},
@@ -108,7 +116,9 @@ private:
                 {"SleepNow","Turn screen off without stopping apps",{}},
                 {"Wake","Wake screen for maintenance",{}},
                 {"DeepSleepNow","Stop apps and enter deep sleep; touch/key wakes",{}},
-                {"TestDeepSleep","Deep sleep with a 20 second recovery timer",{}}};
+                {"TestDeepSleep","Deep sleep with a 20 second recovery timer",{}},
+                {"SetAutoDeepSleep","Set idle duration: 0,10,20,30,60,120,240 minutes",{{"Minutes","0 disables",FunctionValueType::Number}}},
+                {"TestIdleDeepSleep","Exercise idle policy after five quiet seconds with twenty second recovery",{}}};
     }
     FunctionHandlerList get_function_handlers() override {
         return {{"ProfileRefresh",[](FunctionParameterMap &&p)->FunctionResult{
@@ -126,7 +136,16 @@ private:
                 {"SleepNow",[](FunctionParameterMap &&)->FunctionResult{sleep_requested=true;return {.success=true};}},
                 {"Wake",[](FunctionParameterMap &&)->FunctionResult{wake_requested=true;return {.success=true};}},
                 {"DeepSleepNow",[](FunctionParameterMap &&)->FunctionResult{const auto e=brookesia_board_request_deep_sleep(0);return {.success=e==ESP_OK,.error_message=e==ESP_OK?"":esp_err_to_name(e)};}},
-                {"TestDeepSleep",[](FunctionParameterMap &&)->FunctionResult{const auto e=brookesia_board_request_deep_sleep(20);return {.success=e==ESP_OK,.error_message=e==ESP_OK?"":esp_err_to_name(e)};}}};
+                {"TestDeepSleep",[](FunctionParameterMap &&)->FunctionResult{const auto e=brookesia_board_request_deep_sleep(20);return {.success=e==ESP_OK,.error_message=e==ESP_OK?"":esp_err_to_name(e)};}},
+                {"SetAutoDeepSleep",[](FunctionParameterMap &&p)->FunctionResult{
+                    const double value=std::get<double>(p.at("Minutes"));
+                    if(!std::isfinite(value) || value<0 || value>240 || std::floor(value)!=value ||
+                       !brookesia_board_set_auto_deep_sleep_index(idle_deep_sleep::index(int(value))))
+                        return {.success=false,.error_message="Use 0,10,20,30,60,120,240 minutes after preferences load"};
+                    return {.success=true};}},
+                {"TestIdleDeepSleep",[](FunctionParameterMap &&)->FunctionResult{
+                    if(!preferences_loaded || brookesia_board_deep_sleep_pending())return {.success=false,.error_message="Device is not ready"};
+                    deep_activity_ms=now_ms();test_idle_deep=true;return {.success=true};}}};
     }
 };
 }
@@ -136,6 +155,11 @@ extern "C" bool brookesia_board_screen_asleep(){return asleep;}
 extern "C" bool brookesia_board_do_not_disturb(){return dnd;}
 extern "C" bool brookesia_board_auto_sleep_enabled(){return automatic;}
 extern "C" void brookesia_board_set_auto_sleep(bool on){automatic=on;dirty=true;wake_requested=true;}
+extern "C" int brookesia_board_auto_deep_sleep_index(){return std::max(0,idle_deep_sleep::index(deep_minutes.load()));}
+extern "C" bool brookesia_board_set_auto_deep_sleep_index(int index){
+    if(!preferences_loaded || index<0 || unsigned(index)>=idle_deep_sleep::minutes.size())return false;
+    deep_minutes=idle_deep_sleep::minutes[index];deep_activity_ms=now_ms();test_idle_deep=false;dirty=true;return true;
+}
 extern "C" void brookesia_board_set_do_not_disturb(bool on){manual_dnd=on;update_quiet();dirty=true;audio_dirty=true;}
 extern "C" bool brookesia_board_manual_dnd(){return manual_dnd;}
 extern "C" bool brookesia_board_quiet_enabled(){return quiet_enabled;}
@@ -152,7 +176,7 @@ extern "C" int brookesia_board_volume_filter(int volume){if(!dnd)desired_volume=
 extern "C" bool brookesia_board_filter_touch(bool pressed){
     if(brookesia_board_deep_sleep_pending())return true;
     if(!pressed){consume_touch=false;return false;}
-    last_touch_ms=now_ms();
+    last_touch_ms=now_ms();deep_activity_ms=now_ms();
     if(asleep){wake_requested=true;if(!consume_touch.exchange(true))++swallowed;}
     return consume_touch;
 }
@@ -161,16 +185,16 @@ void device_modes_poll(){
     if(!ready)return;
     // Service start runs on a PSRAM-backed thread. Even NVS reads must run
     // here on the orientation worker's internal stack while flash cache pauses.
-    static bool loaded=false;
-    if(!loaded){
+    if(!preferences_loaded){
         nvs_handle_t h;uint8_t a=1,d=0;int32_t resume=75;
         if(nvs_open("DeviceModes",NVS_READONLY,&h)==ESP_OK){
+            uint16_t minutes=0;nvs_get_u16(h,"deep_min",&minutes);deep_minutes=idle_deep_sleep::index(minutes)>=0?minutes:0;
             nvs_get_u8(h,"auto_sleep",&a);nvs_get_u8(h,"dnd",&d);nvs_get_i32(h,"resume_volume",&resume);
             uint8_t q=0;int32_t start=1320,end=420;nvs_get_u8(h,"quiet_on",&q);nvs_get_i32(h,"quiet_start",&start);nvs_get_i32(h,"quiet_end",&end);
             quiet_enabled=q!=0;quiet_start=std::clamp<int>(start,0,1439);quiet_end=std::clamp<int>(end,0,1439);nvs_close(h);
         }
         automatic=a!=0;manual_dnd=d!=0;update_quiet();desired_volume=std::clamp<int>(resume,0,100);
-        last_touch_ms=now_ms();audio_dirty=true;loaded=true;
+        last_touch_ms=now_ms();deep_activity_ms=now_ms();audio_dirty=true;preferences_loaded=true;
     }
     update_quiet();
     const bool waking=wake_requested.exchange(false);
@@ -187,7 +211,7 @@ void device_modes_poll(){
         }else ++panel_errors;
         esp_lv_adapter_unlock();
     }
-    if(waking && !asleep)last_touch_ms=now_ms();
+    if(waking && !asleep){last_touch_ms=now_ms();deep_activity_ms=now_ms();}
     if(waking && asleep)wake_requested=true;
     if(sleeping && !asleep)sleep_requested=true;
     if(audio_dirty.exchange(false)){
@@ -197,9 +221,18 @@ void device_modes_poll(){
     if(dirty.exchange(false)){
         nvs_handle_t h;bool saved=false;
         if(nvs_open("DeviceModes",NVS_READWRITE,&h)==ESP_OK){
-            saved=nvs_set_u8(h,"auto_sleep",automatic?1:0)==ESP_OK && nvs_set_u8(h,"dnd",manual_dnd?1:0)==ESP_OK && nvs_set_i32(h,"resume_volume",desired_volume.load())==ESP_OK && nvs_set_u8(h,"quiet_on",quiet_enabled?1:0)==ESP_OK && nvs_set_i32(h,"quiet_start",quiet_start.load())==ESP_OK && nvs_set_i32(h,"quiet_end",quiet_end.load())==ESP_OK && nvs_commit(h)==ESP_OK;
+            saved=nvs_set_u8(h,"auto_sleep",automatic?1:0)==ESP_OK && nvs_set_u8(h,"dnd",manual_dnd?1:0)==ESP_OK && nvs_set_i32(h,"resume_volume",desired_volume.load())==ESP_OK && nvs_set_u8(h,"quiet_on",quiet_enabled?1:0)==ESP_OK && nvs_set_i32(h,"quiet_start",quiet_start.load())==ESP_OK && nvs_set_i32(h,"quiet_end",quiet_end.load())==ESP_OK && nvs_set_u16(h,"deep_min",deep_minutes.load())==ESP_OK && nvs_commit(h)==ESP_OK;
             nvs_close(h);
         }
         if(!saved)dirty=true;
+    }
+    const auto now=now_ms();
+    if(local_audio::busy())deep_activity_ms=now;
+    const auto seconds=test_idle_deep.load()?5U:uint32_t(deep_minutes.load()*60);
+    if(!dirty && !brookesia_board_deep_sleep_pending() && idle_deep_sleep::due(now,deep_activity_ms.load(),seconds)) {
+        const auto recovery=test_idle_deep.exchange(false)?20U:0U;
+        // A failed attempt waits a fresh interval instead of retrying each poll.
+        deep_activity_ms=now;
+        (void)brookesia_board_request_deep_sleep(recovery);
     }
 }

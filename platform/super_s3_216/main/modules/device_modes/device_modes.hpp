@@ -8,6 +8,8 @@ extern "C" bool brookesia_board_screen_asleep();
 extern "C" bool brookesia_board_do_not_disturb();
 extern "C" bool brookesia_board_auto_sleep_enabled();
 extern "C" void brookesia_board_set_auto_sleep(bool enabled);
+extern "C" int brookesia_board_auto_deep_sleep_index();
+extern "C" bool brookesia_board_set_auto_deep_sleep_index(int index);
 extern "C" void brookesia_board_set_do_not_disturb(bool enabled);
 
 extern "C" bool brookesia_board_manual_dnd();

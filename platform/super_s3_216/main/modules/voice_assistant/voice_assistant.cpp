@@ -3,6 +3,7 @@
 #include "../child_mode/child_mode.hpp"
 #include <algorithm>
 #include <atomic>
+#include <string_view>
 #include <cmath>
 #include <cstring>
 #include <ctime>
@@ -84,9 +85,12 @@ private:
     int16_t *pcm_=nullptr;
     Packet *packet_=nullptr;
     void state(const char *s, const std::string &message) {
+        const std::string_view value=s;
+        local_audio::assistant_busy=value=="Connecting" || value=="Listening" || value=="Thinking" || value=="Speaking" || value=="Testing";
         std::lock_guard<std::mutex> lock(mutex_); state_=s; message_=message;
     }
     void fail(const std::string &message) {
+        local_audio::assistant_busy=false;
         {std::lock_guard<std::mutex> lock(mutex_);state_="Error";message_=message;error_=message;}
         fatal_=true; accept_audio_=false;
     }

@@ -3,6 +3,7 @@
 #include "../audio_ownership.hpp"
 #include <algorithm>
 #include <atomic>
+#include <string_view>
 #include <cmath>
 #include <cstring>
 #include <dirent.h>
@@ -61,6 +62,7 @@ private:
     std::atomic<int32_t> seek_{-1};
     std::atomic<uint32_t> position_{0}, duration_{0}, bytes_{0};
     void state(const char *s, const char *error="") {
+        local_audio::audiobook_busy=std::string_view(s)=="Loading" || std::string_view(s)=="Playing";
         std::lock_guard<std::mutex> lock(mutex_); state_=s; error_=error;
     }
     std::expected<void,std::string> stop() {
@@ -80,6 +82,7 @@ private:
         }
         auto stopped=stop(); if(!stopped) return stopped;
         if(!local_audio::claim(local_audio::Audiobook))return std::unexpected("Voice assistant is using audio; close it first");
+        local_audio::audiobook_busy=true;
         {std::lock_guard<std::mutex> lock(mutex_);path_=path;state_="Loading";error_.clear();}
         position_=0;duration_=0;bytes_=0;cancel_=false;paused_=false;seek_=static_cast<int32_t>(start);live_=true;
         TaskHandle_t task=nullptr;
