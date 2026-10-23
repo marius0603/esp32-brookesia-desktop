@@ -11,7 +11,7 @@ index 6d62e2f..fe1ee3c 100644
      std::expected<void, std::string> show_restart_prompt(
          system::core::AppContext &context,
 diff --git a/app/brookesia_app_settings/package/res/screens/display.json b/app/brookesia_app_settings/package/res/screens/display.json
-index 30a27ed..5d18a65 100644
+index 30a27ed..64469e6 100644
 --- a/app/brookesia_app_settings/package/res/screens/display.json
 +++ b/app/brookesia_app_settings/package/res/screens/display.json
 @@ -1,193 +1 @@
@@ -208,7 +208,7 @@ index 30a27ed..5d18a65 100644
 -        }
 -    ]
 -}
-+{"type":"viewScreen","id":"display","mountMode":"dynamic","commonProps":{"scrollable":false},"styleRefs":["app.page"],"children":[{"type":"container","id":"page","commonProps":{"scrollable":true},"layout":{"type":"flex","flexFlow":"column","gap":"${constant.settings.layout.pageGap}"},"placement":{"mode":"absolute","x":"${constant.settings.layout.pageX}","y":"${constant.settings.layout.pageY}","width":"${constant.settings.layout.pageWidth}","height":"${constant.settings.layout.pageHeight}"},"children":[{"type":"templateRef","id":"deep_sleep_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"label","id":"auto_title","labelProps":{"text":"自动深度睡眠"},"styleRefs":["app.cardTitle"],"placement":{"mode":"flow","width":"match","height":"wrap"}},{"type":"dropdown","id":"after","dropdownProps":{"options":["关闭","10 分钟","20 分钟","30 分钟","1 小时","2 小时","4 小时"],"selectedIndex":0},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.display.deep_sleep_after"}],"placement":{"mode":"flow","width":"match","height":"56dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}},{"type":"label","id":"auto_hint","labelProps":{"text":"无操作后进入；音频结束后重新计时"},"styleRefs":["app.caption"],"placement":{"mode":"flow","width":"match","height":"wrap"}},{"type":"templateRef","id":"deep_sleep","templateId":"setting_row","overrides":{".":{"commonProps":{"clickable":true},"events":[{"type":"clicked","action":"settings.display.deep_sleep"}]},"title":{"labelProps":{"text":"立即深度睡眠"}},"value":{"labelProps":{"text":""}}}},{"type":"label","id":"hint","labelProps":{"text":"轻触屏幕唤醒，唤醒后重新启动"},"styleRefs":["app.caption"],"placement":{"mode":"flow","width":"match","height":"wrap"}}]}},{"type":"templateRef","id":"auto_rotation_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_rotation","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动旋转"}},"text/subtitle":{"labelProps":{"text":"关闭后锁定当前方向"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_rotation"}]}}}]}},{"type":"templateRef","id":"device_modes_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_sleep","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动息屏"}},"text/subtitle":{"labelProps":{"text":"无操作 10 分钟后息屏，轻触唤醒"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_sleep"}]}}}]}},{"type":"container","id":"theme_modes","layout":{"type":"flex","flexFlow":"rowWrap","gap":"${constant.settings.layout.cardGap}","mainAlign":"start","crossAlign":"start"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"},"children":[{"type":"templateRef","id":"light_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.light"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.base}","radius":"18dp"}},"label":{"labelProps":{"text":"Light mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}},{"type":"templateRef","id":"dark_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.dark"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.overlay}","radius":"18dp"}},"label":{"labelProps":{"text":"Dark mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}}]},{"type":"label","id":"brightness_caption","styleRefs":["app.caption"],"labelProps":{"text":"Brightness level"},"placement":{"mode":"flow"},"bindings":{"labelProps.text":"labelProps.text"}},{"type":"templateRef","id":"brightness_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"${constant.settings.layout.cardGap}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"brightness_row","templateId":"slider_row","overrides":{"title":{"labelProps":{"text":"Screen brightness"}},"slider":{"events":[{"type":"valueChanged","action":"settings.display.brightness"}],"rangeProps":{"min":0,"max":100,"value":72}}}}]}}]}]}
++{"type":"viewScreen","id":"display","mountMode":"dynamic","commonProps":{"scrollable":false},"styleRefs":["app.page"],"children":[{"type":"container","id":"page","commonProps":{"scrollable":true},"layout":{"type":"flex","flexFlow":"column","gap":"${constant.settings.layout.pageGap}"},"placement":{"mode":"absolute","x":"${constant.settings.layout.pageX}","y":"${constant.settings.layout.pageY}","width":"${constant.settings.layout.pageWidth}","height":"${constant.settings.layout.pageHeight}"},"children":[{"type":"templateRef","id":"deep_sleep_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"label","id":"auto_title","labelProps":{"text":"自动深度睡眠"},"styleRefs":["app.cardTitle"],"placement":{"mode":"flow","width":"match","height":"wrap"}},{"type":"dropdown","id":"after","dropdownProps":{"options":["关闭","10 分钟","20 分钟","30 分钟","1 小时","2 小时","4 小时"],"selectedIndex":0},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.display.deep_sleep_after"}],"placement":{"mode":"flow","width":"match","height":"56dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}},{"type":"label","id":"auto_hint","labelProps":{"text":"仅本次有效，唤醒后关闭；播放中暂缓"},"styleRefs":["app.caption"],"placement":{"mode":"flow","width":"match","height":"wrap"}},{"type":"templateRef","id":"deep_sleep","templateId":"setting_row","overrides":{".":{"commonProps":{"clickable":true},"events":[{"type":"clicked","action":"settings.display.deep_sleep"}]},"title":{"labelProps":{"text":"立即深度睡眠"}},"value":{"labelProps":{"text":""}}}},{"type":"label","id":"hint","labelProps":{"text":"轻触屏幕唤醒，唤醒后重新启动"},"styleRefs":["app.caption"],"placement":{"mode":"flow","width":"match","height":"wrap"}}]}},{"type":"templateRef","id":"auto_rotation_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_rotation","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动旋转"}},"text/subtitle":{"labelProps":{"text":"关闭后锁定当前方向"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_rotation"}]}}}]}},{"type":"templateRef","id":"device_modes_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_sleep","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动息屏"}},"text/subtitle":{"labelProps":{"text":"无操作 10 分钟后息屏，轻触唤醒"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_sleep"}]}}}]}},{"type":"container","id":"theme_modes","layout":{"type":"flex","flexFlow":"rowWrap","gap":"${constant.settings.layout.cardGap}","mainAlign":"start","crossAlign":"start"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"},"children":[{"type":"templateRef","id":"light_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.light"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.base}","radius":"18dp"}},"label":{"labelProps":{"text":"Light mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}},{"type":"templateRef","id":"dark_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.dark"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.overlay}","radius":"18dp"}},"label":{"labelProps":{"text":"Dark mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}}]},{"type":"label","id":"brightness_caption","styleRefs":["app.caption"],"labelProps":{"text":"Brightness level"},"placement":{"mode":"flow"},"bindings":{"labelProps.text":"labelProps.text"}},{"type":"templateRef","id":"brightness_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"${constant.settings.layout.cardGap}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"brightness_row","templateId":"slider_row","overrides":{"title":{"labelProps":{"text":"Screen brightness"}},"slider":{"events":[{"type":"valueChanged","action":"settings.display.brightness"}],"rangeProps":{"min":0,"max":100,"value":72}}}}]}}]}]}
 diff --git a/app/brookesia_app_settings/package/res/screens/sound.json b/app/brookesia_app_settings/package/res/screens/sound.json
 index 4792f20..5252b93 100644
 --- a/app/brookesia_app_settings/package/res/screens/sound.json
@@ -625,12 +625,15 @@ diff --git a/gui/brookesia_gui_lvgl/include/brookesia/gui_lvgl/display_source.hp
 index 2a677f8..e37bd3d 100644
 --- a/gui/brookesia_gui_lvgl/include/brookesia/gui_lvgl/display_source.hpp
 +++ b/gui/brookesia_gui_lvgl/include/brookesia/gui_lvgl/display_source.hpp
-@@ -42,4 +42,5 @@ struct DisplaySourceConfig {
+@@ -42,6 +42,7 @@ struct DisplaySourceConfig {
      bool stack_in_psram = (BROOKESIA_GUI_LVGL_DISPLAY_SOURCE_DEFAULT_TASK_STACK_IN_PSRAM != 0);
      uint16_t buffer_height = static_cast<uint16_t>(BROOKESIA_GUI_LVGL_DISPLAY_SOURCE_DEFAULT_BUFFER_HEIGHT);
      bool require_double_buffer = (BROOKESIA_GUI_LVGL_DISPLAY_SOURCE_DEFAULT_REQUIRE_DOUBLE_BUFFER != 0);
 +    bool buffer_in_psram = false;
  };
+-
++
+ class DisplaySourceImpl;
 diff --git a/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp b/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp
 index 95fadf5..03d90b3 100644
 --- a/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp
@@ -788,21 +791,54 @@ index 2ce6a00..2f2e955 100644
              "Applied text font: node='%1%', requested_font_id='%2%', resolved_font_id='%3%', primary_src='%4%', "
              "font_size=%5%, cache_key='%6%', lv_font=%7%",
 diff --git a/hal/brookesia_hal_adaptor/src/audio/codec_player_impl.cpp b/hal/brookesia_hal_adaptor/src/audio/codec_player_impl.cpp
-index 0b9d900..618a0ee 100644
+index 0b9d900..7a5a6b8 100644
 --- a/hal/brookesia_hal_adaptor/src/audio/codec_player_impl.cpp
 +++ b/hal/brookesia_hal_adaptor/src/audio/codec_player_impl.cpp
-@@ -18,6 +18,9 @@
+@@ -18,6 +18,11 @@
  #include "driver/gpio.h"
  #include "esp_codec_dev.h"
- 
+-
++
++extern "C" bool brookesia_board_do_not_disturb() __attribute__((weak));
++extern "C" int brookesia_board_user_volume() __attribute__((weak));
 +extern "C" int brookesia_board_volume_filter(int) __attribute__((weak));
 +extern "C" int brookesia_child_cap_volume(int) __attribute__((weak));
 +
  namespace esp_brookesia::hal {
- 
+-
++
  constexpr uint8_t VOLUME_DEFAULT = 75;
-@@ -205,6 +208,10 @@ bool AudioCodecPlayerImpl::set_volume_internal(uint8_t volume, bool force)
- 
+@@ -91,5 +96,7 @@ bool AudioCodecPlayerImpl::open(const audio::CodecPlayerIface::Config &config)
+     is_codec_opened_ = true;
+-
++
++    const int remembered=brookesia_board_user_volume?brookesia_board_user_volume():-1;
++    if(remembered>=0)volume_=static_cast<uint8_t>(remembered);
+     BROOKESIA_CHECK_FALSE_RETURN(set_volume_internal(volume_, true), false, "Failed to set volume after open");
+-
++
+     return true;
+@@ -143,5 +150,18 @@ bool AudioCodecPlayerImpl::write_data(const uint8_t *data, size_t size)
+     BROOKESIA_CHECK_FALSE_RETURN(is_codec_opened_internal(), false, "Codec is not opened");
+     BROOKESIA_CHECK_NULL_RETURN(data, false, "Invalid audio data");
+-
++
++    // Apply the board's user target through the currently opened writer.
++    // A control-only handle can otherwise defer its cached volume indefinitely.
++    const int remembered=brookesia_board_user_volume?brookesia_board_user_volume():-1;
++    if(remembered>=0) {
++        int effective=std::clamp(remembered,0,100);
++        if(brookesia_child_cap_volume)effective=brookesia_child_cap_volume(effective);
++        if(brookesia_board_do_not_disturb && brookesia_board_do_not_disturb())effective=0;
++        int actual=-1;bool muted=false;
++        const bool force=esp_codec_dev_get_out_vol(get_codec_handle(codec_handles_),&actual)!=ESP_CODEC_DEV_OK ||
++            actual!=effective || esp_codec_dev_get_out_mute(get_codec_handle(codec_handles_),&muted)!=ESP_CODEC_DEV_OK ||
++            muted!=(effective==0);
++        BROOKESIA_CHECK_FALSE_RETURN(set_volume_internal(remembered,force),false,"Failed to synchronize active writer volume");
++    }
+     auto ret = esp_codec_dev_write(get_codec_handle(codec_handles_), const_cast<uint8_t *>(data), size);
+     BROOKESIA_CHECK_FALSE_RETURN(ret == ESP_CODEC_DEV_OK, false, "Failed to write audio data: %1%", ret);
+@@ -206,5 +226,9 @@ bool AudioCodecPlayerImpl::set_volume_internal(uint8_t volume, bool force)
      // Clamp target volume to [VOLUME_MIN, VOLUME_MAX]
      auto volume_clamped = std::clamp<uint8_t>(volume, VOLUME_MIN, VOLUME_MAX);
 +    if (brookesia_child_cap_volume) {
@@ -812,6 +848,15 @@ index 0b9d900..618a0ee 100644
      if (volume_clamped != volume) {
          BROOKESIA_LOGW(
              "Target volume(%1%) is out of range [%2%, %3%], clamp to %4%", volume, VOLUME_MIN, VOLUME_MAX, volume_clamped
+@@ -219,6 +243,8 @@ bool AudioCodecPlayerImpl::set_volume_internal(uint8_t volume, bool force)
+     if (is_codec_opened_internal()) {
+         auto ret = esp_codec_dev_set_out_vol(get_codec_handle(codec_handles_), volume_clamped);
+         BROOKESIA_CHECK_FALSE_RETURN(ret == ESP_CODEC_DEV_OK, false, "Failed to set volume value: %1%", ret);
++        ret = esp_codec_dev_set_out_mute(get_codec_handle(codec_handles_), volume_clamped==0);
++        BROOKESIA_CHECK_FALSE_RETURN(ret == ESP_CODEC_DEV_OK, false, "Failed to apply zero-volume mute: %1%", ret);
+     } else {
+         BROOKESIA_LOGW("Codec is not opened, deferred target volume");
+     }
 diff --git a/hal/brookesia_hal_adaptor/src/display/lcd_touch_impl.cpp b/hal/brookesia_hal_adaptor/src/display/lcd_touch_impl.cpp
 index 307579f..d6b4db9 100644
 --- a/hal/brookesia_hal_adaptor/src/display/lcd_touch_impl.cpp
@@ -936,42 +981,161 @@ index 497042e..373b79d 100644
      play_state_ = AudioPlayState::Idle;
      pause_requested_ = false;
 diff --git a/service/media/brookesia_service_audio/src/audio_playback_control.cpp b/service/media/brookesia_service_audio/src/audio_playback_control.cpp
-index c8456ca..b5b0c83 100644
+index c8456ca..2f6c517 100644
 --- a/service/media/brookesia_service_audio/src/audio_playback_control.cpp
 +++ b/service/media/brookesia_service_audio/src/audio_playback_control.cpp
-@@ -9,6 +9,9 @@
+@@ -9,6 +9,11 @@
  #include <string_view>
  #include <vector>
- 
+-
++
++extern "C" int brookesia_board_volume_filter(int) __attribute__((weak));
++extern "C" int brookesia_board_user_volume() __attribute__((weak));
 +extern "C" bool brookesia_board_do_not_disturb() __attribute__((weak));
 +extern "C" int brookesia_child_cap_volume(int) __attribute__((weak));
 +
  #include "boost/format.hpp"
  #include "brookesia/hal_interface/interface.hpp"
  #include "brookesia/service_audio/macro_configs.h"
-@@ -79,7 +82,11 @@ std::expected<void, std::string> AudioPlayback::function_set_volume(double volum
+@@ -61,6 +66,7 @@ void AudioPlayback::initialize_control_default_state()
+ {
+     BROOKESIA_LOG_TRACE_GUARD_WITH_THIS();
+-
++
+-    desired_volume_ = BROOKESIA_SERVICE_AUDIO_PLAYBACK_VOLUME_DEFAULT;
++    const int remembered=brookesia_board_user_volume?brookesia_board_user_volume():-1;
++    desired_volume_ = remembered>=0?remembered:BROOKESIA_SERVICE_AUDIO_PLAYBACK_VOLUME_DEFAULT;
+     desired_mute_ = BROOKESIA_SERVICE_AUDIO_PLAYBACK_DEFAULT_MUTE;
+ }
+@@ -79,12 +85,18 @@ std::expected<void, std::string> AudioPlayback::function_set_volume(double volum
          return std::unexpected(volume_result.error());
      }
- 
+-
++
 -    const auto target_volume = volume_result.value();
+-    if (target_volume == desired_volume_) {
 +    // Keep the previous user volume intact while the board is in DND.
 +    if(brookesia_board_do_not_disturb && brookesia_board_do_not_disturb())return {};
 +
 +    const auto target_volume = brookesia_child_cap_volume ?
 +                              static_cast<uint8_t>(brookesia_child_cap_volume(volume_result.value())) : volume_result.value();
-     if (target_volume == desired_volume_) {
++    const int board_volume=brookesia_board_user_volume?brookesia_board_user_volume():-1;
++    if (target_volume == desired_volume_ && (board_volume<0 || board_volume==target_volume)) {
          return {};
      }
-@@ -102,7 +109,8 @@ std::expected<double, std::string> AudioPlayback::function_get_volume()
+-
++
+     desired_volume_ = target_volume;
++    if(brookesia_board_volume_filter)(void)brookesia_board_volume_filter(target_volume);
+     save_volume_data();
+     if (!apply_control_state_to_hal()) {
+         BROOKESIA_LOGW("Failed to apply audio volume to HAL immediately, target state retained");
+@@ -102,7 +114,10 @@ std::expected<double, std::string> AudioPlayback::function_get_volume()
          return std::unexpected("Audio player interface is not available");
      }
- 
+-
++
 -    return static_cast<double>(desired_volume_);
 +    if(brookesia_board_do_not_disturb && brookesia_board_do_not_disturb())return 0.;
-+    return static_cast<double>(brookesia_child_cap_volume ? brookesia_child_cap_volume(desired_volume_) : desired_volume_);
++    const int remembered=brookesia_board_user_volume?brookesia_board_user_volume():-1;
++    const int volume=remembered>=0?remembered:desired_volume_;
++    return static_cast<double>(brookesia_child_cap_volume ? brookesia_child_cap_volume(volume) : volume);
  }
- 
+-
++
  std::expected<void, std::string> AudioPlayback::function_set_mute(bool enable)
+@@ -242,6 +257,10 @@ void AudioPlayback::load_control_data_from_storage()
+         }
+     }
+-
++
++    // This board persists the user volume with DeviceModes on an internal stack.
++    // Do not let a stale service cache/default replace it at every service start.
++    const int remembered=brookesia_board_user_volume?brookesia_board_user_volume():-1;
++    if(remembered>=0)desired_volume_=static_cast<uint8_t>(remembered);
+     if (!apply_control_state_to_hal()) {
+         BROOKESIA_LOGW("Failed to apply persisted audio playback state to HAL, cached state retained");
+     }
+@@ -336,6 +355,8 @@ bool AudioPlayback::apply_control_state_to_hal()
+     }
+     BROOKESIA_CHECK_FALSE_RETURN(ensure_player_iface(), false, "Failed to acquire audio player interface");
+-
++
++    const int remembered=brookesia_board_user_volume?brookesia_board_user_volume():-1;
++    if(remembered>=0)desired_volume_=static_cast<uint8_t>(remembered);
+     auto desired_hw_volume = map_percentage_to_hardware(
+                                  desired_volume_,
+                                  BROOKESIA_SERVICE_AUDIO_PLAYBACK_VOLUME_MIN,
+diff --git a/service/system/brookesia_service_usb/src/service_usb.cpp b/service/system/brookesia_service_usb/src/service_usb.cpp
+index 2cf3522..62387be 100644
+--- a/service/system/brookesia_service_usb/src/service_usb.cpp
++++ b/service/system/brookesia_service_usb/src/service_usb.cpp
+@@ -158,12 +158,18 @@ std::expected<std::filesystem::path, std::string> validate_upload_path(std::stri
+     if (remote_path.empty()) {
+         return std::unexpected("path is empty");
+     }
+-    const std::filesystem::path relative(remote_path);
+-    if (relative.is_absolute() || path_has_parent_reference(relative)) {
++    const bool sd_audio = remote_path.starts_with("sd-audiobooks/");
++    const std::filesystem::path relative(sd_audio ? remote_path.substr(14) : remote_path);
++    if (relative.empty() || relative.is_absolute() || path_has_parent_reference(relative)) {
+         return std::unexpected("path must be relative and must not contain '..'");
+     }
+-
++
+-    const std::filesystem::path root(BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
++    const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
++    if (sd_audio) {
++        auto extension = relative.extension().string();
++        std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c){return std::tolower(c);});
++        if (extension != ".mp3" && extension != ".wav")return std::unexpected("SD audio upload requires MP3 or WAV");
++    }
+     const auto candidate = (root / relative).lexically_normal();
+     if (!path_is_same_or_child(candidate, root)) {
+         return std::unexpected("path escapes upload root");
+@@ -758,7 +764,10 @@ private:
+             }
+         }
+-
++
+-        const std::filesystem::path root(BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
++        // Keep large audio transfers on SD from their first byte, including
++        // SHA-256 staging; Flash may have less free space than one chapter.
++        const bool sd_audio = transfer->destination.starts_with("/sdcard/audiobooks/");
++        const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
+         const std::filesystem::path temp_directory = root / ".brookesia_usb";
+         std::error_code error_code;
+         std::filesystem::create_directories(temp_directory, error_code);
+diff --git a/service/system/brookesia_service_usb/src/transport_serial_jtag.cpp b/service/system/brookesia_service_usb/src/transport_serial_jtag.cpp
+index 0ee33bd..a5b3a08 100644
+--- a/service/system/brookesia_service_usb/src/transport_serial_jtag.cpp
++++ b/service/system/brookesia_service_usb/src/transport_serial_jtag.cpp
+@@ -85,6 +85,14 @@ public:
+     bool is_connected() const override
+     {
+-        return usb_serial_jtag_is_connected();
++        const TickType_t now = xTaskGetTickCount();
++        if (usb_serial_jtag_is_connected()) {
++            last_connected_tick_ = now;
++            seen_connected_ = true;
++            return true;
++        }
++        // The IDF SOF monitor can briefly report no connection when tick/SD
++        // interrupts are delayed. Confirm loss before aborting a large upload.
++        return seen_connected_ && (now - last_connected_tick_ < pdMS_TO_TICKS(250));
+     }
+-
++
+     bool owns_driver() const override
+@@ -93,5 +101,7 @@ public:
+     }
+-
++
+ private:
++    mutable TickType_t last_connected_tick_ = 0;
++    mutable bool seen_connected_ = false;
+     bool owns_driver_ = false;
+ };
 diff --git a/system/brookesia_system_core/src/app/app.cpp b/system/brookesia_system_core/src/app/app.cpp
 index 39d0bb8..1fc50dc 100644
 --- a/system/brookesia_system_core/src/app/app.cpp

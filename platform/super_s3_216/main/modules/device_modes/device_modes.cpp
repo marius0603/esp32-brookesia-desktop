@@ -8,6 +8,8 @@
 #include "brookesia/gui_lvgl.hpp"
 #include "esp_board_manager.h"
 #include "dev_display_lcd.h"
+#include "esp_board_manager_includes.h"
+#include "esp_codec_dev.h"
 #include "esp_lcd_panel_ops.h"
 #include "esp_lv_adapter.h"
 #include "esp_timer.h"
@@ -17,6 +19,11 @@
 #include "deep_sleep.hpp"
 #include "idle_deep_sleep.hpp"
 #include "../audio_ownership.hpp"
+#include "../audiobook/audiobook.hpp"
+#include "driver/gpio.h"
+#include "esp_attr.h"
+#include "brookesia/hal_interface/interfaces/display/backlight.hpp"
+#include "brookesia/service_helper/media/audio.hpp"
 
 using namespace esp_brookesia;
 using namespace esp_brookesia::service;
@@ -31,6 +38,9 @@ std::atomic<int> quiet_start{1320},quiet_end{420};
 std::atomic<int> deep_minutes{0};
 std::atomic<uint32_t> deep_activity_ms{0};
 std::atomic<bool> preferences_loaded{false},test_idle_deep{false};
+std::atomic<int> story_dim{1000};
+std::atomic<unsigned> key_presses{0};
+std::atomic<bool> keys_ready{false},keys_reinitialize{false};
 int local_minute(){const time_t now=time(nullptr);if(now<1735689600)return -1;const time_t local=now+8*3600;tm t{};gmtime_r(&local,&t);return t.tm_hour*60+t.tm_min;}
 void update_quiet(){const bool active=manual_dnd || (quiet_enabled && quiet_hours::contains(local_minute(),quiet_start,quiet_end));if(dnd.exchange(active)!=active)audio_dirty=true;}
 std::atomic<uint32_t> last_touch_ms{0}, sleeps{0}, wakes{0}, swallowed{0}, panel_errors{0};
@@ -45,10 +55,13 @@ private:
         ready=true;return true;
     }
     boost::json::object state() {
+        uint8_t brightness=0;auto backlight=hal::acquire_first_interface<hal::display::BacklightIface>();
+        const bool brightness_valid=backlight && backlight->get_brightness(brightness);
         return {{"deep_sleep",board_deep_sleep_state()},{"auto_sleep_enabled",automatic.load()},{"timeout_seconds",600},
                 {"auto_deep_sleep_minutes",deep_minutes.load()},{"auto_deep_sleep_audio_busy",local_audio::busy()},
                 {"auto_deep_sleep_remaining_seconds",idle_deep_sleep::remaining(now_ms(),deep_activity_ms.load(),deep_minutes.load()*60)},
                 {"preferences_loaded",preferences_loaded.load()},{"test_idle_deep_sleep",test_idle_deep.load()},
+                {"brightness_percent",brightness_valid?int(brightness):-1},{"story_dim_per_mille",story_dim.load()},{"volume_keys_ready",keys_ready.load()},{"volume_key_presses",key_presses.load()},
                 {"screen_asleep",asleep.load()},{"do_not_disturb",dnd.load()},
                 {"manual_do_not_disturb",manual_dnd.load()},{"quiet_hours_enabled",quiet_enabled.load()},
                 {"quiet_start_minute",quiet_start.load()},{"quiet_end_minute",quiet_end.load()},
@@ -58,6 +71,18 @@ private:
                 {"wake_count",wakes.load()},{"panel_errors",panel_errors.load()},
                 {"pending_save",dirty.load()},{"audio_pending",audio_dirty.load()},
                 {"resume_volume",desired_volume.load()}};
+    }
+    FunctionResult speaker_volume(){
+        void *handle=nullptr;
+        if(esp_board_manager_get_device_handle("audio_dac",&handle)!=ESP_OK || !handle)
+            return {.success=false,.error_message="Audio DAC unavailable"};
+        auto codec=static_cast<dev_audio_codec_handles_t *>(handle)->codec_dev;
+        int volume=-1,reg=-1;bool muted=false;
+        const bool valid=esp_codec_dev_get_out_vol(codec,&volume)==ESP_CODEC_DEV_OK;
+        const bool read=esp_codec_dev_read_reg(codec,0x32,&reg)==ESP_CODEC_DEV_OK;
+        const bool mute_valid=esp_codec_dev_get_out_mute(codec,&muted)==ESP_CODEC_DEV_OK;
+        return {.success=true,.data=FunctionValue(boost::json::object{{"codec_open",valid},{"codec_volume",volume},
+            {"dac_register_valid",read},{"dac_volume_register",reg},{"mute_valid",mute_valid},{"muted",muted}})};
     }
     FunctionResult visual_layers(){
         if(esp_lv_adapter_lock(100)!=ESP_OK)return {.success=false,.error_message="GUI busy"};
@@ -107,7 +132,8 @@ private:
         esp_lv_adapter_unlock();return {.success=true,.data=FunctionValue(boost::json::object{{"layers",std::move(layers)}})};
     }
     std::vector<FunctionSchema> get_function_schemas() override {
-        return {{"ProfileRefresh","Measure native full-screen refresh",{{"Force","Force one whole-screen redraw",FunctionValueType::Boolean}},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Refresh timing"}},
+        return {{"GetSpeakerVolume","Read actual codec volume, mute and DAC register",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Speaker volume diagnostics"}},
+                {"ProfileRefresh","Measure native full-screen refresh",{{"Force","Force one whole-screen redraw",FunctionValueType::Boolean}},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Refresh timing"}},
                 {"GetWeatherLayers","Read visible native layer opacity for weather diagnostics",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Visible surfaces"}},
                 {"GetState","Get screen and sound mode state",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Modes"}},
                 {"SetAutoSleep","Enable ten minute inactivity timeout",{{"Enabled","Enabled",FunctionValueType::Boolean}}},
@@ -121,7 +147,8 @@ private:
                 {"TestIdleDeepSleep","Exercise idle policy after five quiet seconds with twenty second recovery",{}}};
     }
     FunctionHandlerList get_function_handlers() override {
-        return {{"ProfileRefresh",[](FunctionParameterMap &&p)->FunctionResult{
+        return {{"GetSpeakerVolume",[this](FunctionParameterMap &&)->FunctionResult{return speaker_volume();}},
+                {"ProfileRefresh",[](FunctionParameterMap &&p)->FunctionResult{
                     if(esp_lv_adapter_lock(1000)!=ESP_OK)return {.success=false,.error_message="GUI busy"};
                     auto result=board_display_profile(std::get<bool>(p.at("Force")));
                     esp_lv_adapter_unlock();return {.success=true,.data=FunctionValue(std::move(result))};}},
@@ -151,6 +178,9 @@ private:
 }
 
 std::shared_ptr<ServiceBase> make_device_modes_service(){return std::make_shared<DeviceModes>();}
+extern "C" void brookesia_board_volume_keys_resume(){keys_reinitialize=true;}
+extern "C" void brookesia_board_story_dim(int value){story_dim=std::clamp(value,100,1000);}
+extern "C" void brookesia_board_story_sleep_done(){story_dim=1000;sleep_requested=true;}
 extern "C" bool brookesia_board_screen_asleep(){return asleep;}
 extern "C" bool brookesia_board_do_not_disturb(){return dnd;}
 extern "C" bool brookesia_board_auto_sleep_enabled(){return automatic;}
@@ -170,7 +200,11 @@ extern "C" void brookesia_board_set_quiet_hours(bool on,int start,int end){
     if(start<0 || start>=1440 || end<0 || end>=1440)return;
     quiet_start=start;quiet_end=end;quiet_enabled=on;update_quiet();dirty=true;
 }
-extern "C" int brookesia_board_volume_filter(int volume){if(!dnd)desired_volume=volume;return dnd?0:volume;}
+extern "C" int brookesia_board_user_volume(){return preferences_loaded?desired_volume.load():-1;}
+extern "C" int brookesia_board_volume_filter(int volume){
+    if(!dnd && preferences_loaded && desired_volume.exchange(volume)!=volume)dirty=true;
+    return dnd?0:volume;
+}
 // HAL calls this even on release. Consume the entire first contact so waking
 // cannot also click an app, submit a PIN or start microphone recording.
 extern "C" bool brookesia_board_filter_touch(bool pressed){
@@ -181,6 +215,62 @@ extern "C" bool brookesia_board_filter_touch(bool pressed){
     return consume_touch;
 }
 
+namespace {
+std::atomic<unsigned> key_edges{0};
+void IRAM_ATTR volume_key_edge(void *context){key_edges.fetch_or(unsigned(uintptr_t(context)),std::memory_order_relaxed);}
+void volume_keys_poll() {
+    // Leave the middle PMU power key untouched. GPIO0 keeps its boot strap role.
+    static bool initialized=false;
+    struct Key{gpio_num_t pin;unsigned bit;int step;bool armed=false,held=false;uint32_t fired=0,repeat=0;};
+    static Key keys[]={{GPIO_NUM_0,1,-5},{GPIO_NUM_18,2,5}};
+    if(brookesia_board_deep_sleep_pending())return;
+    if(keys_reinitialize.exchange(false))initialized=false;
+    if(!initialized) {
+        gpio_config_t config{};config.pin_bit_mask=(1ULL<<0)|(1ULL<<18);
+        config.mode=GPIO_MODE_INPUT;config.pull_up_en=GPIO_PULLUP_ENABLE;
+        config.intr_type=GPIO_INTR_NEGEDGE;
+        if(gpio_config(&config)!=ESP_OK)return;
+        const auto installed=gpio_install_isr_service(0);
+        if(installed!=ESP_OK && installed!=ESP_ERR_INVALID_STATE)return;
+        if(gpio_isr_handler_add(GPIO_NUM_0,volume_key_edge,reinterpret_cast<void *>(1))!=ESP_OK ||
+           gpio_isr_handler_add(GPIO_NUM_18,volume_key_edge,reinterpret_cast<void *>(2))!=ESP_OK)return;
+        for(auto &key:keys){key.armed=false;key.held=false;key.fired=key.repeat=0;}
+        key_edges=0;initialized=true;keys_ready=true;
+    }
+    const auto now=now_ms();const unsigned edges=key_edges.exchange(0);
+    for(auto &key:keys) {
+        const bool pressed=gpio_get_level(key.pin)==0;
+        const bool tap=(edges & key.bit)!=0;
+        if(!pressed){key.armed=true;key.held=false;}
+        const bool initial=tap && key.armed && (!key.fired || now-key.fired>=180);
+        const bool repeat=pressed && key.held && now-key.repeat>=350 && now-key.fired>=650;
+        if(!initial && !repeat)continue;
+        if(initial){key.fired=now;key.held=pressed;}
+        key.repeat=now;++key_presses;last_touch_ms=now;deep_activity_ms=now;
+        if(asleep){wake_requested=true;key.armed=false;key.held=false;continue;}
+        if(dnd || brookesia_board_deep_sleep_pending())continue;
+        using Audio=service::helper::AudioPlayback;
+        auto current=Audio::call_function_sync<double>(Audio::FunctionId::GetVolume,service::helper::Timeout(1000));
+        if(current)(void)Audio::call_function_sync(Audio::FunctionId::SetVolume,
+            double(std::clamp(int(*current)+key.step,0,100)),service::helper::Timeout(1000));
+    }
+}
+void story_brightness_poll() {
+    static int saved=-1,applied=-1;
+    const int factor=story_dim.load();
+    if(factor==1000 && saved<0)return;
+    auto backlight=hal::acquire_first_interface<hal::display::BacklightIface>();
+    if(!backlight || esp_lv_adapter_lock(30)!=ESP_OK)return;
+    if(saved<0){uint8_t value=0;if(backlight->get_brightness(value)){saved=value;applied=value;}}
+    if(saved>=0) {
+        const int target=factor==1000?saved:saved==0?0:std::max(1,saved*factor/1000);
+        if(target==applied || backlight->set_brightness(target)) {
+            applied=target;if(factor==1000){saved=-1;applied=-1;}
+        }
+    }
+    esp_lv_adapter_unlock();
+}
+}
 void device_modes_poll(){
     if(!ready)return;
     // Service start runs on a PSRAM-backed thread. Even NVS reads must run
@@ -197,6 +287,7 @@ void device_modes_poll(){
         last_touch_ms=now_ms();deep_activity_ms=now_ms();audio_dirty=true;preferences_loaded=true;
     }
     update_quiet();
+    volume_keys_poll();audiobook_sleep_poll();
     const bool waking=wake_requested.exchange(false);
     const bool sleeping=sleep_requested.exchange(false);
     const bool target=waking?false:(asleep || sleeping || (automatic && now_ms()-last_touch_ms.load()>=IDLE_MS));
@@ -214,6 +305,7 @@ void device_modes_poll(){
     if(waking && !asleep){last_touch_ms=now_ms();deep_activity_ms=now_ms();}
     if(waking && asleep)wake_requested=true;
     if(sleeping && !asleep)sleep_requested=true;
+    story_brightness_poll();
     if(audio_dirty.exchange(false)){
         auto player=hal::acquire_first_interface<hal::audio::CodecPlayerIface>();
         if(!player || !player->set_volume(static_cast<uint8_t>(desired_volume.load())))audio_dirty=true;

@@ -4,6 +4,7 @@ The accelerated path uses the production idle poll and audio guard, but adds
 a 20 s RTC recovery timer. It never persists a short timeout.
 Do not touch the board during this test. Original preferences are restored.
 """
+import argparse
 import json
 from pathlib import Path
 import time
@@ -15,6 +16,7 @@ PRESETS=(0,10,20,30,60,120,240)
 
 
 def main():
+    parser=argparse.ArgumentParser();parser.add_argument('--leave-disabled',action='store_true');args=parser.parse_args()
     original=None
     original_volume=None
     report={'passed':False,'presets':[]}
@@ -56,7 +58,7 @@ def main():
             call(c,'SystemCore','StartApp',{'AppId':app['app_id']});time.sleep(1)
             call(c,'AudioPlayback','SetVolume',{'Volume':original_volume})
             call(c,'DeviceModes','SetAutoDeepSleep',{'Minutes':20});before=saved(c)
-            report['preserved']={k:before[k] for k in ('auto_deep_sleep_minutes','auto_sleep_enabled','quiet_hours_enabled','quiet_start_minute','quiet_end_minute','resume_volume')}
+            report['preserved']={k:before[k] for k in ('auto_sleep_enabled','quiet_hours_enabled','quiet_start_minute','quiet_end_minute','resume_volume')}
             entries=before['deep_sleep']['entries']
             # TestTone is a fixed two second synthetic sound, no microphone upload.
             call(c,'Audiobook','TestTone')
@@ -85,17 +87,19 @@ def main():
             deep=after['deep_sleep']
             assert not deep['error'] and deep['entries']==entries+1 and deep['wake_cause']==4,deep
             assert not after['test_idle_deep_sleep']
+            assert after['auto_deep_sleep_minutes']==0,after
+            report['one_shot_disabled_after_wake']=True
             assert {k:after[k] for k in report['preserved']}==report['preserved']
             report.update({'idle_trigger_verified':True,'timer_wake':deep,'passed':True})
-            print('Idle-triggered real deep sleep and saved 20 minute preset survived RTC wake',flush=True)
+            print('Idle-triggered real deep sleep and one-shot timeout disabled itself across RTC wake',flush=True)
             break
         else:raise TimeoutError('Idle deep-sleep recovery did not finish')
     finally:
         if original is not None:
             with connect() as c:
-                call(c,'DeviceModes','SetAutoDeepSleep',{'Minutes':original})
+                call(c,'DeviceModes','SetAutoDeepSleep',{'Minutes':0 if args.leave_disabled else original})
                 if original_volume is not None:call(c,'AudioPlayback','SetVolume',{'Volume':original_volume})
-                assert saved(c)['auto_deep_sleep_minutes']==original
+                assert saved(c)['auto_deep_sleep_minutes']==(0 if args.leave_disabled else original)
         (ROOT/'runtime/auto-deep-sleep-verification.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
 
 

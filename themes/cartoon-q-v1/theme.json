@@ -1,0 +1,70 @@
+{
+  "id": "cartoon-q-v1",
+  "display": [
+    480,
+    480
+  ],
+  "icon_size": [
+    96,
+    96
+  ],
+  "icons": {
+    "brookesia.general.settings": "settings.png",
+    "brookesia.general.files": "files.png",
+    "brookesia.general.app_store": "app-store.png",
+    "local.codex.quota": "quota.png",
+    "local.weather": "weather.png",
+    "local.audiobook": "audiobook.png",
+    "local.flipclock": "flipclock.png",
+    "local.voiceassistant": "assistant.png",
+    "local.childmode": "child-mode.png"
+  },
+  "wallpaper": "wallpaper.jpg",
+  "files": {
+    "settings.png": {
+      "bytes": 17289,
+      "sha256": "ace38ff285355d72966e136919b0e113c23295bbea509c60c39c52390692208c"
+    },
+    "files.png": {
+      "bytes": 13632,
+      "sha256": "27d675452703489aa939f909d423b40a0952c7323b9797a7407bc1bdf69e9a48"
+    },
+    "app-store.png": {
+      "bytes": 17110,
+      "sha256": "e7f0281bb17335fb75d1dd7a6979ea4052983fdfda17729f16672cbfea913dc5"
+    },
+    "quota.png": {
+      "bytes": 18627,
+      "sha256": "6678e8b3306637a430e899eec1080187bc40f1ca9eb7a8933a7356fbdf420887"
+    },
+    "weather.png": {
+      "bytes": 17075,
+      "sha256": "1154cea039fca35c5dfe7afd83e2bce55353a26f7b15d23015f0647a086b48b1"
+    },
+    "audiobook.png": {
+      "bytes": 17672,
+      "sha256": "dbf6bcf3f830705e5b1d2422139342c4dca89fc0b6920915adebbbad2be4676f"
+    },
+    "flipclock.png": {
+      "bytes": 16897,
+      "sha256": "06cb609b10a7690b784a8586928ddea9a3e830e4bb6a7aeae8b1872cbc5902f8"
+    },
+    "assistant.png": {
+      "bytes": 15412,
+      "sha256": "095d45370c54983307a56bd4e0971b4216f3ce0ce65d4eece07db1ef12374d0c"
+    },
+    "child-mode.png": {
+      "bytes": 17072,
+      "sha256": "9b33ebf45ee354ba7db16015b8e8dc466d68054aab3c9730593ba413131e5540"
+    },
+    "wallpaper.jpg": {
+      "bytes": 26318,
+      "sha256": "7a146ed4d2396e8818472d7fe6fbebd590dcea95695ca239bb22a138484aed5d"
+    },
+    "wallpaper-486-rgb565.bin": {
+      "bytes": 102293,
+      "sha256": "5fd2663c210e73d123bb798e39daf0d05c4a06fd05f33118fe2d9eb5d5061956"
+    }
+  },
+  "wallpaper_render": "wallpaper-486-rgb565.bin"
+}

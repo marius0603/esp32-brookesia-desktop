@@ -1,3 +1,5 @@
+当前 s3.21 使用 `cartoon-q-v1` 九枚图标与壁纸，更新请使用 `tools/deploy_cartoon_theme.py --repo <仓库目录>`，见仓库 `themes/cartoon-q-v1/README.md`。下文为 s3.20 及之前奶油主题的迁移流程，勿用其旧主题提交步骤覆盖当前 Q 版回退图标。
+
 # SD 卡资源分层
 
 系统固件、应用 JS/JSON、基础字库、儿童模式及 PIN 保存在内部 Flash。

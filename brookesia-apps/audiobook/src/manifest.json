@@ -5,7 +5,7 @@
       "en": "Audiobook",
       "zh_CN": "听书"
     },
-    "version": "0.1.1",
+    "version": "0.2.0",
     "visible": true,
     "systems": [
       "super"
@@ -29,6 +29,10 @@
     {
       "name": "AudioPlayback",
       "version": "0.8.2"
+    },
+    {
+      "name": "DeviceModes",
+      "version": "0.1.0"
     }
   ]
 }

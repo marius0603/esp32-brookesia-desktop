@@ -1,69 +1,44 @@
-# 听书应用
+# 听书 0.2.0（固件 s3.20 起）
 
-听书 App：`local.audiobook` 0.1.1。底层服务 `Audiobook` 0.1.0 集成在
-ESP-Brookesia 本地适配固件 0.8.3-s3.3，独立工作于播放任务；额度、天气继续使用原有 App 包。
+## 操作
 
-按用户要求，暂停下载《凡人修仙传》，等待 microSD 卡。当前没有下载任何书籍音频。
-“测试喇叭”生成两秒、低幅度的 440 Hz 正弦波，不使用网络音频或书籍。
+打开应用自动扫描 SD 卡 `/sdcard/audiobooks/` 中的 MP3/WAV（含两层子目录，最多 512 章）。上一章、播放/暂停、下一章以及前后 30 秒使用大号触摸按钮；移除了扫描章节、测试喇叭和屏幕音量按钮。重新打开/恢复应用会刷新书单。
 
-## 装卡后使用
+中间 PWR 键保留 PMU 开关机。两个侧键分别为 BOOT/GPIO0 音量减、KEY3/GPIO18 音量加，每次 5%，长按连续调整；尊重儿童音量上限与勿扰。息屏后的首次按键只唤醒，不同时调音量。BOOT 在上电/复位期间仍保持原有启动配置功能。
 
-使用可读的 FAT32 microSD 卡，在电脑上创建 `audiobooks` 文件夹。例如：
+s3.21 将保存音量统一用于服务启动、编解码器重开和正在写入的音频流，避免界面数值变化但芯片输出不变。0% 会启用芯片静音，新的音量选择会保存；睡眠渐弱仍只改变 PCM 增益，不覆盖选择值。勿扰期间页面显示“音量 xx% · 勿扰静音”，保持已保存的音量。
 
-```
-audiobooks/
-  书名/
-    0001.mp3
-    0002.mp3
-```
+`tools/verify_speaker_volume.py` 在播放中核对 10%、30%、0% 的芯片音量、DAC 寄存器与静音标志，测试后恢复当前音量和勿扰。可显式用 `--restore-volume` 指定恢复值；不改家长控制，需家长音量上限允许 30%。
 
-关机装卡后启动开发板，打开“听书”，点击“扫描章节”。支持 MP3、WAV，单声道或双声道、
-8–48 kHz；输出为 16 位 PCM。文件按路径字典序排列，建议章节编号补零。
-扫描至子目录两层，当前最多显示 512 个文件。无卡时显示提示，不格式化存储卡。
-SD 卡读写、真实长音频解码和持续播放需装卡后实测。
+## 睡眠定时
 
-提供播放／暂停、上一章／下一章、前后 30 秒、音量调节、章节扫描和测试喇叭。
-自动播放下一章；显示当前播放时间，只有文件头提供总时长时才显示总时长。
-MP3 未提供总帧数时不扫描整部文件计算时长，避免阻塞首次播放。
+选 15、30、45 分钟，立即开始一次墙钟倒计时；暂停和切换章节不重新计时。最后 2 分钟对故事 PCM 施加线性数字增益，并把屏幕亮度渐降至原亮度的约 10%。屏幕若已自动熄灭，不会为了淡出重新点亮。
 
-书签保存在 `/littlefs/audiobook-bookmark.json`：记录最近章节及播放秒数，播放时每 15 秒保存，
-暂停、切换和退出时保存；恢复是章节及秒数级，断电可能损失最后 15 秒进度。
-切到后台继续当前章节；退出应用停止播放。SD 读取与解码由独立内部栈任务运行。
+到时截停故事，使用离线中文短句“晚安”轻声播报，然后息屏；保留故事路径与位置，不会自动跳到下一章。勿扰或家长休息限制生效时跳过晚安语音，仍停止播放。取消定时恢复正常数字增益和先前亮度；到时息屏后恢复保存亮度供下次唤醒使用。
 
-## 源码和构建
+定时只在本次听书服务会话生效，关闭应用或重启取消；切换前台应用而听书仍保留在后台时，由原生轮询继续处理。倒计时未结束时暂缓自动深睡，避免暂停后被 10 分钟闲置规则提前打断。定时结束后自动深睡重新计时。原有 10 分钟显示息屏不变。
 
-- App：`D:/chatgpt_data/brookesia-apps/audiobook`。
-- 音频服务：`D:/chatgpt_data/esp-brookesia-v08/examples/system/super_s3_216/main/modules/audiobook`。
-- 解码器：[dr_libs](https://github.com/mackron/dr_libs)，固定提交和文件校验值见服务目录 `upstream.json`；许可见 `LICENSE`。
+渐弱不修改系统音量或逐秒写 NVS；复用原有音频任务及设备轮询，不创建常驻睡眠定时任务。
+
+## 两篇中文样例
+
+- 《小马和月亮灯》：本项目原创睡前故事，约 5 分 51 秒，中文合成朗读；文字和 MP3 在 `samples/stories/`。本机使用 Windows 的 Microsoft Huihui Desktop，Rate=-2、Volume=75、16 kHz 单声道 WAV，再编码为 48 kbps MP3。开发板只解码播放。
+- 《咕咚》：从淘知学堂课文原声朗读页面提供的下载链接获取，用于当前设备测试；来源、字节数和 SHA-256 记录于 `samples/stories/sources.json`，仓库不重新分发该音频。部署时使用 ASCII 文件名以适配当前 SD 文件系统编码，界面显示中文书名。
+
+在中文 Windows 上可重新合成原创故事为 WAV，开发板同样支持 WAV：
 
 ```powershell
-.venv\Scripts\python.exe tools/build_brookesia_app.py ..\brookesia-apps\audiobook
-# 先停止电脑采集器，等待串口释放
-.venv\Scripts\python.exe tools/install_runtime_app.py ..\brookesia-apps\audiobook\dist\local.audiobook.debug.0.1.1.bpk
+powershell.exe -NoProfile -File tools/synthesize_mandarin.ps1 -TextFile samples/stories/小马和月亮灯.txt -Output D:/story.wav
 ```
 
-此 BPK 需要包含 Audiobook 服务的 s3.3 固件；在只有音量控制的 s3.2 上不能实际播放。
-升级只写应用分区，保留现有应用、LittleFS、NVS 和 Wi-Fi 配置。
-s3.2 升级前镜像位于 `artifacts/brookesia-s3.2-before-audiobook`。
+无需 API Key、网络 TTS 或接口费用；其他语音需要在本机已安装并通过 `-Voice` 指定。短句晚安以约 34 KB PCM 保存在固件 Flash，不依赖 SD 或网络。
 
-## 内容来源
+## 部署与验证
 
-已找到[喜马拉雅制作的《凡人修仙传》多播版](https://www.himalaya.com/courses/3710632)，
-页面注明前 30 集免费试听，其余需要购买。尚未下载，也未验证平台文件能否直接用于开发板。
+先烧录 s3.21 或更新版应用分区，再用 `tools/deploy_audiobook_sleep.py --repo <仓库目录> --downloaded <已下载咕咚.mp3>` 更新三个听书文件并上传两篇故事。旧界面备份到 SD，更新后重启刷新预加载资源。
 
-## 实机验证（2026-10-18）
+固件 USB `put` 新增 `sd-audiobooks/` 相对路径前缀，仅允许 MP3/WAV，映射到 `/sdcard/audiobooks/`。临时分片与 SHA-256 校验也在 SD 上完成，不经过空间有限的 Flash；其余上传路径行为不变，仍拒绝绝对路径、父级跳转和符号链接。既有故事默认不覆盖。
 
-固件已仅写入应用分区并通过 esptool 哈希校验，额度 0.2.2 和天气 0.2.2 保留。
-听书重复打开两次通过；无卡目录为空，缺失文件正确拒绝。测试音完整输出 64,000 字节 PCM，
-状态 Ended，无错误；用户确认“界面正常，喇叭有声音”。音量测试后恢复原值。
-0.1.1 将音量减号从字体缺失的 U+2212 改为 ASCII 连字符，更新后启动正常。
-证据：runtime/audiobook-verification.json、audiobook-layout-0.1.1.json、audiobook-flash.log。
-SD 文件读取、MP3/WAV 持续播放和实机断点续播等待装卡后验证。
+`tools/verify_story_sleep.py` 使用临时 10 秒定时、8 秒淡出，检查两篇 MP3 解码、三个正式档位、非法输入、跨章节计时、取消恢复、暂停/后台完成、晚安写入及勿扰跳过。会短暂关闭勿扰以测试播报，最终恢复捕获的音量、勿扰和自动深睡设置；不修改家长控制。
 
-## SD 卡验证（2026-10-20）
-
-已挂载约 64GB FATFS SD 卡到 `/sdcard`，容量 63,832,162,304 字节。已创建 `/sdcard/audiobooks`，临时文本写入、读取比对和清理通过；Audiobook.List 确认识别到卡，目前没有书籍章节。
-
-生成并临时复制了一段 2 秒、16kHz、单声道 PCM16 WAV 到 SD 卡，通过听书应用持有服务后播放：状态 Ended、进度 2 秒、输出 PCM 64,000 字节、无错误。测试后删除自建测试文件，恢复原音量和书签。尚未验证实际 MP3 书籍或长时间播放。
-
-证据：本机私有 `runtime/sdcard-ready.json`、`runtime/sdcard-playback-verification.json`。SD 卡和音频驱动无需重新烧录固件。
+`tests/story_sleep_static.cpp` 编译检查正式 2 分钟淡出和分钟档位边界。加速检查不等同于逐档完整等待 15/30/45 分钟。实体按键、排版和实际听感需结合实物确认。

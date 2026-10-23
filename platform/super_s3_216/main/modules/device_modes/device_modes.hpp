@@ -18,3 +18,10 @@ extern "C" int brookesia_board_quiet_start();
 extern "C" int brookesia_board_quiet_end();
 extern "C" int brookesia_board_local_minute();
 extern "C" void brookesia_board_set_quiet_hours(bool,int,int);
+
+extern "C" void brookesia_board_story_dim(int per_mille);
+extern "C" void brookesia_board_story_sleep_done();
+
+extern "C" void brookesia_board_volume_keys_resume();
+
+extern "C" int brookesia_board_user_volume();

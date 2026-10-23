@@ -7,7 +7,8 @@ enum Owner { Free = 0, Audiobook = 1, Assistant = 2 };
 inline std::atomic<int> owner{Free};
 inline std::atomic<bool> sleeping{false};
 inline std::atomic<bool> audiobook_busy{false}, assistant_busy{false};
-inline bool busy(){return audiobook_busy.load() || assistant_busy.load();}
+inline std::atomic<bool> story_timer_busy{false};
+inline bool busy(){return audiobook_busy.load() || assistant_busy.load() || story_timer_busy.load();}
 inline bool claim(Owner value) {
     if(sleeping.load())return false;
     int expected = Free;

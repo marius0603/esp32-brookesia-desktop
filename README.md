@@ -4,10 +4,10 @@
 
 | 内容 | 版本与当前行为 |
 | --- | --- |
-| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.19；可选闲置时长深度睡眠、PSRAM 整屏合成、壁纸定时微移、10 分钟自动息屏、声音设置内的定时勿扰、儿童模式、SD 主题回退、重力自动旋转；独立 48KiB 编解码栈，40KiB 自动提交保护 |
+| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.21；Q 版主题、音量持久化与实际输出同步、单次闲置深度睡眠、实体音量键、PSRAM 整屏合成、壁纸定时微移、10 分钟自动息屏、声音设置内的定时勿扰、儿童模式、SD 主题回退、重力自动旋转；独立 48KiB 编解码栈，40KiB 自动提交保护 |
 | Codex 额度 | 0.2.2，真实剩余额度、吃豆人动画、大号重置倒计时 |
 | 天气 | 0.2.6，默认上海、开发板直接联网、各天气动态背景、云形图片、24 小时预报 |
-| 听书 | 0.1.1，扬声器、MP3/WAV、章节与书签；SD 卡挂载及 WAV 文件播放已验证 |
+| 听书 | 0.2.0，SD MP3/WAV、章节与书签；15/30/45 分钟睡眠定时，最后 2 分钟声音/亮度渐弱，到时离线“晚安”并停播 |
 | 翻页时钟 | 0.1.1，只显示大号北京时间 HH:MM，分钟变化时翻页 |
 | 智能助手 | 0.1.0，小智平台激活、手动语音对话、字幕、音量和本地录音回放；当前设备识别和播报已验证 |
 | 儿童模式 | 0.1.0，家长 PIN、应用白名单、音量上限、每日时长和可选夜间休息；默认不开放语音助手 |
@@ -17,12 +17,13 @@
 壁纸微移的行为与已有设备更新步骤见 [WALLPAPER_SHIFT.md](codex-quota-monitor/WALLPAPER_SHIFT.md)。
 重力感应开关、校准与已有设备安装步骤见 [AUTO_ROTATION.md](codex-quota-monitor/AUTO_ROTATION.md)。
 儿童模式设置与验证见 [CHILD_MODE.md](codex-quota-monitor/CHILD_MODE.md)，主题资源迁移见 [SD_RESOURCES.md](codex-quota-monitor/SD_RESOURCES.md)。
+听书定时、中文样例及离线语音合成见 [AUDIOBOOK.md](codex-quota-monitor/AUDIOBOOK.md)。当前 Q 版图标和壁纸见 [主题说明](themes/cartoon-q-v1/README.md)。
 当前系统属于官方开发分支的本地 S3 适配，未恢复微雪出厂 AIChats 等完整应用。
 
 ## 在另一台 Windows 电脑开始
 
 准备 Git、Python 3.12（64 位）、Node.js LTS；固件编译建议使用较短路径，例如 `C:\dev\esp32-desktop`。
-克隆此私有仓库时使用你自己的 GitHub 登录。进入仓库后运行：
+克隆仓库时使用你自己的 GitHub 登录。进入仓库后运行：
 
 ```powershell
 git clone https://github.com/marius0603/esp32-brookesia-desktop.git
@@ -86,7 +87,7 @@ npm --prefix tools/brookesia-toolkit install
 
 ## 固件文件与备份
 
-`packages/apps` 是当前 6 个可安装 BPK；`packages/firmware` 包含 s3.19、s3.18、s3.17、s3.16、s3.15、s3.14、s3.13、s3.12、s3.11、s3.8、s3.6 和上版 s3.3 **仅应用分区**镜像与分区表参考，校验值见 `packages/SHA256.json`。
+`packages/apps` 是当前 6 个可安装 BPK；`packages/firmware` 包含 s3.21、s3.20、s3.19、s3.18、s3.17、s3.16、s3.15、s3.14、s3.13、s3.12、s3.11、s3.8、s3.6 和上版 s3.3 **仅应用分区**镜像与分区表参考，校验值见 `packages/SHA256.json`。
 它们不包含用户 NVS、Wi-Fi 数据或设备系统资源分区，不能当成任意新设备的完整恢复镜像。
 
 原电脑的恢复工具会检查完整备份和设备身份，新电脑没有备份时会拒绝直接烧录。这是已有防误刷机制。

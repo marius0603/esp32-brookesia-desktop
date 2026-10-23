@@ -8,7 +8,7 @@ using namespace esp_brookesia::service;
 namespace {
 struct Asset {const char *name,*flash,*sd,*fallback;};
 #define ASSET(name,app,ext) {name ".png","/littlefs/themes/cream-handdrawn-v1/" name ".png", \
-    "/sdcard/themes/cream-handdrawn-v1/" name ".png","/littlefs/apps/" app "/res/images/launcher_icon." ext}
+    "/sdcard/themes/cartoon-q-v1/" name ".png","/littlefs/apps/" app "/res/images/launcher_icon." ext}
 constexpr Asset assets[]{
     ASSET("settings","brookesia.general.settings","jpg"),
     ASSET("files","brookesia.general.files","jpg"),
@@ -18,10 +18,11 @@ constexpr Asset assets[]{
     ASSET("audiobook","local.audiobook","png"),
     ASSET("flipclock","local.flipclock","png"),
     ASSET("assistant","local.voiceassistant","png"),
+    ASSET("child-mode","local.childmode","png"),
     {"wallpaper-486-rgb565.bin","/littlefs/themes/cream-handdrawn-v1/wallpaper-486-rgb565.bin",
-     "/sdcard/themes/cream-handdrawn-v1/wallpaper-486-rgb565.bin","/littlefs/themes/cream-handdrawn-v1/wallpaper.jpg"},
+     "/sdcard/themes/cartoon-q-v1/wallpaper-486-rgb565.bin","/littlefs/themes/cream-handdrawn-v1/wallpaper.jpg"},
     {"wallpaper.jpg","/littlefs/themes/cream-handdrawn-v1/wallpaper.jpg",
-     "/sdcard/themes/cream-handdrawn-v1/wallpaper.jpg","/littlefs/themes/cream-handdrawn-v1/wallpaper.jpg"}
+     "/sdcard/themes/cartoon-q-v1/wallpaper.jpg","/littlefs/themes/cream-handdrawn-v1/wallpaper.jpg"}
 };
 #undef ASSET
 std::atomic<unsigned> sd_resolutions{0},flash_resolutions{0};
@@ -52,7 +53,7 @@ private:
                 files.push_back(boost::json::object{{"name",a.name},{"selected",selected},
                     {"on_sd",selected==a.sd},{"exists",present},{"bytes",present?st.st_size:0}});
             }
-            return {.success=true,.data=FunctionValue(boost::json::object{{"files",std::move(files)},
+            return {.success=true,.data=FunctionValue(boost::json::object{{"theme","cartoon-q-v1"},{"files",std::move(files)},
                     {"sd_resolutions",sd_resolutions.load()},{"flash_resolutions",flash_resolutions.load()}})};
         }}};
     }

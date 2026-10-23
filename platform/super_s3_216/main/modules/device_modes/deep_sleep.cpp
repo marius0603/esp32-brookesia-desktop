@@ -1,4 +1,5 @@
 #include "deep_sleep.hpp"
+#include "device_modes.hpp"
 #include "../audio_ownership.hpp"
 #include <atomic>
 #include <string_view>
@@ -71,6 +72,8 @@ bool stop_audio() {
 esp_err_t enter_sleep() {
     // Do not cut power or stop Wi-Fi while apps still own files or audio buffers.
     if(!close_apps() || !stop_audio())return ESP_ERR_TIMEOUT;
+    // The idle timeout is a one-shot choice. Persist OFF before any real sleep.
+    if(!brookesia_board_set_auto_deep_sleep_index(0))return ESP_ERR_INVALID_STATE;
     // Existing internal workers finish their pending NVS saves during this grace period.
     vTaskDelay(pdMS_TO_TICKS(1500));
     for(const auto *name:{"DeviceModes","AutoRotation"}) {
@@ -146,7 +149,7 @@ void worker(void *) {
         lv_obj_invalidate(lv_screen_active());esp_lv_adapter_unlock();
     }
     failure=error;
-    pending=false;local_audio::sleeping=false;
+    pending=false;local_audio::sleeping=false;brookesia_board_volume_keys_resume();
     ESP_LOGE("S3_SLEEP","Deep sleep cancelled: %s",esp_err_to_name(error));
     vTaskDelete(nullptr);
 }

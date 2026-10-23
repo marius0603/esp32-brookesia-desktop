@@ -1,0 +1,22 @@
+{
+  "original": {
+    "title": "小马和月亮灯",
+    "language": "zh-CN",
+    "voice": "Microsoft Huihui Desktop",
+    "rate": -2,
+    "sample_rate": 16000,
+    "channels": 1,
+    "mp3_kbps": 48,
+    "seconds": 350.82,
+    "sha256": "b53ea2574a3843f55562e66190bf39d8de3cc16d2daf1e075342a0a1589b0e80"
+  },
+  "downloaded": {
+    "title": "咕咚",
+    "language": "zh-CN",
+    "page": "https://www.taozhi.cn/a/160345.htm",
+    "download": "https://assets.taozhi.online/_Upload/Files/2017_01_11_08_41_48_4515.mp3",
+    "bytes": 1106053,
+    "sha256": "f556babff79e8539d2187a6125bf0778289ca32c292549f3aee8f5f7968e06e1",
+    "note": "Downloaded using the source page download link for this device; audio is not redistributed in the repository."
+  }
+}
