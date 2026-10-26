@@ -27,5 +27,7 @@
   "packages/firmware/brookesia-0.8.3-s3.21-app.bin": "657c69781afbf32a1874a67aca10994da86225367f6641a7c2974697634e9d32",
   "packages/firmware/brookesia-0.8.3-s3.22-app.bin": "95e5514d72c124a9bc8e742daaa4bcd19c1079a681e4c9bd66c527b419b74dfd",
   "packages/apps/local.audiobook.debug.0.2.1.bpk": "576eabcc350670b98d89a1163881b96ec61e252590a4eab67005b110981d1d54",
-  "packages/apps/local.voiceassistant.debug.0.1.1.bpk": "3f806798ada1a6f8b453a9bbac35c67fe9eb56ee3841c042db7bfdc45ff8411d"
+  "packages/apps/local.voiceassistant.debug.0.1.1.bpk": "3f806798ada1a6f8b453a9bbac35c67fe9eb56ee3841c042db7bfdc45ff8411d",
+  "packages/apps/local.audiobook.debug.0.3.0.bpk": "0ed1f5e05bda85ef76b8a5b87a5cb2ae9cada862686b9842f85c7418bb25d293",
+  "packages/firmware/brookesia-0.8.3-s3.23-app-only.zip": "9bdf653626889e059676af2947cad8759231dcf20bd7d87fa7d386b9f88eeb4b"
 }

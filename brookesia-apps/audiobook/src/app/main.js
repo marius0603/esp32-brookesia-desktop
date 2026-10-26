@@ -12,7 +12,8 @@ const storyTitles={
   '09-xuehaizi.mp3':'雪孩子',
   '10-wangyangbulao.mp3':'亡羊补牢'
 };
-let gui, audio, storage, modes, timer, playback, localVoice, tracks=[], index=0, current=null, playing=null, hidden=false, cache={}, volume=20, bookmark=null, lastSaved=0;
+const sleepMinutes=[0,15,30,45];
+let gui, audio, storage, modes, timer, playback, localVoice, tracks=[], index=0, current=null, playing=null, hidden=false, cache={}, volume=20, bookmark=null, lastSaved=0,sleepSelected=-1;
 function call(handle,name,args){const r=JSON.parse(brookesia.call_function(handle,name,JSON.stringify(args||{})));if(!r.success)throw new Error(r.error||r.error_message||name);return r.data;}
 function text(id,value){value=String(value);if(cache[id]===value||hidden)return;call(gui,'SetText',{Path:'/main/'+id,Text:value});cache[id]=value;}
 function clock(seconds){seconds=Math.max(0,Math.floor(Number(seconds)||0));return Math.floor(seconds/3600)+':'+String(Math.floor(seconds%3600/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');}
@@ -32,8 +33,14 @@ function play(){
   call(audio,'Play',{Path:current.path,Position:position});text('chapter',title(current));poll();
 }
 function move(delta){if(!tracks.length)return;save();index=Math.max(0,Math.min(tracks.length-1,index+delta));current=tracks[index];bookmark={path:current.path,position:0};play();}
+function syncSleep(next){
+  const selected=next.sleep_active?Math.max(0,sleepMinutes.indexOf(next.sleep_minutes)):0;
+  if(selected===sleepSelected)return;
+  call(gui,'SetBinding',{Path:'/main/sleep/choice',Key:'selected',Value:String(selected)});sleepSelected=selected;
+}
 function poll(){
   const next=call(audio,'GetState');
+  syncSleep(next);
   const actual=tracks.findIndex(t=>t.path===next.path);
   if(actual>=0&&(!current||current.path!==next.path)){index=actual;current=tracks[index];text('chapter',title(current));}
   if(playing&&playing.state!=='Ended'&&next.state==='Ended'&&next.path!=='@tone'){
@@ -51,7 +58,7 @@ function poll(){
   const remaining=Math.max(0,Number(next.sleep_remaining_seconds)||0);
   text('sleepStatus',next.sleep_finishing?'晚安，做个好梦':next.sleep_active?(next.sleep_fading?'正在淡出 ':'睡眠定时 ')+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):next.sleep_completed?'定时结束 · 已停止':'睡眠定时 · 最后两分钟渐弱');
   try{const sound=call(modes,'GetState');volume=call(playback,'GetVolume');text('volume',sound.do_not_disturb?'音量 '+sound.resume_volume+'% · 勿扰静音':'音量 '+volume+'% · 两侧实体键调节');}catch(_){}
-  try{const local=call(localVoice,'GetState');text('voice/label',local.listening?'我在听，请说命令':'点一下说话 · 离线');if(local.error)text('status','离线语音：'+local.error);}catch(_){}
+  try{const local=call(localVoice,'GetState');text('tools/voice/label',local.listening?'我在听，请说命令':'点一下说话 · 离线');if(local.error)text('status','离线语音：'+local.error);}catch(_){}
   if(sleepJustEnded)save();
   text('progress',clock(next.position)+(next.duration?' / '+clock(next.duration):''));
   text('transport/toggle/label',next.active&&next.state!=='Paused'?'暂停':'播放');
@@ -59,26 +66,30 @@ function poll(){
 }
 function action(name){
   if(name==='offlineSpeak'){call(localVoice,'ListenNow');text('status','我在听，请说命令');return;}
-  if(name==='sleep15'||name==='sleep30'||name==='sleep45'||name==='sleepOff'){call(audio,'SetSleepTimer',{Minutes:name==='sleepOff'?0:Number(name.slice(5))});poll();}
+  if(name==='lockScreen'){save();call(modes,'LockScreen');return;}
+  if(name==='sleepChoice'){
+    const value=call(gui,'GetBinding',{Path:'/main/sleep/choice',Key:'selected'});
+    if(typeof value!=='string'||!/^\d+$/.test(value))return;
+    const selected=Number(value);if(!Number.isInteger(selected)||selected<0||selected>=sleepMinutes.length)return;
+    call(audio,'SetSleepTimer',{Minutes:sleepMinutes[selected]});sleepSelected=selected;poll();
+  }
   else if(name==='previous')move(-1);
   else if(name==='next')move(1);
   else if(name==='toggle'){
     if(playing&&playing.active){call(audio,playing.state==='Paused'?'Resume':'Pause');poll();save();}
     else play();
-  }else if(name==='back'||name==='forward'){
-    if(playing&&playing.active&&playing.path!=='@tone')call(audio,'Seek',{Seconds:Math.max(0,playing.position+(name==='back'?-30:30))});
   }
 }
 globalThis.brookesia_app={
   on_start(){gui=brookesia.start_service('SystemGui');audio=brookesia.start_service('Audiobook');modes=brookesia.start_service('DeviceModes');storage=brookesia.start_service('Storage');timer=brookesia.start_service('SystemTimer');playback=brookesia.start_service('AudioPlayback');localVoice=brookesia.start_service('OfflineVoice');
-    for(const name of ['previous','next','toggle','back','forward','sleep15','sleep30','sleep45','sleepOff','offlineSpeak'])call(gui,'SubscribeAction',{Action:name});
+    for(const name of ['previous','next','toggle','sleepChoice','offlineSpeak','lockScreen'])call(gui,'SubscribeAction',{Action:name});
     try{bookmark=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/audiobook-bookmark.json'}));}catch(_){}
     try{volume=call(playback,'GetVolume');}catch(_){}
-    hidden=false;text('volume','音量 '+volume+'% · 两侧实体键调节');refresh();poll();call(timer,'StartPeriodic',{Name:'audiobook',IntervalMs:1000});return true;},
+    hidden=false;sleepSelected=-1;text('volume','音量 '+volume+'% · 两侧实体键调节');refresh();poll();call(timer,'StartPeriodic',{Name:'audiobook',IntervalMs:1000});return true;},
   on_timer(){if(!hidden)try{poll();}catch(e){text('status',String(e));}return true;},
   on_action(name){try{action(name);}catch(e){text('status',String(e));}return true;},
   on_pause(){try{save();}catch(_){}hidden=true;return true;},
-  on_resume(){hidden=false;cache={};refresh();text('volume','音量 '+volume+'% · 两侧实体键调节');poll();return true;},
+  on_resume(){hidden=false;cache={};sleepSelected=-1;refresh();text('volume','音量 '+volume+'% · 两侧实体键调节');poll();return true;},
   on_stop(){try{save();call(audio,'Stop');}catch(_){}return true;}
 };
 })();

@@ -6,14 +6,14 @@
   },
   "style": {
     "bgColor": "#0c1222",
-    "padding": 18
+    "padding": 12
   },
   "layout": {
     "type": "flex",
     "flexFlow": "column",
     "mainAlign": "center",
     "crossAlign": "center",
-    "gap": 6
+    "gap": 8
   },
   "children": [
     {
@@ -21,7 +21,7 @@
       "id": "chapter",
       "placement": {
         "width": 380,
-        "height": 42
+        "height": 36
       },
       "style": {
         "textColor": "#e9ebfa",
@@ -38,12 +38,12 @@
       "id": "progress",
       "placement": {
         "width": 380,
-        "height": 24
+        "height": 20
       },
       "style": {
         "textColor": "#e9ebfa",
         "font": "${font.zh_CN}",
-        "fontSize": 20,
+        "fontSize": 18,
         "textAlign": "center"
       },
       "labelProps": {
@@ -55,7 +55,7 @@
       "id": "status",
       "placement": {
         "width": 380,
-        "height": 22
+        "height": 20
       },
       "style": {
         "textColor": "#bbc6e0",
@@ -72,7 +72,7 @@
       "id": "transport",
       "placement": {
         "width": 380,
-        "height": 64
+        "height": 56
       },
       "commonProps": {
         "scrollable": false
@@ -94,7 +94,7 @@
           "id": "previous",
           "placement": {
             "width": 120,
-            "height": 64
+            "height": 56
           },
           "style": {
             "bgColor": "#263756",
@@ -118,7 +118,7 @@
               "id": "label",
               "style": {
                 "font": "${font.zh_CN}",
-                "fontSize": 26,
+                "fontSize": 24,
                 "textColor": "#ffffff"
               },
               "labelProps": {
@@ -132,7 +132,7 @@
           "id": "toggle",
           "placement": {
             "width": 128,
-            "height": 64
+            "height": 56
           },
           "style": {
             "bgColor": "#263756",
@@ -156,7 +156,7 @@
               "id": "label",
               "style": {
                 "font": "${font.zh_CN}",
-                "fontSize": 26,
+                "fontSize": 24,
                 "textColor": "#ffffff"
               },
               "labelProps": {
@@ -170,7 +170,7 @@
           "id": "next",
           "placement": {
             "width": 120,
-            "height": 64
+            "height": 56
           },
           "style": {
             "bgColor": "#263756",
@@ -194,7 +194,7 @@
               "id": "label",
               "style": {
                 "font": "${font.zh_CN}",
-                "fontSize": 26,
+                "fontSize": 24,
                 "textColor": "#ffffff"
               },
               "labelProps": {
@@ -204,123 +204,6 @@
           ]
         }
       ]
-    },
-    {
-      "type": "container",
-      "id": "seek",
-      "placement": {
-        "width": 380,
-        "height": 54
-      },
-      "commonProps": {
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "layout": {
-        "type": "flex",
-        "flexFlow": "row",
-        "mainAlign": "spaceBetween",
-        "crossAlign": "center"
-      },
-      "children": [
-        {
-          "type": "button",
-          "id": "back",
-          "placement": {
-            "width": 186,
-            "height": 54
-          },
-          "style": {
-            "bgColor": "#263756",
-            "radius": 16,
-            "padding": 0
-          },
-          "layout": {
-            "type": "flex",
-            "mainAlign": "center",
-            "crossAlign": "center"
-          },
-          "events": [
-            {
-              "type": "clicked",
-              "action": "back"
-            }
-          ],
-          "children": [
-            {
-              "type": "label",
-              "id": "label",
-              "style": {
-                "font": "${font.zh_CN}",
-                "fontSize": 24,
-                "textColor": "#ffffff"
-              },
-              "labelProps": {
-                "text": "后退30秒"
-              }
-            }
-          ]
-        },
-        {
-          "type": "button",
-          "id": "forward",
-          "placement": {
-            "width": 186,
-            "height": 54
-          },
-          "style": {
-            "bgColor": "#263756",
-            "radius": 16,
-            "padding": 0
-          },
-          "layout": {
-            "type": "flex",
-            "mainAlign": "center",
-            "crossAlign": "center"
-          },
-          "events": [
-            {
-              "type": "clicked",
-              "action": "forward"
-            }
-          ],
-          "children": [
-            {
-              "type": "label",
-              "id": "label",
-              "style": {
-                "font": "${font.zh_CN}",
-                "fontSize": 24,
-                "textColor": "#ffffff"
-              },
-              "labelProps": {
-                "text": "前进30秒"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "label",
-      "id": "sleepStatus",
-      "placement": {
-        "width": 380,
-        "height": 24
-      },
-      "style": {
-        "font": "${font.zh_CN}",
-        "fontSize": 20,
-        "textColor": "#cdd6ee",
-        "textAlign": "center"
-      },
-      "labelProps": {
-        "text": "睡眠定时 · 最后两分钟渐弱"
-      }
     },
     {
       "type": "container",
@@ -345,154 +228,52 @@
       },
       "children": [
         {
-          "type": "button",
-          "id": "sleep15",
+          "type": "label",
+          "id": "label",
           "placement": {
-            "width": 90,
-            "height": 48
+            "width": 120,
+            "height": 32
           },
           "style": {
-            "bgColor": "#344166",
-            "radius": 14,
-            "padding": 0
+            "font": "${font.zh_CN}",
+            "fontSize": 22,
+            "textColor": "#cdd6ee"
           },
-          "layout": {
-            "type": "flex",
-            "mainAlign": "center",
-            "crossAlign": "center"
-          },
-          "events": [
-            {
-              "type": "clicked",
-              "action": "sleep15"
-            }
-          ],
-          "children": [
-            {
-              "type": "label",
-              "id": "label",
-              "style": {
-                "font": "${font.zh_CN}",
-                "fontSize": 22,
-                "textColor": "#ffffff"
-              },
-              "labelProps": {
-                "text": "15分钟"
-              }
-            }
-          ]
+          "labelProps": {
+            "text": "睡眠定时"
+          }
         },
         {
-          "type": "button",
-          "id": "sleep30",
+          "type": "dropdown",
+          "id": "choice",
           "placement": {
-            "width": 90,
+            "width": 248,
             "height": 48
           },
           "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 24,
             "bgColor": "#344166",
-            "radius": 14,
-            "padding": 0
+            "textColor": "#ffffff",
+            "radius": 12,
+            "padding": 6
           },
-          "layout": {
-            "type": "flex",
-            "mainAlign": "center",
-            "crossAlign": "center"
+          "dropdownProps": {
+            "options": [
+              "关闭",
+              "15分钟",
+              "30分钟",
+              "45分钟"
+            ],
+            "selectedIndex": 0
+          },
+          "bindings": {
+            "dropdownProps.selectedIndex": "selected"
           },
           "events": [
             {
-              "type": "clicked",
-              "action": "sleep30"
-            }
-          ],
-          "children": [
-            {
-              "type": "label",
-              "id": "label",
-              "style": {
-                "font": "${font.zh_CN}",
-                "fontSize": 22,
-                "textColor": "#ffffff"
-              },
-              "labelProps": {
-                "text": "30分钟"
-              }
-            }
-          ]
-        },
-        {
-          "type": "button",
-          "id": "sleep45",
-          "placement": {
-            "width": 90,
-            "height": 48
-          },
-          "style": {
-            "bgColor": "#344166",
-            "radius": 14,
-            "padding": 0
-          },
-          "layout": {
-            "type": "flex",
-            "mainAlign": "center",
-            "crossAlign": "center"
-          },
-          "events": [
-            {
-              "type": "clicked",
-              "action": "sleep45"
-            }
-          ],
-          "children": [
-            {
-              "type": "label",
-              "id": "label",
-              "style": {
-                "font": "${font.zh_CN}",
-                "fontSize": 22,
-                "textColor": "#ffffff"
-              },
-              "labelProps": {
-                "text": "45分钟"
-              }
-            }
-          ]
-        },
-        {
-          "type": "button",
-          "id": "sleepOff",
-          "placement": {
-            "width": 90,
-            "height": 48
-          },
-          "style": {
-            "bgColor": "#344166",
-            "radius": 14,
-            "padding": 0
-          },
-          "layout": {
-            "type": "flex",
-            "mainAlign": "center",
-            "crossAlign": "center"
-          },
-          "events": [
-            {
-              "type": "clicked",
-              "action": "sleepOff"
-            }
-          ],
-          "children": [
-            {
-              "type": "label",
-              "id": "label",
-              "style": {
-                "font": "${font.zh_CN}",
-                "fontSize": 22,
-                "textColor": "#ffffff"
-              },
-              "labelProps": {
-                "text": "取消"
-              }
+              "type": "valueChanged",
+              "action": "sleepChoice"
             }
           ]
         }
@@ -500,10 +281,27 @@
     },
     {
       "type": "label",
+      "id": "sleepStatus",
+      "placement": {
+        "width": 380,
+        "height": 20
+      },
+      "style": {
+        "font": "${font.zh_CN}",
+        "fontSize": 18,
+        "textColor": "#cdd6ee",
+        "textAlign": "center"
+      },
+      "labelProps": {
+        "text": "睡眠定时 · 最后两分钟渐弱"
+      }
+    },
+    {
+      "type": "label",
       "id": "volume",
       "placement": {
         "width": 380,
-        "height": 22
+        "height": 20
       },
       "style": {
         "textColor": "#e9ebfa",
@@ -516,42 +314,121 @@
       }
     },
     {
-      "type": "button",
-      "id": "voice",
+      "type": "container",
+      "id": "tools",
       "placement": {
         "width": 380,
-        "height": 54
+        "height": 52
+      },
+      "commonProps": {
+        "scrollable": false
       },
       "style": {
-        "bgColor": "#263756",
-        "radius": 16,
+        "bgOpacity": 0,
+        "borderWidth": 0,
         "padding": 0
       },
       "layout": {
         "type": "flex",
-        "mainAlign": "center",
+        "flexFlow": "row",
+        "mainAlign": "spaceBetween",
         "crossAlign": "center"
       },
-      "events": [
-        {
-          "type": "clicked",
-          "action": "offlineSpeak"
-        }
-      ],
       "children": [
         {
-          "type": "label",
-          "id": "label",
-          "style": {
-            "font": "${font.zh_CN}",
-            "fontSize": 24,
-            "textColor": "#ffffff"
+          "type": "button",
+          "id": "voice",
+          "placement": {
+            "width": 248,
+            "height": 52
           },
-          "labelProps": {
-            "text": "点一下说话 · 离线"
-          }
+          "style": {
+            "bgColor": "#263756",
+            "radius": 16,
+            "padding": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "offlineSpeak"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 22,
+                "textColor": "#ffffff"
+              },
+              "labelProps": {
+                "text": "点一下说话 · 离线"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "lock",
+          "placement": {
+            "width": 124,
+            "height": 52
+          },
+          "style": {
+            "bgColor": "#344166",
+            "radius": 14,
+            "padding": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "lockScreen"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 24,
+                "textColor": "#ffffff"
+              },
+              "labelProps": {
+                "text": "锁屏"
+              }
+            }
+          ]
         }
       ]
+    },
+    {
+      "type": "label",
+      "id": "lockHint",
+      "placement": {
+        "width": 380,
+        "height": 18
+      },
+      "style": {
+        "font": "${font.zh_CN}",
+        "fontSize": 17,
+        "textColor": "#bbc6e0",
+        "textAlign": "center"
+      },
+      "labelProps": {
+        "text": "解锁：连按两次音量+"
+      }
     }
   ]
 }

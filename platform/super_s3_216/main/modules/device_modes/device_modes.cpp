@@ -13,11 +13,13 @@
 #include "esp_lcd_panel_ops.h"
 #include "esp_lv_adapter.h"
 #include "esp_timer.h"
+#include "esp_app_desc.h"
 #include "nvs.h"
 #include "lvgl.h"
 #include "../display.hpp"
 #include "deep_sleep.hpp"
 #include "idle_deep_sleep.hpp"
+#include "screen_lock.hpp"
 #include "../audio_ownership.hpp"
 #include "../audiobook/audiobook.hpp"
 #include "driver/gpio.h"
@@ -45,6 +47,9 @@ std::atomic<int> story_dim{1000};
 std::atomic<bool> offline_enabled{false};
 std::atomic<unsigned> key_presses{0};
 std::atomic<bool> keys_ready{false},keys_reinitialize{false};
+std::atomic<bool> screen_locked{false},lock_reset{false};
+std::atomic<unsigned> lock_count{0},unlock_count{0},unlock_taps{0},locked_touches{0};
+screen_lock::DoublePress unlock_pattern;
 int local_minute(){const time_t now=time(nullptr);if(now<1735689600)return -1;const time_t local=now+8*3600;tm t{};gmtime_r(&local,&t);return t.tm_hour*60+t.tm_min;}
 void update_quiet(){const bool active=manual_dnd || (quiet_enabled && quiet_hours::contains(local_minute(),quiet_start,quiet_end));if(dnd.exchange(active)!=active)audio_dirty=true;}
 std::atomic<uint32_t> last_touch_ms{0}, sleeps{0}, wakes{0}, swallowed{0}, panel_errors{0};
@@ -61,12 +66,16 @@ private:
     boost::json::object state() {
         uint8_t brightness=0;auto backlight=hal::acquire_first_interface<hal::display::BacklightIface>();
         const bool brightness_valid=backlight && backlight->get_brightness(brightness);
-        return {{"deep_sleep",board_deep_sleep_state()},{"auto_sleep_enabled",automatic.load()},{"timeout_seconds",600},
+        return {{"firmware_version",esp_app_get_description()->version},
+                {"deep_sleep",board_deep_sleep_state()},{"auto_sleep_enabled",automatic.load()},{"timeout_seconds",600},
                 {"auto_deep_sleep_minutes",deep_minutes.load()},{"auto_deep_sleep_audio_busy",local_audio::busy()},
                 {"auto_deep_sleep_remaining_seconds",idle_deep_sleep::remaining(now_ms(),deep_activity_ms.load(),deep_minutes.load()*60)},
                 {"preferences_loaded",preferences_loaded.load()},{"test_idle_deep_sleep",test_idle_deep.load()},
                 {"brightness_percent",brightness_valid?int(brightness):-1},{"story_dim_per_mille",story_dim.load()},{"volume_keys_ready",keys_ready.load()},{"volume_key_presses",key_presses.load()},{"volume_key_applied",key_applied.load()},{"volume_key_last_gpio",key_last_gpio.load()},{"volume_key_last_target",key_last_target.load()},
-                {"screen_asleep",asleep.load()},{"do_not_disturb",dnd.load()},
+                {"screen_asleep",asleep.load()},{"screen_locked",screen_locked.load()},
+                {"screen_lock_count",lock_count.load()},{"screen_unlock_count",unlock_count.load()},
+                {"screen_unlock_taps",unlock_taps.load()},{"locked_touches",locked_touches.load()},
+                {"do_not_disturb",dnd.load()},
                 {"manual_do_not_disturb",manual_dnd.load()},{"quiet_hours_enabled",quiet_enabled.load()},
                 {"quiet_start_minute",quiet_start.load()},{"quiet_end_minute",quiet_end.load()},
                 {"local_minute",local_minute()},{"clock_synced",local_minute()>=0},{"timezone","Asia/Shanghai"},
@@ -111,12 +120,12 @@ private:
             }
             if(layers.size()<32 && lv_obj_check_type(object,&lv_dropdown_class)){
                 const auto count=lv_dropdown_get_option_count(object);
-                if(count==24 || count==60){
+                if(count==4 || count==24 || count==60){
                     const auto font=lv_obj_get_style_text_font(object,LV_PART_MAIN);
                     auto *list=lv_dropdown_get_list(object);const auto popup=lv_obj_get_style_text_font(list,LV_PART_MAIN);
                     const auto selected=lv_obj_get_style_text_font(list,LV_PART_SELECTED);
                     char text[24]{};lv_dropdown_get_selected_str(object,text,sizeof(text));
-                    layers.push_back(boost::json::object{{"kind","time_picker"},{"options",count},{"selected",lv_dropdown_get_selected(object)},
+                    layers.push_back(boost::json::object{{"kind",count==4?"sleep_picker":"time_picker"},{"options",count},{"selected",lv_dropdown_get_selected(object)},
                         {"text",text},{"font_height",font?font->line_height:0},{"popup_font_height",popup?popup->line_height:0},
                         {"selected_font_height",selected?selected->line_height:0},{"symbol_present",lv_dropdown_get_symbol(object)!=nullptr},
                         {"background_rgb",color},{"text_rgb",lv_color_to_u32(lv_obj_get_style_text_color(object,LV_PART_MAIN)) & 0xffffff},
@@ -144,6 +153,7 @@ private:
                 {"SetDoNotDisturb","Mute speaker while retaining its volume",{{"Enabled","Enabled",FunctionValueType::Boolean}}},
                 {"SetQuietHours","Set daily quiet hours in Beijing time",{{"Enabled","Schedule enabled",FunctionValueType::Boolean},{"StartMinute","0-1439 inclusive",FunctionValueType::Number},{"EndMinute","0-1439 exclusive; equal means all day",FunctionValueType::Number}}},
                 {"SleepNow","Turn screen off without stopping apps",{}},
+                {"LockScreen","Lock touch and turn screen off; double press volume+ to unlock",{}},
                 {"Wake","Wake screen for maintenance",{}},
                 {"DeepSleepNow","Stop apps and enter deep sleep; touch/key wakes",{}},
                 {"TestDeepSleep","Deep sleep with a 20 second recovery timer",{}},
@@ -165,6 +175,12 @@ private:
                     if(!std::isfinite(a)||!std::isfinite(b)||a<0||a>=1440||b<0||b>=1440||std::floor(a)!=a||std::floor(b)!=b)return {.success=false,.error_message="Times must be whole minutes from 0 to 1439"};
                     brookesia_board_set_quiet_hours(std::get<bool>(p.at("Enabled")),int(a),int(b));return {.success=true};}},
                 {"SleepNow",[](FunctionParameterMap &&)->FunctionResult{sleep_requested=true;return {.success=true};}},
+                {"LockScreen",[](FunctionParameterMap &&)->FunctionResult{
+                    if(brookesia_board_deep_sleep_pending())return {.success=false,.error_message="Device is entering deep sleep"};
+                    if(!keys_ready)return {.success=false,.error_message="Volume keys are not ready"};
+                    if(!screen_locked.exchange(true))++lock_count;
+                    lock_reset=true;unlock_taps=0;wake_requested=false;sleep_requested=true;
+                    return {.success=true};}},
                 {"Wake",[](FunctionParameterMap &&)->FunctionResult{wake_requested=true;return {.success=true};}},
                 {"DeepSleepNow",[](FunctionParameterMap &&)->FunctionResult{const auto e=brookesia_board_request_deep_sleep(0);return {.success=e==ESP_OK,.error_message=e==ESP_OK?"":esp_err_to_name(e)};}},
                 {"TestDeepSleep",[](FunctionParameterMap &&)->FunctionResult{const auto e=brookesia_board_request_deep_sleep(20);return {.success=e==ESP_OK,.error_message=e==ESP_OK?"":esp_err_to_name(e)};}},
@@ -215,6 +231,7 @@ extern "C" int brookesia_board_volume_filter(int volume){
 // cannot also click an app, submit a PIN or start microphone recording.
 extern "C" bool brookesia_board_filter_touch(bool pressed){
     if(brookesia_board_deep_sleep_pending())return true;
+    if(screen_locked){if(pressed)++locked_touches;consume_touch=pressed;return true;}
     if(!pressed){consume_touch=false;return false;}
     last_touch_ms=now_ms();deep_activity_ms=now_ms();
     if(asleep){wake_requested=true;if(!consume_touch.exchange(true))++swallowed;}
@@ -230,6 +247,7 @@ void volume_keys_poll() {
     struct Key{gpio_num_t pin;unsigned bit;int step;bool armed=false,held=false;uint32_t fired=0,repeat=0;};
     static Key keys[]={{GPIO_NUM_0,1,-5},{GPIO_NUM_18,2,5}};
     if(brookesia_board_deep_sleep_pending())return;
+    if(lock_reset.exchange(false)){unlock_pattern.reset();unlock_taps=0;}
     if(keys_reinitialize.exchange(false))initialized=false;
     if(!initialized) {
         gpio_config_t config{};config.pin_bit_mask=(1ULL<<0)|(1ULL<<18);
@@ -244,15 +262,36 @@ void volume_keys_poll() {
         key_edges=0;initialized=true;keys_ready=true;
     }
     const auto now=now_ms();const unsigned edges=key_edges.exchange(0);
+    unlock_pattern.expire(now);unlock_taps=unlock_pattern.pending();
+    auto unlock=[&](){
+        screen_locked=false;unlock_pattern.reset();unlock_taps=0;++unlock_count;
+        sleep_requested=false;wake_requested=true;consume_touch=true;
+    };
     for(auto &key:keys) {
         const bool pressed=gpio_get_level(key.pin)==0;
         const bool tap=(edges & key.bit)!=0;
+        // Release is required for a real double press. A long hold and its
+        // repeat events never advance the unlock gesture or change volume.
+        if(screen_locked && key.step>0 && key.held && !pressed){
+            const bool done=unlock_pattern.release(now);unlock_taps=unlock_pattern.pending();
+            if(done){key.held=false;key.armed=true;unlock();continue;}
+        }
         if(!pressed){key.armed=true;key.held=false;}
-        const bool initial=(tap || pressed) && key.armed && (!key.fired || now-key.fired>=180);
+        const bool initial=(tap || pressed) && key.armed && (!key.fired || now-key.fired>=(screen_locked?50U:180U));
         const bool repeat=pressed && key.held && now-key.repeat>=350 && now-key.fired>=650;
         if(!initial && !repeat)continue;
         if(initial){key.fired=now;key.held=pressed;key.armed=false;}
         key.repeat=now;++key_presses;last_touch_ms=now;deep_activity_ms=now;
+        if(screen_locked){
+            if(key.step>0 && initial){
+                unlock_pattern.press(now);
+                if(!pressed && unlock_pattern.release(now))unlock();
+                unlock_taps=unlock_pattern.pending();
+            }else if(initial){
+                unlock_pattern.reset();unlock_taps=0;
+            }
+            continue;
+        }
         if(asleep){wake_requested=true;key.armed=false;key.held=false;continue;}
         if(dnd || brookesia_board_deep_sleep_pending())continue;
         // Keys update the board target directly. A cloud assistant has its own
@@ -298,9 +337,9 @@ void device_modes_poll(){
     }
     update_quiet();
     volume_keys_poll();audiobook_sleep_poll();
-    const bool waking=wake_requested.exchange(false);
+    const bool waking=wake_requested.exchange(false) && !screen_locked.load();
     const bool sleeping=sleep_requested.exchange(false);
-    const bool target=waking?false:(asleep || sleeping || (automatic && now_ms()-last_touch_ms.load()>=IDLE_MS));
+    const bool target=screen_locked || (waking?false:(asleep || sleeping || (automatic && now_ms()-last_touch_ms.load()>=IDLE_MS)));
     if(target!=asleep && esp_lv_adapter_lock(30)==ESP_OK){
         void *handle=nullptr;
         const auto found=esp_board_manager_get_device_handle("display_lcd",&handle);
@@ -329,7 +368,7 @@ void device_modes_poll(){
         if(!saved)dirty=true;
     }
     const auto now=now_ms();
-    if(local_audio::busy())deep_activity_ms=now;
+    if(local_audio::busy() || screen_locked)deep_activity_ms=now;
     const auto seconds=test_idle_deep.load()?5U:uint32_t(deep_minutes.load()*60);
     if(!dirty && !brookesia_board_deep_sleep_pending() && idle_deep_sleep::due(now,deep_activity_ms.load(),seconds)) {
         const auto recovery=test_idle_deep.exchange(false)?20U:0U;

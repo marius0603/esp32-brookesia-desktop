@@ -831,7 +831,7 @@ dependencies:
       require: private
       version: '>=5.4'
     source:
-      registry_url: https://components.espressif.com
+      registry_url: https://components.espressif.com/
       type: service
     version: 2.0.1
   espressif/mqtt:
@@ -920,7 +920,9 @@ direct_dependencies:
 - espressif/esp_audio_codec
 - espressif/esp_lcd_co5300
 - espressif/esp_xiaozhi
+- espressif/mcp-c-sdk
+- espressif/zlib
 - waveshare/esp_lcd_touch_cst9217
-manifest_hash: 19d5d19f745c30b4747d363633e2a8c1e23756d1f54ee3a297843bd6015fa3e1
+manifest_hash: d2f881347d056cb1896323a97713ec81f64c2e1e4ab9106f566a479ceeaaeba6
 target: esp32s3
 version: 3.0.0

@@ -1,6 +1,6 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
 const code=fs.readFileSync(path.join(__dirname,'../src/app/main.js'),'utf8');
-let bindings=[],calls=[],texts={},stored={},tracks=[],mounted=false,volume=20,volumeCap=100,quiet=false,offlineListening=false;
+let bindings=[],calls=[],texts={},stored={},tracks=[],mounted=false,volume=20,volumeCap=100,quiet=false,offlineListening=false,selection=0,locked=false;
 let state={path:'',state:'Idle',position:0,duration:0,active:false},now=20000;
 class Clock extends Date{static now(){return now;}}
 const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>{bindings.push(n);return n;},call_function(h,n,s){
@@ -13,6 +13,9 @@ const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>{bindings.pus
  if(n==='GetState')data=h==='DeviceModes'?{do_not_disturb:quiet,resume_volume:30}:h==='OfflineVoice'?{listening:offlineListening}:state;
  if(n==='ListenNow')offlineListening=true;
  if(n==='SetText')texts[a.Path]=a.Text;
+ if(n==='SetBinding'&&a.Path==='/main/sleep/choice')selection=Number(a.Value);
+ if(n==='GetBinding'&&a.Path==='/main/sleep/choice')data=String(selection);
+ if(n==='LockScreen')locked=true;
  if(n==='Play')state={...state,path:a.Path,state:'Playing',position:a.Position,duration:60,active:true};
  if(n==='Pause')state={...state,state:'Paused'};
  if(n==='Resume')state={...state,state:'Playing'};
@@ -31,9 +34,9 @@ ctx.brookesia_app.on_pause();const count=calls.filter(c=>c.n==='GetState').lengt
 ctx.brookesia_app.on_resume();ctx.brookesia_app.on_action('next');assert.equal(state.path,tracks[1].path);assert.equal(state.position,0);
 ctx.brookesia_app.on_stop();assert.equal(state.active,false);
 vm.runInContext(code,ctx);ctx.brookesia_app.on_start();ctx.brookesia_app.on_action('toggle');assert.equal(state.path,tracks[1].path);
-assert.equal(calls.filter(c=>c.n==='SubscribeAction'&&['scan','test','quieter','louder'].includes(c.a.Action)).length,0);
-for(const minutes of [15,30,45]){
- ctx.brookesia_app.on_action('sleep'+minutes);
+assert.equal(calls.filter(c=>c.n==='SubscribeAction'&&['scan','test','quieter','louder','back','forward','sleep15','sleep30','sleep45','sleepOff'].includes(c.a.Action)).length,0);
+for(const [selected,minutes] of [[1,15],[2,30],[3,45]]){
+ selection=selected;ctx.brookesia_app.on_action('sleepChoice');
  assert.equal(calls.filter(c=>c.n==='SetSleepTimer').at(-1).a.Minutes,minutes);
  assert.match(texts['/main/sleepStatus'],new RegExp(minutes+':00'));
 }
@@ -41,7 +44,14 @@ state={...state,sleep_active:true,sleep_fading:true,sleep_remaining_seconds:65};
 assert.equal(texts['/main/sleepStatus'],'正在淡出 01:05');
 const timerCalls=calls.filter(c=>c.n==='SetSleepTimer').length;ctx.brookesia_app.on_action('next');
 assert.equal(state.sleep_active,true);assert.equal(calls.filter(c=>c.n==='SetSleepTimer').length,timerCalls);
-ctx.brookesia_app.on_action('sleepOff');assert.equal(calls.filter(c=>c.n==='SetSleepTimer').at(-1).a.Minutes,0);
+selection=0;ctx.brookesia_app.on_action('sleepChoice');assert.equal(calls.filter(c=>c.n==='SetSleepTimer').at(-1).a.Minutes,0);
+const beforeInvalid=calls.filter(c=>c.n==='SetSleepTimer').length;
+for(const invalid of [-1,4,1.5,'bad','']){selection=invalid;ctx.brookesia_app.on_action('sleepChoice');}
+assert.equal(calls.filter(c=>c.n==='SetSleepTimer').length,beforeInvalid);
+state={...state,sleep_active:true,sleep_minutes:30};ctx.brookesia_app.on_timer();assert.equal(selection,2);
+assert.equal(calls.filter(c=>c.n==='SetSleepTimer').length,beforeInvalid,'Polling must not restart the countdown');
+state={...state,sleep_active:false};ctx.brookesia_app.on_timer();assert.equal(selection,0);
+ctx.brookesia_app.on_action('back');ctx.brookesia_app.on_action('forward');assert.equal(calls.filter(c=>c.n==='Seek').length,0);
 const plays=calls.filter(c=>c.n==='Play').length;
 state={...state,state:'SleepEnded',active:false,position:42,sleep_completed:true};ctx.brookesia_app.on_timer();
 assert.equal(calls.filter(c=>c.n==='Play').length,plays); // Never auto-advance after sleep.
@@ -51,15 +61,25 @@ volume=25;ctx.brookesia_app.on_timer();assert.equal(texts['/main/volume'],'音�
 quiet=true;volume=0;ctx.brookesia_app.on_timer();assert.equal(texts['/main/volume'],'音量 30% · 勿扰静音');
 quiet=false;volume=30;ctx.brookesia_app.on_timer();assert.equal(texts['/main/volume'],'音量 30% · 两侧实体键调节');
 const screen=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/screens/main.json'),'utf8'));
-const ids=screen.children.map(n=>n.id);assert(!ids.includes('tools')&&!ids.includes('sound'));
+const ids=screen.children.map(n=>n.id);assert(!ids.includes('seek')&&!ids.includes('sound'));
 assert.equal(screen.children.find(n=>n.id==='chapter').style.font,'${font.audiobook_title}');
 const resources=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/root.json'),'utf8'));
 assert(!resources.assets.includes('fonts/index.json'),'Runtime app documents cannot register fontSet assets');
 const systemFonts=JSON.parse(fs.readFileSync(path.join(__dirname,'../../../platform/super_s3_216/littlefs/system/fonts/index.json'),'utf8'));
 assert.deepEqual(systemFonts.fonts.find(f=>f.id==='audiobook_title').fallbacks,['${font.zh_CN}']);
-ctx.brookesia_app.on_action('offlineSpeak');assert.equal(calls.filter(c=>c.n==='ListenNow').length,1);ctx.brookesia_app.on_timer();assert.equal(texts['/main/voice/label'],'我在听，请说命令');
-assert.equal(screen.children.find(n=>n.id==='voice').placement.height,54);
-for(const row of screen.children.filter(n=>['transport','seek','sleep'].includes(n.id)))for(const button of row.children){assert(button.placement.height>=48);assert(button.children[0].style.fontSize>=22);}
+ctx.brookesia_app.on_action('offlineSpeak');assert.equal(calls.filter(c=>c.n==='ListenNow').length,1);ctx.brookesia_app.on_timer();assert.equal(texts['/main/tools/voice/label'],'我在听，请说命令');
+const tools=screen.children.find(n=>n.id==='tools');assert.equal(tools.children.find(n=>n.id==='voice').placement.height,52);
+const choice=screen.children.find(n=>n.id==='sleep').children.find(n=>n.id==='choice');
+assert.equal(choice.type,'dropdown');assert.deepEqual(choice.dropdownProps.options,['关闭','15分钟','30分钟','45分钟']);
+assert.equal(choice.bindings['dropdownProps.selectedIndex'],'selected');
+assert.deepEqual(fs.readFileSync(path.join(__dirname,'../src/res/images/launcher_icon.png')),fs.readFileSync(path.join(__dirname,'../../../themes/cartoon-q-v1/flash-fallback/audiobook.png')),'App updates must keep the Q theme icon');
+assert(screen.children.reduce((sum,n)=>sum+n.placement.height,0)+(screen.children.length-1)*screen.layout.gap+2*screen.style.padding<=400);
+const audioStops=calls.filter(c=>c.n==='Stop').length;
+ctx.brookesia_app.on_action('lockScreen');assert(locked);
+assert.equal(calls.filter(c=>c.n==='Stop').length,audioStops,'Screen lock must not stop the story');
+assert.equal(calls.filter(c=>c.n==='SetSleepTimer').length,beforeInvalid,'Screen lock must preserve sleep countdown');
+assert.equal(calls.filter(c=>c.n==='LockScreen').length,1);
+for(const row of screen.children.filter(n=>['transport','tools'].includes(n.id)))for(const button of row.children){assert(button.placement.height>=48);assert(button.children[0].style.fontSize>=22);}
 console.log('Audiobook regression passed: automatic scan, playback/bookmarks, sleep presets/fade/completion, hardware-volume refresh and larger controls');
 
 const bindingCount=bindings.length;
