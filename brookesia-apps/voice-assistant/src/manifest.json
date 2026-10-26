@@ -5,7 +5,7 @@
       "en": "Voice Assistant",
       "zh_CN": "智能助手"
     },
-    "version": "0.1.0",
+    "version": "0.1.1",
     "visible": true,
     "systems": [
       "super"
@@ -28,6 +28,10 @@
     },
     {
       "name": "Audiobook",
+      "version": "0.1.0"
+    },
+    {
+      "name": "DeviceModes",
       "version": "0.1.0"
     }
   ]

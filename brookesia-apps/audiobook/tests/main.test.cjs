@@ -1,16 +1,17 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
 const code=fs.readFileSync(path.join(__dirname,'../src/app/main.js'),'utf8');
-let calls=[],texts={},stored={},tracks=[],mounted=false,volume=20,volumeCap=100,quiet=false;
+let bindings=[],calls=[],texts={},stored={},tracks=[],mounted=false,volume=20,volumeCap=100,quiet=false,offlineListening=false;
 let state={path:'',state:'Idle',position:0,duration:0,active:false},now=20000;
 class Clock extends Date{static now(){return now;}}
-const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>n,call_function(h,n,s){
+const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>{bindings.push(n);return n;},call_function(h,n,s){
  const a=JSON.parse(s);calls.push({h,n,a});let data=null;
  if(n==='FSReadText'){if(!stored[a.Path])return JSON.stringify({success:false,error:'missing'});data=stored[a.Path];}
  if(n==='FSWriteText')stored[a.Path]=a.Data;
  if(n==='SetVolume')volume=Math.min(volumeCap,a.Volume);
  if(n==='GetVolume')data=volume;
  if(n==='List')data={mounted,tracks};
- if(n==='GetState')data=h==='DeviceModes'?{do_not_disturb:quiet,resume_volume:30}:state;
+ if(n==='GetState')data=h==='DeviceModes'?{do_not_disturb:quiet,resume_volume:30}:h==='OfflineVoice'?{listening:offlineListening}:state;
+ if(n==='ListenNow')offlineListening=true;
  if(n==='SetText')texts[a.Path]=a.Text;
  if(n==='Play')state={...state,path:a.Path,state:'Playing',position:a.Position,duration:60,active:true};
  if(n==='Pause')state={...state,state:'Paused'};
@@ -51,5 +52,11 @@ quiet=true;volume=0;ctx.brookesia_app.on_timer();assert.equal(texts['/main/volum
 quiet=false;volume=30;ctx.brookesia_app.on_timer();assert.equal(texts['/main/volume'],'音量 30% · 两侧实体键调节');
 const screen=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/screens/main.json'),'utf8'));
 const ids=screen.children.map(n=>n.id);assert(!ids.includes('tools')&&!ids.includes('sound'));
-for(const row of screen.children.filter(n=>n.children))for(const button of row.children){assert(button.placement.height>=48);assert(button.children[0].style.fontSize>=22);}
+ctx.brookesia_app.on_action('offlineSpeak');assert.equal(calls.filter(c=>c.n==='ListenNow').length,1);ctx.brookesia_app.on_timer();assert.equal(texts['/main/voice/label'],'我在听，请说命令');
+assert.equal(screen.children.find(n=>n.id==='voice').placement.height,54);
+for(const row of screen.children.filter(n=>['transport','seek','sleep'].includes(n.id)))for(const button of row.children){assert(button.placement.height>=48);assert(button.children[0].style.fontSize>=22);}
 console.log('Audiobook regression passed: automatic scan, playback/bookmarks, sleep presets/fade/completion, hardware-volume refresh and larger controls');
+
+const bindingCount=bindings.length;
+for(let i=0;i<120;i++){now+=1000;ctx.brookesia_app.on_timer();}
+assert.equal(bindings.length,bindingCount,'Polling must reuse bindings instead of accumulating live service records');

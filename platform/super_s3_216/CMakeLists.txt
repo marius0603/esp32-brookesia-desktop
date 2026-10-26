@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 3.16)
 
 option(CCACHE_ENABLE "Use ccache to accelerate repeat ESP-IDF builds" ON)
 
-set(PROJECT_VER "0.8.3-s3.21")
+set(PROJECT_VER "0.8.3-s3.22")
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
 # Work around esp-idf-configdep mapping CONFIG_ESP_LVGL_ADAPTER_PARTIAL_AUX_IMG_CACHE
@@ -25,6 +25,8 @@ endif()
 project(brookesia_s3_216)
 
 include(${CMAKE_CURRENT_LIST_DIR}/overrides/audio_dma.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/overrides/esp_sr_sd.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/overrides/i2s_peer.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/overrides/lvgl_rle.cmake)
 
 # Temporary workaround for `espressif__mcp-c-sdk` stringop-truncation warning
@@ -46,3 +48,6 @@ if(NOT CONFIG_XIAOZHI_STACK_IN_PSRAM)
     idf_component_get_property(xiaozhi_lib espressif__esp_xiaozhi COMPONENT_LIB)
     target_compile_definitions(${xiaozhi_lib} PRIVATE CONFIG_XIAOZHI_STACK_IN_PSRAM=0)
 endif()
+
+# ESP-SR static libraries print directly; silence only their worker console so USB JSON remains framed.
+target_link_options(${CMAKE_PROJECT_NAME}.elf PRIVATE "-Wl,--wrap=printf,--wrap=puts")

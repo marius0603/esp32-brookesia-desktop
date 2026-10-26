@@ -11,6 +11,7 @@
 #include "private/utils.hpp"
 #include "general_services.hpp"
 #include "audiobook/audiobook.hpp"
+#include "offline_voice/offline_voice.hpp"
 #include "voice_assistant/voice_assistant.hpp"
 #include "auto_rotation/auto_rotation.hpp"
 #include "device_modes/device_modes.hpp"
@@ -36,6 +37,8 @@ bool GeneralServices::init()
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_auto_rotation_service()), false, "Failed to register auto rotation service");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_child_mode_service()), false, "Failed to register child mode service");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_sd_resources_service()), false, "Failed to register SD resource service");
+
+    BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_offline_voice_service()), false, "Failed to register offline voice");
 
     BROOKESIA_CHECK_FALSE_RETURN(init_audio(), false, "Failed to initialize audio");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.start(), false, "Failed to start service manager");
@@ -110,6 +113,8 @@ bool GeneralServices::start_audio_services()
     auto &service_manager = service::ServiceManager::get_instance();
     static auto playback_binding = service_manager.bind(AudioPlaybackHelper::get_name().data());
     BROOKESIA_CHECK_FALSE_RETURN(playback_binding.is_valid(), false, "Failed to bind audio playback service");
+    static auto offline_binding = service_manager.bind("OfflineVoice");
+    BROOKESIA_CHECK_FALSE_RETURN(offline_binding.is_valid(), false, "Failed to bind offline voice");
     // Keep the service object alive while an app's asynchronous Disconnect finishes.
     static auto assistant_binding = service_manager.bind("VoiceAssistant");
     BROOKESIA_CHECK_FALSE_RETURN(assistant_binding.is_valid(), false, "Failed to bind voice assistant service");

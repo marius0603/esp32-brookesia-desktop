@@ -1,6 +1,6 @@
 (function () {
 'use strict';
-let gui, audio, storage, modes, timer, tracks=[], index=0, current=null, playing=null, hidden=false, cache={}, volume=20, bookmark=null, lastSaved=0;
+let gui, audio, storage, modes, timer, playback, localVoice, tracks=[], index=0, current=null, playing=null, hidden=false, cache={}, volume=20, bookmark=null, lastSaved=0;
 function call(handle,name,args){const r=JSON.parse(brookesia.call_function(handle,name,JSON.stringify(args||{})));if(!r.success)throw new Error(r.error||r.error_message||name);return r.data;}
 function text(id,value){value=String(value);if(cache[id]===value||hidden)return;call(gui,'SetText',{Path:'/main/'+id,Text:value});cache[id]=value;}
 function clock(seconds){seconds=Math.max(0,Math.floor(Number(seconds)||0));return Math.floor(seconds/3600)+':'+String(Math.floor(seconds%3600/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');}
@@ -38,13 +38,15 @@ function poll(){
   else if(next.state==='Ended')text('status',next.path==='@tone'?'测试音播放结束':'本章播放结束');
   const remaining=Math.max(0,Number(next.sleep_remaining_seconds)||0);
   text('sleepStatus',next.sleep_finishing?'晚安，做个好梦':next.sleep_active?(next.sleep_fading?'正在淡出 ':'睡眠定时 ')+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):next.sleep_completed?'定时结束 · 已停止':'睡眠定时 · 最后两分钟渐弱');
-  try{const sound=call(modes,'GetState');volume=call(brookesia.start_service('AudioPlayback'),'GetVolume');text('volume',sound.do_not_disturb?'音量 '+sound.resume_volume+'% · 勿扰静音':'音量 '+volume+'% · 两侧实体键调节');}catch(_){}
+  try{const sound=call(modes,'GetState');volume=call(playback,'GetVolume');text('volume',sound.do_not_disturb?'音量 '+sound.resume_volume+'% · 勿扰静音':'音量 '+volume+'% · 两侧实体键调节');}catch(_){}
+  try{const local=call(localVoice,'GetState');text('voice/label',local.listening?'我在听，请说命令':'点一下说话 · 离线');if(local.error)text('status','离线语音：'+local.error);}catch(_){}
   if(sleepJustEnded)save();
   text('progress',clock(next.position)+(next.duration?' / '+clock(next.duration):''));
   text('transport/toggle/label',next.active&&next.state!=='Paused'?'暂停':'播放');
   if(next.active&&next.path!=='@tone'&&Date.now()-lastSaved>15000)save();
 }
 function action(name){
+  if(name==='offlineSpeak'){call(localVoice,'ListenNow');text('status','我在听，请说命令');return;}
   if(name==='sleep15'||name==='sleep30'||name==='sleep45'||name==='sleepOff'){call(audio,'SetSleepTimer',{Minutes:name==='sleepOff'?0:Number(name.slice(5))});poll();}
   else if(name==='previous')move(-1);
   else if(name==='next')move(1);
@@ -56,10 +58,10 @@ function action(name){
   }
 }
 globalThis.brookesia_app={
-  on_start(){gui=brookesia.start_service('SystemGui');audio=brookesia.start_service('Audiobook');modes=brookesia.start_service('DeviceModes');storage=brookesia.start_service('Storage');timer=brookesia.start_service('SystemTimer');
-    for(const name of ['previous','next','toggle','back','forward','sleep15','sleep30','sleep45','sleepOff'])call(gui,'SubscribeAction',{Action:name});
+  on_start(){gui=brookesia.start_service('SystemGui');audio=brookesia.start_service('Audiobook');modes=brookesia.start_service('DeviceModes');storage=brookesia.start_service('Storage');timer=brookesia.start_service('SystemTimer');playback=brookesia.start_service('AudioPlayback');localVoice=brookesia.start_service('OfflineVoice');
+    for(const name of ['previous','next','toggle','back','forward','sleep15','sleep30','sleep45','sleepOff','offlineSpeak'])call(gui,'SubscribeAction',{Action:name});
     try{bookmark=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/audiobook-bookmark.json'}));}catch(_){}
-    try{volume=call(brookesia.start_service('AudioPlayback'),'GetVolume');}catch(_){}
+    try{volume=call(playback,'GetVolume');}catch(_){}
     hidden=false;text('volume','音量 '+volume+'% · 两侧实体键调节');refresh();poll();call(timer,'StartPeriodic',{Name:'audiobook',IntervalMs:1000});return true;},
   on_timer(){if(!hidden)try{poll();}catch(e){text('status',String(e));}return true;},
   on_action(name){try{action(name);}catch(e){text('status',String(e));}return true;},

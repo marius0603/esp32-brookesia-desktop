@@ -18,23 +18,6 @@
   "children": [
     {
       "type": "label",
-      "id": "title",
-      "placement": {
-        "width": 380,
-        "height": 26
-      },
-      "style": {
-        "textColor": "#e9ebfa",
-        "font": "${font.zh_CN}",
-        "fontSize": 24,
-        "textAlign": "center"
-      },
-      "labelProps": {
-        "text": "听书"
-      }
-    },
-    {
-      "type": "label",
       "id": "chapter",
       "placement": {
         "width": 380,
@@ -531,6 +514,44 @@
       "labelProps": {
         "text": "音量 --% · 两侧实体键调节"
       }
+    },
+    {
+      "type": "button",
+      "id": "voice",
+      "placement": {
+        "width": 380,
+        "height": 54
+      },
+      "style": {
+        "bgColor": "#263756",
+        "radius": 16,
+        "padding": 0
+      },
+      "layout": {
+        "type": "flex",
+        "mainAlign": "center",
+        "crossAlign": "center"
+      },
+      "events": [
+        {
+          "type": "clicked",
+          "action": "offlineSpeak"
+        }
+      ],
+      "children": [
+        {
+          "type": "label",
+          "id": "label",
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 24,
+            "textColor": "#ffffff"
+          },
+          "labelProps": {
+            "text": "点一下说话 · 离线"
+          }
+        }
+      ]
     }
   ]
 }

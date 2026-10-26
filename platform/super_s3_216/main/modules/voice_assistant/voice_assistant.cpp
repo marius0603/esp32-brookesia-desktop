@@ -1,5 +1,6 @@
 #include "voice_assistant.hpp"
 #include "../audio_ownership.hpp"
+#include "../offline_voice/offline_voice.hpp"
 #include "../child_mode/child_mode.hpp"
 #include <algorithm>
 #include <atomic>
@@ -146,11 +147,12 @@ private:
         // A completed worker publishes live=false only after all callbacks and codecs are released.
         bool expected=false;
         if (!live_.compare_exchange_strong(expected,true)) return std::unexpected("助手正在运行或关闭中");
+        if (!offline_voice_prepare_online()){live_=false;return std::unexpected("离线麦克风正在释放，请稍后重试");}
         if (!local_audio::claim(local_audio::Assistant)) {live_=false;return std::unexpected("请先停止听书，再连接助手");}
         local_test_=local_test;cancel_=false;fatal_=false;connected_=false;channel_=false;stack_free_min_=VOICE_STACK_BYTES;control_stack_free_min_=CONTROL_STACK_BYTES;codec_test_frames_=0;stack_limit_hit_=false;
         tts_=false;accept_audio_=false;command_=0;captured_=0;sent_=0;received_=0;played_=0;level_=0;peak_=0;mic0_=0;mic1_=0;
         {std::lock_guard<std::mutex> lock(mutex_);code_.clear();user_.clear();answer_.clear();error_.clear();stop_reason_.clear();}
-        state(local_test?"Testing":"Connecting",local_test?"录音测试：请说话三秒":"正在连接小智");
+        state(local_test?"Testing":"Connecting",local_test?"准备本地音频测试":"正在连接小智");
         TaskHandle_t task=nullptr;
         if (xTaskCreatePinnedToCore([](void *ctx){static_cast<VoiceAssistant *>(ctx)->run();vTaskDelete(nullptr);},
                 "voice_assistant",CONTROL_STACK_BYTES,this,4,&task,0)!=pdPASS) {
@@ -179,7 +181,8 @@ private:
                 {"Interrupt","Stop the current answer",{}},
                 {"TestMicrophone","Record and locally replay three seconds; no upload",{}},
                 {"TestCodec","Encode/decode synthetic audio and measure stack; no capture/upload/playback",{}},
-                {"GetState","Get assistant status",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Assistant state"}}};
+                {"GetState","Get assistant status",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Assistant state"}},
+                {"TestSpeaker","Play bounded synthetic tone through assistant writer; no capture/upload",{}}};
     }
     FunctionHandlerList get_function_handlers() override {
         // The framework binds by position; legacy handler names are discarded.
@@ -191,7 +194,8 @@ private:
                 BROOKESIA_SERVICE_FUNC_HANDLER_0("Interrupt",command(3)),
                 BROOKESIA_SERVICE_FUNC_HANDLER_0("TestMicrophone",launch(true)),
                 BROOKESIA_SERVICE_FUNC_HANDLER_0("TestCodec",launch(2)),
-                {"GetState",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(snapshot())};}}};
+                {"GetState",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(snapshot())};}},
+                BROOKESIA_SERVICE_FUNC_HANDLER_0("TestSpeaker",launch(3))};
     }
     void close_recorder() {if(recording_){recorder_->close();recording_=false;}level_=0;}
     void close_player() {
@@ -318,6 +322,17 @@ private:
         }
         heap_caps_free(recording);
         if(!fatal_&&!cancel_)state("Tested",peak_>20?"录音回放完成，请确认声音":"未检测到有效声音，请重试");
+    }
+    void speaker_test() {
+        state("Testing","扬声器测试音，请按两侧音量键");
+        if(!open_player())return;
+        // Same open/write path as decoded XiaoZhi replies; no microphone or network.
+        for(unsigned n=0;n<500&&!cancel_&&!fatal_;++n){
+            for(int i=0;i<FRAME;++i)pcm_[i]=static_cast<int16_t>(1800*std::sin(2*3.14159265*440*(n*FRAME+i)/RATE));
+            if(!player_->write_data(reinterpret_cast<uint8_t *>(pcm_),FRAME*2)){fail("扬声器自检失败");break;}
+            played_+=FRAME*2;sample_stack();vTaskDelay(1);
+        }
+        if(!fatal_&&!cancel_)state("Tested","扬声器测试完成");
     }
     void codec_test() {
         state("Testing","正在运行本地编解码自检");
@@ -453,7 +468,7 @@ private:
         }
     }
     void run() {
-        if(prepare_audio()) {sample_stack();if(local_test_==2)codec_test();else if(local_test_==1)microphone_test();else conversation();}
+        if(prepare_audio()) {sample_stack();if(local_test_==2)codec_test();else if(local_test_==1)microphone_test();else if(local_test_==3)speaker_test();else conversation();}
         accept_audio_=false;channel_=false;close_recorder();close_player();
         // Quiesce network callbacks before freeing their destination buffers.
         if(chat_){esp_xiaozhi_chat_stop(chat_);esp_xiaozhi_chat_deinit(chat_);chat_=0;}

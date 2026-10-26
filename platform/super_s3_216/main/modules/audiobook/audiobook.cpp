@@ -92,6 +92,8 @@ private:
     uint32_t sleep_id_=0,goodnight_count_=0;
     int sleep_minutes_=0;
     bool sleep_completed_=false,goodnight_played_=false;
+    std::atomic<bool> announce_{false};
+    std::atomic<unsigned> announcement_count_{0},last_announcement_{0};
     bool on_start() override {started_=true;return true;}
     void reset_sleep() {
         std::lock_guard lock(mutex_);
@@ -121,7 +123,7 @@ private:
     void say_goodnight(hal::InterfaceHandle<hal::audio::CodecPlayerIface> &codec,int16_t *pcm,uint32_t id) {
         if(cancel_ || brookesia_board_do_not_disturb() || !child_mode_audiobook_allowed())return;
         codec->close();
-        if(!codec->open({.bits=16,.channels=1,.sample_rate=16000}))return;
+        if(!codec->open({.bits=16,.channels=2,.sample_rate=16000}))return;
         if(codec->is_pa_on_off_supported())codec->set_pa_on_off(true);
         state("Goodnight");
         const size_t total=std::size(goodnight_pcm);
@@ -131,13 +133,57 @@ private:
             const size_t count=std::min<size_t>(512,total-at);
             for(size_t i=0;i<count;++i) {
                 const int envelope=std::min<size_t>(640,std::min(at+i,total-at-i));
-                pcm[i]=int32_t(goodnight_pcm[at+i])*envelope/(640*4); // Gentle quarter-level speech.
+                pcm[2*i]=pcm[2*i+1]=int32_t(goodnight_pcm[at+i])*envelope/(640*4); // Gentle quarter-level speech.
             }
-            if(!codec->write_data(reinterpret_cast<uint8_t *>(pcm),count*sizeof(int16_t)))break;
+            if(!codec->write_data(reinterpret_cast<uint8_t *>(pcm),count*2*sizeof(int16_t)))break;
             wrote=true;vTaskDelay(1);
         }
         std::lock_guard lock(mutex_);
         if(wrote && id==sleep_id_){goodnight_played_=true;++goodnight_count_;}
+    }
+    void say_remaining(hal::InterfaceHandle<hal::audio::CodecPlayerIface> &codec,int16_t *pcm){
+        if(cancel_ || brookesia_board_do_not_disturb() || !child_mode_audiobook_allowed())return;
+        unsigned prompt=0;
+        {std::lock_guard lock(mutex_);if(deadline_){const auto seconds=story_sleep::remaining(esp_timer_get_time()/1000,deadline_);prompt=seconds<60?46:std::min(45u,unsigned((seconds+59)/60));}}
+        char path[96];snprintf(path,sizeof(path),"/sdcard/offline-voice/prompts/remaining-%02u.pcm",prompt);
+        FILE *fp=fopen(path,"rb");if(!fp)return;
+        bool wrote=false;
+        codec->close();
+        if(codec->open({.bits=16,.channels=2,.sample_rate=16000})){
+            if(codec->is_pa_on_off_supported())codec->set_pa_on_off(true);
+            size_t n;while(!cancel_ && !sleep_due_ && !brookesia_board_do_not_disturb() && child_mode_audiobook_allowed() && (n=fread(pcm,2,512,fp))>0){
+                for(size_t i=n;i-->0;){const int16_t sample=pcm[i];pcm[2*i]=pcm[2*i+1]=sample;}
+                if(!codec->write_data(reinterpret_cast<uint8_t *>(pcm),n*4))break;
+                wrote=true;vTaskDelay(1);
+            }
+        }
+        fclose(fp);if(wrote){++announcement_count_;last_announcement_=prompt;}
+    }
+    std::expected<void,std::string> voice_action(double command){
+        if(!std::isfinite(command)||std::floor(command)!=command||command<1||command>8)return std::unexpected("Invalid command");
+        const int id=int(command);
+        if(id!=7 && !child_mode_audiobook_allowed())return std::unexpected("听书已被家长限制，或已到休息时间");
+        if(id==2){paused_=true;state("Paused");return {};}
+        if(id==7){std::lock_guard operation(operation_);reset_sleep();std::lock_guard lock(mutex_);deadline_=esp_timer_get_time()/1000;sleep_due_=true;local_audio::story_timer_busy=true;return {};}
+        if(id==8){
+            std::lock_guard operation(operation_);
+            if(sleep_due_)return std::unexpected("Goodnight is finishing");
+            if(live_){announce_=true;return {};}
+            if(!local_audio::claim(local_audio::Audiobook))return std::unexpected("Audio busy");
+            cancel_=false;live_=true;local_audio::audiobook_busy=true;
+            if(xTaskCreatePinnedToCore([](void *ctx){static_cast<Audiobook *>(ctx)->run(false,true);vTaskDelete(nullptr);},"story_remaining",12288,this,4,nullptr,0)!=pdPASS){live_=false;local_audio::release(local_audio::Audiobook);return std::unexpected("Audio memory unavailable");}
+            return {};
+        }
+        if(id==1||id==3||id==4){
+            if(live_ && id!=4){paused_=false;state("Playing");return {};}
+            std::string current;bool ended=false;{std::lock_guard lock(mutex_);current=path_;ended=state_=="Ended";}
+            if(id!=4 && permitted(current))return play(current,ended?0:position_.load());
+            std::vector<std::string> files;scan("/sdcard/audiobooks",2,files);std::sort(files.begin(),files.end());
+            if(files.empty())return std::unexpected("SD 卡中没有故事");
+            auto next=std::find(files.begin(),files.end(),current);if(id==4 && next!=files.end() && ++next!=files.end())return play(*next,0);
+            return play(files.front(),0);
+        }
+        return std::unexpected("Volume is handled by AudioPlayback");
     }
     std::string path_, state_="Idle", error_;
     std::atomic<bool> live_{false}, cancel_{false}, paused_{false};
@@ -148,7 +194,7 @@ private:
         std::lock_guard<std::mutex> lock(mutex_); state_=s; error_=error;
     }
     std::expected<void,std::string> stop_worker() {
-        cancel_=true;
+        cancel_=true;announce_=false;
         for (int i=0; live_ && i<500; ++i) vTaskDelay(pdMS_TO_TICKS(10));
         if (live_) return std::unexpected("Audio worker is still stopping");
         return {};
@@ -186,7 +232,7 @@ private:
                 {"sleep_minutes",sleep_minutes_},{"sleep_remaining_seconds",story_sleep::remaining(esp_timer_get_time()/1000,deadline_)},
                 {"sleep_active",deadline_!=0},{"sleep_fading",deadline_!=0 && gain_<1000},
                 {"sleep_finishing",sleep_due_.load()},{"sleep_completed",sleep_completed_},
-                {"sleep_gain_per_mille",gain_.load()},{"goodnight_played",goodnight_played_},{"goodnight_count",goodnight_count_}};
+                {"sleep_gain_per_mille",gain_.load()},{"goodnight_played",goodnight_played_},{"goodnight_count",goodnight_count_},{"announcement_count",announcement_count_.load()},{"last_announcement",last_announcement_.load()}};
     }
     std::expected<boost::json::object,std::string> list() {
         struct stat st{};
@@ -207,7 +253,8 @@ private:
             {"GetState","Get player state",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Playback state"}},
             {"TestTone","Play a two second quiet test tone",{}},
             {"SetSleepTimer","Set a wall-clock story timer; 0 cancels",{{"Minutes","0,15,30,45",FunctionValueType::Number}}},
-            {"TestSleepTimer","Ten second diagnostic with eight second fade",{}}
+            {"TestSleepTimer","Ten second diagnostic with eight second fade",{}},
+            {"VoiceAction","Local story command routing",{{"Command","1..8",FunctionValueType::Number}}}
         };
     }
     FunctionHandlerList get_function_handlers() override {
@@ -224,15 +271,17 @@ private:
             {"GetState",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(snapshot())};}},
             BROOKESIA_SERVICE_FUNC_HANDLER_0("TestTone",play("@tone",0)),
             BROOKESIA_SERVICE_FUNC_HANDLER_1("SetSleepTimer","Minutes",double,set_sleep(PARAM)),
-            BROOKESIA_SERVICE_FUNC_HANDLER_0("TestSleepTimer",set_sleep(1,true))
+            BROOKESIA_SERVICE_FUNC_HANDLER_0("TestSleepTimer",set_sleep(1,true)),
+            BROOKESIA_SERVICE_FUNC_HANDLER_1("VoiceAction","Command",double,voice_action(PARAM))
         };
     }
-    void run(bool goodnight_only=false) {
+    void run(bool goodnight_only=false,bool feedback_only=false) {
         auto codecs=hal::acquire_interfaces<hal::audio::CodecPlayerIface>();
         auto codec=codecs.empty()?hal::InterfaceHandle<hal::audio::CodecPlayerIface>{}:std::move(codecs.front());
         auto *mp3=static_cast<drmp3 *>(audio_malloc(sizeof(drmp3),nullptr));
         auto *wav=static_cast<drwav *>(audio_malloc(sizeof(drwav),nullptr));
         auto *pcm=static_cast<int16_t *>(audio_malloc(1024*2*sizeof(int16_t),nullptr));
+        auto *output=static_cast<int16_t *>(audio_malloc(4096*sizeof(int16_t),nullptr));
         bool mp3open=false,wavopen=false,opened=false,failed=false,eof=false;
         bool finish_sleep=goodnight_only;uint32_t finish_id=0;
         {std::lock_guard lock(mutex_);finish_id=sleep_id_;}
@@ -243,8 +292,9 @@ private:
         const drwav_allocation_callbacks wavalloc{nullptr,audio_malloc,audio_realloc,audio_free};
         auto fail=[&](const char *message){state("Error",message);failed=true;};
         do {
-            if(!codec || !pcm || !mp3 || !wav){fail("Audio memory or codec unavailable");break;}
+            if(!codec || !pcm || !output || !mp3 || !wav){fail("Audio memory or codec unavailable");break;}
             if(goodnight_only)break;
+            if(feedback_only){say_remaining(codec,pcm);opened=true;break;}
             if(!tone){
                 auto ext=path.substr(path.find_last_of('.'));std::transform(ext.begin(),ext.end(),ext.begin(),::tolower);
                 if(ext==".mp3") {
@@ -261,19 +311,21 @@ private:
             if((channels!=1 && channels!=2) || rate<8000 || rate>48000){fail("Supported audio: mono/stereo, 8-48 kHz");break;}
             duration_=total/rate;
             codec->close();
-            if(!codec->open({.bits=16,.channels=static_cast<uint8_t>(channels),.sample_rate=rate})) {fail("Failed to open speaker codec");break;}
+            if(!codec->open({.bits=16,.channels=2,.sample_rate=16000})) {fail("Failed to open speaker codec");break;}
             opened=true;
             if(codec->is_pa_on_off_supported())codec->set_pa_on_off(true);
             state("Playing");
+            uint64_t resample_phase=0;
             while(!cancel_) {
                 if(sleep_due_){finish_sleep=true;{std::lock_guard lock(mutex_);finish_id=sleep_id_;}break;}
+                if(announce_.exchange(false))say_remaining(codec,pcm);
                 if(!child_mode_audiobook_allowed())break;
                 int32_t requested=seek_.exchange(-1);
                 if(requested>=0){
                     uint64_t target=static_cast<uint64_t>(requested)*rate;
                     if(total)target=std::min(target,total);
                     bool ok=tone || (mp3open?drmp3_seek_to_pcm_frame(mp3,target):drwav_seek_to_pcm_frame(wav,target));
-                    if(!ok){fail("Failed to seek audio");break;}frames=target;position_=frames/rate;
+                    if(!ok){fail("Failed to seek audio");break;}frames=target;position_=frames/rate;resample_phase=0;
                 }
                 if(paused_){vTaskDelay(pdMS_TO_TICKS(20));continue;}
                 size_t count;
@@ -282,11 +334,17 @@ private:
                     for(size_t i=0;i<count;++i)pcm[i]=static_cast<int16_t>(1000*std::sin(2*3.14159265*440*(frames+i)/rate));
                 }else count=mp3open?drmp3_read_pcm_frames_s16(mp3,1024,pcm):drwav_read_pcm_frames_s16(wav,1024,pcm);
                 if(!count){eof=true;break;}
-                size_t size=count*channels*sizeof(int16_t);
-                const int gain=gain_.load();
-                if(gain<1000)for(size_t i=0;i<count*channels;++i)pcm[i]=int32_t(pcm[i])*gain/1000;
-                if(!codec->write_data(reinterpret_cast<uint8_t *>(pcm),size)){fail("Speaker write failed");break;}
-                frames+=count;position_=frames/rate;bytes_+=size;
+                // Duplicated stereo keeps 32-bit RX slots compatible with the shared 16 kHz TX clock.
+                size_t written=0;const int gain=gain_.load()*(local_audio::offline_duck?250:1000)/1000;
+                for(;resample_phase<count*16000;resample_phase+=rate){
+                    const size_t at=resample_phase/16000,next=std::min<size_t>(at+1,count-1);const int fraction=resample_phase%16000;
+                    int a=0,b=0;for(unsigned ch=0;ch<channels;++ch){a+=pcm[at*channels+ch];b+=pcm[next*channels+ch];}
+                    const int sample=(int64_t(a)*(16000-fraction)+int64_t(b)*fraction)/(16000*channels);
+                    output[2*written]=output[2*written+1]=int32_t(sample)*gain/1000;++written;
+                }
+                resample_phase-=count*16000;
+                if(!codec->write_data(reinterpret_cast<uint8_t *>(output),written*4)){fail("Speaker write failed");break;}
+                frames+=count;position_=frames/rate;bytes_+=written*4;
                 vTaskDelay(1);
             }
         }while(false);
@@ -297,7 +355,7 @@ private:
         }
         if(mp3open)drmp3_uninit(mp3);
         if(wavopen)drwav_uninit(wav);
-        audio_free(mp3,nullptr);audio_free(wav,nullptr);audio_free(pcm,nullptr);
+        audio_free(mp3,nullptr);audio_free(wav,nullptr);audio_free(pcm,nullptr);audio_free(output,nullptr);
         if(finish_sleep)complete_sleep(finish_id);
         if(!failed)state(finish_sleep?"SleepEnded":eof?"Ended":"Stopped");
         codec.reset();local_audio::release(local_audio::Audiobook);live_=false;

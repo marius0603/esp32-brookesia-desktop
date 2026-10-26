@@ -1,6 +1,7 @@
 #include "deep_sleep.hpp"
 #include "device_modes.hpp"
 #include "../audio_ownership.hpp"
+#include "../offline_voice/offline_voice.hpp"
 #include <atomic>
 #include <string_view>
 #include "freertos/FreeRTOS.h"
@@ -71,7 +72,7 @@ bool stop_audio() {
 }
 esp_err_t enter_sleep() {
     // Do not cut power or stop Wi-Fi while apps still own files or audio buffers.
-    if(!close_apps() || !stop_audio())return ESP_ERR_TIMEOUT;
+    if(!offline_voice_quiesce() || !close_apps() || !stop_audio())return ESP_ERR_TIMEOUT;
     // The idle timeout is a one-shot choice. Persist OFF before any real sleep.
     if(!brookesia_board_set_auto_deep_sleep_index(0))return ESP_ERR_INVALID_STATE;
     // Existing internal workers finish their pending NVS saves during this grace period.

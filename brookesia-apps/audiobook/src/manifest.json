@@ -5,7 +5,7 @@
       "en": "Audiobook",
       "zh_CN": "听书"
     },
-    "version": "0.2.0",
+    "version": "0.2.1",
     "visible": true,
     "systems": [
       "super"
@@ -32,6 +32,10 @@
     },
     {
       "name": "DeviceModes",
+      "version": "0.1.0"
+    },
+    {
+      "name": "OfflineVoice",
       "version": "0.1.0"
     }
   ]

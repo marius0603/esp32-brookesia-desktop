@@ -1,0 +1,11 @@
+#pragma once
+#include <cstdint>
+struct OfflineModelFile{const char *path;int64_t bytes;const char *sha256;};
+inline constexpr OfflineModelFile offline_model_files[]={
+ {"mn5q8_cn/_MODEL_INFO_",160,"b0092f625bf2489b8243916d36647e12aa6349a6b9dd22972c580ab5fa8bdb9f"},
+ {"mn5q8_cn/mn5q8_data",2201963,"ad8b051c4e995c46b6bbc4c9727d53678aabed1f452afbf2a82bd093317ae8bb"},
+ {"mn5q8_cn/mn5q8_index",1536,"252740046c9383f69c2a7d2da04dd1b1fa8069ba06a20cd4f91fe495bfb26eaa"},
+ {"wn9_nihaoxiaozhi_tts/_MODEL_INFO_",44,"058c04f027862ab745c056b8c8d896396b1cf871e0a8098537610f1a0e16a108"},
+ {"wn9_nihaoxiaozhi_tts/wn9_data",289638,"3bd2998013971a5999ca024745bf282381ce93c1ac79468a674abfe3d91399d8"},
+ {"wn9_nihaoxiaozhi_tts/wn9_index",1200,"b463a5051d01bddc1f5723cddc8f3d5f11a6c750106694ca4aa0c8fdc235032c"},
+};

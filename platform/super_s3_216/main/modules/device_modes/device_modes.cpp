@@ -25,6 +25,8 @@
 #include "brookesia/hal_interface/interfaces/display/backlight.hpp"
 #include "brookesia/service_helper/media/audio.hpp"
 
+extern "C" int brookesia_child_cap_volume(int);
+
 using namespace esp_brookesia;
 using namespace esp_brookesia::service;
 namespace {
@@ -33,12 +35,14 @@ std::atomic<bool> ready{false}, automatic{true}, dnd{true}, asleep{false};
 std::atomic<bool> wake_requested{false}, sleep_requested{false}, consume_touch{false};
 std::atomic<bool> dirty{false}, audio_dirty{false};
 std::atomic<int> desired_volume{75};
+std::atomic<uint32_t> key_applied{0};std::atomic<int> key_last_gpio{-1},key_last_target{-1};
 std::atomic<bool> manual_dnd{false},quiet_enabled{false};
 std::atomic<int> quiet_start{1320},quiet_end{420};
 std::atomic<int> deep_minutes{0};
 std::atomic<uint32_t> deep_activity_ms{0};
 std::atomic<bool> preferences_loaded{false},test_idle_deep{false};
 std::atomic<int> story_dim{1000};
+std::atomic<bool> offline_enabled{false};
 std::atomic<unsigned> key_presses{0};
 std::atomic<bool> keys_ready{false},keys_reinitialize{false};
 int local_minute(){const time_t now=time(nullptr);if(now<1735689600)return -1;const time_t local=now+8*3600;tm t{};gmtime_r(&local,&t);return t.tm_hour*60+t.tm_min;}
@@ -61,7 +65,7 @@ private:
                 {"auto_deep_sleep_minutes",deep_minutes.load()},{"auto_deep_sleep_audio_busy",local_audio::busy()},
                 {"auto_deep_sleep_remaining_seconds",idle_deep_sleep::remaining(now_ms(),deep_activity_ms.load(),deep_minutes.load()*60)},
                 {"preferences_loaded",preferences_loaded.load()},{"test_idle_deep_sleep",test_idle_deep.load()},
-                {"brightness_percent",brightness_valid?int(brightness):-1},{"story_dim_per_mille",story_dim.load()},{"volume_keys_ready",keys_ready.load()},{"volume_key_presses",key_presses.load()},
+                {"brightness_percent",brightness_valid?int(brightness):-1},{"story_dim_per_mille",story_dim.load()},{"volume_keys_ready",keys_ready.load()},{"volume_key_presses",key_presses.load()},{"volume_key_applied",key_applied.load()},{"volume_key_last_gpio",key_last_gpio.load()},{"volume_key_last_target",key_last_target.load()},
                 {"screen_asleep",asleep.load()},{"do_not_disturb",dnd.load()},
                 {"manual_do_not_disturb",manual_dnd.load()},{"quiet_hours_enabled",quiet_enabled.load()},
                 {"quiet_start_minute",quiet_start.load()},{"quiet_end_minute",quiet_end.load()},
@@ -200,6 +204,8 @@ extern "C" void brookesia_board_set_quiet_hours(bool on,int start,int end){
     if(start<0 || start>=1440 || end<0 || end>=1440)return;
     quiet_start=start;quiet_end=end;quiet_enabled=on;update_quiet();dirty=true;
 }
+extern "C" bool brookesia_board_offline_voice_enabled(){return preferences_loaded && offline_enabled;}
+extern "C" void brookesia_board_set_offline_voice(bool value){offline_enabled=value;dirty=true;}
 extern "C" int brookesia_board_user_volume(){return preferences_loaded?desired_volume.load():-1;}
 extern "C" int brookesia_board_volume_filter(int volume){
     if(!dnd && preferences_loaded && desired_volume.exchange(volume)!=volume)dirty=true;
@@ -242,17 +248,20 @@ void volume_keys_poll() {
         const bool pressed=gpio_get_level(key.pin)==0;
         const bool tap=(edges & key.bit)!=0;
         if(!pressed){key.armed=true;key.held=false;}
-        const bool initial=tap && key.armed && (!key.fired || now-key.fired>=180);
+        const bool initial=(tap || pressed) && key.armed && (!key.fired || now-key.fired>=180);
         const bool repeat=pressed && key.held && now-key.repeat>=350 && now-key.fired>=650;
         if(!initial && !repeat)continue;
-        if(initial){key.fired=now;key.held=pressed;}
+        if(initial){key.fired=now;key.held=pressed;key.armed=false;}
         key.repeat=now;++key_presses;last_touch_ms=now;deep_activity_ms=now;
         if(asleep){wake_requested=true;key.armed=false;key.held=false;continue;}
         if(dnd || brookesia_board_deep_sleep_pending())continue;
-        using Audio=service::helper::AudioPlayback;
-        auto current=Audio::call_function_sync<double>(Audio::FunctionId::GetVolume,service::helper::Timeout(1000));
-        if(current)(void)Audio::call_function_sync(Audio::FunctionId::SetVolume,
-            double(std::clamp(int(*current)+key.step,0,100)),service::helper::Timeout(1000));
+        // Keys update the board target directly. A cloud assistant has its own
+        // writer; control must not wait on another playback service's RPC queue.
+        const int current=brookesia_child_cap_volume(desired_volume.load());
+        const int target=brookesia_child_cap_volume(std::clamp(current+key.step,0,100));
+        key_last_gpio=int(key.pin);key_last_target=target;
+        if(desired_volume.exchange(target)!=target){dirty=true;++key_applied;}
+        audio_dirty=true; // Idle codec, and the active writer also synchronizes each PCM write.
     }
 }
 void story_brightness_poll() {
@@ -278,6 +287,7 @@ void device_modes_poll(){
     if(!preferences_loaded){
         nvs_handle_t h;uint8_t a=1,d=0;int32_t resume=75;
         if(nvs_open("DeviceModes",NVS_READONLY,&h)==ESP_OK){
+            uint8_t off=0;nvs_get_u8(h,"offline_voice",&off);offline_enabled=off!=0;
             uint16_t minutes=0;nvs_get_u16(h,"deep_min",&minutes);deep_minutes=idle_deep_sleep::index(minutes)>=0?minutes:0;
             nvs_get_u8(h,"auto_sleep",&a);nvs_get_u8(h,"dnd",&d);nvs_get_i32(h,"resume_volume",&resume);
             uint8_t q=0;int32_t start=1320,end=420;nvs_get_u8(h,"quiet_on",&q);nvs_get_i32(h,"quiet_start",&start);nvs_get_i32(h,"quiet_end",&end);
@@ -313,7 +323,7 @@ void device_modes_poll(){
     if(dirty.exchange(false)){
         nvs_handle_t h;bool saved=false;
         if(nvs_open("DeviceModes",NVS_READWRITE,&h)==ESP_OK){
-            saved=nvs_set_u8(h,"auto_sleep",automatic?1:0)==ESP_OK && nvs_set_u8(h,"dnd",manual_dnd?1:0)==ESP_OK && nvs_set_i32(h,"resume_volume",desired_volume.load())==ESP_OK && nvs_set_u8(h,"quiet_on",quiet_enabled?1:0)==ESP_OK && nvs_set_i32(h,"quiet_start",quiet_start.load())==ESP_OK && nvs_set_i32(h,"quiet_end",quiet_end.load())==ESP_OK && nvs_set_u16(h,"deep_min",deep_minutes.load())==ESP_OK && nvs_commit(h)==ESP_OK;
+            saved=nvs_set_u8(h,"offline_voice",offline_enabled?1:0)==ESP_OK && nvs_set_u8(h,"auto_sleep",automatic?1:0)==ESP_OK && nvs_set_u8(h,"dnd",manual_dnd?1:0)==ESP_OK && nvs_set_i32(h,"resume_volume",desired_volume.load())==ESP_OK && nvs_set_u8(h,"quiet_on",quiet_enabled?1:0)==ESP_OK && nvs_set_i32(h,"quiet_start",quiet_start.load())==ESP_OK && nvs_set_i32(h,"quiet_end",quiet_end.load())==ESP_OK && nvs_set_u16(h,"deep_min",deep_minutes.load())==ESP_OK && nvs_commit(h)==ESP_OK;
             nvs_close(h);
         }
         if(!saved)dirty=true;

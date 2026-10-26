@@ -14,7 +14,7 @@ diff --git a/app/brookesia_app_settings/package/res/screens/display.json b/app/b
 index 30a27ed..64469e6 100644
 --- a/app/brookesia_app_settings/package/res/screens/display.json
 +++ b/app/brookesia_app_settings/package/res/screens/display.json
-@@ -1,193 +1 @@
+@@ -1,193 +1,1 @@
 -{
 -    "type": "viewScreen",
 -    "id": "display",
@@ -210,10 +210,10 @@ index 30a27ed..64469e6 100644
 -}
 +{"type":"viewScreen","id":"display","mountMode":"dynamic","commonProps":{"scrollable":false},"styleRefs":["app.page"],"children":[{"type":"container","id":"page","commonProps":{"scrollable":true},"layout":{"type":"flex","flexFlow":"column","gap":"${constant.settings.layout.pageGap}"},"placement":{"mode":"absolute","x":"${constant.settings.layout.pageX}","y":"${constant.settings.layout.pageY}","width":"${constant.settings.layout.pageWidth}","height":"${constant.settings.layout.pageHeight}"},"children":[{"type":"templateRef","id":"deep_sleep_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"label","id":"auto_title","labelProps":{"text":"自动深度睡眠"},"styleRefs":["app.cardTitle"],"placement":{"mode":"flow","width":"match","height":"wrap"}},{"type":"dropdown","id":"after","dropdownProps":{"options":["关闭","10 分钟","20 分钟","30 分钟","1 小时","2 小时","4 小时"],"selectedIndex":0},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.display.deep_sleep_after"}],"placement":{"mode":"flow","width":"match","height":"56dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}},{"type":"label","id":"auto_hint","labelProps":{"text":"仅本次有效，唤醒后关闭；播放中暂缓"},"styleRefs":["app.caption"],"placement":{"mode":"flow","width":"match","height":"wrap"}},{"type":"templateRef","id":"deep_sleep","templateId":"setting_row","overrides":{".":{"commonProps":{"clickable":true},"events":[{"type":"clicked","action":"settings.display.deep_sleep"}]},"title":{"labelProps":{"text":"立即深度睡眠"}},"value":{"labelProps":{"text":""}}}},{"type":"label","id":"hint","labelProps":{"text":"轻触屏幕唤醒，唤醒后重新启动"},"styleRefs":["app.caption"],"placement":{"mode":"flow","width":"match","height":"wrap"}}]}},{"type":"templateRef","id":"auto_rotation_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_rotation","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动旋转"}},"text/subtitle":{"labelProps":{"text":"关闭后锁定当前方向"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_rotation"}]}}}]}},{"type":"templateRef","id":"device_modes_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_sleep","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动息屏"}},"text/subtitle":{"labelProps":{"text":"无操作 10 分钟后息屏，轻触唤醒"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_sleep"}]}}}]}},{"type":"container","id":"theme_modes","layout":{"type":"flex","flexFlow":"rowWrap","gap":"${constant.settings.layout.cardGap}","mainAlign":"start","crossAlign":"start"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"},"children":[{"type":"templateRef","id":"light_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.light"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.base}","radius":"18dp"}},"label":{"labelProps":{"text":"Light mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}},{"type":"templateRef","id":"dark_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.dark"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.overlay}","radius":"18dp"}},"label":{"labelProps":{"text":"Dark mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}}]},{"type":"label","id":"brightness_caption","styleRefs":["app.caption"],"labelProps":{"text":"Brightness level"},"placement":{"mode":"flow"},"bindings":{"labelProps.text":"labelProps.text"}},{"type":"templateRef","id":"brightness_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"${constant.settings.layout.cardGap}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"brightness_row","templateId":"slider_row","overrides":{"title":{"labelProps":{"text":"Screen brightness"}},"slider":{"events":[{"type":"valueChanged","action":"settings.display.brightness"}],"rangeProps":{"min":0,"max":100,"value":72}}}}]}}]}]}
 diff --git a/app/brookesia_app_settings/package/res/screens/sound.json b/app/brookesia_app_settings/package/res/screens/sound.json
-index 4792f20..5252b93 100644
+index 4792f20..aeac658 100644
 --- a/app/brookesia_app_settings/package/res/screens/sound.json
 +++ b/app/brookesia_app_settings/package/res/screens/sound.json
-@@ -1,173 +1 @@
+@@ -1,173 +1,1 @@
 -{
 -    "type": "viewScreen",
 -    "id": "sound",
@@ -387,13 +387,13 @@ index 4792f20..5252b93 100644
 -        }
 -    ]
 -}
-+{"type":"viewScreen","id":"sound","mountMode":"dynamic","commonProps":{"scrollable":false},"styleRefs":["app.page"],"children":[{"type":"container","id":"page","commonProps":{"scrollable":true},"layout":{"type":"flex","flexFlow":"column","gap":"${constant.settings.layout.pageGap}"},"placement":{"mode":"absolute","x":"${constant.settings.layout.pageX}","y":"${constant.settings.layout.pageY}","width":"${constant.settings.layout.pageWidth}","height":"${constant.settings.layout.pageHeight}"},"children":[{"type":"templateRef","id":"volume_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"10dp"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"media_volume_row","templateId":"slider_row","overrides":{"title":{"labelProps":{"text":"Volume"}},"slider":{"events":[{"type":"valueChanged","action":"settings.sound.volume"}],"rangeProps":{"min":0,"max":100,"value":42}}}}]}},{"type":"label","id":"options_caption","styleRefs":["app.caption"],"labelProps":{"text":"Sound options"},"placement":{"mode":"flow"},"bindings":{"labelProps.text":"labelProps.text"}},{"type":"templateRef","id":"silent_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"10dp"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"silent_mode","templateId":"switch_row","overrides":{".":{"placement":{"mode":"flow","width":"match","height":"${constant.settings.layout.rowHeight}","alignSelf":"stretch"}},"text":{"layout":{"type":"flex","flexFlow":"column","mainAlign":"center","crossAlign":"start","gap":"0dp"}},"text/title":{"labelProps":{"text":"Mute"}},"text/subtitle":{"commonProps":{"hidden":true},"labelProps":{"text":""}},"toggle":{"events":[{"type":"valueChanged","action":"settings.sound.mute"}],"toggleProps":{"checked":true}}}}]}},{"type":"templateRef","id":"quiet_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"},"layout":{"type":"flex","flexFlow":"column","gap":"12dp"}}},"slots":{"content":[{"type":"templateRef","id":"quiet_enabled","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"定时勿扰"}},"text/subtitle":{"labelProps":{"text":"24 小时制 · 小时 : 分钟"}},"toggle":{"toggleProps":{"checked":false},"events":[{"type":"valueChanged","action":"settings.sound.quiet_enabled"}]}}},{"type":"container","id":"start","commonProps":{"scrollable":false},"layout":{"type":"flex","flexFlow":"row","gap":"8dp","crossAlign":"center"},"placement":{"mode":"flow","width":"match","height":"56dp"},"style":{"padding":0},"children":[{"type":"label","id":"title","styleRefs":["app.cardTitle"],"labelProps":{"text":"开始时间"},"placement":{"mode":"flow","width":"104dp","height":"wrap"}},{"type":"dropdown","id":"hour","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"],"selectedIndex":22},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_start_hour"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}},{"type":"label","id":"colon","labelProps":{"text":":"},"styleRefs":["app.cardTitle"],"style":{"fontSize":24},"placement":{"mode":"flow","width":"12dp","height":"wrap"}},{"type":"dropdown","id":"minute","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59"],"selectedIndex":0},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_start_minute"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}}]},{"type":"container","id":"end","commonProps":{"scrollable":false},"layout":{"type":"flex","flexFlow":"row","gap":"8dp","crossAlign":"center"},"placement":{"mode":"flow","width":"match","height":"56dp"},"style":{"padding":0},"children":[{"type":"label","id":"title","styleRefs":["app.cardTitle"],"labelProps":{"text":"结束时间"},"placement":{"mode":"flow","width":"104dp","height":"wrap"}},{"type":"dropdown","id":"hour","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"],"selectedIndex":7},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_end_hour"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}},{"type":"label","id":"colon","labelProps":{"text":":"},"styleRefs":["app.cardTitle"],"style":{"fontSize":24},"placement":{"mode":"flow","width":"12dp","height":"wrap"}},{"type":"dropdown","id":"minute","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59"],"selectedIndex":0},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_end_minute"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}}]},{"type":"label","id":"status","styleRefs":["app.caption"],"labelProps":{"text":"北京时间 · 起止相同为全天静音"},"bindings":{"labelProps.text":"text"},"placement":{"mode":"flow","width":"match","height":"wrap"}}]}}]}]}
++{"type":"viewScreen","id":"sound","mountMode":"dynamic","commonProps":{"scrollable":false},"styleRefs":["app.page"],"children":[{"type":"container","id":"page","commonProps":{"scrollable":true},"layout":{"type":"flex","flexFlow":"column","gap":"${constant.settings.layout.pageGap}"},"placement":{"mode":"absolute","x":"${constant.settings.layout.pageX}","y":"${constant.settings.layout.pageY}","width":"${constant.settings.layout.pageWidth}","height":"${constant.settings.layout.pageHeight}"},"children":[{"type":"templateRef","id":"offline_voice_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"},"layout":{"type":"flex","flexFlow":"column","gap":"12dp"}}},"slots":{"content":[{"type":"templateRef","id":"enabled","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"离线语音"}},"text/subtitle":{"labelProps":{"text":"你好小智 · 命令在本机识别"}},"toggle":{"toggleProps":{"checked":false},"events":[{"type":"valueChanged","action":"settings.sound.offline_voice"}]}}},{"type":"label","id":"hint","labelProps":{"text":"讲故事、暂停、继续、下一篇\n大声点、小声点、晚安、还有多久\n关闭后释放麦克风；深睡期间不监听"},"style":{"fontSize":18,"textColor":"#735b50"},"placement":{"mode":"flow","width":"match","height":"wrap"}}]}},{"type":"templateRef","id":"volume_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"10dp"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"media_volume_row","templateId":"slider_row","overrides":{"title":{"labelProps":{"text":"Volume"}},"slider":{"events":[{"type":"valueChanged","action":"settings.sound.volume"}],"rangeProps":{"min":0,"max":100,"value":42}}}}]}},{"type":"label","id":"options_caption","styleRefs":["app.caption"],"labelProps":{"text":"Sound options"},"placement":{"mode":"flow"},"bindings":{"labelProps.text":"labelProps.text"}},{"type":"templateRef","id":"silent_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"10dp"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"silent_mode","templateId":"switch_row","overrides":{".":{"placement":{"mode":"flow","width":"match","height":"${constant.settings.layout.rowHeight}","alignSelf":"stretch"}},"text":{"layout":{"type":"flex","flexFlow":"column","mainAlign":"center","crossAlign":"start","gap":"0dp"}},"text/title":{"labelProps":{"text":"Mute"}},"text/subtitle":{"commonProps":{"hidden":true},"labelProps":{"text":""}},"toggle":{"events":[{"type":"valueChanged","action":"settings.sound.mute"}],"toggleProps":{"checked":true}}}}]}},{"type":"templateRef","id":"quiet_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"},"layout":{"type":"flex","flexFlow":"column","gap":"12dp"}}},"slots":{"content":[{"type":"templateRef","id":"quiet_enabled","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"定时勿扰"}},"text/subtitle":{"labelProps":{"text":"24 小时制 · 小时 : 分钟"}},"toggle":{"toggleProps":{"checked":false},"events":[{"type":"valueChanged","action":"settings.sound.quiet_enabled"}]}}},{"type":"container","id":"start","commonProps":{"scrollable":false},"layout":{"type":"flex","flexFlow":"row","gap":"8dp","crossAlign":"center"},"placement":{"mode":"flow","width":"match","height":"56dp"},"style":{"padding":0},"children":[{"type":"label","id":"title","styleRefs":["app.cardTitle"],"labelProps":{"text":"开始时间"},"placement":{"mode":"flow","width":"104dp","height":"wrap"}},{"type":"dropdown","id":"hour","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"],"selectedIndex":22},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_start_hour"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}},{"type":"label","id":"colon","labelProps":{"text":":"},"styleRefs":["app.cardTitle"],"style":{"fontSize":24},"placement":{"mode":"flow","width":"12dp","height":"wrap"}},{"type":"dropdown","id":"minute","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59"],"selectedIndex":0},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_start_minute"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}}]},{"type":"container","id":"end","commonProps":{"scrollable":false},"layout":{"type":"flex","flexFlow":"row","gap":"8dp","crossAlign":"center"},"placement":{"mode":"flow","width":"match","height":"56dp"},"style":{"padding":0},"children":[{"type":"label","id":"title","styleRefs":["app.cardTitle"],"labelProps":{"text":"结束时间"},"placement":{"mode":"flow","width":"104dp","height":"wrap"}},{"type":"dropdown","id":"hour","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23"],"selectedIndex":7},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_end_hour"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}},{"type":"label","id":"colon","labelProps":{"text":":"},"styleRefs":["app.cardTitle"],"style":{"fontSize":24},"placement":{"mode":"flow","width":"12dp","height":"wrap"}},{"type":"dropdown","id":"minute","dropdownProps":{"options":["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59"],"selectedIndex":0},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.sound.quiet_end_minute"}],"placement":{"mode":"flow","width":"76dp","height":"48dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}}]},{"type":"label","id":"status","styleRefs":["app.caption"],"labelProps":{"text":"北京时间 · 起止相同为全天静音"},"bindings":{"labelProps.text":"text"},"placement":{"mode":"flow","width":"match","height":"wrap"}}]}}]}]}
+\ No newline at end of file
 diff --git a/app/brookesia_app_settings/src/app/lifecycle.ipp b/app/brookesia_app_settings/src/app/lifecycle.ipp
-index dd90da0..d253178 100644
+index dd90da0..36e99ae 100644
 --- a/app/brookesia_app_settings/src/app/lifecycle.ipp
 +++ b/app/brookesia_app_settings/src/app/lifecycle.ipp
-@@ -90,6 +90,7 @@ std::expected<void, std::string> SettingsApp::on_start(system::core::AppContext
- 
+@@ -91,5 +91,6 @@ std::expected<void, std::string> SettingsApp::on_start(system::core::AppContext
      auto stage_started_at = SteadyClock::now();
      context_ = &context;
 +    (void)context.timer().start_delayed("quiet_hours_refresh",1000);
@@ -411,9 +411,10 @@ index dd90da0..d253178 100644
      if (name == WIFI_SCAN_RETRY_TIMER_NAME) {
          if (timer_id != pending_wifi_scan_retry_timer_id_) {
              BROOKESIA_LOGW(
-@@ -630,7 +635,55 @@ std::expected<void, std::string> SettingsApp::subscribe_actions(system::core::Ap
+@@ -630,7 +635,59 @@ std::expected<void, std::string> SettingsApp::subscribe_actions(system::core::Ap
      }
- 
+-
++
      std::vector<system::core::GuiActionHandlerSubscription> subscriptions;
 -    subscriptions.reserve(19);
 +    subscriptions.reserve(20);
@@ -434,6 +435,10 @@ index dd90da0..d253178 100644
 +    subscriptions.push_back({.action="settings.display.auto_sleep",.handler=[this](const gui::Event &event){
 +        auto checked=event.get_bool("checked");
 +        if(context_ && checked && brookesia_board_set_auto_sleep){brookesia_board_set_auto_sleep(*checked);(void)refresh_display_state(*context_);}
++    }});
++    subscriptions.push_back({.action="settings.sound.offline_voice",.handler=[this](const gui::Event &event){
++        auto checked=event.get_bool("checked");
++        if(context_ && checked && brookesia_board_set_offline_voice){brookesia_board_set_offline_voice(*checked);(void)refresh_sound_state(*context_);}
 +    }});
 +    subscriptions.push_back({.action="settings.sound.quiet_enabled",.handler=[this](const gui::Event &event){
 +        auto checked=event.get_bool("checked");
@@ -497,13 +502,14 @@ index eeaabcc..d02a0d6 100644
          return;
      }
 diff --git a/app/brookesia_app_settings/src/private/settings_app_internal.hpp b/app/brookesia_app_settings/src/private/settings_app_internal.hpp
-index 8d0b14e..67eddc9 100644
+index 8d0b14e..f6ca31a 100644
 --- a/app/brookesia_app_settings/src/private/settings_app_internal.hpp
 +++ b/app/brookesia_app_settings/src/private/settings_app_internal.hpp
 @@ -5,6 +5,25 @@
   */
  #pragma once
- 
+-
++
 +extern "C" int brookesia_board_request_deep_sleep(unsigned) __attribute__((weak));
 +extern "C" int brookesia_board_auto_deep_sleep_index() __attribute__((weak));
 +extern "C" bool brookesia_board_set_auto_deep_sleep_index(int) __attribute__((weak));
@@ -526,8 +532,15 @@ index 8d0b14e..67eddc9 100644
  #include <array>
  #include <chrono>
  #include <cstdint>
+@@ -599,3 +618,6 @@ struct SettingsApp::Impl {
+ #define debug_entry_click_count_ impl_->debug_entry_click_count
+ #define debug_entry_last_click_at_ impl_->debug_entry_last_click_at
+ #define utils_debug_unavailable_logged_ impl_->utils_debug_unavailable_logged
++
++extern "C" bool brookesia_board_offline_voice_enabled() __attribute__((weak));
++extern "C" void brookesia_board_set_offline_voice(bool) __attribute__((weak));
 diff --git a/app/brookesia_app_settings/src/service/device.ipp b/app/brookesia_app_settings/src/service/device.ipp
-index 4d350ae..7718873 100644
+index 4d350ae..c92a188 100644
 --- a/app/brookesia_app_settings/src/service/device.ipp
 +++ b/app/brookesia_app_settings/src/service/device.ipp
 @@ -320,6 +320,23 @@ std::expected<void, std::string> SettingsApp::refresh_display_state(system::core
@@ -554,10 +567,12 @@ index 4d350ae..7718873 100644
      add_binding_update(
          updates,
          DISPLAY_BRIGHTNESS_SLIDER_PATH,
-@@ -333,6 +350,18 @@ std::expected<void, std::string> SettingsApp::refresh_sound_state(system::core::
+@@ -333,6 +350,20 @@ std::expected<void, std::string> SettingsApp::refresh_sound_state(system::core::
  {
      const bool enabled = device_ui_state_.audio_service_ready && device_ui_state_.audio_player_supported;
      std::vector<gui::BindingValueUpdate> updates;
++    if(brookesia_board_offline_voice_enabled)
++        add_binding_update(updates,"/sound/page/offline_voice_card/enabled/toggle","checked",brookesia_board_offline_voice_enabled()?"true":"false");
 +    if(brookesia_board_quiet_enabled && brookesia_board_quiet_start && brookesia_board_quiet_end){
 +        const std::string base="/sound/page/quiet_card/";
 +        const int start=brookesia_board_quiet_start(),end=brookesia_board_quiet_end();
@@ -580,16 +595,19 @@ index 819a72f..04c114b 100644
 @@ -5,6 +5,8 @@
   */
  #include "private/runtime_impl.hpp"
- 
+-
++
 +extern "C" bool brookesia_board_image_needs_resolution(const char *) __attribute__((weak));
 +
  namespace esp_brookesia::gui {
- 
+-
++
  std::shared_ptr<Runtime::Impl::NodeRecord::InteractionState> Runtime::Impl::find_interaction_state(
 @@ -775,7 +777,9 @@ std::expected<RuntimeImageResource, std::string> Runtime::Impl::resolve_image_re
          resource = global_it->second;
      }
- 
+-
++
 -    if ((resource.width <= 0 || resource.height <= 0) && backend != nullptr) {
 +    if ((resource.width <= 0 || resource.height <= 0 ||
 +            (brookesia_board_image_needs_resolution &&
@@ -604,11 +622,13 @@ index 5957887..ddcea23 100644
 @@ -5,6 +5,8 @@
   */
  #include "private/runtime_impl.hpp"
- 
+-
++
 +extern "C" bool brookesia_board_image_needs_resolution(const char *) __attribute__((weak));
 +
  namespace esp_brookesia::gui {
- 
+-
++
  std::expected<void, std::string> Runtime::Impl::load_theme(const ThemeAsset &theme)
 @@ -442,7 +444,9 @@ std::expected<void, std::string> Runtime::Impl::register_image(const RuntimeImag
          return std::unexpected("Image resource must define primary_src or native_src");
@@ -655,14 +675,14 @@ index c7dd23f..e2be1bc 100644
 @@ -5,6 +5,8 @@
   */
  #include <string_view>
- 
+-
++
 +extern "C" const char *brookesia_board_image_path(const char *) __attribute__((weak));
 +
  #include "private/props_impl.hpp"
  // lv_image_cache_drop() lives in an instance header that lvgl.h does not aggregate.
  #if __has_include("lvgl/src/misc/cache/instance/lv_image_cache.h")
-@@ -33,6 +35,15 @@ std::expected<std::shared_ptr<BinaryImageSource>, std::string> load_image_source
- 
+@@ -34,5 +36,14 @@ std::expected<std::shared_ptr<BinaryImageSource>, std::string> load_image_source
  std::expected<RuntimeImageResource, std::string> resolve_image_resource(RuntimeImageResource resource)
  {
 +    if (resource.native_src == 0 && brookesia_board_image_path) {
@@ -681,7 +701,7 @@ diff --git a/gui/brookesia_gui_lvgl/src/props_image.cpp b/gui/brookesia_gui_lvgl
 index f083f6d..fc9e2f6 100644
 --- a/gui/brookesia_gui_lvgl/src/props_image.cpp
 +++ b/gui/brookesia_gui_lvgl/src/props_image.cpp
-@@ -4,6 +4,11 @@
+@@ -4,5 +4,10 @@
   * SPDX-License-Identifier: Apache-2.0
   */
  #include "private/props_impl.hpp"
@@ -690,9 +710,9 @@ index f083f6d..fc9e2f6 100644
 +#else
 +#include "src/libs/rle/lv_rle.h"
 +#endif
- 
+-
++
  namespace esp_brookesia::gui::lvgl::props_detail {
- 
 @@ -232,8 +237,33 @@ std::expected<std::shared_ptr<BinaryImageSource>, std::string> load_binary_image
      source->descriptor.header.h = read_le16(source->data, 6);
      source->descriptor.header.stride = read_le16(source->data, 8);
@@ -736,7 +756,8 @@ index 2ce6a00..2f2e955 100644
 @@ -57,6 +57,32 @@ void apply_style_colors(Record &record, const ResolvedStyle &style)
          lv_style_remove_prop(&record.style, LV_STYLE_TEXT_COLOR);
      }
- 
+-
++
 +    // Dropdown lists live outside the dropdown object and need its palette
 +    // explicitly, just as they need its resolved font below.
 +    if (record.type == NodeType::Dropdown) {
@@ -872,13 +893,15 @@ index 307579f..d6b4db9 100644
 @@ -17,6 +18,10 @@
  #include "brookesia/hal_adaptor/board_manager.h"
  #include "esp_lcd_touch.h"
- 
+-
++
 +// Optional board orientation hook; transform before LVGL and gesture handling.
 +extern "C" bool brookesia_board_filter_touch(bool) __attribute__((weak));
 +extern "C" void brookesia_board_touch_transform(int16_t *, int16_t *) __attribute__((weak));
 +
  namespace esp_brookesia::hal {
- 
+-
++
  namespace {
 @@ -45,7 +50,11 @@ display::TouchIface::Info generate_info()
      return display::TouchIface::Info {
@@ -893,14 +916,14 @@ index 307579f..d6b4db9 100644
          .operation_mode = GPIO_IS_VALID_GPIO(config->touch_config.int_gpio_num) ?
          display::TouchIface::OperationMode::Interrupt : display::TouchIface::OperationMode::Polling,
          .group_id = DisplayDevice::LCD_GROUP_ID,
-@@ -101,9 +110,10 @@ bool I2cDisplayTouchImpl::read_points(std::vector<display::TouchIface::Point> &p
- 
+@@ -102,8 +111,9 @@ bool I2cDisplayTouchImpl::read_points(std::vector<display::TouchIface::Point> &p
      uint8_t count = 0;
      std::array<esp_lcd_touch_point_data_t, CONFIG_ESP_LCD_TOUCH_MAX_POINTS> data;
 -    bool get_ret = esp_lcd_touch_get_data(touch_handle, data.data(), &count, CONFIG_ESP_LCD_TOUCH_MAX_POINTS);
 +    esp_err_t get_ret = esp_lcd_touch_get_data(touch_handle, data.data(), &count, CONFIG_ESP_LCD_TOUCH_MAX_POINTS);
      BROOKESIA_CHECK_ESP_ERR_RETURN(get_ret, false, "Failed to get touch data");
- 
+-
++
 +    if(brookesia_board_filter_touch && brookesia_board_filter_touch(count>0))count=0;
      points.resize(count);
      if (count == 0) {
@@ -913,7 +936,8 @@ index 307579f..d6b4db9 100644
 +            brookesia_board_touch_transform(&points[i].x, &points[i].y);
 +        }
      }
- 
+-
++
      return true;
 diff --git a/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_devices.yaml b/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_devices.yaml
 index de650ea..9b86df6 100755
@@ -944,10 +968,10 @@ diff --git a/service/media/brookesia_service_audio/src/audio_playback.cpp b/serv
 index 497042e..373b79d 100644
 --- a/service/media/brookesia_service_audio/src/audio_playback.cpp
 +++ b/service/media/brookesia_service_audio/src/audio_playback.cpp
-@@ -34,17 +34,25 @@ bool AudioPlayback::on_start()
- 
+@@ -35,16 +35,24 @@ bool AudioPlayback::on_start()
      initialize_control_default_state();
- 
+-
++
 -    auto playback_handle = hal::acquire_interface<hal::audio::PlaybackIface>(
 -                               hal::audio::PlaybackIface::get_default_instance_name()
 -                           );
@@ -977,7 +1001,8 @@ index 497042e..373b79d 100644
 +        false, "Failed to open audio playback"
 +        );
 +    }
- 
+-
++
      play_state_ = AudioPlayState::Idle;
      pause_requested_ = false;
 diff --git a/service/media/brookesia_service_audio/src/audio_playback_control.cpp b/service/media/brookesia_service_audio/src/audio_playback_control.cpp
@@ -1067,33 +1092,41 @@ index c8456ca..2f6c517 100644
                                   desired_volume_,
                                   BROOKESIA_SERVICE_AUDIO_PLAYBACK_VOLUME_MIN,
 diff --git a/service/system/brookesia_service_usb/src/service_usb.cpp b/service/system/brookesia_service_usb/src/service_usb.cpp
-index 2cf3522..62387be 100644
+index 2cf3522..f90dddb 100644
 --- a/service/system/brookesia_service_usb/src/service_usb.cpp
 +++ b/service/system/brookesia_service_usb/src/service_usb.cpp
-@@ -158,12 +158,18 @@ std::expected<std::filesystem::path, std::string> validate_upload_path(std::stri
+@@ -158,12 +158,26 @@ std::expected<std::filesystem::path, std::string> validate_upload_path(std::stri
      if (remote_path.empty()) {
          return std::unexpected("path is empty");
      }
 -    const std::filesystem::path relative(remote_path);
 -    if (relative.is_absolute() || path_has_parent_reference(relative)) {
 +    const bool sd_audio = remote_path.starts_with("sd-audiobooks/");
-+    const std::filesystem::path relative(sd_audio ? remote_path.substr(14) : remote_path);
++    const bool sd_voice = remote_path.starts_with("offline-voice/");
++    const std::filesystem::path relative(sd_audio ? remote_path.substr(14) : sd_voice ? remote_path.substr(14) : remote_path);
 +    if (relative.empty() || relative.is_absolute() || path_has_parent_reference(relative)) {
          return std::unexpected("path must be relative and must not contain '..'");
      }
 -
 +
 -    const std::filesystem::path root(BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
-+    const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
++    const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : sd_voice ? "/sdcard/offline-voice" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
 +    if (sd_audio) {
 +        auto extension = relative.extension().string();
 +        std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c){return std::tolower(c);});
 +        if (extension != ".mp3" && extension != ".wav")return std::unexpected("SD audio upload requires MP3 or WAV");
 +    }
++    if (sd_voice) {
++        const auto name = relative.filename().string();
++        const auto first = *relative.begin();
++        const bool model = first == "models" && (name == "_MODEL_INFO_" || name == "mn5q8_data" || name == "mn5q8_index" || name == "wn9_data" || name == "wn9_index");
++        const bool prompt = (first == "prompts" || first == "diagnostic") && relative.extension() == ".pcm";
++        if (!model && !prompt)return std::unexpected("Invalid offline voice asset");
++    }
      const auto candidate = (root / relative).lexically_normal();
      if (!path_is_same_or_child(candidate, root)) {
          return std::unexpected("path escapes upload root");
-@@ -758,7 +764,10 @@ private:
+@@ -758,7 +772,11 @@ private:
              }
          }
 -
@@ -1102,7 +1135,8 @@ index 2cf3522..62387be 100644
 +        // Keep large audio transfers on SD from their first byte, including
 +        // SHA-256 staging; Flash may have less free space than one chapter.
 +        const bool sd_audio = transfer->destination.starts_with("/sdcard/audiobooks/");
-+        const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
++        const bool sd_voice = transfer->destination.starts_with("/sdcard/offline-voice/");
++        const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : sd_voice ? "/sdcard/offline-voice" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
          const std::filesystem::path temp_directory = root / ".brookesia_usb";
          std::error_code error_code;
          std::filesystem::create_directories(temp_directory, error_code);
@@ -1143,7 +1177,8 @@ index 39d0bb8..1fc50dc 100644
 @@ -11,6 +11,8 @@
  #include <string>
  #include <utility>
- 
+-
++
 +extern "C" bool brookesia_child_requires_internal(const char *) __attribute__((weak));
 +
  #include "brookesia/system_core/app/iapp.hpp"
@@ -1152,7 +1187,8 @@ index 39d0bb8..1fc50dc 100644
 @@ -1190,6 +1192,14 @@ std::expected<AppId, std::string> System::install_runtime_app_package(
          app_root = app_root_result->lexically_normal();
      }
- 
+-
++
 +    if (!installed && brookesia_child_requires_internal &&
 +            brookesia_child_requires_internal(package_manifest->id.c_str())) {
 +        const auto layout = get_storage_layout();
@@ -1171,7 +1207,8 @@ index 4f3953d..46e8542 100644
 @@ -13,6 +13,9 @@
  #include <string_view>
  #include <utility>
- 
+-
++
 +extern "C" bool brookesia_child_visible(const char *) __attribute__((weak));
 +extern "C" const char *brookesia_child_launch_error(const char *) __attribute__((weak));
 +
@@ -1206,7 +1243,8 @@ index 4057f51..93b5f30 100644
 +++ b/system/brookesia_system_core/src/system/resources.cpp
 @@ -142,6 +142,19 @@ std::optional<std::filesystem::path> find_icon_descriptor_path(
      }
- 
+-
++
      for (const auto &dir : make_icon_search_dirs(manifest, resource_dir)) {
 +        // Standard app packages keep the launcher entry in images/index.json.
 +        // Probe that small descriptor directly before the recursive FSList scan:
@@ -1273,15 +1311,15 @@ index 927e196..7d2ff19 100644
 @@ -14,6 +14,9 @@
  #include <utility>
  #include <vector>
- 
+-
++
 +extern "C" unsigned brookesia_child_revision() __attribute__((weak));
 +extern "C" void brookesia_child_foreground(const char *, unsigned) __attribute__((weak));
 +
  #include "brookesia/service_manager/dataflow/registry.hpp"
  #include "private/shell_app.hpp"
  #include "private/system_constants.hpp"
-@@ -230,6 +233,15 @@ void ShellApp::clear_display_source_restore_records()
- 
+@@ -231,5 +234,14 @@ void ShellApp::clear_display_source_restore_records()
  std::expected<void, std::string> ShellApp::set_foreground_app(const std::optional<core::AppInfo> &app)
  {
 +    if (brookesia_child_foreground) {
@@ -1300,19 +1338,20 @@ diff --git a/system/brookesia_system_super/src/shell_status.cpp b/system/brookes
 index e156b9a..d0c4d84 100644
 --- a/system/brookesia_system_super/src/shell_status.cpp
 +++ b/system/brookesia_system_super/src/shell_status.cpp
-@@ -21,6 +21,8 @@
+@@ -21,5 +21,7 @@
  #include "private/system_constants.hpp"
  #include "private/utils.hpp"
- 
+-
++
 +extern "C" bool brookesia_board_screen_asleep() __attribute__((weak));
 +
  namespace esp_brookesia::system::super {
  namespace {
- 
 @@ -266,6 +268,50 @@ void ShellApp::refresh_status_clock()
      }
  }
- 
+-
++
 +void ShellApp::refresh_wallpaper_shift()
 +{
 +    if (context_ == nullptr) {

@@ -1,11 +1,11 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'../src/app/main.js'),'utf8');
-let calls=[],texts={},state={state:'Idle',active:false,channel:false},book=true,volume=20,volumeCap=100;
-const ctx=vm.createContext({brookesia:{start_service:n=>n,call_function(h,n,s){
+let bindings=[],quiet=false,calls=[],texts={},state={state:'Idle',active:false,channel:false},book=true,volume=20,volumeCap=100;
+const ctx=vm.createContext({brookesia:{start_service:n=>{bindings.push(n);return n;},call_function(h,n,s){
   const a=JSON.parse(s);calls.push({h,n,a});let data=null;
   if(n==='SetVolume')volume=Math.min(volumeCap,a.Volume);
   if(n==='GetVolume')data=volume;
-  if(n==='GetState')data=h==='Audiobook'?{active:book}:state;
+  if(n==='GetState')data=h==='Audiobook'?{active:book}:h==='DeviceModes'?{do_not_disturb:quiet,resume_volume:70}:state;
   if(h==='Audiobook'&&n==='Stop')book=false;
   if(n==='Connect')state={state:'Activation',active:true,channel:false,activation_code:'123456',message:'请激活'};
   if(n==='Disconnect')state={state:'Idle',active:false,channel:false};
@@ -28,6 +28,12 @@ ctx.brookesia_app.on_action('talk');assert.equal(state.state,'Thinking');
 state={state:'Speaking',active:true,channel:true,answer:'回答'};ctx.brookesia_app.on_timer();ctx.brookesia_app.on_action('cancel');assert.equal(state.state,'Ready');
 for(let n=0;n<30;n++)ctx.brookesia_app.on_action('louder');assert.equal(calls.filter(c=>c.n==='SetVolume').at(-1).a.Volume,100);
 volumeCap=30;ctx.brookesia_app.on_action('louder');assert.equal(texts['/main/volume'],'音量 30%');
+// Simulate a hardware adjustment outside this JavaScript instance.
+volume=70;ctx.brookesia_app.on_timer();assert.equal(texts['/main/volume'],'音量 70%');
+volume=65;ctx.brookesia_app.on_timer();assert.equal(texts['/main/volume'],'音量 65%');
+volumeCap=100;volume=40;ctx.brookesia_app.on_action('quieter');assert.equal(volume,35,'Touch adjustment must start from the current hardware target');
+quiet=true;ctx.brookesia_app.on_timer();assert.equal(texts['/main/volume'],'音量 70% · 勿扰静音');quiet=false;
+const bindingCount=bindings.length;for(let n=0;n<120;n++)ctx.brookesia_app.on_timer();assert.equal(bindings.length,bindingCount);
 ctx.brookesia_app.on_pause();assert.equal(state.active,false);
 const count=calls.length;ctx.brookesia_app.on_timer();assert.equal(calls.length,count);
 ctx.brookesia_app.on_resume();ctx.brookesia_app.on_action('test');assert.equal(state.state,'Testing');

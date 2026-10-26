@@ -1,4 +1,4 @@
-# 听书 0.2.0（固件 s3.20 起）
+# 听书 0.2.1（固件 s3.22；0.2.0 支持 s3.20 起）
 
 ## 操作
 
@@ -9,6 +9,8 @@
 s3.21 将保存音量统一用于服务启动、编解码器重开和正在写入的音频流，避免界面数值变化但芯片输出不变。0% 会启用芯片静音，新的音量选择会保存；睡眠渐弱仍只改变 PCM 增益，不覆盖选择值。勿扰期间页面显示“音量 xx% · 勿扰静音”，保持已保存的音量。
 
 `tools/verify_speaker_volume.py` 在播放中核对 10%、30%、0% 的芯片音量、DAC 寄存器与静音标志，测试后恢复当前音量和勿扰。可显式用 `--restore-volume` 指定恢复值；不改家长控制，需家长音量上限允许 30%。
+
+新增大号“点一下说话 · 离线”按钮，先点按即可说短命令；不需要小智联网或云端识别。离线开关、模型与童声验证范围见 [OFFLINE_VOICE.md](OFFLINE_VOICE.md)。
 
 ## 睡眠定时
 
@@ -35,7 +37,7 @@ powershell.exe -NoProfile -File tools/synthesize_mandarin.ps1 -TextFile samples/
 
 ## 部署与验证
 
-先烧录 s3.21 或更新版应用分区，再用 `tools/deploy_audiobook_sleep.py --repo <仓库目录> --downloaded <已下载咕咚.mp3>` 更新三个听书文件并上传两篇故事。旧界面备份到 SD，更新后重启刷新预加载资源。
+当前 s3.22 / 听书 0.2.1 使用 `tools/deploy_offline_voice.py` 部署。旧 s3.20/21 / 听书 0.2.0 使用 `tools/deploy_audiobook_sleep.py --repo <仓库目录> --downloaded <已下载咕咚.mp3>` 更新三个听书文件并上传两篇故事。旧界面备份到 SD，更新后重启刷新预加载资源。
 
 固件 USB `put` 新增 `sd-audiobooks/` 相对路径前缀，仅允许 MP3/WAV，映射到 `/sdcard/audiobooks/`。临时分片与 SHA-256 校验也在 SD 上完成，不经过空间有限的 Flash；其余上传路径行为不变，仍拒绝绝对路径、父级跳转和符号链接。既有故事默认不覆盖。
 

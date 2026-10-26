@@ -2,16 +2,23 @@
   "upstream": "https://github.com/espressif/esp-brookesia.git",
   "commit": "68ac00e7aa9012cd8cbf0cbf6bee155801db0e8c",
   "esp_idf": "6.0.2",
-  "firmware": "0.8.3-s3.21",
+  "firmware": "0.8.3-s3.22",
   "toolkit": "1.0.1",
   "apps": {
-    "local.audiobook": "0.2.0",
+    "local.audiobook": "0.2.1",
     "local.codex.quota": "0.2.2",
     "local.flipclock": "0.1.1",
     "local.weather": "0.2.6",
-    "local.voiceassistant": "0.1.0",
+    "local.voiceassistant": "0.1.1",
     "local.childmode": "0.1.0"
   },
   "device": "ESP32-S3-Touch-AMOLED-2.16",
-  "theme": "cartoon-q-v1"
+  "theme": "cartoon-q-v1",
+  "offline_voice": {
+    "service": "0.1.0",
+    "esp_sr": "2.4.5",
+    "wake_word": "你好小智",
+    "wakenet": "wn9_nihaoxiaozhi_tts",
+    "multinet": "mn5q8_cn"
+  }
 }
