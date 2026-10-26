@@ -1,5 +1,17 @@
 (function () {
 'use strict';
+const storyTitles={
+  '01-xiaoma-yueliang.mp3':'小马和月亮灯',
+  '02-gudong.mp3':'咕咚',
+  '03-xiaokedou-zhao-mama.mp3':'小蝌蚪找妈妈',
+  '04-wuya-heshui.mp3':'乌鸦喝水',
+  '05-xiaohouzi-xiashan.mp3':'小猴子下山',
+  '06-hujiahuwei.mp3':'狐假虎威',
+  '07-zuojingguantian.mp3':'坐井观天',
+  '08-xiaoma-guohe.mp3':'小马过河',
+  '09-xuehaizi.mp3':'雪孩子',
+  '10-wangyangbulao.mp3':'亡羊补牢'
+};
 let gui, audio, storage, modes, timer, playback, localVoice, tracks=[], index=0, current=null, playing=null, hidden=false, cache={}, volume=20, bookmark=null, lastSaved=0;
 function call(handle,name,args){const r=JSON.parse(brookesia.call_function(handle,name,JSON.stringify(args||{})));if(!r.success)throw new Error(r.error||r.error_message||name);return r.data;}
 function text(id,value){value=String(value);if(cache[id]===value||hidden)return;call(gui,'SetText',{Path:'/main/'+id,Text:value});cache[id]=value;}
@@ -12,7 +24,7 @@ function refresh(){
 }
 function title(track){
   const file=track.path.slice(track.path.lastIndexOf('/')+1);
-  return file==='01-xiaoma-yueliang.mp3'?'小马和月亮灯 · 原创':file==='02-gudong.mp3'?'咕咚 · 中文朗读':track.title;
+  return storyTitles[file]||file.replace(/\.(mp3|wav)$/i,'');
 }
 function play(){
   if(!current){text('status','请先装卡并扫描章节');return;}

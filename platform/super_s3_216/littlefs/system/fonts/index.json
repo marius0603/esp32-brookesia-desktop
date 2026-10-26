@@ -17,6 +17,18 @@
                 "en",
                 "zh_CN"
             ]
+        },
+        {
+            "id": "audiobook_title",
+            "kind": "file",
+            "src": "audiobook-title-extra.ttf",
+            "languages": [
+                "en",
+                "zh_CN"
+            ],
+            "fallbacks": [
+                "${font.zh_CN}"
+            ]
         }
     ]
 }

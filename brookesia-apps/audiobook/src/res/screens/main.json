@@ -25,7 +25,7 @@
       },
       "style": {
         "textColor": "#e9ebfa",
-        "font": "${font.zh_CN}",
+        "font": "${font.audiobook_title}",
         "fontSize": 26,
         "textAlign": "center"
       },

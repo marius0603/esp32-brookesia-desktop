@@ -52,6 +52,11 @@ quiet=true;volume=0;ctx.brookesia_app.on_timer();assert.equal(texts['/main/volum
 quiet=false;volume=30;ctx.brookesia_app.on_timer();assert.equal(texts['/main/volume'],'音量 30% · 两侧实体键调节');
 const screen=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/screens/main.json'),'utf8'));
 const ids=screen.children.map(n=>n.id);assert(!ids.includes('tools')&&!ids.includes('sound'));
+assert.equal(screen.children.find(n=>n.id==='chapter').style.font,'${font.audiobook_title}');
+const resources=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/root.json'),'utf8'));
+assert(!resources.assets.includes('fonts/index.json'),'Runtime app documents cannot register fontSet assets');
+const systemFonts=JSON.parse(fs.readFileSync(path.join(__dirname,'../../../platform/super_s3_216/littlefs/system/fonts/index.json'),'utf8'));
+assert.deepEqual(systemFonts.fonts.find(f=>f.id==='audiobook_title').fallbacks,['${font.zh_CN}']);
 ctx.brookesia_app.on_action('offlineSpeak');assert.equal(calls.filter(c=>c.n==='ListenNow').length,1);ctx.brookesia_app.on_timer();assert.equal(texts['/main/voice/label'],'我在听，请说命令');
 assert.equal(screen.children.find(n=>n.id==='voice').placement.height,54);
 for(const row of screen.children.filter(n=>['transport','seek','sleep'].includes(n.id)))for(const button of row.children){assert(button.placement.height>=48);assert(button.children[0].style.fontSize>=22);}
@@ -60,3 +65,29 @@ console.log('Audiobook regression passed: automatic scan, playback/bookmarks, sl
 const bindingCount=bindings.length;
 for(let i=0;i<120;i++){now+=1000;ctx.brookesia_app.on_timer();}
 assert.equal(bindings.length,bindingCount,'Polling must reuse bindings instead of accumulating live service records');
+
+// Exercise the visible chapter label with the SD service's actual path-shaped titles.
+ctx.brookesia_app.on_stop();
+const storyCases=[
+ ['01-xiaoma-yueliang.mp3','小马和月亮灯'],['02-gudong.mp3','咕咚'],
+ ['03-xiaokedou-zhao-mama.mp3','小蝌蚪找妈妈'],['04-wuya-heshui.mp3','乌鸦喝水'],
+ ['05-xiaohouzi-xiashan.mp3','小猴子下山'],['06-hujiahuwei.mp3','狐假虎威'],
+ ['07-zuojingguantian.mp3','坐井观天'],['08-xiaoma-guohe.mp3','小马过河'],
+ ['09-xuehaizi.mp3','雪孩子'],['10-wangyangbulao.mp3','亡羊补牢'],
+ ['另一篇故事.MP3','另一篇故事'],['new-story.wav','new-story']
+];
+tracks=storyCases.map(([file])=>({path:'/sdcard/audiobooks/bedtime/'+file,title:'/bedtime/'+file}));
+stored={};vm.runInContext(code,ctx);ctx.brookesia_app.on_start();
+assert.equal(texts['/main/chapter'],storyCases[0][1]);
+for(let i=1;i<storyCases.length;i++){
+ ctx.brookesia_app.on_action('next');
+ assert.equal(texts['/main/chapter'],storyCases[i][1]);
+ assert.equal(state.path,tracks[i].path,'Display names must not change playback paths');
+}
+// Resume/bookmarks and native next-track changes must use the same display names.
+state={...state,path:tracks[2].path,state:'Paused',active:true,position:23};
+ctx.brookesia_app.on_timer();assert.equal(texts['/main/chapter'],'小蝌蚪找妈妈');
+ctx.brookesia_app.on_pause();ctx.brookesia_app.on_resume();
+assert.equal(texts['/main/chapter'],'小蝌蚪找妈妈');
+assert.equal(JSON.parse(stored['/littlefs/audiobook-bookmark.json']).path,tracks[2].path);
+console.log('Story titles passed: all 10 Chinese names, filename fallback, chapter changes and bookmark resume');
