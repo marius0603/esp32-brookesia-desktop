@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+config/
+logs/
+outputs/
+runtime/
+models/
+envs/
+cache/
+*.key
+.env

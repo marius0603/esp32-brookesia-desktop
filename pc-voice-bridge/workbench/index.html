@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>本地语音工作台</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f5f8;color:#172334;font:16px/1.6 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1080px;margin:48px auto;padding:0 24px}header{margin-bottom:28px}h1{font-size:32px;letter-spacing:.02em;margin:0 0 6px}p{color:#637184;margin:6px 0}section{background:white;padding:28px;border:1px solid #e1e7ee;border-radius:20px;box-shadow:0 8px 24px #102a4310}h2{font-size:22px;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}label{display:block;font-weight:600;margin:18px 0 7px}textarea,input,select{width:100%;padding:12px;border:1px solid #cad4e1;border-radius:10px;font:inherit;color:inherit;background:#fff}textarea{resize:vertical;min-height:200px}button{background:#245cb4;color:white;border:0;border-radius:10px;font:inherit;font-weight:600;padding:12px 24px;cursor:pointer;margin-top:20px}button:disabled{opacity:.5;cursor:wait}.status{min-height:30px;margin-top:18px;color:#245cb4}.error{color:#b63c36}.output{white-space:pre-wrap;background:#f6f8fc;border-radius:12px;padding:16px;margin-top:16px;min-height:150px}audio{width:100%;margin-top:18px}a{color:#245cb4}footer{margin:24px 0;color:#718096;font-size:14px}.small{font-size:14px}#transcript:empty:before{content:"识别结果会显示在这里";color:#94a0af}@media(max-width:720px){main{margin-top:24px;padding:0 16px}.grid{grid-template-columns:1fr}section{padding:22px}h1{font-size:28px}}
+</style>
+<main><header><h1>本地语音工作台</h1><p>把文字读出来，把录音写下来。</p><p id="readiness" class="small" role="status"></p></header>
+<div class="grid"><section><h2>文字朗读</h2><p class="small">输入中文，生成可以播放和保存的语音。</p>
+<label for="text">朗读内容</label><textarea id="text" maxlength="5000" placeholder="输入故事、文章或想说的话……"></textarea>
+<label for="speaker">声音</label><select id="speaker"><option value="Serena">Serena · 女声</option><option value="Vivian">Vivian · 女声</option><option value="Uncle_Fu">Uncle Fu · 男声</option></select>
+<label for="instruct">朗读方式</label><input id="instruct" maxlength="300" value="温柔、清晰地朗读，语速稍慢。">
+<button id="tts" onclick="speak()">生成语音</button><div id="tts-status" class="status" role="status"></div>
+<audio id="player" controls hidden></audio><a id="tts-download" hidden download="朗读.wav">保存朗读音频</a></section>
+<section><h2>录音转写</h2><p class="small">选择录音文件，识别为中文文字。</p>
+<label for="file">录音文件</label><input id="file" type="file" accept="audio/*,.m4a,.flac,.webm">
+<p class="small">支持 WAV、MP3、M4A、FLAC 等格式，文件不超过 30MB。</p>
+<button id="asr" onclick="transcribe()">开始转写</button><div id="asr-status" class="status" role="status"></div>
+<div id="transcript" class="output"></div><a id="asr-download" hidden download="转写.txt">保存转写文字</a></section></div>
+<footer>文字和录音仅在本电脑处理。结果保存在本地 outputs 文件夹。首次处理需要准备模型，请耐心等待。</footer></main>
+<script>
+const $=id=>document.getElementById(id);
+async function checkReady(){try{const state=await(await fetch('/api/health')).json();$('readiness').textContent=state.ready?'模型已就绪，可以离线使用。':'模型正在准备，完成后即可使用。';if(!state.ready){$('tts').disabled=true;$('asr').disabled=true;setTimeout(checkReady,4000);}else{$('tts').disabled=false;$('asr').disabled=false;}}catch(_){$('readiness').textContent='本地服务暂时无法连接';}}
+checkReady();
+async function submit(task,body){
+ const status=$(task+'-status');$(task).disabled=true;status.className='status';status.textContent='正在提交……';
+ try{
+  const response=await fetch('/api/'+task,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const job=await response.json();if(!response.ok)throw Error(job.error||'无法提交任务');
+  while(true){
+   await new Promise(resolve=>setTimeout(resolve,1200));
+   const state=await(await fetch('/api/jobs/'+job.id)).json();
+   if(state.state==='error')throw Error(state.error);
+   if(state.state==='done'){
+    status.textContent='已完成，用时 '+state.result.elapsed_seconds.toFixed(1)+' 秒';
+    const link=$(task+'-download');link.href=state.download;link.hidden=false;
+    if(task==='tts'){$('player').src=state.audio;$('player').hidden=false;}
+    else $('transcript').textContent=state.result.text||'没有识别到文字';
+    break;
+   }
+   status.textContent=state.state==='queued'?'正在排队……':task==='tts'?'正在准备声音并朗读……':'正在识别录音……';
+  }
+ }catch(error){status.className='status error';status.textContent=error.message;}
+ finally{$(task).disabled=false;}
+}
+function speak(){const text=$('text').value.trim();if(!text){$('tts-status').textContent='请先输入朗读内容';return;}submit('tts',{text,speaker:$('speaker').value,instruct:$('instruct').value});}
+async function transcribe(){
+ const file=$('file').files[0];if(!file){$('asr-status').textContent='请先选择录音文件';return;}
+ if(file.size>30*1024*1024){$('asr-status').textContent='请选择 30MB 以内的录音';return;}
+ const buffer=new Uint8Array(await file.arrayBuffer());let binary='';
+ for(let at=0;at<buffer.length;at+=32768)binary+=String.fromCharCode(...buffer.subarray(at,at+32768));
+ submit('asr',{audio:btoa(binary),filename:file.name});
+}
+</script></html>
