@@ -9,12 +9,14 @@ def main():
     os.environ['QWEN_SPEECH_ROOT']=str(root)
     sys.path.insert(0,str(root/'scripts'))
     import config_store,public_tunnel
-    if config_store.load().get('network_mode')!='quick_tunnel':
-        raise SystemExit('Only temporary quick tunnels can be recreated with this tool')
-    pid_file=root/'logs/tunnel.pid'
+    mode=config_store.load().get('network_mode')
+    if mode not in ('quick_tunnel','ssh_tunnel'):
+        raise SystemExit('Only managed temporary tunnels can be recreated with this tool')
+    pid_file=root/('logs/ssh-tunnel.pid' if mode=='ssh_tunnel' else 'logs/tunnel.pid')
     if pid_file.exists():
         identifier=int(pid_file.read_text())
-        if public_tunnel.matching_process(identifier,root/'tools/cloudflared.exe'):
+        owned=public_tunnel.owned_ssh_process(identifier) if mode=='ssh_tunnel' else public_tunnel.matching_process(identifier,root/'tools/cloudflared.exe')
+        if owned:
             subprocess.run(['taskkill','/PID',str(identifier),'/F'],check=True,capture_output=True)
     public_tunnel.run()
     result=public_tunnel.snapshot()

@@ -5,10 +5,55 @@ from config_store import ROOT,load,save
 
 state={'running':False,'url':'','error':''}
 
+def ssh_executable():return Path(os.environ.get('SystemRoot','C:/Windows'))/'System32/OpenSSH/ssh.exe'
+
+def ssh_endpoint(log):
+    matches=re.findall(r'https://([a-z0-9-]+\.(?:lhr\.life|localhost\.run))',log)
+    return 'wss://'+matches[-1]+'/device' if matches else ''
+
+def owned_ssh_process(identifier):
+    if not matching_process(identifier,ssh_executable()):return False
+    query=subprocess.run(['powershell.exe','-NoProfile','-NonInteractive','-Command',
+        f"(Get-CimInstance Win32_Process -Filter 'ProcessId={int(identifier)}').CommandLine"],
+        capture_output=True,text=True,timeout=10,creationflags=subprocess.CREATE_NO_WINDOW)
+    command=os.path.normcase(query.stdout)
+    return 'nokey@localhost.run' in command and os.path.normcase(str(ROOT/'config/ssh-tunnel-known-hosts')) in command
+
+def run_ssh(config):
+    executable=ssh_executable();pid_file=ROOT/'logs/ssh-tunnel.pid';log_path=ROOT/'logs/ssh-tunnel.log'
+    try:
+        if pid_file.exists() and owned_ssh_process(int(pid_file.read_text())):
+            state.update(running=True,url=config.get('device_url',''),error='',provider='localhost.run');return
+        arguments=[str(executable),'-T','-o','BatchMode=yes','-o','ConnectTimeout=20',
+            '-o','ServerAliveInterval=30','-o','ServerAliveCountMax=3','-o','ExitOnForwardFailure=yes',
+            '-o','IdentityAgent=none','-o','IdentitiesOnly=yes','-o','IdentityFile=none',
+            '-o','StrictHostKeyChecking=accept-new','-o','UserKnownHostsFile='+str(ROOT/'config/ssh-tunnel-known-hosts'),
+            '-R','80:127.0.0.1:'+str(config.get('gateway_port',7861)),'nokey@localhost.run']
+        with log_path.open('w',encoding='utf-8') as log:
+            process=subprocess.Popen(arguments,cwd=ROOT,stdin=subprocess.DEVNULL,stdout=log,
+                stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW)
+        pid_file.write_text(str(process.pid),encoding='ascii')
+        for _ in range(120):
+            if process.poll() is not None:raise RuntimeError('备用公网入口启动失败，请查看 ssh-tunnel.log')
+            address=ssh_endpoint(log_path.read_text(encoding='utf-8',errors='replace'))
+            if address:
+                config=load();old=config.get('device_url');config['device_url']=address
+                config['device_address_changed']=bool(old and old!=address);save(config)
+                state.update(running=True,url=address,error='',provider='localhost.run');return
+            time.sleep(.5)
+        raise RuntimeError('备用公网入口准备超时')
+    except Exception as error:state.update(running=False,error=str(error)[:180])
+
 def snapshot():
     """A live process alone does not prove the temporary public route still exists."""
     result=dict(state)
     config=load()
+    if config.get('network_mode')=='ssh_tunnel':
+        result.update(url=config.get('device_url',''),provider='localhost.run')
+        try:running=matching_process(int((ROOT/'logs/ssh-tunnel.pid').read_text()),ssh_executable())
+        except (ValueError,OSError):running=False
+        result.update(running=running,error='' if running else '公网中转已停止，请重新启动工作台')
+        return result
     if config.get('network_mode')!='quick_tunnel':return result
     result['url']=config.get('device_url',result['url'])
     log_path=ROOT/'logs/tunnel-current.log'
@@ -36,6 +81,7 @@ def matching_process(identifier,expected):
 
 def run():
     config=load()
+    if config.get('network_mode')=='ssh_tunnel':return run_ssh(config)
     if config.get('network_mode')!='quick_tunnel':return
     executable=ROOT/'tools/cloudflared.exe';pid_file=ROOT/'logs/tunnel.pid';log_path=ROOT/'logs/tunnel-current.log'
     if not executable.exists():state['error']='尚未安装公网隧道程序';return

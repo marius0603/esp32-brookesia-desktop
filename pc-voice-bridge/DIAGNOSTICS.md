@@ -6,7 +6,7 @@
 python pc-voice-bridge/arm_diagnostic.py --target G:/codex_data/qwen-speech
 ```
 
-让使用者知道会在本机留存这一段录音，再由使用者在设备点击说话、说完发送。原始16kHz、16位单声道PCM以WAV保存于运行目录 `outputs/diagnostics`，旁边JSON记录时长、峰值、RMS、直流偏移、削顶及零值比例。采集一次后自动关闭。取消尚未发生的采集：
+让使用者知道会在本机留存这一段录音，再由使用者在设备点击说话、说完发送。送入识别模型的16kHz、16位单声道PCM以WAV保存于运行目录 `outputs/diagnostics`；使用压缩传输时保存的是解码后的识别输入。旁边JSON记录时长、峰值、RMS、直流偏移、削顶及零值比例。采集一次后自动关闭。取消尚未发生的采集：
 
 ```powershell
 python pc-voice-bridge/arm_diagnostic.py --target G:/codex_data/qwen-speech --cancel

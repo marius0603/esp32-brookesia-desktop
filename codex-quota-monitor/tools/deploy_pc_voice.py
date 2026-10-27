@@ -4,6 +4,7 @@ from pathlib import Path
 from deploy_audiobook_sleep import StoryClient
 
 ROOT=Path(__file__).resolve().parents[1]
+VERSIONS=json.loads((ROOT.parent/'versions.json').read_text(encoding='utf-8'))
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--port',required=True);p.add_argument('--model-root',type=Path,required=True);a=p.parse_args()
@@ -11,17 +12,18 @@ def main():
     import config_store
     config=config_store.load();url=config.get('device_url','')
     if not url.startswith('wss://'):raise SystemExit('Configure an encrypted public device endpoint first')
-    package=ROOT.parent/'packages/apps/local.voiceassistant.debug.0.2.0.bpk'
+    version=VERSIONS['apps']['local.voiceassistant']
+    package=ROOT.parent/('packages/apps/local.voiceassistant.debug.'+version+'.bpk')
     with zipfile.ZipFile(package) as z:
         assert z.testzip() is None
-        assert json.loads(z.read('manifest.json'))['package']['version']=='0.2.0'
+        assert json.loads(z.read('manifest.json'))['package']['version']==version
         assert z.read('res/images/launcher_icon.png')==(ROOT.parent/'themes/cartoon-q-v1/flash-fallback/assistant.png').read_bytes()
     stamp=datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
     report={'backup':'/sdcard/resource-backups/pc-voice-'+stamp,'complete':False}
     with StoryClient(a.port,timeout=25) as c:
         c.hello()
         def call(s,f,args=None):return c.call(s,f,args or {})['result']
-        assert call('DeviceModes','GetState')['firmware_version']=='0.8.3-s3.24'
+        assert call('DeviceModes','GetState')['firmware_version']==VERSIONS['firmware']
         if call('Wifi','GetGeneralState')!='Connected':
             raise SystemExit('Connect the device to Wi-Fi before installing the PC assistant')
         before=call('Audiobook','List')['tracks']
@@ -42,7 +44,7 @@ def main():
         assert installed['ok'],installed
         call('Storage','FSWriteText',{'Path':'/littlefs/voice-assistant-backend.json','Data':'{"backend":"pc"}'})
         app=next(x for x in call('SystemCore','ListApps') if x['manifest']['id']=='local.voiceassistant')
-        assert app['manifest']['version']=='0.2.0'
+        assert app['manifest']['version']==version
         call('SystemCore','StartApp',{'AppId':app['app_id']})
         deadline=time.monotonic()+100
         while True:
@@ -56,6 +58,6 @@ def main():
         report.update(complete=True,active=active,local_voice=local,story_count=len(before))
         (ROOT/'runtime/pc-voice-app-deployment.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
     config=config_store.load();config['device_address_changed']=False;config_store.save(config)
-    print('Assistant 0.2.0 running and connected over public WSS; Q icon and stories preserved.')
+    print('Assistant '+version+' running and connected over public WSS; Q icon and stories preserved.')
 
 if __name__=='__main__':main()

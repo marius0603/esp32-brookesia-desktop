@@ -5,6 +5,14 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import public_tunnel
 
 class TunnelHealthTests(unittest.TestCase):
+    def test_ssh_endpoint_parser_ignores_documentation_links(self):
+        self.assertEqual(public_tunnel.ssh_endpoint('https://localhost.run/docs/'),'')
+        self.assertEqual(public_tunnel.ssh_endpoint('https://localhost.run/docs/\n\x1b[32mhttps://example123.lhr.life\x1b[0m'),'wss://example123.lhr.life/device')
+    def test_dead_ssh_process_is_not_a_ready_route(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);(root/'logs').mkdir();(root/'logs/ssh-tunnel.pid').write_text('123')
+            with patch.object(public_tunnel,'ROOT',root),patch.object(public_tunnel,'load',return_value={'network_mode':'ssh_tunnel','device_url':'wss://example.lhr.life/device'}),patch.object(public_tunnel,'matching_process',return_value=False):
+                result=public_tunnel.snapshot();self.assertFalse(result['running']);self.assertIn('停止',result['error'])
     def test_expired_route_is_not_reported_as_running(self):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder);(root/'logs').mkdir()

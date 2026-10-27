@@ -32,6 +32,12 @@ state={state:'Ready',active:true,channel:true};ctx.brookesia_app.on_timer();ctx.
 assert.equal(state.state,'Listening');
 assert.equal(calls.filter(c=>c.n==='SetBinding').at(-1).a.Value,'140');
 ctx.brookesia_app.on_action('talk');assert.equal(state.state,'Thinking');
+for(const stage of ['Starting','Uploading']){
+  state={state:stage,active:true,channel:true};ctx.brookesia_app.on_timer();
+  const before=calls.filter(c=>c.n==='StartListening').length;
+  ctx.brookesia_app.on_action('talk');
+  assert.equal(calls.filter(c=>c.n==='StartListening').length,before,'Cannot restart during '+stage);
+}
 state={state:'Speaking',active:true,channel:true,answer:'回答'};ctx.brookesia_app.on_timer();ctx.brookesia_app.on_action('cancel');assert.equal(state.state,'Ready');
 for(let n=0;n<30;n++)ctx.brookesia_app.on_action('louder');assert.equal(calls.filter(c=>c.n==='SetVolume').at(-1).a.Volume,100);
 volumeCap=30;ctx.brookesia_app.on_action('louder');assert.equal(texts['/main/volume'],'音量 30%');

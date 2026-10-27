@@ -5,6 +5,7 @@ from conversation import Conversation
 from deepseek_client import Cancelled
 from engines import engines
 from audio_diagnostics import capture_if_armed
+from audio_wire import encode_adpcm,decode_packet
 
 HEADER=struct.Struct('<4sII')
 MAX_PCM=960000
@@ -15,6 +16,7 @@ class Session:
         self.ws=ws;self.loop=asyncio.get_running_loop();self.conversation=Conversation()
         self.turn=0;self.recording=None;self.input_sequence=0;self.output_sequence=0
         self.ack_sequence=-1;self.sent_lengths={};self.ack=asyncio.Event();self.cancel=None;self.tasks=set();self.send_lock=asyncio.Lock()
+        self.encoding='pcm_s16le';self.encode_state=(0,0)
     async def send(self,event):
         async with self.send_lock:await self.ws.send(json.dumps(event,ensure_ascii=False))
     def stop(self):
@@ -34,7 +36,9 @@ class Session:
                 await asyncio.wait_for(self.ack.wait(),15)
                 if cancel.event.is_set() or self.turn!=turn:raise Cancelled()
             if cancel.event.is_set() or self.turn!=turn:raise Cancelled()
-            packet=HEADER.pack(b'VPC1',turn,self.output_sequence)+pcm[at:at+1920]
+            part=pcm[at:at+1920]
+            if self.encoding=='ima_adpcm':packet,self.encode_state=encode_adpcm(part,turn,self.output_sequence,self.encode_state)
+            else:packet=HEADER.pack(b'VPC1',turn,self.output_sequence)+part
             self.sent_lengths[self.output_sequence]=len(pcm[at:at+1920])
             self.output_sequence+=1
             async with self.send_lock:await self.ws.send(packet)
@@ -61,6 +65,8 @@ class Session:
         if hello.get('type')!='hello' or not hmac.compare_digest(str(hello.get('token','')),config['device_token']):
             return await self.ws.close(1008,'Pairing required')
         if hello.get('sample_rate')!=16000:return await self.ws.close(1008,'PCM format mismatch')
+        self.encoding=hello.get('encoding','pcm_s16le')
+        if self.encoding not in ('pcm_s16le','ima_adpcm'):return await self.ws.close(1008,'Unsupported audio encoding')
         await self.send({'type':'status','state':'Preparing','message':'正在准备电脑模型'})
         if not engines.ready.is_set():
             task=asyncio.create_task(asyncio.to_thread(engines.warm))
@@ -68,15 +74,14 @@ class Session:
                 await self.send({'type':'status','state':'Preparing','message':'正在准备电脑模型'})
                 await asyncio.sleep(2)
             await task
-        await self.send({'type':'ready','message':'点击说话，再次点击发送'})
+        await self.send({'type':'ready','message':'点击说话，再次点击发送','encoding':self.encoding})
         state['connections']+=1
         try:
             async for raw in self.ws:
                 if isinstance(raw,bytes):
                     if self.recording is None or len(raw)<=HEADER.size:continue
-                    magic,turn,sequence=HEADER.unpack_from(raw)
-                    pcm=raw[HEADER.size:]
-                    if magic!=b'VPC1' or turn!=self.turn:continue
+                    turn,sequence,pcm=decode_packet(raw)
+                    if turn!=self.turn:continue
                     if sequence!=self.input_sequence or len(pcm)%2 or len(pcm)>1920:raise ValueError('录音分片格式异常')
                     if len(self.recording)+len(pcm)>MAX_PCM:raise ValueError('录音超过30秒')
                     self.input_sequence+=1;self.recording.extend(pcm);state['recorded_bytes']+=len(pcm)
@@ -88,7 +93,7 @@ class Session:
                         state['played_bytes']+=sum(self.sent_lengths.pop(n,0) for n in range(self.ack_sequence+1,sequence+1));self.ack_sequence=sequence;self.ack.set()
                 elif kind in ('listen_start','text'):
                     if not isinstance(turn,int) or not 0<turn<2**32:raise ValueError('Invalid turn ID')
-                    self.stop();self.turn=turn;self.output_sequence=0;self.ack_sequence=-1;self.sent_lengths={};self.input_sequence=0
+                    self.stop();self.turn=turn;self.output_sequence=0;self.ack_sequence=-1;self.sent_lengths={};self.input_sequence=0;self.encode_state=(0,0)
                     if kind=='listen_start':
                         self.recording=bytearray();await self.send({'type':'recording','turn':turn})
                     else:self.submit(text=str(message.get('text',''))[:1200])
@@ -119,7 +124,7 @@ def start():
     def worker():
         import websockets.asyncio.server
         async def serve():
-            async with websockets.asyncio.server.serve(handler,'127.0.0.1' if load().get('network_mode')!='lan' else '0.0.0.0',load().get('gateway_port',7861),max_size=8192,compression=None,ping_interval=20,ping_timeout=20):
+            async with websockets.asyncio.server.serve(handler,'127.0.0.1' if load().get('network_mode')!='lan' else '0.0.0.0',load().get('gateway_port',7861),max_size=8192,compression=None,ping_interval=20,ping_timeout=60):
                 state['running']=True
                 await asyncio.Future()
         try:asyncio.run(serve())

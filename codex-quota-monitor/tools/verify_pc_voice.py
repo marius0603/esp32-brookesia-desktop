@@ -29,6 +29,11 @@ def main():
             assert '连接成功' in state['answer'] and state['captured_frames']==before['captured_frames']
             assert state['turn']==before['turn']+1,'Connection restarted during playback'
             assert state['max_playback_gap_ms']<250,('Audio writer stalled',state['max_playback_gap_ms'])
+            packets=state['received_packets']-before['received_packets']
+            played=state['played_bytes']-before['played_bytes']
+            assert packets>1 and (packets-1)*1920<played<=packets*1920,'Audio received but not completely played'
+            assert state['audio_encoding']=='ima_adpcm'
+            assert state['received_wire_bytes']-before['received_wire_bytes']<played*.4,'Expected compressed audio transport'
             report.update(passed=True,public_wss=True,cloud_tts_device_playback=True,microphone_not_opened=True)
         except Exception as error:
             report['error']=str(error);raise

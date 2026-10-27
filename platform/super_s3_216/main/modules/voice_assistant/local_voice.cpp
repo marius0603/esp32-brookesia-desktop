@@ -27,15 +27,15 @@ using namespace esp_brookesia;
 using namespace esp_brookesia::service;
 namespace {
 constexpr size_t SAMPLES=960,PCM_BYTES=1920,DEPTH=384,PREFILL=256;
-constexpr uint32_t STACK=16*1024;
-// Receive can hold the WebSocket mutex for its 3s network timeout.
-// Sending must allow that receive to finish before acquiring the same mutex.
-constexpr uint32_t SEND_TIMEOUT_MS=5000;
+constexpr uint32_t STACK=8*1024,ACK_STACK=4*1024;
+constexpr size_t MAX_RECORDING_BYTES=30*16000*2;
+// Allow public-link jitter without blocking microphone capture: capture is local.
+constexpr uint32_t SEND_TIMEOUT_MS=15000;
 uint32_t u32(const uint8_t *p){return pc_voice::read32(p);}
 void put32(uint8_t *p,uint32_t value){for(int i=0;i<4;++i)p[i]=uint8_t(value>>(8*i));}
 std::string value(const boost::json::object &j,const char *key){auto *v=j.if_contains(key);return v&&v->is_string()?std::string(v->as_string().c_str(),v->as_string().size()):"";}
 std::string clipped(std::string text,size_t limit){if(text.size()>limit){size_t n=limit;while(n && (uint8_t(text[n])&0xc0)==0x80)--n;text.resize(n);}return text;}
-struct Block{uint32_t sequence,segment;uint16_t size;uint8_t data[PCM_BYTES];};
+struct Block{uint32_t sequence,segment;uint16_t size;bool adpcm;uint8_t data[PCM_BYTES];};
 class LocalVoice final:public ServiceBase {
 public:
     LocalVoice():ServiceBase({.name="LocalVoice",.description="PC ASR, cloud dialogue and PC TTS",.version="0.1.0",.dependencies={"AudioPlayback"}}){}
@@ -53,14 +53,20 @@ private:
     hal::InterfaceHandle<hal::audio::CodecRecorderIface> recorder_;
     hal::InterfaceHandle<hal::audio::CodecPlayerIface> player_;
     bool recording_=false,playing_=false;
+    wifi_ps_type_t previous_ps_=WIFI_PS_NONE;bool restore_ps_=false;
+    int64_t capture_started_=0,last_capture_=0;
+    std::atomic<uint32_t> recorded_bytes_{0},uploaded_bytes_{0},recording_elapsed_ms_{0},maximum_capture_gap_ms_{0},maximum_upload_ms_{0};
+    std::atomic<uint32_t> uploaded_wire_bytes_{0},received_wire_bytes_{0};
+    std::atomic<uint32_t> upload_elapsed_ms_{0};
     uint8_t *raw_=nullptr,*tx_=nullptr,*frame_=nullptr;int16_t *pcm_=nullptr;
+    uint8_t *recording_data_=nullptr;
     Block *queue_=nullptr,*block_=nullptr;
     size_t head_=0,count_=0,frame_used_=0;int frame_opcode_=0;
     uint32_t input_sequence_=0,output_sequence_=0;
     uint32_t segment_=0,completed_segment_=0,playing_segment_=0,ack_turn_=0,ack_sequence_=0;
     bool ack_pending_=false,segment_end_=false,buffering_=true;
     std::atomic<uint32_t> maximum_gap_ms_{0};
-    std::atomic<uint32_t> ack_stack_min_{8192};
+    std::atomic<uint32_t> ack_stack_min_{ACK_STACK},internal_min_{UINT32_MAX};
     int64_t last_write_=0;uint32_t last_segment_=0;
     void state(const char *name,const std::string &message){
         const std::string_view s=name;
@@ -74,6 +80,8 @@ private:
     }
     boost::json::object snapshot(){
         char address[16]{};esp_netif_ip_info_t ip{};auto *netif=esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+        wifi_ap_record_t ap{};const bool associated=esp_wifi_sta_get_ap_info(&ap)==ESP_OK;
+        wifi_ps_type_t power_save=WIFI_PS_NONE;esp_wifi_get_ps(&power_save);
         if(netif&&esp_netif_get_ip_info(netif,&ip)==ESP_OK)std::snprintf(address,sizeof(address),IPSTR,IP2STR(&ip.ip));
         std::lock_guard<std::mutex> lock(mutex_);
         return {{"state",state_},{"message",message_},{"user_text",user_},{"answer",answer_},{"error",error_},
@@ -84,6 +92,14 @@ private:
             {"max_playback_gap_ms",maximum_gap_ms_.load()},
             {"ack_stack_free_min_bytes",ack_stack_min_.load()},
             {"free_psram_bytes",heap_caps_get_free_size(MALLOC_CAP_SPIRAM)},
+            {"free_internal_bytes",heap_caps_get_free_size(MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT)},
+            {"minimum_internal_bytes",internal_min_.load()},
+            {"largest_dma_block_bytes",heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL|MALLOC_CAP_DMA)},
+            {"recorded_audio_ms",recorded_bytes_.load()/32},{"recording_elapsed_ms",recording_elapsed_ms_.load()},
+            {"uploaded_bytes",uploaded_bytes_.load()},{"max_capture_gap_ms",maximum_capture_gap_ms_.load()},
+            {"uploaded_wire_bytes",uploaded_wire_bytes_.load()},{"received_wire_bytes",received_wire_bytes_.load()},{"audio_encoding","ima_adpcm"},
+            {"upload_elapsed_ms",upload_elapsed_ms_.load()},
+            {"max_upload_send_ms",maximum_upload_ms_.load()},{"wifi_rssi",associated?int(ap.rssi):0},{"wifi_power_save",int(power_save)},
             {"turn",turn_.load()},{"control_stack_free_min_bytes",minimum_stack_.load()}};
     }
     void clear_queue(){std::lock_guard<std::mutex> lock(queue_mutex_);head_=count_=0;}
@@ -97,6 +113,7 @@ private:
     void acknowledgements(){
         while(!ack_stop_&&!cancel_&&!fatal_){
             ack_stack_min_=std::min(ack_stack_min_.load(),uint32_t(uxTaskGetStackHighWaterMark(nullptr)));
+            internal_min_=std::min(internal_min_.load(),uint32_t(heap_caps_get_free_size(MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT)));
             uint32_t id=0,sequence=0;bool pending=false;
             {std::lock_guard<std::mutex> lock(queue_mutex_);pending=ack_pending_;ack_pending_=false;id=ack_turn_;sequence=ack_sequence_;}
             if(pending&&channel_&&id==turn_)send({{"type","played"},{"turn",id},{"seq",sequence}});
@@ -107,7 +124,7 @@ private:
     bool send(boost::json::object object){
         if(cancel_||fatal_||!ws_||!connected_)return false;
         const auto text=boost::json::serialize(object);
-        if(esp_websocket_client_send_text(ws_,text.c_str(),text.size(),pdMS_TO_TICKS(SEND_TIMEOUT_MS))<0){if(!cancel_)fail("电脑连接已中断");return false;}
+        if(esp_websocket_client_send_text(ws_,text.c_str(),text.size(),pdMS_TO_TICKS(SEND_TIMEOUT_MS))!=int(text.size())){if(!cancel_)fail("电脑连接已中断");return false;}
         return true;
     }
     void receive(const esp_websocket_event_data_t &data){
@@ -123,7 +140,7 @@ private:
             bool full=false,bad=false;
             {std::lock_guard<std::mutex> lock(queue_mutex_);if(u32(frame_+4)!=turn_)return;
                 bad=sequence!=output_sequence_;full=count_==DEPTH;
-                if(!bad&&!full){++output_sequence_;auto &p=queue_[(head_+count_)%DEPTH];p.sequence=sequence;p.segment=segment_;p.size=frame_used_-12;memcpy(p.data,frame_+12,p.size);++count_;++received_;}}
+                if(!bad&&!full){++output_sequence_;auto &p=queue_[(head_+count_)%DEPTH];p.sequence=sequence;p.segment=segment_;p.adpcm=frame_[2]=='A';p.size=frame_used_-12;memcpy(p.data,frame_+12,p.size);++count_;++received_;received_wire_bytes_+=frame_used_;}}
             if(bad)fail("电脑音频顺序异常");
             if(full)fail("音频缓冲已满，请重新连接");
             return;
@@ -133,7 +150,10 @@ private:
         const auto &j=json.as_object();const auto type=value(j,"type");
         std::lock_guard<std::mutex> turn_lock(queue_mutex_);
         if(auto *id=j.if_contains("turn");id && id->is_int64() && uint32_t(id->as_int64())!=turn_)return;
-        if(type=="ready"){channel_=true;state("Ready","点击说话，再次点击发送");}
+        if(type=="ready"){
+            if(value(j,"encoding")!="ima_adpcm"){fail("请更新电脑语音服务后重新连接");return;}
+            channel_=true;state("Ready","点击说话，再次点击发送");
+        }
         else if(type=="status")state(value(j,"state").c_str(),value(j,"message"));
         else if(type=="user_text"){std::lock_guard<std::mutex> lock(mutex_);user_=clipped(value(j,"text"),600);}
         else if(type=="answer"){std::lock_guard<std::mutex> lock(mutex_);answer_=clipped(value(j,"text"),1600);}
@@ -160,6 +180,26 @@ private:
         for(size_t i=0;i<SAMPLES;++i){int sample=info.bits==32?reinterpret_cast<int32_t *>(raw_)[i*info.channels+channel]>>16:reinterpret_cast<int16_t *>(raw_)[i*info.channels+channel];pcm_[i]=sample;peak=std::max(peak,uint32_t(std::abs(sample)));energy+=int64_t(sample)*sample;}
         peak_=std::max(peak_.load(),peak);level_=std::min(100u,unsigned(std::sqrt(double(energy)/SAMPLES)*100/6000));captured_+=SAMPLES;return true;
     }
+    bool upload_recording(){
+        state("Uploading","录音已完成，正在上传电脑");uploaded_bytes_=uploaded_wire_bytes_=0;
+        const auto upload_started=esp_timer_get_time();upload_elapsed_ms_=0;
+        pc_voice::ImaState codec;
+        if(!send({{"type","listen_start"},{"turn",turn_.load()}}))return false;
+        for(size_t offset=0;offset<recorded_bytes_;offset+=PCM_BYTES){
+            if(cancel_||fatal_||command_.load()!=0)return false;
+            const size_t length=std::min(PCM_BYTES,size_t(recorded_bytes_.load())-offset);
+            memcpy(tx_,"VPA1",4);put32(tx_+4,turn_);put32(tx_+8,input_sequence_++);
+            pc_voice::write16(tx_+12,uint16_t(codec.predictor));tx_[14]=uint8_t(codec.index);pc_voice::write16(tx_+15,length/2);
+            const size_t encoded=pc_voice::ima_encode(reinterpret_cast<const int16_t *>(recording_data_+offset),length/2,tx_+17,codec);
+            const auto started=esp_timer_get_time();
+            const int written=esp_websocket_client_send_bin(ws_,reinterpret_cast<char *>(tx_),encoded+17,pdMS_TO_TICKS(SEND_TIMEOUT_MS));
+            maximum_upload_ms_=std::max(maximum_upload_ms_.load(),uint32_t((esp_timer_get_time()-started)/1000));
+            upload_elapsed_ms_=(esp_timer_get_time()-upload_started)/1000;
+            if(written!=int(encoded+17)){fail("录音上传中断，请重新录音");return false;}
+            uploaded_bytes_+=length;uploaded_wire_bytes_+=encoded+17;++sent_;vTaskDelay(1);
+        }
+        return send({{"type","listen_end"},{"turn",turn_.load()}});
+    }
     bool preferences(std::string &url,std::string &token){
         std::lock_guard<std::mutex> lock(mutex_);nvs_handle_t h;
         if(nvs_open("LocalVoice",NVS_READWRITE,&h)==ESP_OK){
@@ -180,22 +220,25 @@ private:
         recorder_=std::move(rec.front());player_=std::move(play.front());
         auto alloc=[](size_t bytes){return heap_caps_calloc(1,bytes,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);};
         raw_=static_cast<uint8_t *>(alloc(SAMPLES*4*4));pcm_=static_cast<int16_t *>(alloc(PCM_BYTES));
+        recording_data_=static_cast<uint8_t *>(alloc(MAX_RECORDING_BYTES));
         tx_=static_cast<uint8_t *>(alloc(PCM_BYTES+12));frame_=static_cast<uint8_t *>(alloc(4097));
         queue_=static_cast<Block *>(alloc(sizeof(Block)*DEPTH));block_=static_cast<Block *>(alloc(sizeof(Block)));
-        if(!raw_||!pcm_||!tx_||!frame_||!queue_||!block_){fail("语音缓冲内存不足");return false;}return true;
+        if(!raw_||!pcm_||!tx_||!frame_||!queue_||!block_||!recording_data_){fail("语音缓冲内存不足");return false;}return true;
     }
     void conversation(const std::string &url,const std::string &token){
         wifi_ap_record_t ap{};if(esp_wifi_sta_get_ap_info(&ap)!=ESP_OK){fail("请先连接Wi-Fi");return;}
+        if(esp_wifi_get_ps(&previous_ps_)==ESP_OK&&previous_ps_!=WIFI_PS_NONE)
+            restore_ps_=esp_wifi_set_ps(WIFI_PS_NONE)==ESP_OK;
         esp_websocket_client_config_t config{};config.uri=url.c_str();config.buffer_size=4096;
         if(url.starts_with("wss://"))config.crt_bundle_attach=esp_crt_bundle_attach;
-        config.task_stack=8192;config.disable_auto_reconnect=false;config.reconnect_timeout_ms=3000;config.network_timeout_ms=3000;
+        config.task_stack=8192;config.disable_auto_reconnect=false;config.reconnect_timeout_ms=3000;config.network_timeout_ms=15000;
         ws_=esp_websocket_client_init(&config);
         if(!ws_){fail("无法创建电脑连接");return;}
         esp_websocket_register_events(ws_,WEBSOCKET_EVENT_ANY,event,this);
         if(esp_websocket_client_start(ws_)!=ESP_OK){fail("电脑连接启动失败");return;}
         ack_stop_=false;ack_live_=true;
         TaskHandle_t ack_task=nullptr;
-        if(xTaskCreatePinnedToCore([](void *ctx){static_cast<LocalVoice *>(ctx)->acknowledgements();vTaskDelete(nullptr);},"voice_ack",8192,this,3,&ack_task,0)!=pdPASS){
+        if(xTaskCreatePinnedToCore([](void *ctx){static_cast<LocalVoice *>(ctx)->acknowledgements();vTaskDelete(nullptr);},"voice_ack",ACK_STACK,this,3,&ack_task,0)!=pdPASS){
             ack_live_=false;fail("播放确认任务内存不足");return;}
         bool hello=false;int64_t connected_at=esp_timer_get_time(),recorded_at=0,waiting=0;
         while(!cancel_&&!fatal_){
@@ -209,7 +252,7 @@ private:
                 hello=false;waiting=0;input_sequence_=0;
                 state("Connecting","网络断开，正在重新连接电脑");
             }
-            if(connected_&&!hello){hello=send({{"type","hello"},{"token",token},{"sample_rate",16000},{"channels",1},{"bits",16}});}
+            if(connected_&&!hello){hello=send({{"type","hello"},{"token",token},{"sample_rate",16000},{"channels",1},{"bits",16},{"encoding","ima_adpcm"}});}
             if(!channel_){if(esp_timer_get_time()-connected_at>90000000){fail("电脑准备超时，请重新连接");break;}vTaskDelay(pdMS_TO_TICKS(20));continue;}
             const int cmd=command_.exchange(0);
             if(cmd==1||cmd==3||cmd==4){
@@ -219,29 +262,42 @@ private:
                 input_sequence_=0;waiting=0;
                 {std::lock_guard<std::mutex> lock(mutex_);error_.clear();if(cmd!=3){user_.clear();answer_.clear();}}
                 if(cmd==1){
-                    if(!send({{"type","listen_start"},{"turn",turn_.load()}}))break;
-                    if(!recorder_->open()){fail("无法打开麦克风");break;}recording_=true;recorded_at=esp_timer_get_time();state("Listening","正在录音，再点一下发送");
+                    recorded_bytes_=uploaded_bytes_=recording_elapsed_ms_=maximum_capture_gap_ms_=maximum_upload_ms_=0;last_capture_=0;
+                    if(!recorder_->open()){fail("无法打开麦克风");break;}recording_=true;capture_started_=recorded_at=esp_timer_get_time();state("Listening","正在录音，再点一下发送");
                 }else if(cmd==4){
                     send({{"type","text"},{"turn",turn_.load()},{"text","请只回复：语音助手连接成功。"}});waiting=esp_timer_get_time();state("Thinking","正在测试电脑回答");
                 }else state("Ready","已停止，点击继续说话");
             }
-            if(cmd==2 || (recording_&&esp_timer_get_time()-recorded_at>=30000000)){
-                if(recording_){close_recorder();send({{"type","listen_end"},{"turn",turn_.load()}});waiting=esp_timer_get_time();state("Recognizing","正在识别");}
+            if(cmd==2 || (recording_&&(esp_timer_get_time()-recorded_at>=30000000||recorded_bytes_>=MAX_RECORDING_BYTES))){
+                if(recording_){
+                    recording_elapsed_ms_=(esp_timer_get_time()-capture_started_)/1000;close_recorder();
+                    if(upload_recording()){waiting=esp_timer_get_time();state("Recognizing","正在识别");}
+                    else if(fatal_||cancel_)break;
+                }
             }
             if(recording_){
                 if(!capture())break;
-                memcpy(tx_,"VPC1",4);put32(tx_+4,turn_);put32(tx_+8,input_sequence_++);memcpy(tx_+12,pcm_,PCM_BYTES);
-                if(esp_websocket_client_send_bin(ws_,reinterpret_cast<char *>(tx_),PCM_BYTES+12,pdMS_TO_TICKS(SEND_TIMEOUT_MS))<0){fail("录音发送失败");break;}
-                ++sent_;vTaskDelay(1);continue;
+                const auto now=esp_timer_get_time();
+                if(last_capture_)maximum_capture_gap_ms_=std::max(maximum_capture_gap_ms_.load(),uint32_t((now-last_capture_)/1000));
+                last_capture_=now;recording_elapsed_ms_=(now-capture_started_)/1000;
+                if(recorded_bytes_+PCM_BYTES<=MAX_RECORDING_BYTES){memcpy(recording_data_+recorded_bytes_,pcm_,PCM_BYTES);recorded_bytes_+=PCM_BYTES;}
+                vTaskDelay(1);continue;
             }
             if(buffered()&&pop()){
                 buffering_=false;playing_segment_=block_->segment;
                 if(!open_player())break;
-                if(!player_->write_data(block_->data,block_->size)){fail("喇叭播放失败");break;}
+                const uint8_t *audio=block_->data;size_t bytes=block_->size;
+                if(block_->adpcm){
+                    const size_t samples=pc_voice::read16(block_->data+3);
+                    pc_voice::ImaState codec{int16_t(pc_voice::read16(block_->data)),int(block_->data[2])};
+                    if(!pc_voice::ima_decode(block_->data+5,block_->size-5,pcm_,samples,codec)){fail("电脑压缩音频异常");break;}
+                    audio=reinterpret_cast<uint8_t *>(pcm_);bytes=samples*2;
+                }
+                if(!player_->write_data(audio,bytes)){fail("喇叭播放失败");break;}
                 const auto now=esp_timer_get_time();
                 if(last_write_&&last_segment_==block_->segment)maximum_gap_ms_=std::max(maximum_gap_ms_.load(),uint32_t((now-last_write_)/1000));
                 last_write_=now;last_segment_=block_->segment;
-                played_+=block_->size;
+                played_+=bytes;
                 {std::lock_guard<std::mutex> lock(queue_mutex_);ack_turn_=turn_;ack_sequence_=block_->sequence;ack_pending_=true;}
                 waiting=esp_timer_get_time();state("Speaking","正在回答");
             }else{
@@ -278,8 +334,9 @@ private:
         ack_stop_=true;while(ack_live_)vTaskDelay(pdMS_TO_TICKS(10));
         close_recorder();close_player();
         if(ws_){esp_websocket_client_stop(ws_);esp_websocket_client_destroy(ws_);ws_=nullptr;}
+        if(restore_ps_){esp_wifi_set_ps(previous_ps_);restore_ps_=false;}
         {std::lock_guard<std::mutex> lock(queue_mutex_);heap_caps_free(queue_);queue_=nullptr;head_=count_=0;}
-        heap_caps_free(raw_);heap_caps_free(pcm_);heap_caps_free(tx_);heap_caps_free(frame_);heap_caps_free(block_);
+        heap_caps_free(raw_);heap_caps_free(pcm_);heap_caps_free(tx_);heap_caps_free(frame_);heap_caps_free(block_);heap_caps_free(recording_data_);recording_data_=nullptr;
         raw_=tx_=frame_=nullptr;pcm_=nullptr;block_=nullptr;recorder_.reset();player_.reset();
         connected_=false;level_=0;if(requested)state("Idle","已断开，点击连接电脑");
         local_audio::release(local_audio::Assistant);live_=false;
@@ -290,8 +347,9 @@ private:
         if(!offline_voice_prepare_online()){live_=false;return std::unexpected("麦克风正在释放，请稍后重试");}
         if(!local_audio::claim(local_audio::Assistant)){live_=false;return std::unexpected("请先停止听书或其他助手");}
         cancel_=fatal_=connected_=channel_=done_=connection_lost_=false;command_=0;turn_=0;captured_=sent_=received_=played_=level_=peak_=0;minimum_stack_=STACK;
+        uploaded_wire_bytes_=received_wire_bytes_=0;
         local_test_=local_test;
-        ack_pending_=false;segment_end_=false;buffering_=true;last_write_=0;segment_=completed_segment_=playing_segment_=0;maximum_gap_ms_=0;ack_stack_min_=8192;
+        ack_pending_=false;segment_end_=false;buffering_=true;last_write_=0;segment_=completed_segment_=playing_segment_=0;maximum_gap_ms_=0;ack_stack_min_=ACK_STACK;internal_min_=UINT32_MAX;
         {std::lock_guard<std::mutex> lock(mutex_);user_.clear();answer_.clear();error_.clear();}
         state(local_test?"Testing":"Connecting",local_test?"准备本地录音测试":"正在连接电脑");TaskHandle_t task=nullptr;
         if(xTaskCreatePinnedToCore([](void *ctx){static_cast<LocalVoice *>(ctx)->run();vTaskDelete(nullptr);},"local_voice",STACK,this,4,&task,0)!=pdPASS){
@@ -302,7 +360,9 @@ private:
     std::expected<void,std::string> command(int value){
         if(value==1&&!child_mode_voice_allowed())return std::unexpected("语音采集已被家长限制");
         if(!live_||cancel_||fatal_||!channel_)return std::unexpected("请先连接电脑并等待模型就绪");
-        int empty=0;if(!command_.compare_exchange_strong(empty,value))return std::unexpected("正在处理，请稍候");return {};
+        int empty=0;if(!command_.compare_exchange_strong(empty,value))return std::unexpected("正在处理，请稍候");
+        if(value==1){state("Starting","正在准备录音，显示发送后再说话");}
+        return {};
     }
     void on_stop() override {disconnect();while(live_)vTaskDelay(pdMS_TO_TICKS(20));}
     std::vector<FunctionSchema> get_function_schemas() override {

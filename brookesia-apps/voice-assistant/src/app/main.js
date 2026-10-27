@@ -10,7 +10,7 @@ function poll(){
   text('backend/label',state.state==='Activation'?(state.activation_code||'等待激活码'):backend==='pc'?'电脑 + DS · 切换':'小智云端 · 切换');
   text('user',state.user_text?'你：'+truncate(state.user_text,45):'');
   text('answer',truncate(state.answer,115)||(state.state==='Activation'?'登录 xiaozhi.me\n添加设备，输入上方激活码':backend==='pc'?'点击说话，再次点击发送\n本机识别，云端回答':'点击说话，再次点击发送\n录音期间才会上传语音'));
-  text('controls/talk/label',state.state==='Listening'?'发送':state.state==='Speaking'?'打断说话':'说话');
+  text('controls/talk/label',state.state==='Listening'?'发送':state.state==='Starting'?'准备中':state.state==='Uploading'?'上传中':state.state==='Speaking'?'打断说话':'说话');
   text('tools/connect/label',state.active?'断开':'连接');
   volume=call(audio,'GetVolume');
   const sound=call(modes,'GetState');
@@ -28,6 +28,7 @@ function action(name){
   }
   if(name==='connect')invoke(state.active?'Disconnect':'Connect');
   else if(name==='talk'){
+    if(state.state==='Starting'||state.state==='Uploading')return;
     if(state.state==='Listening')invoke('StopListening');
     else if(state.channel)invoke('StartListening');
     else if(!state.active)invoke('Connect');
