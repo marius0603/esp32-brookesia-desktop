@@ -22,9 +22,10 @@ def main():
             layers = call('DeviceModes', 'GetWeatherLayers')['layers']
             return next(layer for layer in layers if layer['kind'] == 'sleep_picker')
         app = next(a for a in call('SystemCore', 'ListApps') if a['manifest']['id'] == 'local.audiobook')
-        assert app['manifest']['version'] == '0.3.0'
+        expected = json.loads((ROOT.parent / 'versions.json').read_text())['apps']['local.audiobook']
+        assert app['manifest']['version'] == expected
         modes = call('DeviceModes', 'GetState')
-        assert modes['firmware_version'] == '0.8.3-s3.23' and not modes['screen_locked']
+        assert 'screen_locked' in modes and modes['volume_keys_ready'] and not modes['screen_locked']
         report['modes_before'] = modes
         report['playback_before'] = call('Audiobook', 'GetState')
         assert not report['playback_before']['sleep_active'], 'Keep the current sleep timer; test later'

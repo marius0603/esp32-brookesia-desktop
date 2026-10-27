@@ -5,74 +5,192 @@
     "scrollable": false
   },
   "style": {
-    "bgColor": "#0c1222",
-    "padding": 12
+    "bgColor": "#080c14",
+    "padding": 12,
+    "borderWidth": 0
   },
   "layout": {
     "type": "flex",
     "flexFlow": "column",
     "mainAlign": "center",
     "crossAlign": "center",
-    "gap": 8
+    "gap": 10
   },
   "children": [
     {
-      "type": "label",
-      "id": "chapter",
+      "type": "container",
+      "id": "header",
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false
+      },
       "placement": {
-        "width": 380,
-        "height": 36
+        "width": 400,
+        "height": 48
       },
       "style": {
-        "textColor": "#e9ebfa",
-        "font": "${font.audiobook_title}",
-        "fontSize": 26,
-        "textAlign": "center"
+        "bgColor": "#101723",
+        "borderColor": "#263347",
+        "borderWidth": 0,
+        "radius": 18,
+        "padding": 0,
+        "bgOpacity": 0
       },
-      "labelProps": {
-        "text": "装卡后扫描章节"
+      "children": [
+        {
+          "type": "label",
+          "id": "volume",
+          "placement": {
+            "width": 250,
+            "height": 36
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 24,
+            "textColor": "#e7ebf3",
+            "textAlign": "left"
+          },
+          "labelProps": {
+            "text": "音量 --%"
+          }
+        },
+        {
+          "type": "button",
+          "id": "lock",
+          "placement": {
+            "width": 124,
+            "height": 48
+          },
+          "style": {
+            "bgColor": "#202b3e",
+            "radius": 16,
+            "padding": 0,
+            "borderWidth": 1,
+            "borderColor": "#33415a"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "lockScreen"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 22,
+                "textColor": "#ffffff"
+              },
+              "labelProps": {
+                "text": "锁屏"
+              }
+            }
+          ]
+        }
+      ],
+      "layout": {
+        "type": "flex",
+        "flexFlow": "row",
+        "mainAlign": "spaceBetween",
+        "crossAlign": "center"
       }
     },
     {
-      "type": "label",
-      "id": "progress",
+      "type": "container",
+      "id": "player",
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false
+      },
       "placement": {
-        "width": 380,
-        "height": 20
+        "width": 400,
+        "height": 132
       },
       "style": {
-        "textColor": "#e9ebfa",
-        "font": "${font.zh_CN}",
-        "fontSize": 18,
-        "textAlign": "center"
+        "bgColor": "#101723",
+        "borderColor": "#263347",
+        "borderWidth": 1,
+        "radius": 18,
+        "padding": 0,
+        "bgGradientColor": "#0c121e",
+        "bgGradientDirection": "vertical"
       },
-      "labelProps": {
-        "text": "0:00:00"
-      }
-    },
-    {
-      "type": "label",
-      "id": "status",
-      "placement": {
-        "width": 380,
-        "height": 20
-      },
-      "style": {
-        "textColor": "#bbc6e0",
-        "font": "${font.zh_CN}",
-        "fontSize": 18,
-        "textAlign": "center"
-      },
-      "labelProps": {
-        "text": "准备播放器"
-      }
+      "children": [
+        {
+          "type": "label",
+          "id": "chapter",
+          "placement": {
+            "width": 364,
+            "height": 46,
+            "mode": "absolute",
+            "x": 18,
+            "y": 8
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 32,
+            "textColor": "#f7e7bd",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "暂无故事"
+          }
+        },
+        {
+          "type": "label",
+          "id": "progress",
+          "placement": {
+            "width": 364,
+            "height": 34,
+            "mode": "absolute",
+            "x": 18,
+            "y": 58
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 24,
+            "textColor": "#e7ebf3",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "0:00:00"
+          }
+        },
+        {
+          "type": "label",
+          "id": "status",
+          "placement": {
+            "width": 364,
+            "height": 28,
+            "mode": "absolute",
+            "x": 18,
+            "y": 96
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 20,
+            "textColor": "#93a4bd",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "未播放"
+          }
+        }
+      ]
     },
     {
       "type": "container",
       "id": "transport",
       "placement": {
-        "width": 380,
-        "height": 56
+        "width": 400,
+        "height": 60
       },
       "commonProps": {
         "scrollable": false
@@ -93,13 +211,14 @@
           "type": "button",
           "id": "previous",
           "placement": {
-            "width": 120,
-            "height": 56
+            "width": 112,
+            "height": 60
           },
           "style": {
-            "bgColor": "#263756",
-            "radius": 16,
-            "padding": 0
+            "bgColor": "#202c42",
+            "radius": 20,
+            "padding": 0,
+            "borderWidth": 0
           },
           "layout": {
             "type": "flex",
@@ -118,8 +237,8 @@
               "id": "label",
               "style": {
                 "font": "${font.zh_CN}",
-                "fontSize": 24,
-                "textColor": "#ffffff"
+                "fontSize": 26,
+                "textColor": "#ecf0f8"
               },
               "labelProps": {
                 "text": "上一章"
@@ -131,13 +250,14 @@
           "type": "button",
           "id": "toggle",
           "placement": {
-            "width": 128,
-            "height": 56
+            "width": 152,
+            "height": 60
           },
           "style": {
-            "bgColor": "#263756",
-            "radius": 16,
-            "padding": 0
+            "bgColor": "#f2d38b",
+            "radius": 20,
+            "padding": 0,
+            "borderWidth": 0
           },
           "layout": {
             "type": "flex",
@@ -156,8 +276,8 @@
               "id": "label",
               "style": {
                 "font": "${font.zh_CN}",
-                "fontSize": 24,
-                "textColor": "#ffffff"
+                "fontSize": 26,
+                "textColor": "#211b10"
               },
               "labelProps": {
                 "text": "播放"
@@ -169,13 +289,14 @@
           "type": "button",
           "id": "next",
           "placement": {
-            "width": 120,
-            "height": 56
+            "width": 112,
+            "height": 60
           },
           "style": {
-            "bgColor": "#263756",
-            "radius": 16,
-            "padding": 0
+            "bgColor": "#202c42",
+            "radius": 20,
+            "padding": 0,
+            "borderWidth": 0
           },
           "layout": {
             "type": "flex",
@@ -194,8 +315,8 @@
               "id": "label",
               "style": {
                 "font": "${font.zh_CN}",
-                "fontSize": 24,
-                "textColor": "#ffffff"
+                "fontSize": 26,
+                "textColor": "#ecf0f8"
               },
               "labelProps": {
                 "text": "下一章"
@@ -208,36 +329,38 @@
     {
       "type": "container",
       "id": "sleep",
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false
+      },
       "placement": {
-        "width": 380,
+        "width": 400,
         "height": 48
       },
-      "commonProps": {
-        "scrollable": false
-      },
       "style": {
-        "bgOpacity": 0,
+        "bgColor": "#080c14",
+        "borderColor": "#263347",
+        "borderWidth": 0,
+        "radius": 0,
         "padding": 0,
-        "borderWidth": 0
-      },
-      "layout": {
-        "type": "flex",
-        "flexFlow": "row",
-        "mainAlign": "spaceBetween",
-        "crossAlign": "center"
+        "bgOpacity": 0
       },
       "children": [
         {
           "type": "label",
           "id": "label",
           "placement": {
-            "width": 120,
-            "height": 32
+            "width": 110,
+            "height": 36,
+            "mode": "absolute",
+            "x": 0,
+            "y": 8
           },
           "style": {
             "font": "${font.zh_CN}",
             "fontSize": 22,
-            "textColor": "#cdd6ee"
+            "textColor": "#cad4e4",
+            "textAlign": "left"
           },
           "labelProps": {
             "text": "睡眠定时"
@@ -247,16 +370,21 @@
           "type": "dropdown",
           "id": "choice",
           "placement": {
-            "width": 248,
-            "height": 48
+            "width": 172,
+            "height": 48,
+            "mode": "absolute",
+            "x": 116,
+            "y": 0
           },
           "style": {
             "font": "${font.zh_CN}",
-            "fontSize": 24,
-            "bgColor": "#344166",
+            "fontSize": 22,
+            "bgColor": "#202c42",
             "textColor": "#ffffff",
-            "radius": 12,
-            "padding": 6
+            "radius": 14,
+            "padding": 6,
+            "borderColor": "#33415a",
+            "borderWidth": 1
           },
           "dropdownProps": {
             "options": [
@@ -276,76 +404,62 @@
               "action": "sleepChoice"
             }
           ]
+        },
+        {
+          "type": "label",
+          "id": "sleepStatus",
+          "placement": {
+            "width": 100,
+            "height": 30,
+            "mode": "absolute",
+            "x": 300,
+            "y": 10
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 22,
+            "textColor": "#f2d38b",
+            "textAlign": "right"
+          },
+          "labelProps": {
+            "text": ""
+          }
         }
       ]
     },
     {
-      "type": "label",
-      "id": "sleepStatus",
-      "placement": {
-        "width": 380,
-        "height": 20
-      },
-      "style": {
-        "font": "${font.zh_CN}",
-        "fontSize": 18,
-        "textColor": "#cdd6ee",
-        "textAlign": "center"
-      },
-      "labelProps": {
-        "text": "睡眠定时 · 最后两分钟渐弱"
-      }
-    },
-    {
-      "type": "label",
-      "id": "volume",
-      "placement": {
-        "width": 380,
-        "height": 20
-      },
-      "style": {
-        "textColor": "#e9ebfa",
-        "font": "${font.zh_CN}",
-        "fontSize": 18,
-        "textAlign": "center"
-      },
-      "labelProps": {
-        "text": "音量 --% · 两侧实体键调节"
-      }
-    },
-    {
       "type": "container",
       "id": "tools",
-      "placement": {
-        "width": 380,
-        "height": 52
-      },
       "commonProps": {
-        "scrollable": false
+        "scrollable": false,
+        "clickable": false
+      },
+      "placement": {
+        "width": 400,
+        "height": 48
       },
       "style": {
-        "bgOpacity": 0,
+        "bgColor": "#101723",
+        "borderColor": "#263347",
         "borderWidth": 0,
-        "padding": 0
-      },
-      "layout": {
-        "type": "flex",
-        "flexFlow": "row",
-        "mainAlign": "spaceBetween",
-        "crossAlign": "center"
+        "radius": 18,
+        "padding": 0,
+        "bgOpacity": 0
       },
       "children": [
         {
           "type": "button",
           "id": "voice",
           "placement": {
-            "width": 248,
-            "height": 52
+            "width": 400,
+            "height": 48
           },
           "style": {
-            "bgColor": "#263756",
+            "bgColor": "#182235",
             "radius": 16,
-            "padding": 0
+            "padding": 0,
+            "borderColor": "#2c3c55",
+            "borderWidth": 1
           },
           "layout": {
             "type": "flex",
@@ -364,70 +478,21 @@
               "id": "label",
               "style": {
                 "font": "${font.zh_CN}",
-                "fontSize": 22,
-                "textColor": "#ffffff"
-              },
-              "labelProps": {
-                "text": "点一下说话 · 离线"
-              }
-            }
-          ]
-        },
-        {
-          "type": "button",
-          "id": "lock",
-          "placement": {
-            "width": 124,
-            "height": 52
-          },
-          "style": {
-            "bgColor": "#344166",
-            "radius": 14,
-            "padding": 0
-          },
-          "layout": {
-            "type": "flex",
-            "mainAlign": "center",
-            "crossAlign": "center"
-          },
-          "events": [
-            {
-              "type": "clicked",
-              "action": "lockScreen"
-            }
-          ],
-          "children": [
-            {
-              "type": "label",
-              "id": "label",
-              "style": {
-                "font": "${font.zh_CN}",
                 "fontSize": 24,
-                "textColor": "#ffffff"
+                "textColor": "#dbe5f6"
               },
               "labelProps": {
-                "text": "锁屏"
+                "text": "语音控制"
               }
             }
           ]
         }
-      ]
-    },
-    {
-      "type": "label",
-      "id": "lockHint",
-      "placement": {
-        "width": 380,
-        "height": 18
-      },
-      "style": {
-        "font": "${font.zh_CN}",
-        "fontSize": 17,
-        "textColor": "#bbc6e0",
-        "textAlign": "center"
-      },
-      "labelProps": {
-        "text": "解锁：连按两次音量+"
+      ],
+      "layout": {
+        "type": "flex",
+        "flexFlow": "row",
+        "mainAlign": "spaceBetween",
+        "crossAlign": "center"
       }
     }
   ]

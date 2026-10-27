@@ -2,9 +2,13 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
 const code=fs.readFileSync(path.join(__dirname,'../src/app/main.js'),'utf8');
 let bindings=[],calls=[],texts={},stored={},tracks=[],mounted=false,volume=20,volumeCap=100,quiet=false,offlineListening=false,selection=0,locked=false;
 let state={path:'',state:'Idle',position:0,duration:0,active:false},now=20000;
+const document=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/screens/main.json'),'utf8')),views=new Set();
+function indexViews(node,parent=''){const key=parent+'/'+node.id;views.add(key);for(const c of node.children||[])indexViews(c,key);}
+indexViews(document);
 class Clock extends Date{static now(){return now;}}
 const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>{bindings.push(n);return n;},call_function(h,n,s){
  const a=JSON.parse(s);calls.push({h,n,a});let data=null;
+ if(h==='SystemGui'&&a.Path)assert(views.has(a.Path),'Missing GUI view: '+a.Path);
  if(n==='FSReadText'){if(!stored[a.Path])return JSON.stringify({success:false,error:'missing'});data=stored[a.Path];}
  if(n==='FSWriteText')stored[a.Path]=a.Data;
  if(n==='SetVolume')volume=Math.min(volumeCap,a.Volume);
@@ -23,7 +27,8 @@ const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>{bindings.pus
  if(n==='SetSleepTimer')state={...state,sleep_active:a.Minutes>0,sleep_minutes:a.Minutes,sleep_remaining_seconds:a.Minutes*60,sleep_fading:false,sleep_completed:false};
  return JSON.stringify({success:true,data});}}});
 vm.runInContext(code,ctx);ctx.brookesia_app.on_start();
-assert.match(texts['/main/status'],/未检测到 SD 卡/);
+assert.equal(texts['/main/sleep/sleepStatus'],'');
+assert.match(texts['/main/player/status'],/未检测到 SD 卡/);
 ctx.brookesia_app.on_action('toggle');assert.equal(calls.filter(c=>c.n==='Play').length,0);
 mounted=true;tracks=[{path:'/sdcard/audiobooks/test/001.mp3',title:'001.mp3'},{path:'/sdcard/audiobooks/test/002.wav',title:'002.wav'}];
 ctx.brookesia_app.on_resume();ctx.brookesia_app.on_action('toggle');assert.equal(state.path,tracks[0].path);
@@ -38,10 +43,10 @@ assert.equal(calls.filter(c=>c.n==='SubscribeAction'&&['scan','test','quieter','
 for(const [selected,minutes] of [[1,15],[2,30],[3,45]]){
  selection=selected;ctx.brookesia_app.on_action('sleepChoice');
  assert.equal(calls.filter(c=>c.n==='SetSleepTimer').at(-1).a.Minutes,minutes);
- assert.match(texts['/main/sleepStatus'],new RegExp(minutes+':00'));
+ assert.match(texts['/main/sleep/sleepStatus'],new RegExp(minutes+':00'));
 }
 state={...state,sleep_active:true,sleep_fading:true,sleep_remaining_seconds:65};ctx.brookesia_app.on_timer();
-assert.equal(texts['/main/sleepStatus'],'正在淡出 01:05');
+assert.equal(texts['/main/sleep/sleepStatus'],'01:05');
 const timerCalls=calls.filter(c=>c.n==='SetSleepTimer').length;ctx.brookesia_app.on_action('next');
 assert.equal(state.sleep_active,true);assert.equal(calls.filter(c=>c.n==='SetSleepTimer').length,timerCalls);
 selection=0;ctx.brookesia_app.on_action('sleepChoice');assert.equal(calls.filter(c=>c.n==='SetSleepTimer').at(-1).a.Minutes,0);
@@ -56,19 +61,21 @@ const plays=calls.filter(c=>c.n==='Play').length;
 state={...state,state:'SleepEnded',active:false,position:42,sleep_completed:true};ctx.brookesia_app.on_timer();
 assert.equal(calls.filter(c=>c.n==='Play').length,plays); // Never auto-advance after sleep.
 assert.equal(JSON.parse(stored['/littlefs/audiobook-bookmark.json']).position,42);
-assert.equal(texts['/main/sleepStatus'],'定时结束 · 已停止');
-volume=25;ctx.brookesia_app.on_timer();assert.equal(texts['/main/volume'],'音量 25% · 两侧实体键调节');
-quiet=true;volume=0;ctx.brookesia_app.on_timer();assert.equal(texts['/main/volume'],'音量 30% · 勿扰静音');
-quiet=false;volume=30;ctx.brookesia_app.on_timer();assert.equal(texts['/main/volume'],'音量 30% · 两侧实体键调节');
+assert.equal(texts['/main/sleep/sleepStatus'],'已结束');
+volume=25;ctx.brookesia_app.on_timer();assert.equal(texts['/main/header/volume'],'音量 25%');
+quiet=true;volume=0;ctx.brookesia_app.on_timer();assert.equal(texts['/main/header/volume'],'音量 30% · 静音');
+quiet=false;volume=30;ctx.brookesia_app.on_timer();assert.equal(texts['/main/header/volume'],'音量 30%');
 const screen=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/screens/main.json'),'utf8'));
 const ids=screen.children.map(n=>n.id);assert(!ids.includes('seek')&&!ids.includes('sound'));
-assert.equal(screen.children.find(n=>n.id==='chapter').style.font,'${font.audiobook_title}');
+assert.equal(ids[0],'header');assert(!ids.includes('lockHint'));
+assert(screen.children.find(n=>n.id==='header').children.some(n=>n.id==='volume'));
+assert.equal(screen.children.find(n=>n.id==='player').children.find(n=>n.id==='chapter').style.font,'${font.audiobook_title}');
 const resources=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/root.json'),'utf8'));
 assert(!resources.assets.includes('fonts/index.json'),'Runtime app documents cannot register fontSet assets');
 const systemFonts=JSON.parse(fs.readFileSync(path.join(__dirname,'../../../platform/super_s3_216/littlefs/system/fonts/index.json'),'utf8'));
 assert.deepEqual(systemFonts.fonts.find(f=>f.id==='audiobook_title').fallbacks,['${font.zh_CN}']);
-ctx.brookesia_app.on_action('offlineSpeak');assert.equal(calls.filter(c=>c.n==='ListenNow').length,1);ctx.brookesia_app.on_timer();assert.equal(texts['/main/tools/voice/label'],'我在听，请说命令');
-const tools=screen.children.find(n=>n.id==='tools');assert.equal(tools.children.find(n=>n.id==='voice').placement.height,52);
+ctx.brookesia_app.on_action('offlineSpeak');assert.equal(calls.filter(c=>c.n==='ListenNow').length,1);ctx.brookesia_app.on_timer();assert.equal(texts['/main/tools/voice/label'],'正在听');
+const tools=screen.children.find(n=>n.id==='tools');assert.equal(tools.children.find(n=>n.id==='voice').placement.height,48);
 const choice=screen.children.find(n=>n.id==='sleep').children.find(n=>n.id==='choice');
 assert.equal(choice.type,'dropdown');assert.deepEqual(choice.dropdownProps.options,['关闭','15分钟','30分钟','45分钟']);
 assert.equal(choice.bindings['dropdownProps.selectedIndex'],'selected');
@@ -98,16 +105,16 @@ const storyCases=[
 ];
 tracks=storyCases.map(([file])=>({path:'/sdcard/audiobooks/bedtime/'+file,title:'/bedtime/'+file}));
 stored={};vm.runInContext(code,ctx);ctx.brookesia_app.on_start();
-assert.equal(texts['/main/chapter'],storyCases[0][1]);
+assert.equal(texts['/main/player/chapter'],storyCases[0][1]);
 for(let i=1;i<storyCases.length;i++){
  ctx.brookesia_app.on_action('next');
- assert.equal(texts['/main/chapter'],storyCases[i][1]);
+ assert.equal(texts['/main/player/chapter'],storyCases[i][1]);
  assert.equal(state.path,tracks[i].path,'Display names must not change playback paths');
 }
 // Resume/bookmarks and native next-track changes must use the same display names.
 state={...state,path:tracks[2].path,state:'Paused',active:true,position:23};
-ctx.brookesia_app.on_timer();assert.equal(texts['/main/chapter'],'小蝌蚪找妈妈');
+ctx.brookesia_app.on_timer();assert.equal(texts['/main/player/chapter'],'小蝌蚪找妈妈');
 ctx.brookesia_app.on_pause();ctx.brookesia_app.on_resume();
-assert.equal(texts['/main/chapter'],'小蝌蚪找妈妈');
+assert.equal(texts['/main/player/chapter'],'小蝌蚪找妈妈');
 assert.equal(JSON.parse(stored['/littlefs/audiobook-bookmark.json']).path,tracks[2].path);
 console.log('Story titles passed: all 10 Chinese names, filename fallback, chapter changes and bookmark resume');

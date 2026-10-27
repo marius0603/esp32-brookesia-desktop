@@ -15,20 +15,21 @@ const storyTitles={
 const sleepMinutes=[0,15,30,45];
 let gui, audio, storage, modes, timer, playback, localVoice, tracks=[], index=0, current=null, playing=null, hidden=false, cache={}, volume=20, bookmark=null, lastSaved=0,sleepSelected=-1;
 function call(handle,name,args){const r=JSON.parse(brookesia.call_function(handle,name,JSON.stringify(args||{})));if(!r.success)throw new Error(r.error||r.error_message||name);return r.data;}
-function text(id,value){value=String(value);if(cache[id]===value||hidden)return;call(gui,'SetText',{Path:'/main/'+id,Text:value});cache[id]=value;}
+const textPaths={volume:'header/volume',chapter:'player/chapter',progress:'player/progress',status:'player/status',sleepStatus:'sleep/sleepStatus'};
+function text(id,value){value=String(value);if(cache[id]===value||hidden)return;call(gui,'SetText',{Path:'/main/'+(textPaths[id]||id),Text:value});cache[id]=value;}
 function clock(seconds){seconds=Math.max(0,Math.floor(Number(seconds)||0));return Math.floor(seconds/3600)+':'+String(Math.floor(seconds%3600/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');}
 function save(){if(!playing||!playing.path||playing.path==='@tone')return;bookmark={path:playing.path,position:playing.position||0};call(storage,'FSWriteText',{Path:'/littlefs/audiobook-bookmark.json',Data:JSON.stringify(bookmark)});lastSaved=Date.now();}
 function refresh(){
   const result=call(audio,'List');tracks=Array.isArray(result.tracks)?result.tracks:[];
-  if(tracks.length){const at=bookmark?tracks.findIndex(t=>t.path===bookmark.path):-1;index=at>=0?at:Math.min(index,tracks.length-1);current=tracks[index];text('chapter',title(current));text('status','共 '+tracks.length+' 章 · 点击播放');}
-  else {current=null;text('chapter','装卡后扫描章节');text('status',result.mounted?'请将 MP3/WAV 放入 audiobooks 文件夹':'未检测到 SD 卡 · 装卡后重启');}
+  if(tracks.length){const at=bookmark?tracks.findIndex(t=>t.path===bookmark.path):-1;index=at>=0?at:Math.min(index,tracks.length-1);current=tracks[index];text('chapter',title(current));text('status','第 '+(index+1)+' / '+tracks.length+' 章');}
+  else {current=null;text('chapter','暂无故事');text('status',result.mounted?'没有可播放的故事':'未检测到 SD 卡');}
 }
 function title(track){
   const file=track.path.slice(track.path.lastIndexOf('/')+1);
   return storyTitles[file]||file.replace(/\.(mp3|wav)$/i,'');
 }
 function play(){
-  if(!current){text('status','请先装卡并扫描章节');return;}
+  if(!current){text('status','暂无可播放故事');return;}
   const position=bookmark&&bookmark.path===current.path?bookmark.position:0;
   call(audio,'Play',{Path:current.path,Position:position});text('chapter',title(current));poll();
 }
@@ -44,28 +45,27 @@ function poll(){
   const actual=tracks.findIndex(t=>t.path===next.path);
   if(actual>=0&&(!current||current.path!==next.path)){index=actual;current=tracks[index];text('chapter',title(current));}
   if(playing&&playing.state!=='Ended'&&next.state==='Ended'&&next.path!=='@tone'){
-    const sleepJustEnded=next.state==='SleepEnded'&&(!playing||playing.state!=='SleepEnded');
-  playing=next;bookmark={path:next.path,position:0};save();
+    playing=next;bookmark={path:next.path,position:0};save();
     if(index+1<tracks.length){index++;current=tracks[index];bookmark={path:current.path,position:0};play();return;}
   }
   const sleepJustEnded=next.state==='SleepEnded'&&(!playing||playing.state!=='SleepEnded');
   playing=next;
   if(next.path==='@tone'&&next.active)text('status','正在播放测试音');
   else if(next.state==='Error')text('status','播放失败：'+next.error);
-  else if(next.active)text('status',next.state==='Goodnight'?'晚安，做个好梦':next.state==='Paused'?'已暂停':'扬声器播放中');
-  else if(next.state==='SleepEnded')text('status','故事已停 · 晚安');
+  else if(next.active)text('status',next.state==='Goodnight'?'晚安':next.state==='Paused'?'已暂停':'播放中');
+  else if(next.state==='SleepEnded')text('status','已停止');
   else if(next.state==='Ended')text('status',next.path==='@tone'?'测试音播放结束':'本章播放结束');
   const remaining=Math.max(0,Number(next.sleep_remaining_seconds)||0);
-  text('sleepStatus',next.sleep_finishing?'晚安，做个好梦':next.sleep_active?(next.sleep_fading?'正在淡出 ':'睡眠定时 ')+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):next.sleep_completed?'定时结束 · 已停止':'睡眠定时 · 最后两分钟渐弱');
-  try{const sound=call(modes,'GetState');volume=call(playback,'GetVolume');text('volume',sound.do_not_disturb?'音量 '+sound.resume_volume+'% · 勿扰静音':'音量 '+volume+'% · 两侧实体键调节');}catch(_){}
-  try{const local=call(localVoice,'GetState');text('tools/voice/label',local.listening?'我在听，请说命令':'点一下说话 · 离线');if(local.error)text('status','离线语音：'+local.error);}catch(_){}
+  text('sleepStatus',next.sleep_finishing?'晚安':next.sleep_active?String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):next.sleep_completed?'已结束':'');
+  try{const sound=call(modes,'GetState');volume=call(playback,'GetVolume');text('volume',sound.do_not_disturb?'音量 '+sound.resume_volume+'% · 静音':'音量 '+volume+'%');}catch(_){}
+  try{const local=call(localVoice,'GetState');text('tools/voice/label',local.listening?'正在听':'语音控制');if(local.error)text('status','离线语音：'+local.error);}catch(_){}
   if(sleepJustEnded)save();
   text('progress',clock(next.position)+(next.duration?' / '+clock(next.duration):''));
   text('transport/toggle/label',next.active&&next.state!=='Paused'?'暂停':'播放');
   if(next.active&&next.path!=='@tone'&&Date.now()-lastSaved>15000)save();
 }
 function action(name){
-  if(name==='offlineSpeak'){call(localVoice,'ListenNow');text('status','我在听，请说命令');return;}
+  if(name==='offlineSpeak'){call(localVoice,'ListenNow');text('status','正在听');return;}
   if(name==='lockScreen'){save();call(modes,'LockScreen');return;}
   if(name==='sleepChoice'){
     const value=call(gui,'GetBinding',{Path:'/main/sleep/choice',Key:'selected'});
@@ -85,11 +85,11 @@ globalThis.brookesia_app={
     for(const name of ['previous','next','toggle','sleepChoice','offlineSpeak','lockScreen'])call(gui,'SubscribeAction',{Action:name});
     try{bookmark=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/audiobook-bookmark.json'}));}catch(_){}
     try{volume=call(playback,'GetVolume');}catch(_){}
-    hidden=false;sleepSelected=-1;text('volume','音量 '+volume+'% · 两侧实体键调节');refresh();poll();call(timer,'StartPeriodic',{Name:'audiobook',IntervalMs:1000});return true;},
+    hidden=false;sleepSelected=-1;text('volume','音量 '+volume+'%');refresh();poll();call(timer,'StartPeriodic',{Name:'audiobook',IntervalMs:1000});return true;},
   on_timer(){if(!hidden)try{poll();}catch(e){text('status',String(e));}return true;},
   on_action(name){try{action(name);}catch(e){text('status',String(e));}return true;},
   on_pause(){try{save();}catch(_){}hidden=true;return true;},
-  on_resume(){hidden=false;cache={};sleepSelected=-1;refresh();text('volume','音量 '+volume+'% · 两侧实体键调节');poll();return true;},
+  on_resume(){hidden=false;cache={};sleepSelected=-1;refresh();text('volume','音量 '+volume+'%');poll();return true;},
   on_stop(){try{save();call(audio,'Stop');}catch(_){}return true;}
 };
 })();

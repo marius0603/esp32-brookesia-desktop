@@ -1,4 +1,25 @@
-# 听书 0.3.0（锁屏需要固件 s3.23）
+# 听书 0.3.1（锁屏需要固件 s3.23及以上）
+
+## 简洁播放器
+
+0.3.1重绘界面：音量在顶部左侧、锁屏在右侧，中文书名与播放进度集中显示，
+播放/暂停使用金色大按钮。移除实体键调节、双击解锁和渐弱等解释性小字；
+睡眠行保留四档选择框及真实剩余时间，底部为“语音控制”。操作和书签逻辑沿用原有版本。
+
+![简洁听书界面，演示播放状态](../brookesia-apps/audiobook/assets/player-layout-preview.png)
+
+预览由应用资源和脚本渲染，不是设备截图；进度和定时数值为演示。
+现有s3.25设备无需重刷固件，暂停电脑端额度采集器后，在仓库根目录执行：
+
+```powershell
+codex-quota-monitor/.venv/Scripts/python.exe codex-quota-monitor/tools/deploy_audiobook_layout.py --port COM3
+```
+
+安装器将旧应用备份到SD卡，保留书单、书签和音量，并恢复更新前的正常播放/暂停状态。
+若正在运行睡眠定时，先等待定时结束或在设备取消，安装器会拒绝重置正在运行的定时。
+更新完成、USB验证连接关闭后，可通过 `codex-quota-monitor/start.ps1` 恢复额度同步。
+安装包为 `packages/apps/local.audiobook.debug.0.3.1.bpk`，校验值见 `packages/SHA256.json`。
+源码构建沿用 `tools/build_brookesia_app.py`，JS检查为 `node brookesia-apps/audiobook/tests/main.test.cjs`。
 
 ## 操作
 
@@ -12,7 +33,7 @@
 
 锁屏在原有按键轮询和触摸过滤中完成，无额外常驻任务。锁屏期间暂缓自动深睡，以免触摸唤醒绕过本次锁屏；重启或关机结束本次锁屏。按键尚未初始化或设备正在进入深睡时拒绝锁屏。
 
-更新已有设备时，先运行 `tools/backup_current_firmware.py --port COM3` 生成并验证完整 Flash 备份，再使用 `tools/update_brookesia_app_only.py --port COM3 --build <build目录或解压后的应用分区包目录> --backup <本机备份目录>` 更新 s3.23 应用分区；工具核对 MAC、分区表、备份哈希与写入后校验，保留 NVS、LittleFS 和 SD。然后运行 `tools/deploy_audiobook_controls.py --port COM3` 安装听书 0.3.0，原应用资源备份到 SD；安装后再重启一次刷新桌面缓存的图标。
+旧s3.23首次增加锁屏的历史步骤：先运行 `tools/backup_current_firmware.py --port COM3` 生成并验证完整 Flash 备份，再使用 `tools/update_brookesia_app_only.py --port COM3 --build <build目录或解压后的应用分区包目录> --backup <本机备份目录>` 更新 s3.23 应用分区；工具核对 MAC、分区表、备份哈希与写入后校验，保留 NVS、LittleFS 和 SD。然后运行 `tools/deploy_audiobook_controls.py --port COM3` 安装听书 0.3.0，原应用资源备份到 SD；安装后再重启一次刷新桌面缓存的图标。
 
 `tests/screen_lock_static.cpp` 覆盖两次短按、超时、长按重复、无按下的释放和毫秒回绕；听书 JS 回归覆盖选择框档位/非法选择/原生计时同步、移除跳转动作、锁屏不停止音频和 Q 版图标资源。
 
@@ -59,10 +80,14 @@ powershell.exe -NoProfile -File tools/synthesize_mandarin.ps1 -TextFile samples/
 
 ## 部署与验证
 
-当前 s3.23 / 听书 0.3.0 按上方锁屏章节更新。旧 s3.22 / 听书 0.2.1 使用 `tools/deploy_offline_voice.py` 部署；旧 s3.20/21 / 听书 0.2.0 使用 `tools/deploy_audiobook_sleep.py --repo <仓库目录> --downloaded <已下载咕咚.mp3>` 更新三个听书文件并上传两篇故事。旧界面备份到 SD，更新后重启刷新预加载资源。
+当前 s3.25 / 听书 0.3.1 按本文简洁播放器章节更新。s3.23 / 听书 0.3.0 为上一版。旧 s3.22 / 听书 0.2.1 使用 `tools/deploy_offline_voice.py` 部署；旧 s3.20/21 / 听书 0.2.0 使用 `tools/deploy_audiobook_sleep.py --repo <仓库目录> --downloaded <已下载咕咚.mp3>` 更新三个听书文件并上传两篇故事。旧界面备份到 SD，更新后重启刷新预加载资源。
 
 固件 USB `put` 新增 `sd-audiobooks/` 相对路径前缀，仅允许 MP3/WAV，映射到 `/sdcard/audiobooks/`。临时分片与 SHA-256 校验也在 SD 上完成，不经过空间有限的 Flash；其余上传路径行为不变，仍拒绝绝对路径、父级跳转和符号链接。既有故事默认不覆盖。
 
 `tools/verify_story_sleep.py` 使用临时 10 秒定时、8 秒淡出，检查两篇 MP3 解码、三个正式档位、非法输入、跨章节计时、取消恢复、暂停/后台完成、晚安写入及勿扰跳过。会短暂关闭勿扰以测试播报，最终恢复捕获的音量、勿扰和自动深睡设置；不修改家长控制。
 
 `tests/story_sleep_static.cpp` 编译检查正式 2 分钟淡出和分钟档位边界。加速检查不等同于逐档完整等待 15/30/45 分钟。实体按键、排版和实际听感需结合实物确认。
+
+2026-10-27界面版验证：0.3.1安装正常，原生睡眠选择框四档及倒计时同步通过，
+连续重新打开两次无应用错误；10篇故事、书签、90%音量与Q版图标保留。
+定时验证后已恢复关闭，运行记录保留在私有runtime目录。
