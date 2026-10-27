@@ -1,13 +1,17 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'../src/app/main.js'),'utf8');
-let bindings=[],quiet=false,calls=[],texts={},state={state:'Idle',active:false,channel:false},book=true,volume=20,volumeCap=100;
-const ctx=vm.createContext({brookesia:{start_service:n=>{bindings.push(n);return n;},call_function(h,n,s){
+const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/manifest.json'),'utf8'));
+const declared=new Set(manifest.services.map(s=>s.name).concat(['SystemGui','SystemTimer']));
+let bindings=[],quiet=false,calls=[],texts={},stored=null,state={state:'Idle',active:false,channel:false},book=true,volume=20,volumeCap=100;
+const ctx=vm.createContext({brookesia:{start_service:n=>{assert.ok(declared.has(n),'Service must be declared: '+n);bindings.push(n);return n;},call_function(h,n,s){
   const a=JSON.parse(s);calls.push({h,n,a});let data=null;
   if(n==='SetVolume')volume=Math.min(volumeCap,a.Volume);
   if(n==='GetVolume')data=volume;
   if(n==='GetState')data=h==='Audiobook'?{active:book}:h==='DeviceModes'?{do_not_disturb:quiet,resume_volume:70}:state;
   if(h==='Audiobook'&&n==='Stop')book=false;
-  if(n==='Connect')state={state:'Activation',active:true,channel:false,activation_code:'123456',message:'请激活'};
+  if(n==='Connect')state=h==='LocalVoice'?{state:'Ready',active:true,channel:true,message:'电脑已连接'}:{state:'Activation',active:true,channel:false,activation_code:'123456',message:'请激活'};
+  if(n==='FSReadText')data=stored;
+  if(n==='FSWriteText')stored=a.Data;
   if(n==='Disconnect')state={state:'Idle',active:false,channel:false};
   if(n==='StartListening')state={state:'Listening',active:true,channel:true,level:50};
   if(n==='StopListening')state={state:'Thinking',active:true,channel:true};
@@ -18,7 +22,10 @@ const ctx=vm.createContext({brookesia:{start_service:n=>{bindings.push(n);return
   return JSON.stringify({success:true,data});
 }}});
 vm.runInContext(source,ctx);ctx.brookesia_app.on_start();
-assert.equal(book,false);assert.equal(texts['/main/code'],'123456');
+assert.equal(book,false);assert.equal(calls.filter(c=>c.n==='Connect').at(-1).h,'LocalVoice');
+assert.match(texts['/main/backend/label'],/电脑/);
+ctx.brookesia_app.on_action('backend');ctx.brookesia_app.on_action('connect');
+assert.equal(texts['/main/backend/label'],'123456');
 ctx.brookesia_app.on_action('talk');assert.equal(calls.filter(c=>c.n==='StartListening').length,0,'activation must not capture audio');
 ctx.brookesia_app.on_action('test');assert.equal(calls.filter(c=>c.n==='TestMicrophone').length,0,'cannot test while connected');
 state={state:'Ready',active:true,channel:true};ctx.brookesia_app.on_timer();ctx.brookesia_app.on_action('talk');
@@ -40,4 +47,10 @@ ctx.brookesia_app.on_resume();ctx.brookesia_app.on_action('test');assert.equal(s
 ctx.brookesia_app.on_stop();assert.equal(state.active,false);
 assert.equal(calls.filter(c=>c.n==='Stop'&&c.h==='SystemTimer').at(-1).a.TimerId,7);
 vm.runInContext(source,ctx);ctx.brookesia_app.on_start();assert.equal(state.state,'Activation');
+ctx.brookesia_app.on_action('backend');ctx.brookesia_app.on_action('connect');assert.equal(state.state,'Ready');
+assert.equal(calls.filter(c=>c.n==='Connect').at(-1).h,'LocalVoice');
+ctx.brookesia_app.on_action('talk');assert.equal(state.state,'Listening');
+assert.equal(calls.filter(c=>c.n==='StartListening').at(-1).h,'LocalVoice');
+ctx.brookesia_app.on_action('cancel');assert.equal(state.state,'Ready');
+assert.deepEqual(fs.readFileSync(path.join(__dirname,'../src/res/images/launcher_icon.png')),fs.readFileSync(path.join(__dirname,'../../../themes/cartoon-q-v1/flash-fallback/assistant.png')));
 console.log('Voice assistant passed: activation gate, manual send, interrupt, volume bounds, audio release, retained context');

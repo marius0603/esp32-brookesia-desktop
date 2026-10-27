@@ -28,9 +28,9 @@ class Session:
             return await self.send(event|{'turn':turn})
         pcm=event['pcm'];await self.send({'type':'audio_start','turn':turn,'text':event['text'],'sample_rate':16000})
         for at in range(0,len(pcm),1920):
-            while self.output_sequence-self.ack_sequence>12:
+            while self.output_sequence-self.ack_sequence>256:
                 self.ack.clear()
-                await asyncio.wait_for(self.ack.wait(),8)
+                await asyncio.wait_for(self.ack.wait(),15)
                 if cancel.event.is_set() or self.turn!=turn:raise Cancelled()
             if cancel.event.is_set() or self.turn!=turn:raise Cancelled()
             packet=HEADER.pack(b'VPC1',turn,self.output_sequence)+pcm[at:at+1920]

@@ -2,14 +2,14 @@
   "upstream": "https://github.com/espressif/esp-brookesia.git",
   "commit": "68ac00e7aa9012cd8cbf0cbf6bee155801db0e8c",
   "esp_idf": "6.0.2",
-  "firmware": "0.8.3-s3.23",
+  "firmware": "0.8.3-s3.24",
   "toolkit": "1.0.1",
   "apps": {
     "local.audiobook": "0.3.0",
     "local.codex.quota": "0.2.2",
     "local.flipclock": "0.1.1",
     "local.weather": "0.2.6",
-    "local.voiceassistant": "0.1.1",
+    "local.voiceassistant": "0.2.0",
     "local.childmode": "0.1.0"
   },
   "device": "ESP32-S3-Touch-AMOLED-2.16",

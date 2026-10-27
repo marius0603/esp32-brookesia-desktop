@@ -5,7 +5,7 @@
       "en": "Voice Assistant",
       "zh_CN": "智能助手"
     },
-    "version": "0.1.1",
+    "version": "0.2.0",
     "visible": true,
     "systems": [
       "super"
@@ -18,6 +18,14 @@
     "arguments": []
   },
   "services": [
+    {
+      "name": "LocalVoice",
+      "version": "0.1.0"
+    },
+    {
+      "name": "Storage",
+      "version": "0.8.3"
+    },
     {
       "name": "VoiceAssistant",
       "version": "0.1.0"

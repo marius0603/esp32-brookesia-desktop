@@ -26,7 +26,10 @@ def main():
     output.parent.mkdir(parents=True, exist_ok=True)
     manifest = {'version': desc['project_version'], 'device': 'ESP32-S3-Touch-AMOLED-2.16',
         'app_only': True, 'files': {}}
-    with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
+    sdkconfig = json.loads((build / 'config/sdkconfig.json').read_text(encoding='utf-8'))
+    manifest['features'] = {'separate_websocket_tx_lock': bool(sdkconfig.get('ESP_WS_CLIENT_SEPARATE_TX_LOCK'))}
+    temporary = output.with_suffix('.zip.tmp')
+    with zipfile.ZipFile(temporary, 'w', zipfile.ZIP_DEFLATED) as archive:
         for name in keep.values():
             path = (build / name).resolve()
             assert path.is_relative_to(build) and path.is_file()
@@ -42,9 +45,10 @@ def main():
             'Extract this package, then run tools/update_brookesia_app_only.py with --port, --build and --backup.\n'
             'The partition table is included for comparison; the updater writes only the application.\n'
             'NVS, LittleFS, installed apps and SD contents are preserved.\n'
-            'After reboot install the matching audiobook package with tools/deploy_audiobook_controls.py.\n')
-    with zipfile.ZipFile(output) as archive:
+            'After reboot install the matching application packages described in the release documentation.\n')
+    with zipfile.ZipFile(temporary) as archive:
         assert archive.testzip() is None
+    temporary.replace(output)
     print(output)
     print('SHA256:', hashlib.sha256(output.read_bytes()).hexdigest())
 

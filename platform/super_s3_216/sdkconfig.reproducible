@@ -5892,3 +5892,5 @@ CONFIG_SEMIHOSTFS_MAX_MOUNT_POINTS=1
 
 CONFIG_MODEL_IN_SDCARD=y
 # CONFIG_MODEL_IN_FLASH is not set
+# Full-duplex PCM must not serialize playback confirmations behind socket reads.
+CONFIG_ESP_WS_CLIENT_SEPARATE_TX_LOCK=y

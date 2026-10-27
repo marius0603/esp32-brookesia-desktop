@@ -5,6 +5,22 @@ from config_store import ROOT,load,save
 
 state={'running':False,'url':'','error':''}
 
+def snapshot():
+    """A live process alone does not prove the temporary public route still exists."""
+    result=dict(state)
+    config=load()
+    if config.get('network_mode')!='quick_tunnel':return result
+    result['url']=config.get('device_url',result['url'])
+    log_path=ROOT/'logs/tunnel-current.log'
+    try:
+        lines=log_path.read_text(encoding='utf-8',errors='replace').splitlines()
+        registered=max((i for i,line in enumerate(lines) if 'Registered tunnel connection' in line),default=-1)
+        expired=max((i for i,line in enumerate(lines) if 'Unauthorized: Tunnel not found' in line),default=-1)
+        if expired>registered:
+            result.update(running=False,error='临时公网入口已失效，请重建隧道后通过 USB 重新配对')
+    except OSError:pass
+    return result
+
 def matching_process(identifier,expected):
     kernel=ctypes.WinDLL('kernel32',use_last_error=True)
     kernel.OpenProcess.argtypes=[wt.DWORD,wt.BOOL,wt.DWORD];kernel.OpenProcess.restype=wt.HANDLE

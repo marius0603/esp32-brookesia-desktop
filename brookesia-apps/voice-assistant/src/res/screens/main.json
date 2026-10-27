@@ -44,12 +44,12 @@
         "textAlign": "center"
       },
       "labelProps": {
-        "text": "正在连接小智"
+        "text": "正在连接电脑"
       }
     },
     {
-      "type": "label",
-      "id": "code",
+      "type": "button",
+      "id": "backend",
       "placement": {
         "x": 100,
         "y": 121,
@@ -57,14 +57,35 @@
         "height": 50
       },
       "style": {
-        "font": "${font.zh_CN}",
-        "fontSize": 40,
-        "textColor": "#54d9d1",
-        "textAlign": "center"
+        "bgColor": "#1b2c45",
+        "radius": 12,
+        "padding": 0
       },
-      "labelProps": {
-        "text": ""
-      }
+      "layout": {
+        "type": "flex",
+        "mainAlign": "center",
+        "crossAlign": "center"
+      },
+      "events": [
+        {
+          "type": "clicked",
+          "action": "backend"
+        }
+      ],
+      "children": [
+        {
+          "type": "label",
+          "id": "label",
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 24,
+            "textColor": "#54d9d1"
+          },
+          "labelProps": {
+            "text": "电脑 + DS · 切换"
+          }
+        }
+      ]
     },
     {
       "type": "label",

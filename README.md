@@ -4,12 +4,12 @@
 
 | 内容 | 版本与当前行为 |
 | --- | --- |
-| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.23；听书触摸锁屏、双击音量＋解锁、离线 WakeNet + MultiNet 命令、Q 版主题、音量持久化与实际输出同步、单次闲置深度睡眠、实体音量键、PSRAM 整屏合成、壁纸定时微移、10 分钟自动息屏、声音设置内的定时勿扰、儿童模式、SD 主题回退、重力自动旋转；独立 48KiB 编解码栈，40KiB 自动提交保护 |
+| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.24；新增电脑语音助手公网 WSS 通道；保留听书触摸锁屏、双击音量＋解锁、离线 WakeNet + MultiNet 命令、Q 版主题、持久化音量、自动息屏、定时勿扰、儿童模式及重力旋转 |
 | Codex 额度 | 0.2.2，真实剩余额度、吃豆人动画、大号重置倒计时 |
 | 天气 | 0.2.6，默认上海、开发板直接联网、各天气动态背景、云形图片、24 小时预报 |
 | 听书 | 0.3.0，恢复并随包保留 Q 版图标、中文故事标题；移除前后 30 秒按钮，睡眠定时改为选择框；增加锁屏键，连按两次音量＋解锁；SD MP3/WAV、章节与书签，最后 2 分钟声音/亮度渐弱，到时离线“晚安”并停播 |
 | 翻页时钟 | 0.1.1，只显示大号北京时间 HH:MM，分钟变化时翻页 |
-| 智能助手 | 0.1.1，实体键直接同步系统音量，界面刷新实际音量，小智平台激活、手动语音对话、字幕、音量和本地录音回放；当前设备识别和播报已验证 |
+| 智能助手 | 0.2.0，电脑 Qwen3-ASR → DS 云端 → Qwen3-TTS → 设备播放，可切换小智；公网加密音频、手动录音发送、字幕、打断及本地回放，保留实体音量与勿扰规则 |
 | 离线语音 | 0.1.0 试验版，先说“你好小智”，本机处理八类命令；存在漏识别，童声准确率尚未验证；SD 模型与中文剩余时间提示，不上传命令录音 |
 | 儿童模式 | 0.1.0，家长 PIN、应用白名单、音量上限、每日时长和可选夜间休息；默认不开放语音助手 |
 
@@ -20,6 +20,7 @@
 儿童模式设置与验证见 [CHILD_MODE.md](codex-quota-monitor/CHILD_MODE.md)，主题资源迁移见 [SD_RESOURCES.md](codex-quota-monitor/SD_RESOURCES.md)。
 听书定时、中文样例及离线语音合成见 [AUDIOBOOK.md](codex-quota-monitor/AUDIOBOOK.md)。当前 Q 版图标和壁纸见 [主题说明](themes/cartoon-q-v1/README.md)。
 助手实体音量键及界面同步修复见 [ASSISTANT_VOLUME.md](codex-quota-monitor/ASSISTANT_VOLUME.md)。
+电脑模型、跨网络连接、设备安装与验证见 [电脑语音助手](pc-voice-bridge/README.md)。当前公网入口为临时隧道，重建后需更新设备地址；长期使用需固定入口。
 离线命令词、模型部署与童声验证范围见 [OFFLINE_VOICE.md](codex-quota-monitor/OFFLINE_VOICE.md)。
 当前系统属于官方开发分支的本地 S3 适配，未恢复微雪出厂 AIChats 等完整应用。
 
@@ -57,7 +58,7 @@ npm --prefix tools/brookesia-toolkit install
 
 其他应用目录是 `codex-quota`、`weather`、`audiobook`、`voice-assistant`、`child-mode`；打包文件名以各自 `src/manifest.json` 的版本为准。
 安装 App 无需重刷系统。听书需要 s3.3 固件提供的 Audiobook 服务；时钟依赖已有 PNG 解码与 SNTP。
-智能助手需要 s3.6 原生服务。首次打开从平台获取激活码，在小智控制台添加设备；点击说话后才采集并上传语音。
+智能助手 0.2.0 需要 s3.24 原生服务。默认电脑模式，点击模式按钮可切换小智；小智首次使用仍需在平台添加设备。点击说话后才采集语音，再次点击发送，最长30秒。
 电脑端 Node.js 从 PATH 查找，也可通过 `QUOTA_NODE` 指定。
 
 ## 恢复电脑端额度同步
@@ -90,7 +91,7 @@ npm --prefix tools/brookesia-toolkit install
 
 ## 固件文件与备份
 
-`packages/apps` 保存可安装 BPK，当前听书为 [0.3.0](packages/apps/local.audiobook.debug.0.3.0.bpk)；`packages/firmware` 包含 [s3.23 应用分区更新包](packages/firmware/brookesia-0.8.3-s3.23-app-only.zip) 及历史版本。更新包附带只用于核对的分区表，使用 [听书更新步骤](codex-quota-monitor/AUDIOBOOK.md) 安装；校验值见 `packages/SHA256.json`。
+`packages/apps` 保存可安装 BPK，当前听书为 [0.3.0](packages/apps/local.audiobook.debug.0.3.0.bpk)，智能助手为 [0.2.0](packages/apps/local.voiceassistant.debug.0.2.0.bpk)；`packages/firmware` 包含 [s3.24 应用分区更新包](packages/firmware/brookesia-0.8.3-s3.24-app-only.zip) 及历史版本。更新包附带只用于核对的分区表，使用 [听书更新步骤](codex-quota-monitor/AUDIOBOOK.md) 安装；校验值见 `packages/SHA256.json`。
 它们不包含用户 NVS、Wi-Fi 数据或设备系统资源分区，不能当成任意新设备的完整恢复镜像。
 
 原电脑的恢复工具会检查完整备份和设备身份，新电脑没有备份时会拒绝直接烧录。这是已有防误刷机制。

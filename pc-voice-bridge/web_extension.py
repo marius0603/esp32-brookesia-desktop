@@ -23,7 +23,7 @@ def get(path,handler):
     if path=='/assistant':handler.send(200,(ROOT/'scripts/assistant.html').read_bytes(),'text/html; charset=utf-8');return True
     if path=='/api/assistant/state':
         handler.send(200,{'config':public(),'models_ready':engines.ready.is_set(),'loading':engines.loading,
-            'model_error':engines.error,'gateway':dict(device_gateway.state),'tunnel':dict(public_tunnel.state)});return True
+            'model_error':engines.error,'gateway':dict(device_gateway.state),'tunnel':public_tunnel.snapshot()});return True
     if path.startswith('/api/assistant/jobs/'):
         job=serializable_job(path.rsplit('/',1)[1])
         handler.send(200 if job else 404,job or {'error':'任务不存在'});return True

@@ -13,6 +13,7 @@
 #include "audiobook/audiobook.hpp"
 #include "offline_voice/offline_voice.hpp"
 #include "voice_assistant/voice_assistant.hpp"
+#include "voice_assistant/local_voice.hpp"
 #include "auto_rotation/auto_rotation.hpp"
 #include "device_modes/device_modes.hpp"
 #include "child_mode/child_mode.hpp"
@@ -33,6 +34,7 @@ bool GeneralServices::init()
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.init(), false, "Failed to initialize service manager");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_audiobook_service()), false, "Failed to register audiobook service");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_voice_assistant_service()), false, "Failed to register voice assistant service");
+    BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_local_voice_service()), false, "Failed to register local voice service");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_device_modes_service()), false, "Failed to register device modes");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_auto_rotation_service()), false, "Failed to register auto rotation service");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_child_mode_service()), false, "Failed to register child mode service");
@@ -118,6 +120,8 @@ bool GeneralServices::start_audio_services()
     // Keep the service object alive while an app's asynchronous Disconnect finishes.
     static auto assistant_binding = service_manager.bind("VoiceAssistant");
     BROOKESIA_CHECK_FALSE_RETURN(assistant_binding.is_valid(), false, "Failed to bind voice assistant service");
+    static auto local_voice_binding = service_manager.bind("LocalVoice");
+    BROOKESIA_CHECK_FALSE_RETURN(local_voice_binding.is_valid(), false, "Failed to bind local voice service");
 
     return true;
 }
