@@ -7,7 +7,14 @@ import public_tunnel
 class TunnelHealthTests(unittest.TestCase):
     def test_ssh_endpoint_parser_ignores_documentation_links(self):
         self.assertEqual(public_tunnel.ssh_endpoint('https://localhost.run/docs/'),'')
-        self.assertEqual(public_tunnel.ssh_endpoint('https://localhost.run/docs/\n\x1b[32mhttps://example123.lhr.life\x1b[0m'),'wss://example123.lhr.life/device')
+        banner='Manage domains at https://admin.localhost.run/\nhttps://localhost.run/docs/\n'
+        self.assertEqual(public_tunnel.ssh_endpoint(banner),'')
+        self.assertEqual(public_tunnel.ssh_endpoint(banner+'example123.lhr.life tunneled'), '')
+        assigned='\x1b[32mexample123.lhr.life tunneled with tls termination, https://example123.lhr.life\x1b[0m'
+        self.assertEqual(public_tunnel.ssh_endpoint(banner+assigned+'\nhttps://admin.localhost.run/'),'wss://example123.lhr.life/device')
+    def test_latest_announced_hostname_is_selected(self):
+        log='first.lhr.life tunneled with tls termination\nsecond.localhost.run tunneled with tls termination'
+        self.assertEqual(public_tunnel.ssh_endpoint(log),'wss://second.localhost.run/device')
     def test_dead_ssh_process_is_not_a_ready_route(self):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder);(root/'logs').mkdir();(root/'logs/ssh-tunnel.pid').write_text('123')

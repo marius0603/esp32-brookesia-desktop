@@ -22,8 +22,11 @@
 ![对话预览](../brookesia-apps/voice-assistant/assets/xiaoma-conversation-preview.png)
 
 预览根据应用JSON布局及实际JS脚本生成，使用模拟状态、文字与音量，不是设备截图。
-本次提供源文件和 `packages/apps/local.voiceassistant.debug.0.2.2.bpk`；
-尚未安装到设备、未采集实际录音。现有配对仍保留在设备NVS和电脑私有运行目录。
+安装包为 `packages/apps/local.voiceassistant.debug.0.2.2.bpk`。
+2026-10-27实机已安装并重启，桌面名称及0.2.2版本正确，应用运行且公网通道就绪；
+启动未采集麦克风，保留原模式、配对令牌、10篇故事及90%音量。
+原临时公网入口失效后重建，并通过USB更新地址；修复启动横幅中的管理页链接被误识别为入口的问题。
+本次未进行新的真人录音/听感测试，现有配对保留在设备NVS和电脑私有运行目录。
 
 ```powershell
 node brookesia-apps/voice-assistant/tests/main.test.cjs

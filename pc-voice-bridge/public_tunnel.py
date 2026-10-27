@@ -8,7 +8,10 @@ state={'running':False,'url':'','error':''}
 def ssh_executable():return Path(os.environ.get('SystemRoot','C:/Windows'))/'System32/OpenSSH/ssh.exe'
 
 def ssh_endpoint(log):
-    matches=re.findall(r'https://([a-z0-9-]+\.(?:lhr\.life|localhost\.run))',log)
+    # Startup prints account/documentation links before the tunnel announcement.
+    # Wait for the assigned hostname instead of accepting an early admin URL.
+    log=re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]','',log)
+    matches=re.findall(r'([a-z0-9-]+\.(?:lhr\.life|localhost\.run))\s+tunneled with tls termination',log)
     return 'wss://'+matches[-1]+'/device' if matches else ''
 
 def owned_ssh_process(identifier):

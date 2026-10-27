@@ -64,6 +64,8 @@ codex-quota-monitor/.venv/Scripts/python.exe codex-quota-monitor/tools/deploy_pc
 
 端口按实际设备调整，不要同时运行占用串口的额度采集器。安装工具按 `versions.json` 选择对应助手包及固件，备份原助手到 SD，同步电脑公网地址及独立配对令牌；核对助手启动和故事列表保持一致。设备点“说话”，等待按钮显示“发送”后再说话，说完再次点“发送”；点“取消”打断回答，点击“电脑 + DS · 切换”可使用原小智服务。
 
+SSH启动会先输出管理页和文档链接，只有带 `tunneled with tls termination` 的分配声明才作为设备入口；解析时剥离ANSI控制序列。2026-10-27已修复提前误选管理页地址的问题，加入分段启动横幅及多次分配的检查；真实公网WebSocket握手与设备就绪验证通过。
+
 临时隧道地址变化后，仅更新配对，不重装应用：
 
 ```powershell
