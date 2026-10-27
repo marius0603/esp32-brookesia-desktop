@@ -6,7 +6,7 @@
   "toolkit": "1.0.1",
   "apps": {
     "local.audiobook": "0.3.0",
-    "local.codex.quota": "0.2.2",
+    "local.codex.quota": "0.2.3",
     "local.flipclock": "0.1.1",
     "local.weather": "0.2.6",
     "local.voiceassistant": "0.2.1",

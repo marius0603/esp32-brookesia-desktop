@@ -1,23 +1,44 @@
-# 吃豆人额度 App
+# 额度显示 App
 
-local.codex.quota 0.2.2，独立安装到 Brookesia s3.2；无需重刷系统。
-源码：D:/chatgpt_data/brookesia-apps/codex-quota。
+`local.codex.quota` 0.2.3，使用现有Storage服务，可独立安装，无需更新s3.25固件。
+源码位于 `brookesia-apps/codex-quota`，桌面中文名称为“额度显示”。
 
-短周期、每周额度分别显示一条豆子轨道。每颗完整豆子代表 5% 剩余额度，
-部分豆子以透明度表示不足 5% 的部分；吃豆人的位置随真实已用比例前进。
-数字百分比和重置倒计时保留。嘴巴每 240 ms 开合，并有 1 像素轻微摆动，
-动画本身不减少豆子、不改变额度；过期数据停止动画，切到后台停掉动画定时器。
+按参考图使用黑色背景与两张圆角渐变卡片：“5小时”和“每周”标题34号，
+右侧真实剩余百分比48号，下方重置倒计时30号。短周期为金色、每周为青色。
+顶部状态胶囊显示已同步、已过期、需登录或采集失败，并以绿/黄/红点区分。
+倒计时不重复显示“重置”，超过一天时保留天数。
 
-两个 App 都使用函数作用域，修复重复打开时 QuickJS 顶层 let/const 重复声明的错误。
-额度包仅依赖 Storage 0.8.3，沿用电脑端每 60 秒采集、每 15 秒推送的数据源。
+![布局预览，73%和64%为演示数据](../brookesia-apps/codex-quota/assets/quota-cards-preview.png)
 
-构建：.venv/Scripts/python.exe tools/build_quota_bpk.py
-安装：停止采集器后执行 tools/install_runtime_app.py ../brookesia-apps/codex-quota/dist/local.codex.quota.debug.0.2.2.bpk
+该预览由应用布局及脚本生成，用于核对比例，不是设备截图，也不是当前账户数据。
+设备仍从 `/littlefs/quota.json` 读取真实额度，示例数值不会上传至设备。
+每颗完整豆子代表5%剩余额度，部分豆子以透明度显示不足5%的部分；
+吃豆人位置随真实已用比例变化，嘴巴每240ms开合，动画不消耗或改变额度。
+过期数据停止动画，后台停止动画定时器；同一QuickJS VM可重复打开。
 
-回归覆盖正确百分比、部分豆子、动画不改变额度、过期/后台暂停、同一 VM 重复加载。
-0.2.1 同时兼容框架先移除定时器、再调用 on_stop 的生命周期顺序。
-额度与天气各连续重开 6 次，共 12 次全部通过；真实额度与动画更新检查通过。
-用户实屏确认“显示正常，动画正常”。设备验证文件：runtime/runtime-reopen-verification.json。
+Q版额度图标已随应用打包，后续重装不再依赖一次性的桌面主题覆盖。
+更新图标或名称后需要重启设备以清除桌面缓存。
 
-0.2.2 按用户要求移除页面标题“Codex 额度”和同步时间，两条重置倒计时字号由 17 增至 30。
-安装完成后再次重开两次通过，真实数据与动画检查通过；见 runtime/quota-layout-verification-0.2.2.json。
+构建与验证（仓库根目录）：
+
+```powershell
+codex-quota-monitor/.venv/Scripts/python.exe codex-quota-monitor/tools/build_quota_bpk.py
+node brookesia-apps/codex-quota/tests/main.test.cjs
+```
+
+构建直接打包JSON、JS和PNG资源，不需要Node打包工具；PNG由现有固件解码。
+发布包为 `packages/apps/local.codex.quota.debug.0.2.3.bpk`，SHA256见 `packages/SHA256.json`。
+安装前暂停占用同一USB接口的额度采集器，再执行：
+
+```powershell
+codex-quota-monitor/.venv/Scripts/python.exe codex-quota-monitor/tools/deploy_quota_cards.py --port COM3
+```
+
+安装工具在SD卡保留旧应用，保留额度文件和音量，自动处理已有的异步目录清理超时。
+实际端口按电脑调整。完成并关闭USB验证连接后，通过 `codex-quota-monitor/start.ps1`
+恢复电脑端每60秒采集、每15秒推送；电脑端登录状态及网络需正常。
+私有设备验证结果保存在 `codex-quota-monitor/runtime`，不纳入Git。
+
+2026-10-27实机验证：安装并重启后中文名称、图标索引及图标文件尺寸正确；
+真实额度、吃豆人位置和8帧以上动画一致，连续重新打开两次均无应用错误；
+原有10篇故事和90%音量保留。

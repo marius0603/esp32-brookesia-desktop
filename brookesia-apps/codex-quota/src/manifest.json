@@ -2,10 +2,10 @@
   "package": {
     "id": "local.codex.quota",
     "name": {
-      "en": "Codex Quota",
-      "zh_CN": "Codex 额度"
+      "en": "Quota Display",
+      "zh_CN": "额度显示"
     },
-    "version": "0.2.2",
+    "version": "0.2.3",
     "visible": true,
     "systems": [
       "super"
