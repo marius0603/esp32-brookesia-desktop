@@ -9,7 +9,7 @@
 | 天气 | 0.2.6，默认上海、开发板直接联网、各天气动态背景、云形图片、24 小时预报 |
 | 听书 | 0.3.1，重绘简洁播放器、音量与锁屏置顶、去掉解释性小字；Q版图标、中文书名、大号播放按钮、睡眠选择框、语音控制、章节与书签；连按两次音量＋解锁，最后2分钟声音/亮度渐弱，到时离线“晚安”并停播 |
 | 翻页时钟 | 0.1.1，只显示大号北京时间 HH:MM，分钟变化时翻页 |
-| 智能助手 | 0.2.1，电脑 Qwen3-ASR → DS 云端 → Qwen3-TTS → 设备播放，可切换小智；增加准备录音、上传状态，保留字幕、打断、本地回放、实体音量与勿扰规则 |
+| 小马助手 | 0.2.2，简洁对话卡片与说话/发送大按钮，移除音量加减、断开、停止及录音测试按键；电脑 Qwen3-ASR → DS → Qwen3-TTS，可切换小智，保留实体音量与勿扰 |
 | 离线语音 | 0.1.0 试验版，先说“你好小智”，本机处理八类命令；存在漏识别，童声准确率尚未验证；SD 模型与中文剩余时间提示，不上传命令录音 |
 | 儿童模式 | 0.1.0，家长 PIN、应用白名单、音量上限、每日时长和可选夜间休息；默认不开放语音助手 |
 
@@ -58,7 +58,7 @@ npm --prefix tools/brookesia-toolkit install
 
 其他应用目录是 `codex-quota`、`weather`、`audiobook`、`voice-assistant`、`child-mode`；打包文件名以各自 `src/manifest.json` 的版本为准。
 安装 App 无需重刷系统。听书需要 s3.3 固件提供的 Audiobook 服务；时钟依赖已有 PNG 解码与 SNTP。
-智能助手 0.2.1 需要 s3.25 原生服务。默认电脑模式，点击模式按钮可切换小智；小智首次使用仍需在平台添加设备。点击说话，等待按钮显示“发送”后开始说话，再次点击发送；最长30秒，录音先完整缓存在设备内存中，再上传电脑。
+小马助手 0.2.2 需要 s3.25 原生服务。默认电脑模式，点击“电脑模式/小智模式”按钮可切换；小智首次使用仍需在平台添加设备。点击说话，等待按钮显示“发送”后开始说话，再次点击发送；最长30秒，录音先完整缓存在设备内存中，再上传电脑。
 电脑端 Node.js 从 PATH 查找，也可通过 `QUOTA_NODE` 指定。
 
 ## 恢复电脑端额度同步
@@ -91,7 +91,7 @@ npm --prefix tools/brookesia-toolkit install
 
 ## 固件文件与备份
 
-`packages/apps` 保存可安装 BPK，当前听书为 [0.3.1](packages/apps/local.audiobook.debug.0.3.1.bpk)，智能助手为 [0.2.1](packages/apps/local.voiceassistant.debug.0.2.1.bpk)；`packages/firmware` 包含 [s3.25 应用分区更新包](packages/firmware/brookesia-0.8.3-s3.25-app-only.zip) 及历史版本。更新包附带只用于核对的分区表，使用 [听书更新步骤](codex-quota-monitor/AUDIOBOOK.md) 安装；校验值见 `packages/SHA256.json`。
+`packages/apps` 保存可安装 BPK，当前听书为 [0.3.1](packages/apps/local.audiobook.debug.0.3.1.bpk)，小马助手为 [0.2.2](packages/apps/local.voiceassistant.debug.0.2.2.bpk)；`packages/firmware` 包含 [s3.25 应用分区更新包](packages/firmware/brookesia-0.8.3-s3.25-app-only.zip) 及历史版本。更新包附带只用于核对的分区表，使用 [听书更新步骤](codex-quota-monitor/AUDIOBOOK.md) 安装；校验值见 `packages/SHA256.json`。
 它们不包含用户 NVS、Wi-Fi 数据或设备系统资源分区，不能当成任意新设备的完整恢复镜像。
 
 原电脑的恢复工具会检查完整备份和设备身份，新电脑没有备份时会拒绝直接烧录。这是已有防误刷机制。
@@ -120,7 +120,7 @@ node ..\tests\child_ui_flow.cjs
 [天气](codex-quota-monitor/WEATHER.md)、
 [听书](codex-quota-monitor/AUDIOBOOK.md)、
 [翻页时钟](codex-quota-monitor/FLIP_CLOCK.md)、
-[智能助手](codex-quota-monitor/VOICE_ASSISTANT.md)。
+[小马助手](codex-quota-monitor/VOICE_ASSISTANT.md)。
 历史记录中的绝对路径、串口、MAC 和日志指向原电脑，迁移时按实际位置使用；运行日志不随仓库上传。
 
 ## 桌面图标与背景

@@ -2,10 +2,10 @@
   "package": {
     "id": "local.voiceassistant",
     "name": {
-      "en": "Voice Assistant",
-      "zh_CN": "智能助手"
+      "en": "Xiaoma Assistant",
+      "zh_CN": "小马助手"
     },
-    "version": "0.2.1",
+    "version": "0.2.2",
     "visible": true,
     "systems": [
       "super"

@@ -9,7 +9,7 @@
     "local.codex.quota": "0.2.3",
     "local.flipclock": "0.1.1",
     "local.weather": "0.2.6",
-    "local.voiceassistant": "0.2.1",
+    "local.voiceassistant": "0.2.2",
     "local.childmode": "0.1.0"
   },
   "device": "ESP32-S3-Touch-AMOLED-2.16",

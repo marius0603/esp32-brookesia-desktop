@@ -5,163 +5,309 @@
     "scrollable": false
   },
   "style": {
-    "bgColor": "#0b1422",
-    "padding": 0
+    "bgColor": "#080e16",
+    "padding": 12,
+    "borderWidth": 0
+  },
+  "layout": {
+    "type": "flex",
+    "flexFlow": "column",
+    "mainAlign": "center",
+    "crossAlign": "center",
+    "gap": 8
   },
   "children": [
     {
-      "type": "label",
-      "id": "title",
-      "placement": {
-        "x": 130,
-        "y": 35,
-        "width": 220,
-        "height": 36
+      "type": "container",
+      "id": "header",
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false
       },
-      "style": {
-        "font": "${font.zh_CN}",
-        "fontSize": 28,
-        "textColor": "#e7f1ff",
-        "textAlign": "center"
-      },
-      "labelProps": {
-        "text": "智能助手"
-      }
-    },
-    {
-      "type": "label",
-      "id": "status",
       "placement": {
-        "x": 65,
-        "y": 80,
-        "width": 350,
+        "width": 400,
         "height": 44
       },
       "style": {
-        "font": "${font.zh_CN}",
-        "fontSize": 18,
-        "textColor": "#9abde0",
-        "textAlign": "center"
+        "padding": 0,
+        "borderWidth": 0,
+        "radius": 0,
+        "bgOpacity": 0
       },
-      "labelProps": {
-        "text": "正在连接电脑"
-      }
-    },
-    {
-      "type": "button",
-      "id": "backend",
-      "placement": {
-        "x": 100,
-        "y": 121,
-        "width": 280,
-        "height": 50
-      },
-      "style": {
-        "bgColor": "#1b2c45",
-        "radius": 12,
-        "padding": 0
-      },
-      "layout": {
-        "type": "flex",
-        "mainAlign": "center",
-        "crossAlign": "center"
-      },
-      "events": [
-        {
-          "type": "clicked",
-          "action": "backend"
-        }
-      ],
       "children": [
         {
           "type": "label",
-          "id": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 0,
+            "width": 280,
+            "height": 44
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 30,
+            "textColor": "#e7eef5",
+            "textAlign": "left"
+          },
+          "labelProps": {
+            "text": "小马助手"
+          }
+        },
+        {
+          "type": "container",
+          "id": "state",
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "placement": {
+            "width": 108,
+            "height": 36,
+            "mode": "absolute",
+            "x": 292,
+            "y": 4
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "radius": 18,
+            "bgOpacity": 255,
+            "bgColor": "#122c2b"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "dot",
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "placement": {
+                "width": 7,
+                "height": 7,
+                "mode": "absolute",
+                "x": 12,
+                "y": 14
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "radius": 4,
+                "bgOpacity": 255,
+                "bgColor": "#78dfbb"
+              },
+              "children": [],
+              "bindings": {
+                "style.bgColor": "color"
+              }
+            },
+            {
+              "type": "label",
+              "id": "status",
+              "placement": {
+                "mode": "absolute",
+                "x": 26,
+                "y": 3,
+                "width": 76,
+                "height": 30
+              },
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#b6ddcf",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "连接中"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "conversation",
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false
+      },
+      "placement": {
+        "width": 400,
+        "height": 192
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 1,
+        "radius": 24,
+        "bgOpacity": 255,
+        "bgColor": "#101e28",
+        "borderColor": "#263c47",
+        "bgGradientColor": "#0c151f",
+        "bgGradientDirection": "vertical"
+      },
+      "children": [
+        {
+          "type": "image",
+          "id": "avatar",
+          "commonProps": {
+            "clickable": false
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 158,
+            "y": 18,
+            "width": 84,
+            "height": 84
+          },
+          "imageProps": {
+            "src": "${image.launcher_icon}",
+            "innerAlign": "contain"
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "label",
+          "id": "welcome",
+          "placement": {
+            "mode": "absolute",
+            "x": 18,
+            "y": 116,
+            "width": 364,
+            "height": 46
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 26,
+            "textColor": "#d6f4e9",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "你好，我是小马。"
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "label",
+          "id": "user",
+          "placement": {
+            "mode": "absolute",
+            "x": 18,
+            "y": 6,
+            "width": 364,
+            "height": 60
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 20,
+            "textColor": "#93b8b4",
+            "textAlign": "left"
+          },
+          "labelProps": {
+            "text": ""
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "container",
+          "id": "divider",
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "placement": {
+            "width": 364,
+            "height": 1,
+            "mode": "absolute",
+            "x": 18,
+            "y": 74
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "radius": 0,
+            "bgOpacity": 255,
+            "bgColor": "#243b42"
+          },
+          "children": [],
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "label",
+          "id": "answer",
+          "placement": {
+            "mode": "absolute",
+            "x": 18,
+            "y": 80,
+            "width": 364,
+            "height": 108
+          },
           "style": {
             "font": "${font.zh_CN}",
             "fontSize": 24,
-            "textColor": "#54d9d1"
+            "textColor": "#e6eef5",
+            "textAlign": "left"
           },
           "labelProps": {
-            "text": "电脑 + DS · 切换"
+            "text": ""
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden"
           }
         }
       ]
     },
     {
-      "type": "label",
-      "id": "user",
-      "placement": {
-        "x": 65,
-        "y": 173,
-        "width": 350,
-        "height": 46
-      },
-      "style": {
-        "font": "${font.zh_CN}",
-        "fontSize": 18,
-        "textColor": "#9abde0",
-        "textAlign": "center"
-      },
-      "labelProps": {
-        "text": ""
-      }
-    },
-    {
-      "type": "label",
-      "id": "answer",
-      "placement": {
-        "x": 65,
-        "y": 225,
-        "width": 350,
-        "height": 94
-      },
-      "style": {
-        "font": "${font.zh_CN}",
-        "fontSize": 22,
-        "textColor": "#e7f1ff",
-        "textAlign": "center"
-      },
-      "labelProps": {
-        "text": "点击说话，再次点击发送"
-      }
-    },
-    {
       "type": "container",
       "id": "meter",
-      "placement": {
-        "x": 100,
-        "y": 316,
-        "width": 280,
-        "height": 5
-      },
       "commonProps": {
-        "scrollable": false
+        "scrollable": false,
+        "clickable": false
+      },
+      "placement": {
+        "width": 360,
+        "height": 4
       },
       "style": {
-        "bgColor": "#1b2c41",
         "padding": 0,
         "borderWidth": 0,
-        "radius": 3
+        "radius": 2,
+        "bgOpacity": 255,
+        "bgColor": "#172a35"
       },
       "children": [
         {
           "type": "container",
           "id": "fill",
-          "placement": {
-            "x": 0,
-            "y": 0,
-            "width": 0,
-            "height": 5
-          },
           "commonProps": {
-            "scrollable": false
+            "scrollable": false,
+            "clickable": false
+          },
+          "placement": {
+            "width": 0,
+            "height": 4,
+            "mode": "absolute",
+            "x": 0,
+            "y": 0
           },
           "style": {
-            "bgColor": "#54d9d1",
             "padding": 0,
             "borderWidth": 0,
-            "radius": 3
+            "radius": 2,
+            "bgOpacity": 255,
+            "bgColor": "#78dfcc"
           },
+          "children": [],
           "bindings": {
             "placement.width": "width"
           }
@@ -171,75 +317,53 @@
     {
       "type": "container",
       "id": "controls",
-      "placement": {
-        "x": 70,
-        "y": 335,
-        "width": 340,
-        "height": 48
-      },
       "commonProps": {
-        "scrollable": false
+        "scrollable": false,
+        "clickable": false
+      },
+      "placement": {
+        "width": 400,
+        "height": 60
       },
       "style": {
-        "bgOpacity": 0,
         "padding": 0,
-        "borderWidth": 0
+        "borderWidth": 0,
+        "radius": 0,
+        "bgOpacity": 0
       },
       "children": [
         {
           "type": "button",
-          "id": "quieter",
+          "id": "talk",
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
           "placement": {
-            "x": 0,
-            "y": 0,
-            "width": 78,
-            "height": 48
+            "width": 400,
+            "height": 60
           },
           "style": {
-            "bgColor": "#243955",
-            "radius": 16,
-            "padding": 0
+            "padding": 0,
+            "borderWidth": 0,
+            "radius": 18,
+            "bgOpacity": 255,
+            "bgColor": "#83dfca"
           },
-          "layout": {
-            "type": "flex",
-            "mainAlign": "center",
-            "crossAlign": "center"
-          },
-          "events": [
-            {
-              "type": "clicked",
-              "action": "quieter"
-            }
-          ],
           "children": [
             {
               "type": "label",
               "id": "label",
               "style": {
                 "font": "${font.zh_CN}",
-                "fontSize": 21,
-                "textColor": "#ffffff"
+                "fontSize": 28,
+                "textColor": "#112525"
               },
               "labelProps": {
-                "text": "-"
+                "text": "说话"
               }
             }
-          ]
-        },
-        {
-          "type": "button",
-          "id": "talk",
-          "placement": {
-            "x": 90,
-            "y": 0,
-            "width": 160,
-            "height": 48
-          },
-          "style": {
-            "bgColor": "#167f85",
-            "radius": 16,
-            "padding": 0
-          },
+          ],
           "layout": {
             "type": "flex",
             "mainAlign": "center",
@@ -250,96 +374,61 @@
               "type": "clicked",
               "action": "talk"
             }
-          ],
-          "children": [
-            {
-              "type": "label",
-              "id": "label",
-              "style": {
-                "font": "${font.zh_CN}",
-                "fontSize": 21,
-                "textColor": "#ffffff"
-              },
-              "labelProps": {
-                "text": "说话"
-              }
-            }
-          ]
-        },
-        {
-          "type": "button",
-          "id": "louder",
-          "placement": {
-            "x": 262,
-            "y": 0,
-            "width": 78,
-            "height": 48
-          },
-          "style": {
-            "bgColor": "#243955",
-            "radius": 16,
-            "padding": 0
-          },
-          "layout": {
-            "type": "flex",
-            "mainAlign": "center",
-            "crossAlign": "center"
-          },
-          "events": [
-            {
-              "type": "clicked",
-              "action": "louder"
-            }
-          ],
-          "children": [
-            {
-              "type": "label",
-              "id": "label",
-              "style": {
-                "font": "${font.zh_CN}",
-                "fontSize": 21,
-                "textColor": "#ffffff"
-              },
-              "labelProps": {
-                "text": "+"
-              }
-            }
           ]
         }
       ]
     },
     {
       "type": "container",
-      "id": "tools",
-      "placement": {
-        "x": 70,
-        "y": 391,
-        "width": 340,
-        "height": 48
-      },
+      "id": "footer",
       "commonProps": {
-        "scrollable": false
+        "scrollable": false,
+        "clickable": false
+      },
+      "placement": {
+        "width": 400,
+        "height": 44
       },
       "style": {
-        "bgOpacity": 0,
         "padding": 0,
-        "borderWidth": 0
+        "borderWidth": 0,
+        "radius": 0,
+        "bgOpacity": 0
       },
       "children": [
         {
           "type": "button",
-          "id": "connect",
+          "id": "backend",
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
           "placement": {
-            "x": 0,
-            "y": 0,
-            "width": 85,
-            "height": 48
+            "width": 164,
+            "height": 44
           },
           "style": {
-            "bgColor": "#243955",
-            "radius": 16,
-            "padding": 0
+            "padding": 0,
+            "borderWidth": 1,
+            "radius": 15,
+            "bgOpacity": 255,
+            "bgColor": "#172a36",
+            "borderColor": "#29414c"
           },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#9fdad3"
+              },
+              "labelProps": {
+                "text": "电脑模式"
+              }
+            }
+          ],
           "layout": {
             "type": "flex",
             "mainAlign": "center",
@@ -348,123 +437,33 @@
           "events": [
             {
               "type": "clicked",
-              "action": "connect"
-            }
-          ],
-          "children": [
-            {
-              "type": "label",
-              "id": "label",
-              "style": {
-                "font": "${font.zh_CN}",
-                "fontSize": 21,
-                "textColor": "#ffffff"
-              },
-              "labelProps": {
-                "text": "连接"
-              }
+              "action": "backend"
             }
           ]
         },
         {
-          "type": "button",
-          "id": "test",
+          "type": "label",
+          "id": "volume",
           "placement": {
-            "x": 96,
-            "y": 0,
-            "width": 148,
-            "height": 48
+            "width": 212,
+            "height": 32
           },
           "style": {
-            "bgColor": "#243955",
-            "radius": 16,
-            "padding": 0
+            "font": "${font.zh_CN}",
+            "fontSize": 20,
+            "textColor": "#9fafc0",
+            "textAlign": "right"
           },
-          "layout": {
-            "type": "flex",
-            "mainAlign": "center",
-            "crossAlign": "center"
-          },
-          "events": [
-            {
-              "type": "clicked",
-              "action": "test"
-            }
-          ],
-          "children": [
-            {
-              "type": "label",
-              "id": "label",
-              "style": {
-                "font": "${font.zh_CN}",
-                "fontSize": 21,
-                "textColor": "#ffffff"
-              },
-              "labelProps": {
-                "text": "录音测试"
-              }
-            }
-          ]
-        },
-        {
-          "type": "button",
-          "id": "cancel",
-          "placement": {
-            "x": 255,
-            "y": 0,
-            "width": 85,
-            "height": 48
-          },
-          "style": {
-            "bgColor": "#243955",
-            "radius": 16,
-            "padding": 0
-          },
-          "layout": {
-            "type": "flex",
-            "mainAlign": "center",
-            "crossAlign": "center"
-          },
-          "events": [
-            {
-              "type": "clicked",
-              "action": "cancel"
-            }
-          ],
-          "children": [
-            {
-              "type": "label",
-              "id": "label",
-              "style": {
-                "font": "${font.zh_CN}",
-                "fontSize": 21,
-                "textColor": "#ffffff"
-              },
-              "labelProps": {
-                "text": "停止"
-              }
-            }
-          ]
+          "labelProps": {
+            "text": "音量 --%"
+          }
         }
-      ]
-    },
-    {
-      "type": "label",
-      "id": "volume",
-      "placement": {
-        "x": 140,
-        "y": 445,
-        "width": 200,
-        "height": 22
-      },
-      "style": {
-        "font": "${font.zh_CN}",
-        "fontSize": 14,
-        "textColor": "#9abde0",
-        "textAlign": "center"
-      },
-      "labelProps": {
-        "text": "音量 --%"
+      ],
+      "layout": {
+        "type": "flex",
+        "flexFlow": "row",
+        "mainAlign": "spaceBetween",
+        "crossAlign": "center"
       }
     }
   ]
