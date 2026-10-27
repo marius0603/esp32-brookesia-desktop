@@ -1,4 +1,4 @@
-"""Local browser front end; GPU workers run sequentially and exit after each job."""
+"""Local browser front end sharing the resident speech model workers."""
 from concurrent.futures import ThreadPoolExecutor
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
@@ -37,7 +37,7 @@ def run_job(job_id,task,request):
         PYTHONUTF8='1',PYTHONIOENCODING='utf-8')
     if task=='tts':
         from worker import sections
-        import base64,wave
+        import wave
         audio=[];elapsed=0
         for section in sections(request['text']):
             part=engines.call('tts',request|{'op':'tts','text':section,'output':''})

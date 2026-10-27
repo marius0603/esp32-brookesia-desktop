@@ -4,6 +4,7 @@ from config_store import load
 from conversation import Conversation
 from deepseek_client import Cancelled
 from engines import engines
+from audio_diagnostics import capture_if_armed
 
 HEADER=struct.Struct('<4sII')
 MAX_PCM=960000
@@ -93,6 +94,11 @@ class Session:
                     else:self.submit(text=str(message.get('text',''))[:1200])
                 elif kind=='listen_end' and turn==self.turn and self.recording is not None:
                     pcm=bytes(self.recording);self.recording=None
+                    try:
+                        diagnostic=capture_if_armed(pcm)
+                        if diagnostic:state['diagnostic']=diagnostic
+                    except (OSError,ValueError) as error:
+                        state['diagnostic']={'error':str(error)[:160]}
                     if len(pcm)<3200:await self.send({'type':'error','turn':turn,'message':'录音太短，请再说一次'})
                     else:self.submit(pcm=pcm)
                 elif kind=='cancel':
