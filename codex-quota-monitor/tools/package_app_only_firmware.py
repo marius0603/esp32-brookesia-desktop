@@ -30,6 +30,12 @@ def main():
     manifest['features'] = {'separate_websocket_tx_lock': bool(sdkconfig.get('ESP_WS_CLIENT_SEPARATE_TX_LOCK'))}
     temporary = output.with_suffix('.zip.tmp')
     with zipfile.ZipFile(temporary, 'w', zipfile.ZIP_DEFLATED) as archive:
+        launcher=ROOT/'packages/resources/phone-launcher-s3.28.json'
+        if desc['project_version']=='0.8.3-s3.28':
+            data=launcher.read_bytes()
+            archive.writestr('launcher/app_launcher.json',data)
+            manifest['files']['launcher/app_launcher.json']={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+            manifest['features']['phone_launcher']=True
         for name in keep.values():
             path = (build / name).resolve()
             assert path.is_relative_to(build) and path.is_file()

@@ -1,0 +1,305 @@
+--- a/system/brookesia_system_super/src/shell_app_launcher.cpp
++++ b/system/brookesia_system_super/src/shell_app_launcher.cpp
+@@ -21,6 +21,7 @@
+ #include "private/shell_app.hpp"
+ #include "private/system_constants.hpp"
+ #include "private/utils.hpp"
++#include "private/shell_impl.hpp"
+ 
+ #if BROOKESIA_SYSTEM_SUPER_ENABLE_PROFILE_LOG
+ #   define SYSTEM_SUPER_PROFILE_LOGI(...) BROOKESIA_LOGI(__VA_ARGS__)
+@@ -37,7 +38,7 @@
+ using SteadyClock = std::chrono::steady_clock;
+ using SteadyTimePoint = SteadyClock::time_point;
+ 
+-int64_t elapsed_ms_since(SteadyTimePoint started_at, SteadyTimePoint ended_at = SteadyClock::now())
++int64_t launcher_elapsed_ms_since(SteadyTimePoint started_at, SteadyTimePoint ended_at = SteadyClock::now())
+ {
+     return std::chrono::duration_cast<std::chrono::milliseconds>(ended_at - started_at).count();
+ }
+@@ -154,6 +155,7 @@
+ std::expected<void, std::string> ShellApp::populate_launcher(core::AppContext &context)
+ {
+     disconnect_launcher_actions();
++    launcher_swiping_ = false;
+     for (const auto &[instance_id, app_id] : launcher_instance_to_app_) {
+         (void)instance_id;
+         const auto instance_path = make_launcher_item_path(app_id);
+@@ -194,8 +196,13 @@
+                                       1,
+                                       (available_width + LAUNCHER_ITEM_GAP) / (LAUNCHER_ITEM_WIDTH + LAUNCHER_ITEM_GAP)
+                                   );
++    const int32_t launcher_rows = 2;
++    launcher_page_size_ = launcher_columns * launcher_rows;
++    launcher_pages_ = std::max<size_t>(1, (visible_apps.size() + launcher_page_size_ - 1) / launcher_page_size_);
++    launcher_page_ = std::min(launcher_page_, launcher_pages_ - 1);
+     const auto launcher_grid_width =
+         launcher_columns * LAUNCHER_ITEM_WIDTH + (launcher_columns - 1) * LAUNCHER_ITEM_GAP;
++    launcher_page_width_ = launcher_grid_width;
+     const auto launcher_grid_x = std::max<int32_t>(0, (available_width - launcher_grid_width) / 2);
+     std::vector<gui::BindingValueUpdate> binding_updates;
+     add_binding_update(binding_updates, SUPER_LAUNCHER_GRID_STAGE_PATH, "grid_x", std::to_string(launcher_grid_x));
+@@ -212,8 +219,9 @@
+     for (size_t i = 0; i < visible_apps.size(); ++i) {
+         const auto &app = visible_apps[i];
+         const auto column = static_cast<int32_t>(i % static_cast<size_t>(launcher_columns));
+-        const auto row = static_cast<int32_t>(i / static_cast<size_t>(launcher_columns));
+-        const auto item_x = column * (LAUNCHER_ITEM_WIDTH + LAUNCHER_ITEM_GAP);
++        const auto row = static_cast<int32_t>((i % launcher_page_size_) / launcher_columns);
++        const auto page = static_cast<int32_t>(i / launcher_page_size_);
++        const auto item_x = page * launcher_page_width_ + column * (LAUNCHER_ITEM_WIDTH + LAUNCHER_ITEM_GAP);
+         const auto item_y = row * (LAUNCHER_ITEM_HEIGHT + LAUNCHER_ITEM_GAP);
+         content_height = std::max(content_height, item_y + LAUNCHER_ITEM_HEIGHT);
+ 
+@@ -296,6 +304,7 @@
+     }
+ 
+     launcher_populated_ = true;
++    set_launcher_page(launcher_page_, false);
+     return {};
+ }
+ 
+@@ -373,6 +382,7 @@
+ 
+ void ShellApp::handle_launcher_event(const gui::Event &event)
+ {
++    if (launcher_swiping_ || SteadyClock::now() < launcher_click_after_) return;
+     if (launch_overlay_active_) {
+         BROOKESIA_LOGW("Ignore launcher action while app launch overlay is active");
+         return;
+@@ -387,6 +397,14 @@
+     if (app_it == launcher_instance_to_app_.end()) {
+         BROOKESIA_LOGW("Launcher action from unknown instance: %1%", *instance_id);
+         return;
++    }
++
++    const auto selected = owner_.get_app(app_it->second);
++    const auto active = owner_.get_active_app();
++    if (selected && selected->state == core::AppState::Running &&
++            (!active || active->app_id != selected->app_id)) {
++        auto stopped = owner_.stop_app(selected->app_id);
++        if (!stopped) { BROOKESIA_LOGW("Failed to reset stale launcher app: %1%", stopped.error()); return; }
+     }
+ 
+     std::optional<gui::ViewFrame> launch_origin_frame;
+@@ -409,8 +427,8 @@
+         SYSTEM_SUPER_PROFILE_LOGI(
+             "Shell app launch profile: app_id(%1%), start_app_ms(%2%), total_ms(%3%)",
+             app_id,
+-            elapsed_ms_since(app_start_started_at, now),
+-            request_started_at.has_value() ? elapsed_ms_since(*request_started_at, now) : 0
++            launcher_elapsed_ms_since(app_start_started_at, now),
++            request_started_at.has_value() ? launcher_elapsed_ms_since(*request_started_at, now) : 0
+         );
+         launch_request_started_at_.reset();
+         if (!result) {
+@@ -437,4 +455,50 @@
+     }
+ }
+ 
++void ShellApp::set_launcher_page(size_t page, bool animate)
++{
++    if (!context_) return;
++    launcher_page_ = std::min(page, launcher_pages_ - 1);
++    const int32_t target = -static_cast<int32_t>(launcher_page_) * launcher_page_width_;
++    if (launcher_page_animation_) { context_->gui().stop_animation(launcher_page_animation_); launcher_page_animation_ = 0; }
++    if (animate) {
++        auto animation = make_timed_animation(gui::AnimationProperty::X, target, 180);
++        auto result = context_->gui().start_view_animation_with_result(SUPER_LAUNCHER_ITEM_LAYER_PATH, animation, []() {});
++        if (result) launcher_page_animation_ = result->subscription_id;
++    }
++    std::vector<gui::BindingValueUpdate> updates;
++    if (!animate || !launcher_page_animation_) add_binding_update(updates, SUPER_LAUNCHER_ITEM_LAYER_PATH, "page_x", std::to_string(target));
++    std::string dots;
++    for (size_t i = 0; i < launcher_pages_; ++i) { if (i) dots += "  "; dots += i == launcher_page_ ? "●" : "○"; }
++    add_binding_update(updates, "/launcher/content/pages", "text", dots);
++    (void)context_->gui().set_binding_values(updates);
++}
++
++void ShellApp::handle_launcher_swipe(const service::Display::TouchGestureInfo &info)
++{
++    using Type = service::Display::TouchGestureEventType;
++    if (launch_overlay_active_ || !launcher_populated_ || !system_ui_expanded_) return;
++    if (info.event_type == Type::Press) { launcher_swiping_ = false; return; }
++    const float density = std::max(owner_.get_environment().density, .001F);
++    int32_t dx = static_cast<int32_t>((info.stop_x - info.start_x) / density);
++    const int32_t dy = static_cast<int32_t>((info.stop_y - info.start_y) / density);
++    if (std::abs(dx) > 16 && std::abs(dx) > std::abs(dy) * 1.3F) launcher_swiping_ = true;
++    if (!launcher_swiping_) return;
++    launcher_click_after_ = SteadyClock::now() + std::chrono::milliseconds(300);
++    if (info.event_type == Type::Release) {
++        size_t next = launcher_page_;
++        if (dx < -48 && next + 1 < launcher_pages_) ++next;
++        if (dx > 48 && next > 0) --next;
++        launcher_swiping_ = false;
++        set_launcher_page(next, true);
++        return;
++    }
++    if (launcher_page_animation_) { context_->gui().stop_animation(launcher_page_animation_); launcher_page_animation_ = 0; }
++    if ((launcher_page_ == 0 && dx > 0) || (launcher_page_ + 1 == launcher_pages_ && dx < 0)) dx /= 3;
++    dx = std::clamp(dx, -launcher_page_width_, launcher_page_width_);
++    std::vector<gui::BindingValueUpdate> updates;
++    add_binding_update(updates, SUPER_LAUNCHER_ITEM_LAYER_PATH, "page_x", std::to_string(-static_cast<int32_t>(launcher_page_) * launcher_page_width_ + dx));
++    (void)context_->gui().set_binding_values(updates);
++}
++
+ } // namespace esp_brookesia::system::super
+--- a/system/brookesia_system_super/src/private/shell_app.hpp
++++ b/system/brookesia_system_super/src/private/shell_app.hpp
+@@ -161,6 +161,7 @@
+     void subscribe_sntp_events();
+     void disconnect_sntp_events();
+     void refresh_status_clock();
++    void refresh_wallpaper_shift();
+     void schedule_status_clock_timer();
+     void stop_status_clock_timer();
+     void handle_display_touch_gesture(const service::Display::TouchGestureInfo &info);
+@@ -214,6 +215,8 @@
+     core::TimerId gesture_exit_hold_timer_id_ = core::INVALID_TIMER_ID;
+     core::TimerId status_peek_auto_hide_timer_id_ = core::INVALID_TIMER_ID;
+     core::TimerId status_clock_timer_id_ = core::INVALID_TIMER_ID;
++    std::optional<std::chrono::steady_clock::time_point> wallpaper_next_shift_;
++    unsigned wallpaper_shift_step_ = 0;
+     std::vector<gui::ScopedConnection> overlay_action_connections_;
+     std::vector<gui::ScopedConnection> launcher_action_connections_;
+     std::vector<gui::ScopedConnection> keyboard_action_connections_;
+@@ -240,6 +243,13 @@
+     std::vector<core::AppId> launcher_order_;
+     std::unordered_map<std::string, core::AppId> launcher_instance_to_app_;
+     size_t launcher_slot_count_ = 0;
++    size_t launcher_page_ = 0, launcher_pages_ = 1, launcher_page_size_ = 6;
++    int32_t launcher_page_width_ = 372;
++    bool launcher_swiping_ = false;
++    std::chrono::steady_clock::time_point launcher_click_after_{};
++    gui::SubscriptionId launcher_page_animation_ = 0;
++    void set_launcher_page(size_t page, bool animate);
++    void handle_launcher_swipe(const service::Display::TouchGestureInfo &info);
+     std::vector<DisplaySourceRestoreRecord> display_source_restore_records_;
+     bool launcher_populated_ = false;
+     std::string applied_i18n_locale_;
+--- a/system/brookesia_system_super/src/shell_display.cpp
++++ b/system/brookesia_system_super/src/shell_display.cpp
+@@ -206,9 +206,8 @@
+ 
+ void ShellApp::handle_display_touch_gesture(const DisplayService::TouchGestureInfo &info)
+ {
+-    if (context_ == nullptr || foreground_is_shell_) {
+-        return;
+-    }
++    if (context_ == nullptr) return;
++    if (foreground_is_shell_) { handle_launcher_swipe(info); return; }
+     if (message_dialog_mounted_ || message_dialog_closing_) {
+         if (gesture_tracking_ || gesture_exit_armed_ || gesture_exit_triggered_ || status_peek_tracking_) {
+             reset_gesture_indicator();
+--- a/system/brookesia_system_super/resource/shell/screens/app_launcher.json
++++ b/system/brookesia_system_super/resource/shell/screens/app_launcher.json
+@@ -35,7 +35,7 @@
+                     "type": "container",
+                     "id": "grid_stage",
+                     "commonProps": {
+-                        "scrollable": true
++                        "scrollable": false
+                     },
+                     "style": {
+                         "padding": 0
+@@ -49,7 +49,7 @@
+                         "x": "${expr((${env.widthDp} - ${constant.ui.content.metric.launcherGridWidth}) / 2)}",
+                         "y": "${constant.ui.content.metric.launcherGridTop}",
+                         "width": "${constant.ui.content.metric.launcherGridWidth}",
+-                        "height": "${expr(${env.heightDp} - ${constant.ui.content.metric.y} - ${constant.ui.content.metric.launcherGridTop})}"
++                        "height": "${expr(${env.heightDp} - ${constant.ui.content.metric.y} - ${constant.ui.content.metric.launcherGridTop} - 44dp)}"
+                     },
+                     "children": [
+                         {
+@@ -89,7 +89,8 @@
+                                 "scrollable": false
+                             },
+                             "bindings": {
+-                                "placement.height": "content_height"
++                                "placement.height": "content_height",
++                                "placement.x": "page_x"
+                             },
+                             "style": {
+                                 "padding": 0
+@@ -98,7 +99,7 @@
+                                 "mode": "absolute",
+                                 "x": 0,
+                                 "y": 0,
+-                                "width": "match",
++                                "width": "20000dp",
+                                 "height": "match"
+                             },
+                             "children": []
+@@ -127,6 +128,31 @@
+                             "children": []
+                         }
+                     ]
++                },
++                {
++                    "type": "label",
++                    "id": "pages",
++                    "commonProps": {
++                        "clickable": false
++                    },
++                    "bindings": {
++                        "labelProps.text": "text"
++                    },
++                    "labelProps": {
++                        "text": "●"
++                    },
++                    "placement": {
++                        "mode": "absolute",
++                        "x": 0,
++                        "y": "${expr(${env.heightDp} - ${constant.ui.content.metric.y} - 38dp)}",
++                        "width": "match",
++                        "height": 28
++                    },
++                    "style": {
++                        "fontSize": 18,
++                        "textColor": "#775145",
++                        "textAlign": "center"
++                    }
+                 }
+             ]
+         }
+--- a/system/brookesia_system_core/src/app/manager.cpp
++++ b/system/brookesia_system_core/src/app/manager.cpp
+@@ -12,6 +12,9 @@
+ #include <string>
+ #include <string_view>
+ #include <utility>
++
++extern "C" bool brookesia_child_visible(const char *) __attribute__((weak));
++extern "C" const char *brookesia_child_launch_error(const char *) __attribute__((weak));
+ 
+ #include "brookesia/system_core/macro_configs.h"
+ #if !BROOKESIA_SYSTEM_CORE_SYSTEM_ENABLE_DEBUG_LOG
+@@ -605,8 +608,17 @@
+         return std::unexpected(record_result.error());
+     }
+     auto &record = *record_result.value();
++    if (brookesia_child_launch_error) {
++        if (const char *reason = brookesia_child_launch_error(record.info.manifest.id.c_str())) {
++            return std::unexpected(reason);
++        }
++    }
+     if (record.info.state == AppState::Running) {
+-        return {};
++        // Runtime apps can remain running after another app replaced the
++        // foreground. A successful no-op here leaves the launcher visible.
++        if (record.info.manifest.kind != AppKind::Runtime || impl_->active_app_id_ == app_id) return {};
++        auto stopped = stop_app(app_id);
++        if (!stopped) return stopped;
+     }
+ 
+     if (record.info.manifest.kind == AppKind::Runtime) {
+@@ -1655,6 +1667,9 @@
+     apps.reserve(impl_->apps_.size());
+     for (const auto &[_, record] : impl_->apps_) {
+         apps.push_back(record.info);
++        if (brookesia_child_visible && !brookesia_child_visible(record.info.manifest.id.c_str())) {
++            apps.back().manifest.visible = false;
++        }
+     }
+     return apps;
+ }

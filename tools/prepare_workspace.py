@@ -20,11 +20,12 @@ if not (REPO/'.git').exists():
     git('checkout','--detach','FETCH_HEAD')
 head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=REPO,text=True).strip()
 if head!=VERSIONS['commit']:raise SystemExit('Upstream revision differs; refusing to alter your checkout')
-patch=ROOT/'patches/brookesia-s3.patch'
-if git('apply','--check',str(patch),check=False).returncode==0:
-    git('apply',str(patch))
-elif git('apply','--reverse','--check',str(patch),check=False).returncode!=0:
-    raise SystemExit('Patch conflicts with local changes; preserve and inspect your checkout')
+for name in ('brookesia-s3.patch','phone-launcher.patch'):
+    patch=ROOT/'patches'/name
+    if git('apply','--check',str(patch),check=False).returncode==0:
+        git('apply',str(patch))
+    elif git('apply','--reverse','--check',str(patch),check=False).returncode!=0:
+        raise SystemExit('Patch conflicts with local changes; preserve and inspect your checkout: '+name)
 source=ROOT/'platform/super_s3_216'
 target=REPO/'examples/system/super_s3_216'
 for path in source.rglob('*'):
