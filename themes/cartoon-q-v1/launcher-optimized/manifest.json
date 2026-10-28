@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "version": "1.0.0",
+  "size": 92,
+  "background": "#fff1dc",
+  "format": "LVGL RGB565 RLE",
+  "icons": {
+    "brookesia.general.settings": "brookesia.general.settings.bin",
+    "brookesia.general.files": "brookesia.general.files.bin",
+    "brookesia.general.app_store": "brookesia.general.app_store.bin",
+    "local.codex.quota": "local.codex.quota.bin",
+    "local.weather": "local.weather.bin",
+    "local.audiobook": "local.audiobook.bin",
+    "local.flipclock": "local.flipclock.bin",
+    "local.voiceassistant": "local.voiceassistant.bin",
+    "local.childmode": "local.childmode.bin",
+    "local.lightlearning": "local.lightlearning.bin"
+  },
+  "files": {
+    "brookesia.general.settings.bin": {
+      "bytes": 12227,
+      "sha256": "a9935185860492b1de277275ae88ec80944d4eded870b2e99a4b83cfe7dc4f31",
+      "source": "themes/cartoon-q-v1/flash-fallback/settings.png",
+      "source_sha256": "fe7d5b1e99198ae043d862d92b60fbebe899ee080926094dffa0936716973291"
+    },
+    "brookesia.general.files.bin": {
+      "bytes": 8993,
+      "sha256": "59c32ef11ab279e524d04fefb87156a1fd8e8b24cbd9dc70da871e25c84ae471",
+      "source": "themes/cartoon-q-v1/flash-fallback/files.png",
+      "source_sha256": "917144473b6b004019c2b4aff009291ac8abcb69671dee122a6a8d675480b09c"
+    },
+    "brookesia.general.app_store.bin": {
+      "bytes": 12034,
+      "sha256": "a880bff618962ee78cc6e0d50e990fde53d946a76c3c867f8862d406ad464323",
+      "source": "themes/cartoon-q-v1/flash-fallback/app-store.png",
+      "source_sha256": "e1900af06f54df45d9fc8fca9dc81d023ef9e181122a1f51fa47efd2625856f8"
+    },
+    "local.codex.quota.bin": {
+      "bytes": 12164,
+      "sha256": "34b616f47d11a1f4b2a17d48cd9a066838be7f06c976ad7142fa3544e2b9ad3b",
+      "source": "themes/cartoon-q-v1/flash-fallback/quota.png",
+      "source_sha256": "48122bd6340e162b14e7235354d086073d0116635ef60b96c0243c7fdaba20fb"
+    },
+    "local.weather.bin": {
+      "bytes": 10664,
+      "sha256": "709d2b362af30466afbaf35295f9a540152519004c4976b7efda1c75cda30c88",
+      "source": "themes/cartoon-q-v1/flash-fallback/weather.png",
+      "source_sha256": "f8ede197ef13d0f1986e7f348e0d48121f6d67097655cd38c59276f68f065ff3"
+    },
+    "local.audiobook.bin": {
+      "bytes": 11558,
+      "sha256": "27f5cc5026c6a0c6dfe98ad6aa2add511f38ffae4efa3436223d7c26f44da6aa",
+      "source": "themes/cartoon-q-v1/flash-fallback/audiobook.png",
+      "source_sha256": "74324234c542e7355afcc76e57923fa82c7816b125518004db7ae09194031b4e"
+    },
+    "local.flipclock.bin": {
+      "bytes": 11094,
+      "sha256": "b5bda878e153bd071d75c5570e727ff4d1c99cc8031196c40099e37bf99fadff",
+      "source": "themes/cartoon-q-v1/flash-fallback/flipclock.png",
+      "source_sha256": "af24edc6b2ae57c2ba2ee785639497cbe18138358c252708b133cbba4fcffb26"
+    },
+    "local.voiceassistant.bin": {
+      "bytes": 11134,
+      "sha256": "0624e692eef2389eeda815812962b3a9ef69c3de55ae6a8ed9df21691cf7b376",
+      "source": "themes/cartoon-q-v1/flash-fallback/assistant.png",
+      "source_sha256": "73622bdd6c5dc82eebf92f2ad78f08f73d6bf29f74ea419819649dd3eb9f5aa9"
+    },
+    "local.childmode.bin": {
+      "bytes": 12762,
+      "sha256": "60b2c6a4e076be0c93eb7c2af3da06e234a2aedca5a399c354ba9ce1cf84d561",
+      "source": "themes/cartoon-q-v1/flash-fallback/child-mode.png",
+      "source_sha256": "61b5d4fdfaa7e5619f0c0dbead0649b6dc1b99a2fb01749007ca3b9703d3a745"
+    },
+    "local.lightlearning.bin": {
+      "bytes": 8523,
+      "sha256": "d660186fdff7c70928f4e70cb7a8836d288b3119400621c8144969711f198f0c",
+      "source": "brookesia-apps/light-learning/src/res/images/launcher_icon.png",
+      "source_sha256": "d505495d1246290ab073b0d4a3c68db40041e543beaf322749b7aa3bc932be82"
+    }
+  },
+  "layout": {
+    "file": "app_launcher.json",
+    "bytes": 2147,
+    "sha256": "99fdc195054d0418c43b98147af7c3139f99298acb13800e9b22ef9dc4686bc7"
+  }
+}

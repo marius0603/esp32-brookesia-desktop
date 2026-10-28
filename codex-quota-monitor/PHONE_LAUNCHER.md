@@ -6,7 +6,13 @@
 
 s3.30由LVGL输入/绘图循环直接处理横向拖动，移动过程中不再发送图标层位置的数据绑定更新；松手时才更新当前页和圆点，并调用原生滚动停靠。分页条带宽度按实际页数计算，桌面的`grid_stage`限定横向滚动、隐藏滚动条并关闭惯性滑行，避免越过目标页。第二页图标的启动动画起点扣除当前页滚动偏移。其他应用的滚动容器保持原行为。
 
-s3.30固件及配套资源已安装并通过读回校验；桌面启动、时钟连续重开、跨应用返回及8帧分钟翻页通过，10本故事及原音量75保留。跟手效果待用户现场确认。
+s3.30固件及配套资源已安装并通过读回校验；桌面启动、时钟连续重开、跨应用返回及8帧分钟翻页通过，10本故事及原音量75保留。用户反馈原壁纸版本仍有明显拖动延迟，随后完成下述资源优化。
+
+## 当前使用：流畅桌面资源包 1.0.0
+
+保留原桌面壁纸、Q版图标与名称；图标预先适配92×92显示尺寸，合成暖白底色并转换为原生RGB565/RLE，不在拖动时解码PNG或进行尺寸缩放和透明混合。两行图标的滚动视口限制为242dp高，避免重绘下方空白区域。10个缓存文件共111153字节，原图及原壁纸继续保留，可通过安装前备份恢复。
+
+优化前整屏重绘约150–170ms，纯色测试版本约100–104ms；按用户要求换回原壁纸后约110ms。这不是滑动帧率测量。安装后的时钟打开检查通过，故事和音量保持不变。用户先确认纯色测试版跟手正常，随后要求恢复原壁纸，最终现场确认“背景正确，仍然跟手”。
 
 同时修复应用仍被标记为运行中、却已经失去前台的情况。原启动函数直接返回成功，桌面启动动画结束后仍留在桌面，看起来像时钟闪退；现在对这样的运行时应用先停止旧实例再正常启动，恢复真实前台和界面。桌面图标入口也在启动动画之前处理这种状态，正常前台应用保持原行为。
 
@@ -17,10 +23,15 @@ s3.30固件及配套资源已安装并通过读回校验；桌面启动、时钟
 ```powershell
 # 在codex-quota-monitor目录执行，端口按实际设备修改。
 .venv/Scripts/python.exe tools/deploy_phone_launcher.py --port COM3
+.venv/Scripts/python.exe tools/deploy_launcher_cache.py --port COM3
 # 解压 packages/firmware/brookesia-0.8.3-s3.30-app-only.zip 后：
 .venv/Scripts/python.exe tools/update_brookesia_app_only.py --port COM3 --build <解压目录> --backup <私有完整备份目录>
 .venv/Scripts/python.exe tools/verify_flip_clock.py --port COM3
 ```
+
+已经安装s3.30时，只需运行`deploy_launcher_cache.py`并重启设备，不必刷固件。安装器默认保留现有壁纸，只有显式添加`--solid-background`才切换纯色。应用更新可能重置该应用的图标索引，重新运行缓存安装器即可；已存在的缓存文件会复用。保留首次安装时的私有备份，需要恢复原图标引用和布局时运行`tools/deploy_launcher_cache.py --port COM3 --restore <首次备份目录>`并重启。
+
+缓存源码与原始图标在`themes/cartoon-q-v1/launcher-optimized`，可用Pillow及`tools/build_launcher_cache.py`重建；构建器独立解码校验RLE像素。分发包为`packages/resources/launcher-optimized-1.0.0.zip`。
 
 独立桌面资源在`packages/resources/phone-launcher-s3.30.json`，也包含在固件包的`launcher/app_launcher.json`中。安装器将旧文档、音量与故事列表备份到私有`runtime/phone-launcher-时间戳`；压缩JSON后写入，再读取核对。s3.28/s3.29使用旧的`phone-launcher-s3.28.json`，s3.30更新时必须同时更新桌面文档。回退旧版本时需要恢复对应的旧`app_launcher.json`，然后重新启动。不要只回退应用分区而保留新版桌面文档。
 
