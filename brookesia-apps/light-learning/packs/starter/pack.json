@@ -189,32 +189,32 @@
   "cards": [
     {
       "id": "cat",
-      "name": "小猫",
-      "pinyin": "xiǎo māo",
+      "name": "猫",
+      "pinyin": "māo",
       "english": "Cat",
       "image": "images/cat.png",
       "audio": "audio/card-cat.wav"
     },
     {
       "id": "dog",
-      "name": "小狗",
-      "pinyin": "xiǎo gǒu",
+      "name": "狗",
+      "pinyin": "gǒu",
       "english": "Dog",
       "image": "images/dog.png",
       "audio": "audio/card-dog.wav"
     },
     {
       "id": "cow",
-      "name": "奶牛",
-      "pinyin": "nǎi niú",
+      "name": "牛",
+      "pinyin": "niú",
       "english": "Cow",
       "image": "images/cow.png",
       "audio": "audio/card-cow.wav"
     },
     {
       "id": "horse",
-      "name": "小马",
-      "pinyin": "xiǎo mǎ",
+      "name": "马",
+      "pinyin": "mǎ",
       "english": "Horse",
       "image": "images/horse.png",
       "audio": "audio/card-horse.wav"
@@ -229,12 +229,12 @@
     },
     {
       "id": "duck",
-      "name": "小鸭",
-      "pinyin": "xiǎo yā",
+      "name": "鸭",
+      "pinyin": "yā",
       "english": "Duck",
       "image": "images/duck.png",
       "audio": "audio/card-duck.wav"
     }
   ],
-  "version": "1.1.0"
+  "version": "1.2.0"
 }

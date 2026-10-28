@@ -11,7 +11,7 @@
     "local.weather": "0.2.6",
     "local.voiceassistant": "0.2.2",
     "local.childmode": "0.1.1",
-    "local.lightlearning": "0.1.1"
+    "local.lightlearning": "0.1.2"
   },
   "device": "ESP32-S3-Touch-AMOLED-2.16",
   "theme": "cartoon-q-v1",

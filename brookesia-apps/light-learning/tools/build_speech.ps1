@@ -7,14 +7,7 @@ $learningFormat = New-Object System.Speech.AudioFormat.SpeechAudioFormatInfo(160
 try {
     $learningSynth.Rate = -2
     $learningSynth.Volume = 70
-    foreach ($learningCard in $learningData.cards) {
-        $learningSynth.SelectVoice('Microsoft Huihui Desktop')
-        $learningSynth.SetOutputToWaveFile((Join-Path $learningPack $learningCard.audio),$learningFormat)
-        $learningSynth.Speak($learningCard.name)
-        $learningSynth.SelectVoice('Microsoft Zira Desktop')
-        $learningSynth.Speak($learningCard.english)
-        $learningSynth.SetOutputToNull()
-    }
+    # Animal cards use attributed human recordings; rebuild them with build_recordings.py.
     foreach ($learningCard in $learningData.english) {
         $learningSynth.SelectVoice('Microsoft Zira Desktop')
         $learningSynth.SetOutputToWaveFile((Join-Path $learningPack $learningCard.audio),$learningFormat)

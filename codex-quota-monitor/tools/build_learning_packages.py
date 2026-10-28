@@ -40,8 +40,19 @@ def main():
         files['packs/starter/'+item['audio']]=path.read_bytes()
     for item in pack['cards']:
         files['packs/starter/'+item['image']]=(APP/'packs/starter'/item['image']).read_bytes()
-    for filename in ('photo-sources.json','PHOTO-CREDITS.json'):
+    for filename in ('photo-sources.json','PHOTO-CREDITS.json','audio-sources.json'):
         if (APP/'packs'/filename).exists():files[filename]=(APP/'packs'/filename).read_bytes()
+    if 'audio-sources.json' in files:
+        voices=json.loads(files['audio-sources.json'])
+        assert voices['voice_type']=='human_recording' and len(voices['cards'])==6
+        for card in voices['cards']:
+            name='packs/starter/'+card['file'];meta=voices['outputs'][card['file']]
+            assert hashlib.sha256(files[name]).hexdigest()==meta['sha256']
+            with wave.open(str(APP/'packs/starter'/card['file']),'rb') as audio:
+                assert audio.getnframes()==meta['chinese_frames']+meta['pause_frames']+meta['english_frames']
+                chinese=audio.readframes(meta['chinese_frames']);pause=audio.readframes(meta['pause_frames']);english=audio.readframes(meta['english_frames'])
+                assert meta['chinese_frames']>=1600 and meta['english_frames']>=1600
+                assert any(chinese) and not any(pause) and any(english),'Both recorded languages and their separator are required'
     version=json.loads((APP/'packs/index.json').read_text(encoding='utf-8')).get('version','1.0.0')
     metadata={'schema':1,'version':version,'files':{name:{'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()} for name,data in files.items()}}
     files['manifest.json']=(json.dumps(metadata,ensure_ascii=False,indent=2)+'\n').encode()

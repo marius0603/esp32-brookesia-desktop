@@ -1000,7 +1000,7 @@
                 "textAlign": "center"
               },
               "labelProps": {
-                "text": "小猫"
+                "text": "猫"
               },
               "commonProps": {
                 "clickable": false
@@ -1023,7 +1023,7 @@
                 "textAlign": "center"
               },
               "labelProps": {
-                "text": "xiǎo māo · Cat"
+                "text": "māo · Cat"
               },
               "commonProps": {
                 "clickable": false

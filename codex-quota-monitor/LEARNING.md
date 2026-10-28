@@ -1,10 +1,10 @@
-# 轻学习 0.1.1
+# 轻学习 0.1.2
 
 适用于 ESP32-S3-Touch-AMOLED-2.16，需 0.8.3-s3.27 固件及 SD 卡。安装后离线使用，无需电脑或云端模型。
 
 | 活动 | 启蒙包 | 操作 |
 | --- | --- | --- |
-| 动物卡片 | 小猫、小狗、奶牛、小马、兔子、小鸭 | 左右拖动大照片循环切换，显示中文、拼音及英文，并朗读名称；轻点照片重播，无独立“听名字”按钮 |
+| 动物卡片 | 猫、狗、牛、马、兔子、鸭 | 左右拖动大照片循环切换，显示中文、拼音及英文；真人中文录音之后停顿450ms，再播放真人英文录音，轻点照片重播，无独立“听名字”按钮 |
 | 口算 | 12 道加减法 | 点击三个答案之一，即时提示对错；上一题、下一题、随机一题 |
 | 英语跟读 | 8 个词句 | 听示范、录音、回放；默认录 5 秒，可提前结束，不做识别或打分 |
 
@@ -49,7 +49,7 @@
   "schema": 1,
   "id": "starter",
   "title": "启蒙包",
-  "cards": [{"name":"小猫","pinyin":"xiǎo māo","english":"Cat","image":"images/cat.png","audio":"audio/card-cat.wav"}],
+  "cards": [{"name":"猫","pinyin":"māo","english":"Cat","image":"images/cat.png","audio":"audio/card-cat.wav"}],
   "arithmetic": [{"a":1,"b":2,"operator":"+","choices":[2,3,4],"answer":3}],
   "english": [{"text":"Hello","meaning":"你好","audio":"audio/en-hello.wav","record_seconds":5}]
 }
@@ -76,7 +76,8 @@
 ## 来源与重建
 
 - 动物使用真实照片，来源、作者、许可及缩放说明见 [照片署名](../brookesia-apps/light-learning/packs/PHOTO-CREDITS.md)，同样的信息通过 `photo-sources.json` 随1.1.0内容包安装到SD。可用 `tools/build_card_images.cjs` 配合 sharp 从校验后的原图重建PNG；旧SVG插画原稿仅留作历史参考，不参与新版内容包。书本图标仍为本项目绘制。
-- 名称与英语示范使用本机 Windows System.Speech 的 Huihui / Zira 合成；`tools/build_speech.ps1` 从 JSON 重建 14 段 WAV，没有采集真人录音。
+- 六张动物卡片改用已有真人中文及美式英文词条录音，每张先中文再英文，不使用语音合成、克隆或逐字拼接。来源、说话人及许可见 [录音署名](../brookesia-apps/light-learning/packs/AUDIO-CREDITS.md)，`audio-sources.json`随1.2.0内容包安装。`tools/build_recordings.py`校验原录音哈希，再进行格式转换、音量调整和中英顺序编排；不改变语速或音高。
+- 英语跟读的8段独立示范保留原有 Windows Zira 合成，`tools/build_speech.ps1`只重建这些示范，不会覆盖动物卡片真人录音。用户跟读仍仅在设备内存中录音回放。
 - 拼音补充字体来源为 Noto Sans SC 2.04，按 OFL 1.1 重新命名为 LearningSupplement 并子集化；来源及原始哈希见 `packs/font-source.json`，许可见 `packs/OFL.txt`。
 - `tests/main.test.cjs` 验证三类活动、滑动、媒体路径、内容包扩展及录音清除；仓库 `tests/learning_media_static.cpp` 验证本地音频边界及儿童授权。固件构建后仍需实机验证滑动手感、名称读音和麦克风回放。
 

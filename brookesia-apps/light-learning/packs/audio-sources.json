@@ -1,0 +1,243 @@
+{
+  "schema": 1,
+  "version": "1.2.0",
+  "scope": "animal_cards",
+  "voice_type": "human_recording",
+  "separator_ms": 450,
+  "derived_license": "CC BY-SA 4.0",
+  "derived_license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "recordings": [
+    {
+      "id": "zh-cat",
+      "language": "cmn",
+      "text": "猫",
+      "file": "zh-cat.mp3",
+      "source": "https://github.com/hugolpz/audio-cmn/blob/master/96k/hsk/cmn-%E7%8C%AB.mp3",
+      "download_url": "https://raw.githubusercontent.com/hugolpz/audio-cmn/master/96k/hsk/cmn-%E7%8C%AB.mp3",
+      "author": "Yue Tan",
+      "project": "University of Caen / Shtooka; audio-cmn mirror curated by Hugo Lopez",
+      "license": "CC BY-SA 3.0 US",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+      "git_blob": "972a785eb1219661b62214667bf332adfd7817e5",
+      "sha256": "4a08c974aa85364004003972cb064c2be57b0cef3aa036cc1df51e74e807937f"
+    },
+    {
+      "id": "zh-dog",
+      "language": "cmn",
+      "text": "狗",
+      "file": "zh-dog.mp3",
+      "source": "https://github.com/hugolpz/audio-cmn/blob/master/96k/hsk/cmn-%E7%8B%97.mp3",
+      "download_url": "https://raw.githubusercontent.com/hugolpz/audio-cmn/master/96k/hsk/cmn-%E7%8B%97.mp3",
+      "author": "Yue Tan",
+      "project": "University of Caen / Shtooka; audio-cmn mirror curated by Hugo Lopez",
+      "license": "CC BY-SA 3.0 US",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+      "git_blob": "32a84da0f2e25408c9d9a367f8432a4442d709ec",
+      "sha256": "7653b8dc81f17e515e65d168a5a30653750a127c264e1b3fd9a3319e341e0a39"
+    },
+    {
+      "id": "zh-cow",
+      "language": "cmn",
+      "text": "牛",
+      "file": "zh-cow.mp3",
+      "source": "https://github.com/hugolpz/audio-cmn/blob/master/96k/hsk/cmn-%E7%89%9B.mp3",
+      "download_url": "https://raw.githubusercontent.com/hugolpz/audio-cmn/master/96k/hsk/cmn-%E7%89%9B.mp3",
+      "author": "Yue Tan",
+      "project": "University of Caen / Shtooka; audio-cmn mirror curated by Hugo Lopez",
+      "license": "CC BY-SA 3.0 US",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+      "git_blob": "636c9fb6138547e36e657e7d7e66e4501777918b",
+      "sha256": "46edf8c8ea9b617a1764a1b3696d0e22473d9acc89119af73e4b3bf58f71a52c"
+    },
+    {
+      "id": "zh-horse",
+      "language": "cmn",
+      "text": "马",
+      "file": "zh-horse.mp3",
+      "source": "https://github.com/hugolpz/audio-cmn/blob/master/96k/hsk/cmn-%E9%A9%AC.mp3",
+      "download_url": "https://raw.githubusercontent.com/hugolpz/audio-cmn/master/96k/hsk/cmn-%E9%A9%AC.mp3",
+      "author": "Yue Tan",
+      "project": "University of Caen / Shtooka; audio-cmn mirror curated by Hugo Lopez",
+      "license": "CC BY-SA 3.0 US",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+      "git_blob": "f65351361981d75843110b2d2827c89e4ef6a383",
+      "sha256": "3f8db060ad5dec19d3749b65473938d80f15354fd7d1d2d3d0f9da85e7c24ccb"
+    },
+    {
+      "id": "zh-rabbit",
+      "language": "cmn",
+      "text": "兔子",
+      "file": "zh-rabbit.mp3",
+      "source": "https://github.com/hugolpz/audio-cmn/blob/master/96k/hsk/cmn-%E5%85%94%E5%AD%90.mp3",
+      "download_url": "https://raw.githubusercontent.com/hugolpz/audio-cmn/master/96k/hsk/cmn-%E5%85%94%E5%AD%90.mp3",
+      "author": "Yue Tan",
+      "project": "University of Caen / Shtooka; audio-cmn mirror curated by Hugo Lopez",
+      "license": "CC BY-SA 3.0 US",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+      "git_blob": "7e7435a2a04a4fbced0cb5526697812f0cbf3073",
+      "sha256": "1e16816ebad09ffdde58a2dc8e5cf7d176eab779d89edbf3b667c64bcb1216f9"
+    },
+    {
+      "id": "zh-duck",
+      "language": "cmn",
+      "text": "鸭",
+      "file": "zh-duck.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:Zh-y%C4%81.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/7/70/Zh-y%C4%81.ogg",
+      "author": "Wei Gao, Vion Nicolas",
+      "project": "Shtooka chi-balm-hsk1",
+      "license": "CC BY 2.0 FR",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/fr/",
+      "note": "The original human recording is labeled 呀 (yā), which is a Mandarin homophone of 鸭 (yā). The whole recording is used without word or syllable splicing.",
+      "sha256": "7e69de84cd718172f602d238de25dbd389fba53d5b276a4634513fcb70d32ab8"
+    },
+    {
+      "id": "en-cat",
+      "language": "en-US",
+      "text": "cat",
+      "file": "en-cat.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-cat.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/4/46/En-us-cat.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha256": "62502d6aa7d876f597101567f13a4f573a8bd32b0b57f393eb46756455a550e8"
+    },
+    {
+      "id": "en-dog",
+      "language": "en-US",
+      "text": "dog",
+      "file": "en-dog.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-dog.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/0/06/En-us-dog.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha256": "7e11e95b4f3d51a99d3875b5fb4964e230fe0b852f0f629571153e1b181da469"
+    },
+    {
+      "id": "en-cow",
+      "language": "en-US",
+      "text": "cow",
+      "file": "en-cow.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-cow.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/e/e1/En-us-cow.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha256": "44023cd77f66cc4fdef8e64e034eb6823c7060eee1678d0161a1465513a303a6"
+    },
+    {
+      "id": "en-horse",
+      "language": "en-US",
+      "text": "horse",
+      "file": "en-horse.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-horse.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/f/fb/En-us-horse.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha256": "566ea30f153906c33d4de51ff00b4efdfddeb28d2ec98a4a556d4234fc1c4b0b"
+    },
+    {
+      "id": "en-rabbit",
+      "language": "en-US",
+      "text": "rabbit",
+      "file": "en-rabbit.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-rabbit.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/f/f0/En-us-rabbit.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha256": "4f363523ef90d53b02000f3098b984d731b45565d9f02c236ca742edb7a3b885"
+    },
+    {
+      "id": "en-duck",
+      "language": "en-US",
+      "text": "duck",
+      "file": "en-duck.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-duck.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/5/5b/En-us-duck.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha256": "cb116aba987b1f7ac0c7b2b3da2ffb44171f51d00689d4e2a6ade8a44d4def0d"
+    }
+  ],
+  "cards": [
+    {
+      "id": "cat",
+      "chinese": "zh-cat",
+      "english": "en-cat",
+      "file": "audio/card-cat.wav"
+    },
+    {
+      "id": "dog",
+      "chinese": "zh-dog",
+      "english": "en-dog",
+      "file": "audio/card-dog.wav"
+    },
+    {
+      "id": "cow",
+      "chinese": "zh-cow",
+      "english": "en-cow",
+      "file": "audio/card-cow.wav"
+    },
+    {
+      "id": "horse",
+      "chinese": "zh-horse",
+      "english": "en-horse",
+      "file": "audio/card-horse.wav"
+    },
+    {
+      "id": "rabbit",
+      "chinese": "zh-rabbit",
+      "english": "en-rabbit",
+      "file": "audio/card-rabbit.wav"
+    },
+    {
+      "id": "duck",
+      "chinese": "zh-duck",
+      "english": "en-duck",
+      "file": "audio/card-duck.wav"
+    }
+  ],
+  "outputs": {
+    "audio/card-cat.wav": {
+      "chinese_frames": 15201,
+      "pause_frames": 7200,
+      "english_frames": 8359,
+      "sha256": "30a730aebc3c81881c188799cd282fc3ecabd6f4a0ff1f2c1b9a7dc6e69e3644"
+    },
+    "audio/card-dog.wav": {
+      "chinese_frames": 18401,
+      "pause_frames": 7200,
+      "english_frames": 10031,
+      "sha256": "1c1cdec554086c73c478d236bd12b67e590e54f81c26af2e7c4881416c2a8731"
+    },
+    "audio/card-cow.wav": {
+      "chinese_frames": 16801,
+      "pause_frames": 7200,
+      "english_frames": 10031,
+      "sha256": "066703cd3a764cbd601938528f121e337091158813371d7c8190ca7c61538f99"
+    },
+    "audio/card-horse.wav": {
+      "chinese_frames": 17600,
+      "pause_frames": 7200,
+      "english_frames": 10774,
+      "sha256": "f680c3252fbb2d9ae5698f317a898c1d888c59136f20f965a183ab7bb5ebf908"
+    },
+    "audio/card-rabbit.wav": {
+      "chinese_frames": 16801,
+      "pause_frames": 7200,
+      "english_frames": 16800,
+      "sha256": "d68322ecfe44c6331d053fbdbe524ba5a07c1a2f73dce70fcc96205520bcec5e"
+    },
+    "audio/card-duck.wav": {
+      "chinese_frames": 11200,
+      "pause_frames": 7200,
+      "english_frames": 15200,
+      "sha256": "747bb2a9740b22e9a95c1ef5d9d8f6e880266893893bc32e3445303669de6063"
+    }
+  }
+}
