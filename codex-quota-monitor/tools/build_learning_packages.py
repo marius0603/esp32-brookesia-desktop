@@ -40,9 +40,12 @@ def main():
         files['packs/starter/'+item['audio']]=path.read_bytes()
     for item in pack['cards']:
         files['packs/starter/'+item['image']]=(APP/'packs/starter'/item['image']).read_bytes()
-    metadata={'schema':1,'version':'1.0.0','files':{name:{'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()} for name,data in files.items()}}
+    for filename in ('photo-sources.json','PHOTO-CREDITS.json'):
+        if (APP/'packs'/filename).exists():files[filename]=(APP/'packs'/filename).read_bytes()
+    version=json.loads((APP/'packs/index.json').read_text(encoding='utf-8')).get('version','1.0.0')
+    metadata={'schema':1,'version':version,'files':{name:{'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()} for name,data in files.items()}}
     files['manifest.json']=(json.dumps(metadata,ensure_ascii=False,indent=2)+'\n').encode()
-    name='packages/content/learning-starter-1.0.0.zip'
+    name='packages/content/learning-starter-'+version+'.zip'
     hashes[name]=archive(ROOT/name,files)
     version=json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))['firmware']
     firmware='packages/firmware/brookesia-'+version+'-app-only.zip'

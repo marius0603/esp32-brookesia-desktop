@@ -925,15 +925,16 @@
           "id": "animalCard",
           "placement": {
             "mode": "absolute",
-            "x": 40,
-            "y": 104,
-            "width": 400,
-            "height": 260
+            "x": 24,
+            "y": 100,
+            "width": 432,
+            "height": 356
           },
           "commonProps": {
             "scrollable": false,
             "clickable": true,
-            "hidden": true
+            "hidden": true,
+            "pressLock": true
           },
           "bindings": {
             "commonProps.hidden": "hidden"
@@ -947,8 +948,16 @@
           },
           "events": [
             {
-              "type": "gesture",
-              "action": "cardSwipe"
+              "type": "pressed",
+              "action": "cardPress"
+            },
+            {
+              "type": "released",
+              "action": "cardRelease"
+            },
+            {
+              "type": "pressLost",
+              "action": "cardCancel"
             },
             {
               "type": "clicked",
@@ -961,10 +970,10 @@
               "id": "picture",
               "placement": {
                 "mode": "absolute",
-                "x": 116,
-                "y": 4,
-                "width": 168,
-                "height": 168
+                "x": 16,
+                "y": 8,
+                "width": 400,
+                "height": 270
               },
               "commonProps": {
                 "clickable": false
@@ -980,9 +989,9 @@
               "placement": {
                 "mode": "absolute",
                 "x": 16,
-                "y": 172,
-                "width": 368,
-                "height": 48
+                "y": 280,
+                "width": 400,
+                "height": 42
               },
               "style": {
                 "font": "${font.learning}",
@@ -1003,9 +1012,9 @@
               "placement": {
                 "mode": "absolute",
                 "x": 16,
-                "y": 220,
-                "width": 368,
-                "height": 32
+                "y": 322,
+                "width": 400,
+                "height": 30
               },
               "style": {
                 "font": "${font.learning}",
@@ -1021,57 +1030,6 @@
               }
             }
           ]
-        },
-        {
-          "type": "button",
-          "id": "readName",
-          "commonProps": {
-            "scrollable": false,
-            "clickable": true,
-            "hidden": true
-          },
-          "placement": {
-            "mode": "absolute",
-            "x": 40,
-            "y": 404,
-            "width": 400,
-            "height": 48
-          },
-          "style": {
-            "padding": 0,
-            "borderWidth": 0,
-            "bgOpacity": 255,
-            "bgColor": "#23344b",
-            "radius": 18
-          },
-          "children": [
-            {
-              "type": "label",
-              "id": "label",
-              "style": {
-                "font": "${font.learning}",
-                "fontSize": 24,
-                "textColor": "#eff4fa"
-              },
-              "labelProps": {
-                "text": "听名字"
-              }
-            }
-          ],
-          "layout": {
-            "type": "flex",
-            "mainAlign": "center",
-            "crossAlign": "center"
-          },
-          "events": [
-            {
-              "type": "clicked",
-              "action": "readName"
-            }
-          ],
-          "bindings": {
-            "commonProps.hidden": "hidden"
-          }
         }
       ],
       "bindings": {

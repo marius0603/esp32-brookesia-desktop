@@ -3,6 +3,7 @@
 const ROOT='/sdcard/learning/packs/',kinds=['cards','arithmetic','english'];
 const names={cards:'动物卡片',arithmetic:'口算',english:'英语跟读'};
 let gui,audio,storage,modes,speaker,timer,timerId=0,hidden=false,cache={},catalog=[],pack=null,packIndex=0,mode='home',index=0,flipped=false,feedback='',audioState={},pending=null,lastSwipe=0;
+let pressStart=null;
 function call(h,n,args){const r=JSON.parse(brookesia.call_function(h,n,JSON.stringify(args||{}),h===audio?6000:3000));if(!r.success)throw new Error(r.error||r.error_message||n);return r.data;}
 function text(path,value){value=String(value===undefined?'':value);if(hidden||cache[path]===value)return;call(gui,'SetText',{Path:'/main/'+path,Text:value});cache[path]=value;}
 function bind(path,key,value){const k=path+':'+key;value=String(value);if(hidden||cache[k]===value)return;call(gui,'SetBinding',{Path:'/main/'+path,Key:key,Value:value});cache[k]=value;}
@@ -42,7 +43,7 @@ function loadPack(selected){
  bind('home/pack','selected',selected);render();
 }
 function current(){return pack&&mode!=='home'?pack[mode][index]:null;}
-function discard(){pending=null;try{call(audio,'Discard');}catch(_){}audioState={};feedback='';}
+function discard(){pressStart=null;pending=null;try{call(audio,'Discard');}catch(_){}audioState={};feedback='';}
 function queueAudio(fn,args){
  const s=call(audio,'GetState')||{};
  if(s.active){pending={fn,args};call(audio,'Stop');}
@@ -60,14 +61,14 @@ function render(){
  const c=current();if(!c)return;
  text('lesson/header/title',names[mode]);text('lesson/header/count',(index+1)+' / '+pack[mode].length);
  let prompt='',detail='',size=48,buttons=[];
- if(mode==='cards'){prompt=c.name;detail=c.pinyin+' · '+c.english;size=34;buttons=['听名字','',''];}
+ if(mode==='cards'){prompt=c.name;detail=c.pinyin+' · '+c.english;size=34;buttons=['','',''];}
  else if(mode==='arithmetic'){prompt=c.a+' '+(c.operator==='-'?'−':'+')+' '+c.b+' = ?';size=46;buttons=c.choices;}
   else {prompt=c.text;detail=c.meaning;size=c.text.length>12?30:38;buttons=['听示范',audioState.state==='Recording'?'结束':audioState.state==='Starting'?'准备中':'录音','回放'];}
- bind('lesson/card','hidden',mode==='cards');bind('lesson/animalCard','hidden',mode!=='cards');bind('lesson/actions','hidden',mode==='cards');bind('lesson/nav','hidden',mode==='cards');bind('lesson/readName','hidden',mode!=='cards');
+ bind('lesson/card','hidden',mode==='cards');bind('lesson/animalCard','hidden',mode!=='cards');bind('lesson/actions','hidden',mode==='cards');bind('lesson/nav','hidden',mode==='cards');
  if(mode==='cards'){text('lesson/animalCard/name',c.name);text('lesson/animalCard/caption',detail);const src=ROOT+pack.id+'/'+c.image;if(cache.image!==src){call(gui,'SetViewSrc',{Path:'/main/lesson/animalCard/picture',Src:src});cache.image=src;}}
  text('lesson/card/prompt',prompt);bind('lesson/card/prompt','size',size);text('lesson/card/detail',detail);
  for(let i=0;i<3;i++)text('lesson/actions/a'+i+'/label',buttons[i]);
- text('lesson/nav/center/label',mode==='cards'?'听名字':mode==='english'?'随机一句':'随机一题');
+ text('lesson/nav/center/label',mode==='english'?'随机一句':'随机一题');
  bind('lesson/feedback','y',mode==='cards'?368:344);text('lesson/feedback',feedback);
 }
 function choose(kind){ensure(pack&&kinds.includes(kind)&&pack[kind].length>0,'这个包还没有这类内容');discard();mode=kind;index=0;flipped=false;render();if(mode==='cards')playSample();}
@@ -103,8 +104,17 @@ function poll(){
  text('home/volume',sound.do_not_disturb?'音量 '+sound.resume_volume+'% · 静音':'音量 '+vol+'%');
 }
 function action(name,path,payload){
- if(name==='cardSwipe'&&mode==='cards'){let value;try{value=typeof payload==='string'?JSON.parse(payload):payload;}catch(_){return;}if(!value||!['left','right'].includes(value.direction))return;const now=Date.now();if(now-lastSwipe<250)return;lastSwipe=now;move(value.direction==='left'?1:-1);return;}
- if((name==='readName'||name==='cardTap')&&mode==='cards'){if(Date.now()-lastSwipe>=300)playSample();return;}
+ if(name==='cardCancel'){pressStart=null;return;}
+ if((name==='cardPress'||name==='cardRelease')&&mode==='cards'){
+  let point;try{point=typeof payload==='string'?JSON.parse(payload):payload;}catch(_){pressStart=null;return;}
+  if(!point||!Number.isFinite(point.x)||!Number.isFinite(point.y)){pressStart=null;return;}
+  if(name==='cardPress'){pressStart={x:point.x,y:point.y};return;}
+  const start=pressStart;pressStart=null;if(!start)return;
+  const dx=point.x-start.x,dy=point.y-start.y,now=Date.now();
+  if(Math.abs(dx)>=40&&Math.abs(dx)>Math.abs(dy)*1.25&&now-lastSwipe>=250){lastSwipe=now;move(dx<0?1:-1);}
+  return;
+ }
+ if(name==='cardTap'&&mode==='cards'){if(Date.now()-lastSwipe>=300)playSample();return;}
  if(kinds.includes(name)){choose(name);return;}
  if(name==='back'){discard();mode='home';render();return;}
  if(name==='previous'){move(-1);return;}if(name==='next'){move(1);return;}
@@ -123,7 +133,7 @@ globalThis.brookesia_app={
  on_start(){
   hidden=false;cache={};mode='home';gui=brookesia.start_service('SystemGui');storage=brookesia.start_service('Storage');audio=brookesia.start_service('LearningAudio');modes=brookesia.start_service('DeviceModes');speaker=brookesia.start_service('AudioPlayback');timer=brookesia.start_service('SystemTimer');
   for(const [service,fn] of [['Audiobook','Stop'],['LocalVoice','Disconnect'],['VoiceAssistant','Disconnect']])try{call(brookesia.start_service(service),fn);}catch(_){}
-  for(const name of kinds.concat(['back','previous','next','center','a0','a1','a2','pack','cardSwipe','cardTap','readName']))call(gui,'SubscribeAction',{Action:name});
+  for(const name of kinds.concat(['back','previous','next','center','a0','a1','a2','pack','cardPress','cardRelease','cardCancel','cardTap']))call(gui,'SubscribeAction',{Action:name});
   loadCatalog();render();timerId=call(timer,'StartPeriodic',{Name:'light-learning',IntervalMs:250});return true;
  },
  on_action(name,path,payload){try{action(name,path,payload);}catch(e){feedback=String(e.message||e);text(mode==='home'?'home/status':'lesson/feedback',feedback);}return true;},

@@ -37,7 +37,7 @@ def main():
         apps=call('SystemCore','ListApps')
         report['app_list_bytes']=len(json.dumps(apps,ensure_ascii=False,separators=(',',':')).encode('utf-8'))
         app=next(a for a in apps if a['manifest']['id']=='local.lightlearning')
-        assert app['manifest']['version']=='0.1.0'
+        assert app['manifest']['version']==json.loads((REPO/'versions.json').read_text(encoding='utf-8'))['apps']['local.lightlearning']
         assert next(a for a in apps if a['manifest']['id']=='local.childmode')['manifest']['version']=='0.1.1'
         modes=call('DeviceModes','GetState')
         expected=json.loads((REPO/'versions.json').read_text(encoding='utf-8'))['firmware']

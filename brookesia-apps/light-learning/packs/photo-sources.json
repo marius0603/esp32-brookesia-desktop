@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "photos": [
+    {
+      "id": "cat",
+      "file": "Cat_November_2010-1a.jpg",
+      "author": "Alvesgaspar",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "page": "https://commons.wikimedia.org/wiki/File:Cat_November_2010-1a.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Cat_November_2010-1a.jpg",
+      "original_sha256": "59ec9bf12a5b63e0913e986b9566b96228c9f8921fda4fb87bf2a7f9acff3dd2",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    },
+    {
+      "id": "dog",
+      "file": "Sitting_golden_retriever.jpg",
+      "author": "Jiyoon Leee",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "page": "https://commons.wikimedia.org/wiki/File:Sitting_golden_retriever.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Sitting_golden_retriever.jpg",
+      "original_sha256": "7dc7fba30fa7925b4e9962e29a8deab4b513598df53504ac61dd2b41823a2410",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    },
+    {
+      "id": "cow",
+      "file": "Holstein_cow.jpg",
+      "author": "Hokkaido-man",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "page": "https://commons.wikimedia.org/wiki/File:Holstein_cow.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Holstein_cow.jpg",
+      "original_sha256": "e48f12616512a94296def42e2fc5b80999237adbccb9e6d44fe47d73a6b7e85c",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    },
+    {
+      "id": "horse",
+      "file": "20181129_White_Horse.jpg",
+      "author": "Flocci Nivis",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "page": "https://commons.wikimedia.org/wiki/File:20181129_White_Horse.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/0/07/20181129_White_Horse.jpg",
+      "original_sha256": "8299d80f527c2a18a2cb76acf6c68d8d7fce049bfa1b9fa98d0597ee89f15a2c",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    },
+    {
+      "id": "rabbit",
+      "file": "Rabbit_on_grass_(2).jpg",
+      "author": "Miscellaneous contributor",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "page": "https://commons.wikimedia.org/wiki/File:Rabbit_on_grass_%282%29.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Rabbit_on_grass_%282%29.jpg",
+      "original_sha256": "643922de4aef0100510dccf0c44ca78b0b4257ce49729d3778086eda33f5d1e5",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    },
+    {
+      "id": "duck",
+      "file": "2014-08-31-domestic-duck.jpg",
+      "author": "I13Robin",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "page": "https://commons.wikimedia.org/wiki/File:2014-08-31-domestic-duck.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/e/e2/2014-08-31-domestic-duck.jpg",
+      "original_sha256": "b6c49f231d335d910a9802ee0ddbdb83f4bb833dca4510f317954f06a730bbd8",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    }
+  ]
+}

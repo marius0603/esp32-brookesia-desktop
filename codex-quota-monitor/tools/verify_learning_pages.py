@@ -10,14 +10,15 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument('--port',required=True)
     args=p.parse_args()
-    release=REPO/'packages/apps/local.lightlearning.debug.0.1.0.bpk'
+    version=json.loads((REPO/'versions.json').read_text(encoding='utf-8'))['apps']['local.lightlearning']
+    release=REPO/('packages/apps/local.lightlearning.debug.'+version+'.bpk')
     temporary=ROOT/'runtime/learning-page-test.bpk'
     # Use the real app actions and renderer, with four seconds between swipes.
     hook="""on_timer(){if(!hidden){globalThis.pageTestTicks=(globalThis.pageTestTicks||0)+1;
 if(globalThis.pageTestTicks%16===4){globalThis.pageTestStep=(globalThis.pageTestStep||0)+1;
 const step=globalThis.pageTestStep;if(step===1)choose('cards');
-else if(step<=6)move(1);else if(step===7)choose('arithmetic');else if(step===8)choose('english');
-if(step<=8)console.log('LEARNING_PAGE_OK:'+step);}}if(!hidden)"""
+else if(step<=6){action('cardPress','',JSON.stringify({x:350,y:220}));action('cardRelease','',JSON.stringify({x:110,y:225}));if(index!==step-1)throw new Error('Pointer swipe did not change card');}else if(step===7){action('cardPress','',JSON.stringify({x:110,y:220}));action('cardRelease','',JSON.stringify({x:350,y:225}));if(index!==4)throw new Error('Reverse pointer swipe failed');}else if(step===8)choose('arithmetic');else if(step===9)choose('english');
+if(step<=9)console.log('LEARNING_PAGE_OK:'+step);}}if(!hidden)"""
     with zipfile.ZipFile(release) as source,zipfile.ZipFile(temporary,'w',zipfile.ZIP_DEFLATED) as dest:
         for name in source.namelist():
             data=source.read(name)
@@ -38,11 +39,11 @@ if(step<=8)console.log('LEARNING_PAGE_OK:'+step);}}if(!hidden)"""
             try:
                 c.call('SystemCore','StartApp',{'AppId':app['app_id']})
                 c.goodbye();c.serial.timeout=.2
-                until=time.monotonic()+36
+                until=time.monotonic()+40
                 while time.monotonic()<until:
                     raw.extend(c.serial.read(max(1,c.serial.in_waiting)))
                 (ROOT/'runtime/learning-page-test.log').write_bytes(raw)
-                assert all(('LEARNING_PAGE_OK:'+str(i)).encode() in raw for i in range(1,9)),'Some pages did not complete'
+                assert all(('LEARNING_PAGE_OK:'+str(i)).encode() in raw for i in range(1,10)),'Some pages did not complete'
                 assert not any(s in raw for s in (b'assert failed:',b'Guru Meditation',b'Rebooting...',b'ESP-ROM:')),'Device restarted during card rendering'
                 c.serial.timeout=25;c.hello()
                 active=c.call('SystemCore','GetActiveApp',{})['result']

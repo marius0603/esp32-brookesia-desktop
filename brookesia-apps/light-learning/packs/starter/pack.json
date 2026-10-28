@@ -235,5 +235,6 @@
       "image": "images/duck.png",
       "audio": "audio/card-duck.wav"
     }
-  ]
+  ],
+  "version": "1.1.0"
 }
