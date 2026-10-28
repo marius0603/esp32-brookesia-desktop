@@ -2,8 +2,9 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),asse
 const root=path.join(__dirname,'..'),raw=fs.readFileSync(path.join(root,'src/app/main.js'),'utf8');
 const source=raw.replace(/\n\}\)\(\);\s*$/,'\nglobalThis.__test={validatePack,validateIndex,mediaPath,read:()=>({mode,index,packIndex,pending})};\n})();');
 const starter=JSON.parse(fs.readFileSync(path.join(root,'packs/starter/pack.json'),'utf8'));
-assert.deepEqual(starter.cards.map(c=>c.name),['猫','狗','牛','马','兔子','鸭']);
-assert.deepEqual(starter.cards.map(c=>c.english),['Cat','Dog','Cow','Horse','Rabbit','Duck']);
+assert.deepEqual(starter.cards.slice(0,6).map(c=>c.name),['猫','狗','牛','马','兔子','鸭']);
+assert.deepEqual(starter.cards.slice(0,6).map(c=>c.english),['Cat','Dog','Cow','Horse','Rabbit','Duck']);
+assert.equal(new Set(starter.cards.map(c=>c.id)).size,starter.cards.length);
 const fonts=JSON.parse(fs.readFileSync(path.join(root,'../../platform/super_s3_216/littlefs/system/fonts/index.json'),'utf8'));
 assert(fonts.fonts.every(f=>Array.isArray(f.languages)&&f.languages.length),'Font registration requires languages');
 const doc=JSON.parse(fs.readFileSync(path.join(root,'src/res/screens/main.json'),'utf8')),views=new Map();
@@ -30,7 +31,7 @@ const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>n,call_functi
  if(n==='StartPeriodic')data=8;
  return JSON.stringify({success:true,data});}}});
 vm.runInContext(source,ctx);ctx.brookesia_app.on_start();
-assert.equal(ctx.__test.read().mode,'home');assert.equal(texts['/main/home/cards/count'],'6 张');
+assert.equal(ctx.__test.read().mode,'home');assert.equal(texts['/main/home/cards/count'],starter.cards.length+' 张');
 assert.deepEqual(JSON.parse(values['/main/home/pack:options']),['启蒙包','加包演示']);
 ctx.brookesia_app.on_action('cards');assert.equal(texts['/main/lesson/animalCard/name'],'猫');
 assert.equal(calls.filter(c=>c.n==='PlayFile').at(-1).a.Path,'/sdcard/learning/packs/starter/audio/card-cat.wav');
@@ -49,7 +50,14 @@ assert.equal(texts['/main/lesson/animalCard/name'],'猫');
 drag(240,200,250,205);assert.equal(texts['/main/lesson/animalCard/name'],'猫');
 now+=300;ctx.brookesia_app.on_action('cardRelease','/main/lesson/animalCard','{"x":80,"y":200}');assert.equal(texts['/main/lesson/animalCard/name'],'猫');
 ctx.brookesia_app.on_action('cardPress','/main/lesson/animalCard','{"x":350,"y":200}');ctx.brookesia_app.on_action('cardCancel');ctx.brookesia_app.on_action('cardRelease','/main/lesson/animalCard','{"x":80,"y":200}');assert.equal(texts['/main/lesson/animalCard/name'],'猫');
-drag(110,230,350,235);assert.equal(texts['/main/lesson/animalCard/name'],'鸭');drag(350,230,110,235);assert.equal(texts['/main/lesson/animalCard/name'],'猫');
+drag(110,230,350,235);assert.equal(texts['/main/lesson/animalCard/name'],starter.cards.at(-1).name);drag(350,230,110,235);assert.equal(texts['/main/lesson/animalCard/name'],'猫');
+for(const card of starter.cards.slice(1)){
+ drag(350,230,110,235);
+ assert.equal(texts['/main/lesson/animalCard/name'],card.name);
+ assert.equal(calls.filter(c=>c.n==='PlayFile').at(-1).a.Path,'/sdcard/learning/packs/starter/'+card.audio);
+ assert.equal(calls.filter(c=>c.n==='SetViewSrc').at(-1).a.Src,'/sdcard/learning/packs/starter/'+card.image);
+}
+drag(350,230,110,235);assert.equal(ctx.__test.read().index,0);
 assert.equal(values['/main/lesson/nav:hidden'],'true','Animal cards use swiping instead of previous/next buttons');
 ctx.brookesia_app.on_action('arithmetic');ctx.brookesia_app.on_action('a0');assert.equal(texts['/main/lesson/feedback'],'再试一次');
 ctx.brookesia_app.on_action('a1');assert.equal(texts['/main/lesson/feedback'],'答对了！');

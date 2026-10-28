@@ -66,6 +66,105 @@
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/e/e2/2014-08-31-domestic-duck.jpg",
       "original_sha256": "b6c49f231d335d910a9802ee0ddbdb83f4bb833dca4510f317954f06a730bbd8",
       "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    },
+    {
+      "id": "pig",
+      "file": "Pig_USDA01c0116.jpg",
+      "author": "Ken Hammond, USDA",
+      "license": "Public domain (US government)",
+      "license_url": "https://commons.wikimedia.org/wiki/Template:PD-USGov-USDA",
+      "page": "https://commons.wikimedia.org/wiki/File:Pig_USDA01c0116.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/d/db/Pig_USDA01c0116.jpg",
+      "original_sha256": "80c60e81be538932ce5d7e1595f4d26e5193436e56925816c6c8a98229788abc",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    },
+    {
+      "id": "sheep",
+      "file": "Sheep_on_grass.jpg",
+      "author": "Erik Karits",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "page": "https://commons.wikimedia.org/wiki/File:Sheep_on_grass.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/a/af/Sheep_on_grass.jpg",
+      "original_sha256": "83e9369c83a5f862a309ebc6c06b39752a867f8b4deb3e7a62cd8570566d4297",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    },
+    {
+      "id": "chicken",
+      "file": "Andalusian_Blue_chicken_(male).jpg",
+      "author": "Костюшко",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "page": "https://commons.wikimedia.org/wiki/File:Andalusian_Blue_chicken_%28male%29.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Andalusian_Blue_chicken_%28male%29.jpg",
+      "original_sha256": "a5e0aa8bfc77727aa33a94fa96802c8e87a838772528c060c6bd49d1a4c0885a",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    },
+    {
+      "id": "bird",
+      "file": "Parus_major_m.jpg",
+      "author": "Sławek Staszczuk",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "page": "https://commons.wikimedia.org/wiki/File:Parus_major_m.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/2/2d/Parus_major_m.jpg",
+      "original_sha256": "2344e7c3d7820f4b03c006b93d2c7124410f4f050136d06fe717ea60f8d231b6",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    },
+    {
+      "id": "fish",
+      "file": "Goldifishgroupkoi.jpg",
+      "author": "Lacz02",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "page": "https://commons.wikimedia.org/wiki/File:Goldifishgroupkoi.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/2/26/Goldifishgroupkoi.jpg",
+      "original_sha256": "d2e7e8dd2b7eed06035419facdb53f68571052b2bbd8438cdde1edcaf48fb17f",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    },
+    {
+      "id": "bear",
+      "file": "2010-brown-bear.jpg",
+      "author": "Yathin S Krishnappa",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "page": "https://commons.wikimedia.org/wiki/File:2010-brown-bear.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/7/79/2010-brown-bear.jpg",
+      "original_sha256": "4e6ee26f298799e211925d6e7abb2432a6962efaa294c759c77fd6c05f0e3d02",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    },
+    {
+      "id": "lion",
+      "file": "Lion_waiting_in_Namibia.jpg",
+      "author": "Kevin Pluck",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "page": "https://commons.wikimedia.org/wiki/File:Lion_waiting_in_Namibia.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/7/73/Lion_waiting_in_Namibia.jpg",
+      "original_sha256": "564e2b276db9c097c0b1496fa2c60e092b971094f9c9de1dfa489f90add1686f",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    },
+    {
+      "id": "tiger",
+      "file": "Panthera_tigris_tigris_original.jpg",
+      "author": "John and Karen Hollingsworth / U.S. Fish and Wildlife Service",
+      "license": "Public domain (US government)",
+      "license_url": "https://commons.wikimedia.org/wiki/Template:PD-USGov-FWS",
+      "page": "https://commons.wikimedia.org/wiki/File:Panthera_tigris_tigris_original.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Panthera_tigris_tigris_original.jpg",
+      "original_sha256": "64c498175c2ba7387dfc145a8f0431c1cac105b85013f2a057d6c672bc4ee290",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+    },
+    {
+      "id": "monkey",
+      "file": "The_Sitting_Monkey.jpg",
+      "author": "Athul Iyju Jacob",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "page": "https://commons.wikimedia.org/wiki/File:The_Sitting_Monkey.jpg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/4/47/The_Sitting_Monkey.jpg",
+      "original_sha256": "ce7ca58f701cb27c81bb6ad1e524a4ce8ddb138d02f78cb2efe01ad129e7b442",
+      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
     }
   ]
 }

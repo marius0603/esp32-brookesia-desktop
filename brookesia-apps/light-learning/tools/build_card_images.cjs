@@ -13,5 +13,5 @@ const photos=JSON.parse(fs.readFileSync(path.join(root,'packs/photo-sources.json
   if(crypto.createHash('sha256').update(fs.readFileSync(local)).digest('hex')!==photo.original_sha256)throw new Error('Source photo checksum changed: '+photo.id);
   await sharp(local).rotate().resize(256,192,{fit:'contain',background:'#172638'}).png({palette:true,colours:128}).toFile(path.join(root,'packs/starter/images',photo.id+'.png'));
  }
- console.log('Six attributed animal photographs prepared as 256x192 PNGs.');
+ console.log(photos.length+' attributed animal photographs prepared as 256x192 PNGs.');
 })().catch(e=>{console.error(e);process.exit(1)});

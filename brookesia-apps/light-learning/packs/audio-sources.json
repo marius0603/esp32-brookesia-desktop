@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.2.0",
+  "version": "1.3.0",
   "scope": "animal_cards",
   "voice_type": "human_recording",
   "separator_ms": 450,
@@ -162,6 +162,240 @@
       "license": "CC BY-SA 3.0",
       "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
       "sha256": "cb116aba987b1f7ac0c7b2b3da2ffb44171f51d00689d4e2a6ade8a44d4def0d"
+    },
+    {
+      "id": "zh-pig",
+      "language": "cmn",
+      "text": "猪",
+      "file": "zh-pig.mp3",
+      "source": "https://github.com/hugolpz/audio-cmn/blob/master/96k/hsk/cmn-%E7%8C%AA.mp3",
+      "download_url": "https://raw.githubusercontent.com/hugolpz/audio-cmn/master/96k/hsk/cmn-%E7%8C%AA.mp3",
+      "author": "Yue Tan",
+      "project": "University of Caen / Shtooka; audio-cmn mirror curated by Hugo Lopez",
+      "license": "CC BY-SA 3.0 US",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+      "git_blob": "be5bc8d8ea83ce0fac2a1b33acccaaac1848869c",
+      "sha256": "4958eac9d6fd346407edb3fb915d82ac9f2c898235dc1b551240b41148ea983d"
+    },
+    {
+      "id": "en-pig",
+      "language": "en-US",
+      "text": "Pig",
+      "file": "en-pig.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-pig.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/e/e4/En-us-pig.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha256": "ddcb1ead9b56bddd839ba21960e8a07f7833f5740f2519c9fc36022bc02ad485"
+    },
+    {
+      "id": "zh-sheep",
+      "language": "cmn",
+      "text": "羊",
+      "file": "zh-sheep.mp3",
+      "source": "https://github.com/hugolpz/audio-cmn/blob/master/96k/hsk/cmn-%E7%BE%8A.mp3",
+      "download_url": "https://raw.githubusercontent.com/hugolpz/audio-cmn/master/96k/hsk/cmn-%E7%BE%8A.mp3",
+      "author": "Yue Tan",
+      "project": "University of Caen / Shtooka; audio-cmn mirror curated by Hugo Lopez",
+      "license": "CC BY-SA 3.0 US",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+      "git_blob": "361fbb5a34b537798527b32b26aa93b8c64a7443",
+      "sha256": "15782d4837ae4ab8c7515e8d34de1310bbf27a9828bcbeff929d1909dadcd00e"
+    },
+    {
+      "id": "en-sheep",
+      "language": "en-US",
+      "text": "Sheep",
+      "file": "en-sheep.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-sheep.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/8/82/En-us-sheep.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha256": "7e0b494c820f9fbfb9b9b8bec3d7ab3dc035a69e1ffff9c8a1178891c59c479c"
+    },
+    {
+      "id": "zh-chicken",
+      "language": "cmn",
+      "text": "鸡",
+      "file": "zh-chicken.mp3",
+      "source": "https://github.com/hugolpz/audio-cmn/blob/master/96k/hsk/cmn-%E9%B8%A1.mp3",
+      "download_url": "https://raw.githubusercontent.com/hugolpz/audio-cmn/master/96k/hsk/cmn-%E9%B8%A1.mp3",
+      "author": "Yue Tan",
+      "project": "University of Caen / Shtooka; audio-cmn mirror curated by Hugo Lopez",
+      "license": "CC BY-SA 3.0 US",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+      "git_blob": "527186cab627f8853a6775d8dfef6c64e61bca5e",
+      "sha256": "f3f3b48f14fdb23135cef70c20028efea0f41d534b9d43ba08fb8b1aec18f638"
+    },
+    {
+      "id": "en-chicken",
+      "language": "en-US",
+      "text": "Chicken",
+      "file": "en-chicken.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-chicken.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/6/6a/En-us-chicken.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha256": "6b88e446b5bdb5e3b064e7c54a131ba9ac591c614d48bcb5ec0bcef2ffea3fe8"
+    },
+    {
+      "id": "zh-bird",
+      "language": "cmn",
+      "text": "鸟",
+      "file": "zh-bird.mp3",
+      "source": "https://github.com/hugolpz/audio-cmn/blob/master/96k/hsk/cmn-%E9%B8%9F.mp3",
+      "download_url": "https://raw.githubusercontent.com/hugolpz/audio-cmn/master/96k/hsk/cmn-%E9%B8%9F.mp3",
+      "author": "Yue Tan",
+      "project": "University of Caen / Shtooka; audio-cmn mirror curated by Hugo Lopez",
+      "license": "CC BY-SA 3.0 US",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+      "git_blob": "834110ef04fb1b36df8dd64dcc19afc47c5566b6",
+      "sha256": "53ec94c6e644bbba6f2d830ea932e00427b4b7e30bbb7b8e7c12af0072d3658e"
+    },
+    {
+      "id": "en-bird",
+      "language": "en-US",
+      "text": "Bird",
+      "file": "en-bird.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-bird.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/0/07/En-us-bird.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha256": "a73885ede08a81cc4a4acaf7211ee99daa8803b2920e08a2adf068e35037f81f"
+    },
+    {
+      "id": "zh-fish",
+      "language": "cmn",
+      "text": "鱼",
+      "file": "zh-fish.mp3",
+      "source": "https://github.com/hugolpz/audio-cmn/blob/master/96k/hsk/cmn-%E9%B1%BC.mp3",
+      "download_url": "https://raw.githubusercontent.com/hugolpz/audio-cmn/master/96k/hsk/cmn-%E9%B1%BC.mp3",
+      "author": "Yue Tan",
+      "project": "University of Caen / Shtooka; audio-cmn mirror curated by Hugo Lopez",
+      "license": "CC BY-SA 3.0 US",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+      "git_blob": "35030000023924b95e2f20a5b5ae0aa674471a64",
+      "sha256": "d78fd060585fe5239672271019ea33d50f30b18c41462b3691783478a6d2f806"
+    },
+    {
+      "id": "en-fish",
+      "language": "en-US",
+      "text": "Fish",
+      "file": "en-fish.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-fish.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/3/3e/En-us-fish.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "Public domain (PD-self)",
+      "license_url": "https://commons.wikimedia.org/wiki/Template:PD-self",
+      "sha256": "8bc9547fdbd689b4dda749a8faff5de4096bbafd3adc3b4466a788e27cc725e6"
+    },
+    {
+      "id": "zh-bear",
+      "language": "cmn",
+      "text": "熊",
+      "file": "zh-bear.mp3",
+      "source": "https://github.com/hugolpz/audio-cmn/blob/master/96k/hsk/cmn-%E7%86%8A.mp3",
+      "download_url": "https://raw.githubusercontent.com/hugolpz/audio-cmn/master/96k/hsk/cmn-%E7%86%8A.mp3",
+      "author": "Yue Tan",
+      "project": "University of Caen / Shtooka; audio-cmn mirror curated by Hugo Lopez",
+      "license": "CC BY-SA 3.0 US",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+      "git_blob": "a61d753637d17fff99e126c8bb4233be6e38ce3e",
+      "sha256": "11eb018e4a589caef094d7f4abee6de5ec92189c9713c814b22eab1fc76d029a"
+    },
+    {
+      "id": "en-bear",
+      "language": "en-US",
+      "text": "Bear",
+      "file": "en-bear.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-bear.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/c/c7/En-us-bear.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha256": "b7220e2763498416b407de9f967b1a3d6493d039eccf9002d7a0ea02559f13a7"
+    },
+    {
+      "id": "zh-lion",
+      "language": "cmn",
+      "text": "狮子",
+      "file": "zh-lion.mp3",
+      "source": "https://github.com/hugolpz/audio-cmn/blob/master/96k/hsk/cmn-%E7%8B%AE%E5%AD%90.mp3",
+      "download_url": "https://raw.githubusercontent.com/hugolpz/audio-cmn/master/96k/hsk/cmn-%E7%8B%AE%E5%AD%90.mp3",
+      "author": "Yue Tan",
+      "project": "University of Caen / Shtooka; audio-cmn mirror curated by Hugo Lopez",
+      "license": "CC BY-SA 3.0 US",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+      "git_blob": "12f7b8ca8474035c7d23f374b55c05c64d885f5a",
+      "sha256": "b3ae73e4e74004b6a59ca4a87d1b5e4609a74c16769eace97f44946cf6e4b897"
+    },
+    {
+      "id": "en-lion",
+      "language": "en-US",
+      "text": "Lion",
+      "file": "en-lion.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-lion.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/a/aa/En-us-lion.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha256": "745cfa98153a8acd90dade7dd6fcba039af3f0dc349f03a209a4a076e86f073b"
+    },
+    {
+      "id": "zh-tiger",
+      "language": "cmn",
+      "text": "老虎",
+      "file": "zh-tiger.mp3",
+      "source": "https://github.com/hugolpz/audio-cmn/blob/master/96k/hsk/cmn-%E8%80%81%E8%99%8E.mp3",
+      "download_url": "https://raw.githubusercontent.com/hugolpz/audio-cmn/master/96k/hsk/cmn-%E8%80%81%E8%99%8E.mp3",
+      "author": "Yue Tan",
+      "project": "University of Caen / Shtooka; audio-cmn mirror curated by Hugo Lopez",
+      "license": "CC BY-SA 3.0 US",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+      "git_blob": "ef59d68b57a3986030f451dc7182ad9a41d82f4a",
+      "sha256": "0191a379a1cc698c76d21c43efb31adeb2887d628ba40bbd2cb42585965d1cd4"
+    },
+    {
+      "id": "en-tiger",
+      "language": "en-US",
+      "text": "Tiger",
+      "file": "en-tiger.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-tiger.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/En-us-tiger.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha256": "35b81ac772850032437d3f25569b5c68bc94392c617b52dcfa5ece6c92a30234"
+    },
+    {
+      "id": "zh-monkey",
+      "language": "cmn",
+      "text": "猴子",
+      "file": "zh-monkey.mp3",
+      "source": "https://github.com/hugolpz/audio-cmn/blob/master/96k/hsk/cmn-%E7%8C%B4%E5%AD%90.mp3",
+      "download_url": "https://raw.githubusercontent.com/hugolpz/audio-cmn/master/96k/hsk/cmn-%E7%8C%B4%E5%AD%90.mp3",
+      "author": "Yue Tan",
+      "project": "University of Caen / Shtooka; audio-cmn mirror curated by Hugo Lopez",
+      "license": "CC BY-SA 3.0 US",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/us/",
+      "git_blob": "6614426a2729c8a7db6d43a0d5f8abbe77f1f7bc",
+      "sha256": "104ff8f606b71daed0a974446921811c0c2ada1930b936b96512b56e17f6f138"
+    },
+    {
+      "id": "en-monkey",
+      "language": "en-US",
+      "text": "Monkey",
+      "file": "en-monkey.ogg",
+      "source": "https://commons.wikimedia.org/wiki/File:En-us-monkey.ogg",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/7/74/En-us-monkey.ogg",
+      "author": "Dvortygirl (Betsy Megas)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha256": "65b6a8fb778c183c41b54d65dc944ce2f9fe7e0ce51266de2f1cccc4f7ef08d3"
     }
   ],
   "cards": [
@@ -200,6 +434,60 @@
       "chinese": "zh-duck",
       "english": "en-duck",
       "file": "audio/card-duck.wav"
+    },
+    {
+      "id": "pig",
+      "chinese": "zh-pig",
+      "english": "en-pig",
+      "file": "audio/card-pig.wav"
+    },
+    {
+      "id": "sheep",
+      "chinese": "zh-sheep",
+      "english": "en-sheep",
+      "file": "audio/card-sheep.wav"
+    },
+    {
+      "id": "chicken",
+      "chinese": "zh-chicken",
+      "english": "en-chicken",
+      "file": "audio/card-chicken.wav"
+    },
+    {
+      "id": "bird",
+      "chinese": "zh-bird",
+      "english": "en-bird",
+      "file": "audio/card-bird.wav"
+    },
+    {
+      "id": "fish",
+      "chinese": "zh-fish",
+      "english": "en-fish",
+      "file": "audio/card-fish.wav"
+    },
+    {
+      "id": "bear",
+      "chinese": "zh-bear",
+      "english": "en-bear",
+      "file": "audio/card-bear.wav"
+    },
+    {
+      "id": "lion",
+      "chinese": "zh-lion",
+      "english": "en-lion",
+      "file": "audio/card-lion.wav"
+    },
+    {
+      "id": "tiger",
+      "chinese": "zh-tiger",
+      "english": "en-tiger",
+      "file": "audio/card-tiger.wav"
+    },
+    {
+      "id": "monkey",
+      "chinese": "zh-monkey",
+      "english": "en-monkey",
+      "file": "audio/card-monkey.wav"
     }
   ],
   "outputs": {
@@ -238,6 +526,60 @@
       "pause_frames": 7200,
       "english_frames": 15200,
       "sha256": "747bb2a9740b22e9a95c1ef5d9d8f6e880266893893bc32e3445303669de6063"
+    },
+    "audio/card-pig.wav": {
+      "chinese_frames": 15201,
+      "pause_frames": 7200,
+      "english_frames": 8917,
+      "sha256": "2d6821f86c5f6581ffbfbdb6d351a14c011652c8e107226d8d3b8477fbe48253"
+    },
+    "audio/card-sheep.wav": {
+      "chinese_frames": 16000,
+      "pause_frames": 7200,
+      "english_frames": 11146,
+      "sha256": "79e54de9ff321ed224a9e4a3370edf9a89f69c9fa9b166ff38ba845241fa1859"
+    },
+    "audio/card-chicken.wav": {
+      "chinese_frames": 15201,
+      "pause_frames": 7200,
+      "english_frames": 9660,
+      "sha256": "113795403fd2395ee3d670c09d01bb320200e3392587ceec56451774c480d555"
+    },
+    "audio/card-bird.wav": {
+      "chinese_frames": 18401,
+      "pause_frames": 7200,
+      "english_frames": 11517,
+      "sha256": "7547fe23ded65f9d6f46084d14d157da0dfe438df3e28ede127250c621c536a3"
+    },
+    "audio/card-fish.wav": {
+      "chinese_frames": 15201,
+      "pause_frames": 7200,
+      "english_frames": 11703,
+      "sha256": "4f7f65405c7477122994aaa831569667ffbbff17263c458e61780941964a93b8"
+    },
+    "audio/card-bear.wav": {
+      "chinese_frames": 16801,
+      "pause_frames": 7200,
+      "english_frames": 12075,
+      "sha256": "f71a593966a4c7600d233cb8447093767ff0052d3944fb645680bbe7c623f735"
+    },
+    "audio/card-lion.wav": {
+      "chinese_frames": 19200,
+      "pause_frames": 7200,
+      "english_frames": 12446,
+      "sha256": "4f570ee69f02b0a01275d0033cb573fa714f3b3ad716777f850b52105433a6fa"
+    },
+    "audio/card-tiger.wav": {
+      "chinese_frames": 20800,
+      "pause_frames": 7200,
+      "english_frames": 16000,
+      "sha256": "5d2dc72092404b23188af73d0c993235d60933a8f634365fd612214698628a76"
+    },
+    "audio/card-monkey.wav": {
+      "chinese_frames": 19200,
+      "pause_frames": 7200,
+      "english_frames": 9288,
+      "sha256": "fe7b1ae981948513977224e07996de9ed46d6e4e3176548eb27e9c0bc70b0659"
     }
   }
 }

@@ -45,5 +45,6 @@
   "packages/apps/local.lightlearning.debug.0.1.1.bpk": "f5ec9eb6f985ee66ae9ea907747540a5c1b126f5d2766aae7d23dd7483bae730",
   "packages/content/learning-starter-1.1.0.zip": "be17702cf012b610344d4bcb15f7e281f96acba6e24758191a54ce40f8698aa8",
   "packages/apps/local.lightlearning.debug.0.1.2.bpk": "2bd66f93594c4b7c875e8b83a1721f164213d1d6defbde9c6631867a897bf39c",
-  "packages/content/learning-starter-1.2.0.zip": "91e52f2c7f407daa416a1eeb8c64a50163d6104439077854d235839bfdff019a"
+  "packages/content/learning-starter-1.2.0.zip": "91e52f2c7f407daa416a1eeb8c64a50163d6104439077854d235839bfdff019a",
+  "packages/content/learning-starter-1.3.0.zip": "1df70989ea0a7233b4098c76b4269185e8cad9fdd953d0885459033e285b8c4d"
 }

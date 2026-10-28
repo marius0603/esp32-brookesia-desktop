@@ -43,6 +43,6 @@ def main():
             output.setnchannels(1);output.setsampwidth(2);output.setframerate(16000);output.writeframes(samples.tobytes())
         metadata['outputs'][card['file']]={'chinese_frames':len(chinese),'pause_frames':pause_frames,'english_frames':len(english),'sha256':digest(destination.read_bytes())}
     path.write_text(json.dumps(metadata,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    print('Six card recordings built: human Mandarin, pause, human English; no TTS, speed or pitch changes.')
+    print(str(len(metadata['cards']))+' card recordings built: human Mandarin, pause, human English; no TTS, speed or pitch changes.')
 
 if __name__=='__main__':main()

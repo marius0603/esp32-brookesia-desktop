@@ -234,7 +234,79 @@
       "english": "Duck",
       "image": "images/duck.png",
       "audio": "audio/card-duck.wav"
+    },
+    {
+      "id": "pig",
+      "name": "猪",
+      "pinyin": "zhū",
+      "english": "Pig",
+      "image": "images/pig.png",
+      "audio": "audio/card-pig.wav"
+    },
+    {
+      "id": "sheep",
+      "name": "羊",
+      "pinyin": "yáng",
+      "english": "Sheep",
+      "image": "images/sheep.png",
+      "audio": "audio/card-sheep.wav"
+    },
+    {
+      "id": "chicken",
+      "name": "鸡",
+      "pinyin": "jī",
+      "english": "Chicken",
+      "image": "images/chicken.png",
+      "audio": "audio/card-chicken.wav"
+    },
+    {
+      "id": "bird",
+      "name": "鸟",
+      "pinyin": "niǎo",
+      "english": "Bird",
+      "image": "images/bird.png",
+      "audio": "audio/card-bird.wav"
+    },
+    {
+      "id": "fish",
+      "name": "鱼",
+      "pinyin": "yú",
+      "english": "Fish",
+      "image": "images/fish.png",
+      "audio": "audio/card-fish.wav"
+    },
+    {
+      "id": "bear",
+      "name": "熊",
+      "pinyin": "xióng",
+      "english": "Bear",
+      "image": "images/bear.png",
+      "audio": "audio/card-bear.wav"
+    },
+    {
+      "id": "lion",
+      "name": "狮子",
+      "pinyin": "shī zi",
+      "english": "Lion",
+      "image": "images/lion.png",
+      "audio": "audio/card-lion.wav"
+    },
+    {
+      "id": "tiger",
+      "name": "老虎",
+      "pinyin": "lǎo hǔ",
+      "english": "Tiger",
+      "image": "images/tiger.png",
+      "audio": "audio/card-tiger.wav"
+    },
+    {
+      "id": "monkey",
+      "name": "猴子",
+      "pinyin": "hóu zi",
+      "english": "Monkey",
+      "image": "images/monkey.png",
+      "audio": "audio/card-monkey.wav"
     }
   ],
-  "version": "1.2.0"
+  "version": "1.3.0"
 }

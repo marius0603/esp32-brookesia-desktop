@@ -44,8 +44,12 @@ def main():
         if (APP/'packs'/filename).exists():files[filename]=(APP/'packs'/filename).read_bytes()
     if 'audio-sources.json' in files:
         voices=json.loads(files['audio-sources.json'])
-        assert voices['voice_type']=='human_recording' and len(voices['cards'])==6
+        assert voices['voice_type']=='human_recording' and len(voices['cards'])==len(pack['cards'])
+        assert {c['id'] for c in voices['cards']}=={c['id'] for c in pack['cards']}
+        assert {c['file'] for c in voices['cards']}=={c['audio'] for c in pack['cards']}
+        recordings={r['id']:r for r in voices['recordings']}
         for card in voices['cards']:
+            assert recordings[card['chinese']]['language']=='cmn' and recordings[card['english']]['language']=='en-US'
             name='packs/starter/'+card['file'];meta=voices['outputs'][card['file']]
             assert hashlib.sha256(files[name]).hexdigest()==meta['sha256']
             with wave.open(str(APP/'packs/starter'/card['file']),'rb') as audio:
