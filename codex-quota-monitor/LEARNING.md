@@ -77,7 +77,7 @@
 
 - 动物插画和书本图标为本项目 SVG 绘制，保留原稿及生成 PNG，可用 `tools/build_card_images.cjs` 配合 sharp 重建动物图。
 - 名称与英语示范使用本机 Windows System.Speech 的 Huihui / Zira 合成；`tools/build_speech.ps1` 从 JSON 重建 14 段 WAV，没有采集真人录音。
-- 拼音补充字体来源为 Noto Sans SC 2.004，按 OFL 1.1 重新命名为 LearningSupplement 并子集化；来源及原始哈希见 `packs/font-source.json`，许可见 `packs/OFL.txt`。
+- 拼音补充字体来源为 Noto Sans SC 2.04，按 OFL 1.1 重新命名为 LearningSupplement 并子集化；来源及原始哈希见 `packs/font-source.json`，许可见 `packs/OFL.txt`。
 - `tests/main.test.cjs` 验证三类活动、滑动、媒体路径、内容包扩展及录音清除；仓库 `tests/learning_media_static.cpp` 验证本地音频边界及儿童授权。固件构建后仍需实机验证滑动手感、名称读音和麦克风回放。
 
 `tools/verify_learning.py --port COM3` 检查已安装版本、字体、完整音频播放、录音清除和原音量恢复；添加 `--record-test` 会明确执行一次1秒的内存录音及静音回放，随后清除。报告只保存指标到私有 `runtime`，不会导出音频。可用 `--before <私有安装前快照>` 对比原故事、书签、家长设置及助手模式；现有儿童模式必须已允许轻学习且不在休息时间。
