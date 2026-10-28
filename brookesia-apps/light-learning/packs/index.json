@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "packs": [
+    {
+      "id": "starter",
+      "title": "启蒙包"
+    }
+  ]
+}

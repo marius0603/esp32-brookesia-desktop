@@ -131,7 +131,7 @@ private:
                 size_t size=sizeof(prefs);e=nvs_get_blob(h,"policy",&prefs,&size);nvs_close(h);
                 if(e==ESP_ERR_NVS_NOT_FOUND){prefs=Preferences{};e=ESP_OK;size=sizeof(prefs);}
                 if(e!=ESP_OK || size!=sizeof(prefs) || prefs.version!=1 || prefs.volume>60 ||
-                        prefs.minutes>120 || prefs.start>23 || prefs.end>23 || prefs.mask>15 ||
+                        prefs.minutes>120 || prefs.start>23 || prefs.end>23 || !child_policy::valid_mask(prefs.mask) ||
                         (prefs.enabled && !prefs.has_pin))return false;
             } else if(e!=ESP_ERR_NVS_NOT_FOUND)return false;
             used=prefs.used_reserved;
@@ -191,6 +191,7 @@ private:
         boost::json::object o{{"configured",prefs.has_pin!=0},{"enabled",prefs.enabled!=0},
             {"allow_audiobook",(prefs.mask&1)!=0},{"allow_weather",(prefs.mask&2)!=0},
             {"allow_clock",(prefs.mask&4)!=0},{"allow_assistant",(prefs.mask&8)!=0},
+            {"allow_learning",(prefs.mask&16)!=0},
             {"max_volume",prefs.volume},{"daily_minutes",prefs.minutes},{"used_seconds",used},
             {"remaining_seconds",remaining},{"night_enabled",prefs.night!=0},
             {"night_start",prefs.start},{"night_end",prefs.end},{"clock_ready",day!=0},
@@ -242,7 +243,7 @@ private:
                     !number("max_volume",10,60,next.volume) || !number("daily_minutes",0,120,next.minutes) ||
                     !number("night_start",0,23,next.start) || !number("night_end",0,23,next.end))return failed("设置数值无效");
             for(const auto &[key,bit]:std::initializer_list<std::pair<const char *,unsigned>>{
-                    {"allow_audiobook",1},{"allow_weather",2},{"allow_clock",4},{"allow_assistant",8}}) {
+                    {"allow_audiobook",1},{"allow_weather",2},{"allow_clock",4},{"allow_assistant",8},{"allow_learning",16}}) {
                 uint8_t on=(next.mask&bit)!=0;
                 if(!boolean(key,on))return failed("应用开关无效");
                 if(on)next.mask|=bit;else next.mask&=~bit;
@@ -302,6 +303,7 @@ std::shared_ptr<ServiceBase> make_child_mode_service(){return std::make_shared<C
 void child_mode_attach_system(system::core::System *system){system_ptr=system;}
 bool child_mode_voice_allowed(){return ready && (!enabled || ((mask.load()&8) && !resting));}
 bool child_mode_audiobook_allowed(){return ready && (!enabled || ((mask.load()&1) && !resting));}
+bool child_mode_learning_allowed(){return ready && (!enabled || ((mask.load()&16) && !resting));}
 extern "C" bool brookesia_child_visible(const char *id) {
     return child_policy::administrative(id) || (ready && child_policy::visible(enabled,mask,id));
 }

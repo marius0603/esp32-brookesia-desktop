@@ -1,0 +1,50 @@
+{
+  "package": {
+    "id": "local.lightlearning",
+    "name": {
+      "en": "Light Learning",
+      "zh_CN": "轻学习"
+    },
+    "version": "0.1.0",
+    "visible": true,
+    "systems": [
+      "super"
+    ]
+  },
+  "runtime": {
+    "type": "JavaScript",
+    "entry": "app/main.js",
+    "resource_dir": "res",
+    "arguments": []
+  },
+  "services": [
+    {
+      "name": "LearningAudio",
+      "version": "0.1.0"
+    },
+    {
+      "name": "Storage",
+      "version": "0.8.3"
+    },
+    {
+      "name": "AudioPlayback",
+      "version": "0.8.2"
+    },
+    {
+      "name": "DeviceModes",
+      "version": "0.1.0"
+    },
+    {
+      "name": "Audiobook",
+      "version": "0.1.0"
+    },
+    {
+      "name": "LocalVoice",
+      "version": "0.1.0"
+    },
+    {
+      "name": "VoiceAssistant",
+      "version": "0.1.0"
+    }
+  ]
+}

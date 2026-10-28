@@ -13,3 +13,5 @@
 *.bin binary
 *.bpk binary
 
+
+*.wav binary

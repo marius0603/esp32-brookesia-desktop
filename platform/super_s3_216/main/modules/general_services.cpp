@@ -18,6 +18,7 @@
 #include "device_modes/device_modes.hpp"
 #include "child_mode/child_mode.hpp"
 #include "sd_resources/sd_resources.hpp"
+#include "learning_audio/learning_audio.hpp"
 
 using namespace esp_brookesia;
 
@@ -39,6 +40,7 @@ bool GeneralServices::init()
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_auto_rotation_service()), false, "Failed to register auto rotation service");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_child_mode_service()), false, "Failed to register child mode service");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_sd_resources_service()), false, "Failed to register SD resource service");
+    BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_learning_audio_service()), false, "Failed to register learning audio service");
 
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_offline_voice_service()), false, "Failed to register offline voice");
 

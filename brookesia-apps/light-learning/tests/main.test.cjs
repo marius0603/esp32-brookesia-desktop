@@ -1,0 +1,67 @@
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const root=path.join(__dirname,'..'),raw=fs.readFileSync(path.join(root,'src/app/main.js'),'utf8');
+const source=raw.replace(/\n\}\)\(\);\s*$/,'\nglobalThis.__test={validatePack,validateIndex,mediaPath,read:()=>({mode,index,packIndex,pending})};\n})();');
+const starter=JSON.parse(fs.readFileSync(path.join(root,'packs/starter/pack.json'),'utf8'));
+const fonts=JSON.parse(fs.readFileSync(path.join(root,'../../platform/super_s3_216/littlefs/system/fonts/index.json'),'utf8'));
+assert(fonts.fonts.every(f=>Array.isArray(f.languages)&&f.languages.length),'Font registration requires languages');
+const doc=JSON.parse(fs.readFileSync(path.join(root,'src/res/screens/main.json'),'utf8')),views=new Map();
+const actions=new Set();
+(function scan(n,p=''){p+='/'+n.id;views.set(p,n);for(const event of n.events||[]){assert(!actions.has(event.action),'Document actions must be unique: '+event.action);actions.add(event.action);}for(const c of n.children||[])scan(c,p);})(doc);
+const files={'/sdcard/learning/index.json':JSON.stringify({schema:1,packs:[{id:'starter',title:'启蒙包'},{id:'second',title:'加包演示'}]}),'/sdcard/learning/packs/starter/pack.json':JSON.stringify(starter),'/sdcard/learning/packs/second/pack.json':JSON.stringify({...starter,id:'second',title:'加包演示'})};
+let audio={state:'Idle',active:false,recorded_bytes:0,recorded_ms:0},calls=[],texts={},values={},now=1000;
+class Clock extends Date{static now(){return now;}}
+const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>n,call_function(h,n,j){const a=JSON.parse(j);calls.push({h,n,a});let data=null;
+ if(h==='SystemGui'&&a.Path)assert(views.has(a.Path),'Missing view '+a.Path);
+ if(n==='SetText')texts[a.Path]=a.Text;
+ if(n==='SetBinding'){assert(Object.values(views.get(a.Path).bindings||{}).includes(a.Key),'Missing binding '+a.Key);values[a.Path+':'+a.Key]=a.Value;}
+ if(n==='GetBinding')data=values[a.Path+':'+a.Key];
+ if(n==='FSReadText'){if(!(a.Path in files))return JSON.stringify({success:false,error:'Missing content'});data=files[a.Path];}
+ if(n==='GetVolume')data=35;
+ if(n==='GetState')data=h==='LearningAudio'?audio:{do_not_disturb:false,resume_volume:35};
+ if(h==='LearningAudio'){
+  if(n==='Discard')audio={state:'Idle',active:false,recorded_bytes:0,recorded_ms:0};
+  if(n==='PlayFile'||n==='Replay')audio={...audio,state:'Playing',active:true};
+  if(n==='StartRecording')audio={state:'Recording',active:true,recorded_bytes:0,recorded_ms:0};
+  if(n==='StopRecording')audio={state:'Recorded',active:false,recorded_bytes:32000,recorded_ms:1000};
+  if(n==='Stop')audio={...audio,state:'Idle',active:false};
+ }
+ if(n==='StartPeriodic')data=8;
+ return JSON.stringify({success:true,data});}}});
+vm.runInContext(source,ctx);ctx.brookesia_app.on_start();
+assert.equal(ctx.__test.read().mode,'home');assert.equal(texts['/main/home/cards/count'],'6 张');
+assert.deepEqual(JSON.parse(values['/main/home/pack:options']),['启蒙包','加包演示']);
+ctx.brookesia_app.on_action('cards');assert.equal(texts['/main/lesson/animalCard/name'],'小猫');
+assert.equal(calls.filter(c=>c.n==='PlayFile').at(-1).a.Path,'/sdcard/learning/packs/starter/audio/card-cat.wav');
+assert.equal(calls.filter(c=>c.n==='SetViewSrc').at(-1).a.Src,'/sdcard/learning/packs/starter/images/cat.png');
+now+=300;ctx.brookesia_app.on_action('cardSwipe','/main/lesson/animalCard','{"direction":"left"}');
+assert.equal(texts['/main/lesson/animalCard/name'],'小狗');
+const swipedCalls=calls.length;ctx.brookesia_app.on_action('readName');assert.equal(calls.length,swipedCalls,'Swipe release must not restart the spoken name');
+assert.match(calls.filter(c=>c.n==='PlayFile').at(-1).a.Path,/card-dog.wav$/);
+now+=300;ctx.brookesia_app.on_action('cardSwipe','/main/lesson/animalCard','{"direction":"right"}');
+assert.equal(texts['/main/lesson/animalCard/name'],'小猫');
+now+=300;ctx.brookesia_app.on_action('cardSwipe','/main/lesson/animalCard','{"direction":"up"}');
+assert.equal(texts['/main/lesson/animalCard/name'],'小猫');
+assert.equal(values['/main/lesson/nav:hidden'],'true','Animal cards use swiping instead of previous/next buttons');
+ctx.brookesia_app.on_action('arithmetic');ctx.brookesia_app.on_action('a0');assert.equal(texts['/main/lesson/feedback'],'再试一次');
+ctx.brookesia_app.on_action('a1');assert.equal(texts['/main/lesson/feedback'],'答对了！');
+ctx.brookesia_app.on_action('english');ctx.brookesia_app.on_action('a0');assert.match(calls.filter(c=>c.n==='PlayFile').at(-1).a.Path,/en-hello.wav$/);
+ctx.brookesia_app.on_action('a1');
+assert.equal(calls.filter(c=>c.n==='StartRecording').at(-1).a.Seconds,5);
+ctx.brookesia_app.on_action('a1');assert.equal(audio.state,'Recorded');
+ctx.brookesia_app.on_action('a2');assert.equal(calls.filter(c=>c.n==='Replay').length,1);
+ctx.brookesia_app.on_action('next');assert.equal(audio.recorded_bytes,0,'Moving to another word erases the recording');
+assert.equal(calls.filter(c=>c.n==='Connect'||c.n==='StartListening'||c.n==='FSWriteText').length,0,'No network, upload or persistent recordings');
+values['/main/home/pack:selected']='1';ctx.brookesia_app.on_action('pack');assert.equal(ctx.__test.read().packIndex,1);
+ctx.brookesia_app.on_action('english');assert.equal(texts['/main/lesson/card/prompt'],'Hello');
+for(const bad of ['../outside.wav','/tmp/a.wav','audio/../x.wav','audio//x.wav','a\\x.wav','https://x/a.wav'])assert(!ctx.__test.mediaPath(bad));
+const clone=()=>JSON.parse(JSON.stringify(starter));
+let bad=clone();bad.arithmetic[0].answer=99;assert.throws(()=>ctx.__test.validatePack(bad,'starter'));
+bad=clone();bad.arithmetic[0].choices=[3,3,4];assert.throws(()=>ctx.__test.validatePack(bad,'starter'));
+bad=clone();bad.cards[0].image='../outside.png';assert.throws(()=>ctx.__test.validatePack(bad,'starter'));
+bad=clone();bad.english[0].record_seconds=30;assert.throws(()=>ctx.__test.validatePack(bad,'starter'));
+bad=clone();bad.cards[0].audio='../../outside.wav';assert.throws(()=>ctx.__test.validatePack(bad,'starter'));
+assert.throws(()=>ctx.__test.validateIndex({schema:1,packs:[{id:'../bad',title:'坏包'}]}));
+ctx.brookesia_app.on_pause();assert.equal(audio.recorded_bytes,0);let before=calls.length;ctx.brookesia_app.on_timer();assert.equal(calls.length,before);
+ctx.brookesia_app.on_resume();assert.equal(ctx.__test.read().mode,'home');ctx.brookesia_app.on_stop();
+vm.runInContext(source,ctx);ctx.brookesia_app.on_start();assert.equal(ctx.__test.read().mode,'home');
+console.log('Learning passed: illustrated animal cards with left/right swipes and matching voice, maths, local record/replay and erasure, JSON packs and lifecycle.');

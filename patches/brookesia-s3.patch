@@ -1101,20 +1101,20 @@ index 2cf3522..f90dddb 100644
      }
 -    const std::filesystem::path relative(remote_path);
 -    if (relative.is_absolute() || path_has_parent_reference(relative)) {
-+    const bool sd_audio = remote_path.starts_with("sd-audiobooks/");
++    const bool sd_audio = remote_path.starts_with("sd-audiobooks/"); const bool sd_learning = remote_path.starts_with("sd-learning/");
 +    const bool sd_voice = remote_path.starts_with("offline-voice/");
-+    const std::filesystem::path relative(sd_audio ? remote_path.substr(14) : sd_voice ? remote_path.substr(14) : remote_path);
++    const std::filesystem::path relative(sd_audio ? remote_path.substr(14) : sd_voice ? remote_path.substr(14) : sd_learning ? remote_path.substr(12) : remote_path);
 +    if (relative.empty() || relative.is_absolute() || path_has_parent_reference(relative)) {
          return std::unexpected("path must be relative and must not contain '..'");
      }
 -
 +
 -    const std::filesystem::path root(BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
-+    const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : sd_voice ? "/sdcard/offline-voice" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
-+    if (sd_audio) {
++    const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : sd_voice ? "/sdcard/offline-voice" : sd_learning ? "/sdcard/learning" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
++    if (sd_audio || sd_learning) {
 +        auto extension = relative.extension().string();
 +        std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c){return std::tolower(c);});
-+        if (extension != ".mp3" && extension != ".wav")return std::unexpected("SD audio upload requires MP3 or WAV");
++        if ((sd_audio && extension != ".mp3" && extension != ".wav") || (sd_learning && extension != ".wav" && extension != ".json" && extension != ".png"))return std::unexpected("Invalid SD audio or learning asset extension");
 +    }
 +    if (sd_voice) {
 +        const auto name = relative.filename().string();
@@ -1135,11 +1135,20 @@ index 2cf3522..f90dddb 100644
 +        // Keep large audio transfers on SD from their first byte, including
 +        // SHA-256 staging; Flash may have less free space than one chapter.
 +        const bool sd_audio = transfer->destination.starts_with("/sdcard/audiobooks/");
-+        const bool sd_voice = transfer->destination.starts_with("/sdcard/offline-voice/");
-+        const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : sd_voice ? "/sdcard/offline-voice" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
++        const bool sd_voice = transfer->destination.starts_with("/sdcard/offline-voice/"); const bool sd_learning = transfer->destination.starts_with("/sdcard/learning/");
++        const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : sd_voice ? "/sdcard/offline-voice" : sd_learning ? "/sdcard/learning" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
          const std::filesystem::path temp_directory = root / ".brookesia_usb";
          std::error_code error_code;
          std::filesystem::create_directories(temp_directory, error_code);
+@@ -1042,7 +1060,7 @@ private:
+             const int written = transport_->write(
+                                     reinterpret_cast<const uint8_t *>(serialized.data()) + offset,
+-                                    serialized.size() - offset,
++                                    std::min<size_t>(1024, serialized.size() - offset),
+                                     1000
+                                 );
+             if (written <= 0) {
+                 BROOKESIA_LOGW("Transport response write failed at %1%/%2% bytes", offset, serialized.size());
 diff --git a/service/system/brookesia_service_usb/src/transport_serial_jtag.cpp b/service/system/brookesia_service_usb/src/transport_serial_jtag.cpp
 index 0ee33bd..a5b3a08 100644
 --- a/service/system/brookesia_service_usb/src/transport_serial_jtag.cpp

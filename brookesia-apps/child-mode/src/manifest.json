@@ -1,1 +1,26 @@
-{"package":{"id":"local.childmode","name":{"en":"Child Mode","zh_CN":"儿童模式"},"version":"0.1.0","visible":true,"systems":["super"]},"runtime":{"type":"JavaScript","entry":"app/main.js","resource_dir":"res","arguments":[]},"services":[{"name":"ChildMode","version":"0.1.0"}]}
+{
+  "package": {
+    "id": "local.childmode",
+    "name": {
+      "en": "Child Mode",
+      "zh_CN": "儿童模式"
+    },
+    "version": "0.1.1",
+    "visible": true,
+    "systems": [
+      "super"
+    ]
+  },
+  "runtime": {
+    "type": "JavaScript",
+    "entry": "app/main.js",
+    "resource_dir": "res",
+    "arguments": []
+  },
+  "services": [
+    {
+      "name": "ChildMode",
+      "version": "0.1.0"
+    }
+  ]
+}

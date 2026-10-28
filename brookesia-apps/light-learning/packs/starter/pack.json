@@ -1,0 +1,239 @@
+{
+  "schema": 1,
+  "id": "starter",
+  "title": "启蒙包",
+  "arithmetic": [
+    {
+      "a": 1,
+      "b": 2,
+      "operator": "+",
+      "choices": [
+        2,
+        3,
+        4
+      ],
+      "answer": 3
+    },
+    {
+      "a": 2,
+      "b": 3,
+      "operator": "+",
+      "choices": [
+        4,
+        5,
+        6
+      ],
+      "answer": 5
+    },
+    {
+      "a": 4,
+      "b": 1,
+      "operator": "+",
+      "choices": [
+        5,
+        4,
+        6
+      ],
+      "answer": 5
+    },
+    {
+      "a": 3,
+      "b": 3,
+      "operator": "+",
+      "choices": [
+        5,
+        6,
+        7
+      ],
+      "answer": 6
+    },
+    {
+      "a": 5,
+      "b": 2,
+      "operator": "+",
+      "choices": [
+        6,
+        7,
+        8
+      ],
+      "answer": 7
+    },
+    {
+      "a": 6,
+      "b": 3,
+      "operator": "+",
+      "choices": [
+        9,
+        8,
+        7
+      ],
+      "answer": 9
+    },
+    {
+      "a": 3,
+      "b": 1,
+      "operator": "-",
+      "choices": [
+        1,
+        2,
+        3
+      ],
+      "answer": 2
+    },
+    {
+      "a": 5,
+      "b": 2,
+      "operator": "-",
+      "choices": [
+        3,
+        2,
+        4
+      ],
+      "answer": 3
+    },
+    {
+      "a": 6,
+      "b": 2,
+      "operator": "-",
+      "choices": [
+        3,
+        4,
+        5
+      ],
+      "answer": 4
+    },
+    {
+      "a": 8,
+      "b": 3,
+      "operator": "-",
+      "choices": [
+        6,
+        5,
+        4
+      ],
+      "answer": 5
+    },
+    {
+      "a": 9,
+      "b": 4,
+      "operator": "-",
+      "choices": [
+        4,
+        5,
+        6
+      ],
+      "answer": 5
+    },
+    {
+      "a": 10,
+      "b": 5,
+      "operator": "-",
+      "choices": [
+        6,
+        4,
+        5
+      ],
+      "answer": 5
+    }
+  ],
+  "english": [
+    {
+      "text": "Hello",
+      "meaning": "你好",
+      "audio": "audio/en-hello.wav",
+      "record_seconds": 5
+    },
+    {
+      "text": "Cat",
+      "meaning": "小猫",
+      "audio": "audio/en-cat.wav",
+      "record_seconds": 5
+    },
+    {
+      "text": "Dog",
+      "meaning": "小狗",
+      "audio": "audio/en-dog.wav",
+      "record_seconds": 5
+    },
+    {
+      "text": "Apple",
+      "meaning": "苹果",
+      "audio": "audio/en-apple.wav",
+      "record_seconds": 5
+    },
+    {
+      "text": "Sun",
+      "meaning": "太阳",
+      "audio": "audio/en-sun.wav",
+      "record_seconds": 5
+    },
+    {
+      "text": "Book",
+      "meaning": "书本",
+      "audio": "audio/en-book.wav",
+      "record_seconds": 5
+    },
+    {
+      "text": "Water",
+      "meaning": "水",
+      "audio": "audio/en-water.wav",
+      "record_seconds": 5
+    },
+    {
+      "text": "Good morning",
+      "meaning": "早上好",
+      "audio": "audio/en-morning.wav",
+      "record_seconds": 5
+    }
+  ],
+  "cards": [
+    {
+      "id": "cat",
+      "name": "小猫",
+      "pinyin": "xiǎo māo",
+      "english": "Cat",
+      "image": "images/cat.png",
+      "audio": "audio/card-cat.wav"
+    },
+    {
+      "id": "dog",
+      "name": "小狗",
+      "pinyin": "xiǎo gǒu",
+      "english": "Dog",
+      "image": "images/dog.png",
+      "audio": "audio/card-dog.wav"
+    },
+    {
+      "id": "cow",
+      "name": "奶牛",
+      "pinyin": "nǎi niú",
+      "english": "Cow",
+      "image": "images/cow.png",
+      "audio": "audio/card-cow.wav"
+    },
+    {
+      "id": "horse",
+      "name": "小马",
+      "pinyin": "xiǎo mǎ",
+      "english": "Horse",
+      "image": "images/horse.png",
+      "audio": "audio/card-horse.wav"
+    },
+    {
+      "id": "rabbit",
+      "name": "兔子",
+      "pinyin": "tù zi",
+      "english": "Rabbit",
+      "image": "images/rabbit.png",
+      "audio": "audio/card-rabbit.wav"
+    },
+    {
+      "id": "duck",
+      "name": "小鸭",
+      "pinyin": "xiǎo yā",
+      "english": "Duck",
+      "image": "images/duck.png",
+      "audio": "audio/card-duck.wav"
+    }
+  ]
+}

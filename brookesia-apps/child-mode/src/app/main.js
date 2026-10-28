@@ -21,7 +21,7 @@ function render(){
  text('control/mode/label',state.enabled?'关闭儿童模式':'开启儿童模式');
  text('control/volume','音量上限 '+state.max_volume+'%');
  text('control/limit',state.daily_minutes?'每日 '+state.daily_minutes+' 分钟':'时长不限制');
- for(const pair of [['book','听书','allow_audiobook'],['weather','天气','allow_weather'],['clock','时钟','allow_clock'],['assistant','语音助手','allow_assistant']])
+ for(const pair of [['book','听书','allow_audiobook'],['weather','天气','allow_weather'],['clock','时钟','allow_clock'],['assistant','小马助手','allow_assistant'],['learning','轻学习','allow_learning']])
    text('apps/'+pair[0]+'/label',pair[1]+'：'+(state[pair[2]]?'允许':'关闭'));
  text('times/night/label','夜间休息：'+(state.night_enabled?'开启':'关闭'));
  text('times/start','开始 '+('0'+state.night_start).slice(-2)+':00');
@@ -63,7 +63,7 @@ function action(name){
   const key=name.indexOf('start_')===0?'night_start':'night_end';const v=(state[key]+(name.endsWith('_plus')?1:23))%24;
   const params={};params[key]=v;save(params);
  }else{
-  const keys={book:'allow_audiobook',weather:'allow_weather',clock:'allow_clock',assistant:'allow_assistant'};
+  const keys={book:'allow_audiobook',weather:'allow_weather',clock:'allow_clock',assistant:'allow_assistant',learning:'allow_learning'};
   if(keys[name]){
    if(name==='assistant'&&!state.allow_assistant){
     if(!assistantArmed||Date.now()-assistantArmed>8000){assistantArmed=Date.now();message('再次点击开启：语音会上传小智');return;}
@@ -75,7 +75,7 @@ function action(name){
 }
 globalThis.brookesia_app={
  on_start(){hidden=false;cache={};gui=brookesia.start_service('SystemGui');policy=brookesia.start_service('ChildMode');timer=brookesia.start_service('SystemTimer');
-  const actions=['erase','enter','mode','apps','time','lock','back_apps','back_time','change','reset','night','book','weather','clock','assistant','volume_minus','volume_plus','limit_minus','limit_plus','start_minus','start_plus','end_minus','end_plus'];
+  const actions=['erase','enter','mode','apps','time','lock','back_apps','back_time','change','reset','night','book','weather','clock','assistant','learning','volume_minus','volume_plus','limit_minus','limit_plus','start_minus','start_plus','end_minus','end_plus'];
   for(let i=0;i<10;i++)actions.push('digit'+i);
   for(const a of actions)call(gui,'SubscribeAction',{Action:a});
   token='';pin='';first='';purpose='';notice='';idleTicks=0;read();show('gate');render();timerId=call(timer,'StartPeriodic',{Name:'child-mode',IntervalMs:1000});return true;

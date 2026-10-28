@@ -1,34 +1,46 @@
 {
-    "type": "fontSet",
-    "fonts": [
-        {
-            "id": "default",
-            "kind": "file",
-            "src": "Telex-Regular.ttf",
-            "languages": [
-                "en"
-            ]
-        },
-      {
-            "id": "zh_CN",
-            "kind": "file",
-            "src": "NotoSansSC-Regular.subset.ttf",
-            "languages": [
-                "en",
-                "zh_CN"
-            ]
-        },
-        {
-            "id": "audiobook_title",
-            "kind": "file",
-            "src": "audiobook-title-extra.ttf",
-            "languages": [
-                "en",
-                "zh_CN"
-            ],
-            "fallbacks": [
-                "${font.zh_CN}"
-            ]
-        }
-    ]
+  "type": "fontSet",
+  "fonts": [
+    {
+      "id": "default",
+      "kind": "file",
+      "src": "Telex-Regular.ttf",
+      "languages": [
+        "en"
+      ]
+    },
+    {
+      "id": "zh_CN",
+      "kind": "file",
+      "src": "NotoSansSC-Regular.subset.ttf",
+      "languages": [
+        "en",
+        "zh_CN"
+      ]
+    },
+    {
+      "id": "audiobook_title",
+      "kind": "file",
+      "src": "audiobook-title-extra.ttf",
+      "languages": [
+        "en",
+        "zh_CN"
+      ],
+      "fallbacks": [
+        "${font.zh_CN}"
+      ]
+    },
+    {
+      "id": "learning",
+      "kind": "file",
+      "src": "learning-extra.ttf",
+      "fallbacks": [
+        "${font.zh_CN}"
+      ],
+      "languages": [
+        "en",
+        "zh_CN"
+      ]
+    }
+  ]
 }
