@@ -93,7 +93,7 @@
          );
          launch_request_started_at_.reset();
          if (!result) {
-@@ -437,4 +455,50 @@
+@@ -437,4 +455,51 @@
      }
  }
  
@@ -124,13 +124,14 @@
 +    const float density = std::max(owner_.get_environment().density, .001F);
 +    int32_t dx = static_cast<int32_t>((info.stop_x - info.start_x) / density);
 +    const int32_t dy = static_cast<int32_t>((info.stop_y - info.start_y) / density);
-+    if (std::abs(dx) > 16 && std::abs(dx) > std::abs(dy) * 1.3F) launcher_swiping_ = true;
++    if (std::abs(dx) > 8 && std::abs(dx) > std::abs(dy) * 1.3F) launcher_swiping_ = true;
 +    if (!launcher_swiping_) return;
 +    launcher_click_after_ = SteadyClock::now() + std::chrono::milliseconds(300);
 +    if (info.event_type == Type::Release) {
 +        size_t next = launcher_page_;
-+        if (dx < -48 && next + 1 < launcher_pages_) ++next;
-+        if (dx > 48 && next > 0) --next;
++        const int32_t threshold = info.duration_ms <= 350 ? 12 : 24;
++        if (dx <= -threshold && next + 1 < launcher_pages_) ++next;
++        if (dx >= threshold && next > 0) --next;
 +        launcher_swiping_ = false;
 +        set_launcher_page(next, true);
 +        return;
