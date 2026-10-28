@@ -1,6 +1,6 @@
 # 轻学习 0.1.0
 
-适用于 ESP32-S3-Touch-AMOLED-2.16，需 0.8.3-s3.26 固件及 SD 卡。安装后离线使用，无需电脑或云端模型。
+适用于 ESP32-S3-Touch-AMOLED-2.16，需 0.8.3-s3.27 固件及 SD 卡。安装后离线使用，无需电脑或云端模型。
 
 | 活动 | 启蒙包 | 操作 |
 | --- | --- | --- |
@@ -18,7 +18,7 @@
 
 ```powershell
 # 以下在 codex-quota-monitor 目录执行；COM3 替换为实际设备端口。
-# 先解压 packages/firmware/brookesia-0.8.3-s3.26-app-only.zip 到独立目录。
+# 先解压 packages/firmware/brookesia-0.8.3-s3.27-app-only.zip 到独立目录。
 .venv\Scripts\python.exe tools/update_brookesia_app_only.py --port COM3 --build <解压目录> --backup <已校验备份目录>
 .venv\Scripts\python.exe tools/deploy_learning.py --port COM3
 ```
@@ -81,6 +81,8 @@
 - `tests/main.test.cjs` 验证三类活动、滑动、媒体路径、内容包扩展及录音清除；仓库 `tests/learning_media_static.cpp` 验证本地音频边界及儿童授权。固件构建后仍需实机验证滑动手感、名称读音和麦克风回放。
 
 `tools/verify_learning.py --port COM3` 检查已安装版本、字体、完整音频播放、录音清除和原音量恢复；添加 `--record-test` 会明确执行一次1秒的内存录音及静音回放，随后清除。报告只保存指标到私有 `runtime`，不会导出音频。可用 `--before <私有安装前快照>` 对比原故事、书签、家长设置及助手模式；现有儿童模式必须已允许轻学习且不在休息时间。
+
+`tools/verify_learning_pages.py --port COM3` 会暂时安装自动切页的检查版本，静音依次显示六张动物图片、口算和英语，检查无重启，最后恢复正式应用和音量。此检查覆盖真实设备图片加载，不能由首页启动或单独播放音频检查替代。运行前先停止额度同步，完成后恢复；勿与手动操作同时进行。
 
 预览由实际界面资源及脚本渲染，属于模拟画面，不是设备截图：
 

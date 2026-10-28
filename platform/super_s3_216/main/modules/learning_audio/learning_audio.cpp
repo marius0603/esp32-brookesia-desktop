@@ -72,7 +72,7 @@ private:
     }
     std::mutex operation_,state_mutex_;
     std::atomic<bool> live_{false},cancel_{false},finish_{false},forget_{false};
-    std::atomic<unsigned> recorded_{0},played_{0},level_{0},stack_min_{8192},job_{0};
+    std::atomic<unsigned> recorded_{0},played_{0},level_{0},stack_min_{16384},job_{0};
     uint8_t *recording_=nullptr;
     std::string state_="Idle",error_,path_;
     unsigned limit_=5;
@@ -100,10 +100,10 @@ private:
             if(!recording_){local_audio::release(local_audio::Learning);return std::unexpected("录音内存不足");}
             memset(recording_,0,max_bytes);recorded_=0;
         }
-        cancel_=finish_=forget_=false;played_=level_=0;stack_min_=8192;job_=mode;limit_=unsigned(seconds);path_=path;
+        cancel_=finish_=forget_=false;played_=level_=0;stack_min_=16384;job_=mode;limit_=unsigned(seconds);path_=path;
         {std::lock_guard lock(state_mutex_);error_.clear();state_="Starting";}
         live_=true;local_audio::learning_busy=true;
-        if(xTaskCreatePinnedToCore([](void *p){static_cast<LearningAudio *>(p)->run();vTaskDelete(nullptr);},"learning_audio",8192,this,4,nullptr,0)!=pdPASS){
+        if(xTaskCreatePinnedToCore([](void *p){static_cast<LearningAudio *>(p)->run();vTaskDelete(nullptr);},"learning_audio",16384,this,4,nullptr,0)!=pdPASS){
             live_=false;local_audio::release(local_audio::Learning);fail("音频任务内存不足");return std::unexpected("Audio task allocation failed");}
         return {};
     }
@@ -154,6 +154,7 @@ private:
         if(rec_open)recorder->close();
         if(play_open){if(player->is_pa_on_off_supported())player->set_pa_on_off(false);player->close();}
         if(wav_open)drwav_uninit(wav);
+        stack_min_=std::min(stack_min_.load(),unsigned(uxTaskGetStackHighWaterMark(nullptr)));
         heap_caps_free(pcm);heap_caps_free(raw);heap_caps_free(wav);level_=0;
         std::lock_guard lock(operation_);
         if(forget_){if(recording_){memset(recording_,0,max_bytes);heap_caps_free(recording_);recording_=nullptr;}recorded_=0;}

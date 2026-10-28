@@ -44,7 +44,8 @@ def main():
     files['manifest.json']=(json.dumps(metadata,ensure_ascii=False,indent=2)+'\n').encode()
     name='packages/content/learning-starter-1.0.0.zip'
     hashes[name]=archive(ROOT/name,files)
-    firmware='packages/firmware/brookesia-0.8.3-s3.26-app-only.zip'
+    version=json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))['firmware']
+    firmware='packages/firmware/brookesia-'+version+'-app-only.zip'
     hashes[firmware]=hashlib.sha256((ROOT/firmware).read_bytes()).hexdigest()
     (ROOT/'packages/SHA256.json').write_text(json.dumps(hashes,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print('Built learning app, parental controls and checked SD media package.')

@@ -713,7 +713,30 @@ index f083f6d..fc9e2f6 100644
 -
 +
  namespace esp_brookesia::gui::lvgl::props_detail {
-@@ -232,8 +237,33 @@ std::expected<std::shared_ptr<BinaryImageSource>, std::string> load_binary_image
+@@ -88,15 +93,16 @@ std::expected<lv_image_header_t, std::string> read_png_image_header(const std::string &path)
+     static constexpr size_t PNG_HEADER_SIZE = 24;
+-
++
+-    uint8_t header_data[PNG_HEADER_SIZE] {};
+-    auto read_result = StorageHelper::fs_read(path, service::RawBuffer(header_data, sizeof(header_data)));
++    // Keep the result owned by the storage service; a timed-out request must
++    // never retain a pointer to this task's stack.
++    auto read_result = StorageHelper::fs_read_text(path);
+     if (!read_result) {
+         return std::unexpected("Failed to read PNG image header: " + path + ", error: " + read_result.error());
+     }
+-    if (read_result.value() != sizeof(header_data)) {
++    if (read_result->size() < PNG_HEADER_SIZE) {
+         return std::unexpected("PNG image header read size mismatch: " + path);
+     }
+-    return make_png_image_header(header_data, sizeof(header_data), path);
++    return make_png_image_header(reinterpret_cast<const uint8_t *>(read_result->data()), PNG_HEADER_SIZE, path);
+ }
+-
++
+ bool is_jpeg_start_of_frame_marker(uint8_t marker)
+ {
+@@ -232,8 +238,33 @@ std::expected<std::shared_ptr<BinaryImageSource>, std::string> load_binary_image
      source->descriptor.header.h = read_le16(source->data, 6);
      source->descriptor.header.stride = read_le16(source->data, 8);
      source->descriptor.header.reserved_2 = 0;

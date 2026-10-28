@@ -17,6 +17,12 @@ def main():
     args=parser.parse_args()
     report={'passed':False,'physical_swipe_verified':False,'physical_listening_verified':False,'record_test':args.record_test}
     with StoryClient(args.port,timeout=30) as client:
+        original_readline=client.serial.readline
+        def diagnostic_readline(*a,**kw):
+            line=original_readline(*a,**kw)
+            with (ROOT/'runtime/learning-usb-check.log').open('ab') as log:log.write(line)
+            return line
+        client.serial.readline=diagnostic_readline
         client.hello()
         def call(service,name,params=None):return client.call(service,name,params or {})['result']
         def wait_audio():
@@ -34,7 +40,8 @@ def main():
         assert app['manifest']['version']=='0.1.0'
         assert next(a for a in apps if a['manifest']['id']=='local.childmode')['manifest']['version']=='0.1.1'
         modes=call('DeviceModes','GetState')
-        assert modes['firmware_version']=='0.8.3-s3.26' and not modes['screen_locked']
+        expected=json.loads((REPO/'versions.json').read_text(encoding='utf-8'))['firmware']
+        assert modes['firmware_version']==expected and not modes['screen_locked']
         child=call('ChildMode','GetState')
         assert not child['enabled'] or (child['allow_learning'] and not child['resting']),'Parent authorization required'
         volume=call('AudioPlayback','GetVolume')

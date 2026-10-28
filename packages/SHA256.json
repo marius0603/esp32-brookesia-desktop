@@ -40,5 +40,6 @@
   "packages/apps/local.lightlearning.debug.0.1.0.bpk": "65c39466b608910b5a1b2aede5a8493067b9fcff0968f26e83bd2aa38b2e0b22",
   "packages/apps/local.childmode.debug.0.1.1.bpk": "1e19d3eec53dba93ea0305d38b16d413e66c9078dac7e1429a580a14c1f40e98",
   "packages/content/learning-starter-1.0.0.zip": "cfa211c4fac180e0160a401f3659a5b80f6f391bfa85d1b121677e072138e0b4",
-  "packages/firmware/brookesia-0.8.3-s3.26-app-only.zip": "ae85aee7cffcbab42705943f6314e583cb1f493cb1f3a9ca4bcd1983d5704c68"
+  "packages/firmware/brookesia-0.8.3-s3.26-app-only.zip": "ae85aee7cffcbab42705943f6314e583cb1f493cb1f3a9ca4bcd1983d5704c68",
+  "packages/firmware/brookesia-0.8.3-s3.27-app-only.zip": "3ad694fbdd933b1f7f015749877ee5833c7ac2d3bcb29d2026d74dc16ac4062f"
 }
