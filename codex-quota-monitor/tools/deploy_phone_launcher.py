@@ -1,4 +1,4 @@
-"""Back up and install the launcher document required by s3.28 before updating the app partition."""
+"""Back up and install the native-scroll launcher document required by s3.30."""
 import argparse,json
 from datetime import datetime
 from pathlib import Path
@@ -8,11 +8,12 @@ p=argparse.ArgumentParser()
 p.add_argument('--port',required=True)
 p.add_argument('--source',type=Path,help='Optional patched ESP-Brookesia checkout; otherwise use the reviewed release document')
 a=p.parse_args()
-source=(a.source/'system/brookesia_system_super/resource/shell/screens/app_launcher.json') if a.source else ROOT.parent/'packages/resources/phone-launcher-s3.28.json'
+source=(a.source/'system/brookesia_system_super/resource/shell/screens/app_launcher.json') if a.source else ROOT.parent/'packages/resources/phone-launcher-s3.30.json'
 doc=json.loads(source.read_text(encoding='utf-8'))
 data=json.dumps(doc,ensure_ascii=False,separators=(',',':'))+'\n'
 content=doc['children'][0];assert any(n['id']=='pages' for n in content['children'])
-assert not content['children'][0]['commonProps']['scrollable']
+assert content['children'][0]['commonProps']['scrollable']
+assert any(n.get('bindings',{}).get('placement.width')=='content_width' for n in content['children'][0]['children'])
 remote='/littlefs/system/super/shell/screens/app_launcher.json'
 backup=ROOT/'runtime'/('phone-launcher-'+datetime.now().strftime('%Y%m%d-%H%M%S'));backup.mkdir()
 with StoryClient(a.port,timeout=30) as c:

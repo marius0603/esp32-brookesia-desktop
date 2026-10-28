@@ -25,7 +25,7 @@
      for (const auto &[instance_id, app_id] : launcher_instance_to_app_) {
          (void)instance_id;
          const auto instance_path = make_launcher_item_path(app_id);
-@@ -194,8 +196,13 @@
+@@ -194,8 +196,15 @@
                                        1,
                                        (available_width + LAUNCHER_ITEM_GAP) / (LAUNCHER_ITEM_WIDTH + LAUNCHER_ITEM_GAP)
                                    );
@@ -36,10 +36,19 @@
      const auto launcher_grid_width =
          launcher_columns * LAUNCHER_ITEM_WIDTH + (launcher_columns - 1) * LAUNCHER_ITEM_GAP;
 +    launcher_page_width_ = launcher_grid_width;
++    // The native viewport scrolls a strip exactly as wide as the real pages.
++
      const auto launcher_grid_x = std::max<int32_t>(0, (available_width - launcher_grid_width) / 2);
      std::vector<gui::BindingValueUpdate> binding_updates;
      add_binding_update(binding_updates, SUPER_LAUNCHER_GRID_STAGE_PATH, "grid_x", std::to_string(launcher_grid_x));
-@@ -212,8 +219,9 @@
+@@ -206,14 +215,16 @@
+         std::to_string(launcher_grid_width)
+     );
+ 
++    add_binding_update(binding_updates, SUPER_LAUNCHER_ITEM_LAYER_PATH, "content_width", std::to_string(launcher_pages_ * launcher_page_width_));
+     launcher_slot_count_ = 0;
+ 
+     int32_t content_height = content_frame.has_value() ? std::max<int32_t>(content_frame->height, 1) : 1;
      for (size_t i = 0; i < visible_apps.size(); ++i) {
          const auto &app = visible_apps[i];
          const auto column = static_cast<int32_t>(i % static_cast<size_t>(launcher_columns));
@@ -51,7 +60,7 @@
          const auto item_y = row * (LAUNCHER_ITEM_HEIGHT + LAUNCHER_ITEM_GAP);
          content_height = std::max(content_height, item_y + LAUNCHER_ITEM_HEIGHT);
  
-@@ -296,6 +304,7 @@
+@@ -296,6 +307,7 @@
      }
  
      launcher_populated_ = true;
@@ -59,7 +68,7 @@
      return {};
  }
  
-@@ -373,6 +382,7 @@
+@@ -373,6 +385,7 @@
  
  void ShellApp::handle_launcher_event(const gui::Event &event)
  {
@@ -67,7 +76,7 @@
      if (launch_overlay_active_) {
          BROOKESIA_LOGW("Ignore launcher action while app launch overlay is active");
          return;
-@@ -387,6 +397,14 @@
+@@ -387,6 +400,14 @@
      if (app_it == launcher_instance_to_app_.end()) {
          BROOKESIA_LOGW("Launcher action from unknown instance: %1%", *instance_id);
          return;
@@ -82,7 +91,15 @@
      }
  
      std::optional<gui::ViewFrame> launch_origin_frame;
-@@ -409,8 +427,8 @@
+@@ -394,6 +415,7 @@
+         const auto icon_box_path =
+             std::string(SUPER_LAUNCHER_ITEM_LAYER_PATH) + "/" + *instance_id + "/" + SUPER_LAUNCHER_ICON_BOX_ID;
+         launch_origin_frame = get_absolute_view_frame(*context_, icon_box_path);
++        if (launch_origin_frame) launch_origin_frame->x -= static_cast<int32_t>(launcher_page_) * launcher_page_width_;
+         if (!launch_origin_frame.has_value()) {
+             BROOKESIA_LOGW("Launcher icon frame not available: path(%1%)", icon_box_path);
+         }
+@@ -409,8 +431,8 @@
          SYSTEM_SUPER_PROFILE_LOGI(
              "Shell app launch profile: app_id(%1%), start_app_ms(%2%), total_ms(%3%)",
              app_id,
@@ -93,7 +110,7 @@
          );
          launch_request_started_at_.reset();
          if (!result) {
-@@ -437,4 +455,51 @@
+@@ -437,4 +459,42 @@
      }
  }
  
@@ -101,19 +118,14 @@
 +{
 +    if (!context_) return;
 +    launcher_page_ = std::min(page, launcher_pages_ - 1);
-+    const int32_t target = -static_cast<int32_t>(launcher_page_) * launcher_page_width_;
-+    if (launcher_page_animation_) { context_->gui().stop_animation(launcher_page_animation_); launcher_page_animation_ = 0; }
-+    if (animate) {
-+        auto animation = make_timed_animation(gui::AnimationProperty::X, target, 180);
-+        auto result = context_->gui().start_view_animation_with_result(SUPER_LAUNCHER_ITEM_LAYER_PATH, animation, []() {});
-+        if (result) launcher_page_animation_ = result->subscription_id;
-+    }
++    const int32_t target = static_cast<int32_t>(launcher_page_) * launcher_page_width_;
 +    std::vector<gui::BindingValueUpdate> updates;
-+    if (!animate || !launcher_page_animation_) add_binding_update(updates, SUPER_LAUNCHER_ITEM_LAYER_PATH, "page_x", std::to_string(target));
 +    std::string dots;
 +    for (size_t i = 0; i < launcher_pages_; ++i) { if (i) dots += "  "; dots += i == launcher_page_ ? "●" : "○"; }
 +    add_binding_update(updates, "/launcher/content/pages", "text", dots);
 +    (void)context_->gui().set_binding_values(updates);
++    // Native LVGL drag owns movement; only snap once on release.
++    (void)context_->gui().scroll_to(SUPER_LAUNCHER_GRID_STAGE_PATH, target, 0, animate);
 +}
 +
 +void ShellApp::handle_launcher_swipe(const service::Display::TouchGestureInfo &info)
@@ -136,12 +148,8 @@
 +        set_launcher_page(next, true);
 +        return;
 +    }
-+    if (launcher_page_animation_) { context_->gui().stop_animation(launcher_page_animation_); launcher_page_animation_ = 0; }
-+    if ((launcher_page_ == 0 && dx > 0) || (launcher_page_ + 1 == launcher_pages_ && dx < 0)) dx /= 3;
-+    dx = std::clamp(dx, -launcher_page_width_, launcher_page_width_);
-+    std::vector<gui::BindingValueUpdate> updates;
-+    add_binding_update(updates, SUPER_LAUNCHER_ITEM_LAYER_PATH, "page_x", std::to_string(-static_cast<int32_t>(launcher_page_) * launcher_page_width_ + dx));
-+    (void)context_->gui().set_binding_values(updates);
++    // No binding updates while moving: LVGL scrolls in its input/render loop.
++
 +}
 +
  } // namespace esp_brookesia::system::super
@@ -194,15 +202,6 @@
              reset_gesture_indicator();
 --- a/system/brookesia_system_super/resource/shell/screens/app_launcher.json
 +++ b/system/brookesia_system_super/resource/shell/screens/app_launcher.json
-@@ -35,7 +35,7 @@
-                     "type": "container",
-                     "id": "grid_stage",
-                     "commonProps": {
--                        "scrollable": true
-+                        "scrollable": false
-                     },
-                     "style": {
-                         "padding": 0
 @@ -49,7 +49,7 @@
                          "x": "${expr((${env.widthDp} - ${constant.ui.content.metric.launcherGridWidth}) / 2)}",
                          "y": "${constant.ui.content.metric.launcherGridTop}",
@@ -218,19 +217,10 @@
                              "bindings": {
 -                                "placement.height": "content_height"
 +                                "placement.height": "content_height",
-+                                "placement.x": "page_x"
++                                "placement.width": "content_width"
                              },
                              "style": {
                                  "padding": 0
-@@ -98,7 +99,7 @@
-                                 "mode": "absolute",
-                                 "x": 0,
-                                 "y": 0,
--                                "width": "match",
-+                                "width": "20000dp",
-                                 "height": "match"
-                             },
-                             "children": []
 @@ -127,6 +128,31 @@
                              "children": []
                          }
@@ -304,3 +294,19 @@
      }
      return apps;
  }
+--- a/gui/brookesia_gui_lvgl/src/props_common.cpp
++++ b/gui/brookesia_gui_lvgl/src/props_common.cpp
+@@ -52,6 +52,13 @@
+     if (props.scrollable) {
+         lv_obj_add_flag(record.object, LV_OBJ_FLAG_SCROLLABLE);
+         lv_obj_set_scrollbar_mode(record.object, LV_SCROLLBAR_MODE_AUTO);
++        // The system launcher is a horizontal pager, not a scrolling document.
++        // Keep tracking in LVGL; service-level gesture events only choose a page.
++        if (record.node_id == "grid_stage") {
++            lv_obj_set_scroll_dir(record.object, LV_DIR_HOR);
++            lv_obj_set_scrollbar_mode(record.object, LV_SCROLLBAR_MODE_OFF);
++            lv_obj_remove_flag(record.object, LV_OBJ_FLAG_SCROLL_MOMENTUM);
++        }
+     } else {
+         lv_obj_remove_flag(record.object, LV_OBJ_FLAG_SCROLLABLE);
+         lv_obj_set_scrollbar_mode(record.object, LV_SCROLLBAR_MODE_OFF);

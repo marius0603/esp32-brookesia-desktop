@@ -2,7 +2,7 @@
   "upstream": "https://github.com/espressif/esp-brookesia.git",
   "commit": "68ac00e7aa9012cd8cbf0cbf6bee155801db0e8c",
   "esp_idf": "6.0.2",
-  "firmware": "0.8.3-s3.29",
+  "firmware": "0.8.3-s3.30",
   "toolkit": "1.0.1",
   "apps": {
     "local.audiobook": "0.3.1",

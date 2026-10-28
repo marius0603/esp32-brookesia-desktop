@@ -1,8 +1,12 @@
-# 手机式桌面 · s3.29
+# 手机式桌面 · s3.30
 
 桌面改为横向分页：每页两行、按屏幕宽度自动计算列数，480×480屏幕为3列共6个应用。当前10个应用分为两页，底部实心圆点表示当前页。左右拖动可跟手移动，普通拖动24dp即可切换一页，350ms内的短促轻扫只需12dp，否则回到原页；首尾不循环，边缘拖动有阻尼。保留现有Q版图标、应用名称、点击打开、状态栏及应用内手势。
 
 翻页只在桌面前台生效。拖动超过8dp且横向位移明显大于纵向时开始移动，并抑制滑动后的点击300ms，避免翻页时打开图标。应用列表刷新时将当前页限制在有效范围，隐藏的儿童模式应用不会占据页内位置。
+
+s3.30由LVGL输入/绘图循环直接处理横向拖动，移动过程中不再发送图标层位置的数据绑定更新；松手时才更新当前页和圆点，并调用原生滚动停靠。分页条带宽度按实际页数计算，桌面的`grid_stage`限定横向滚动、隐藏滚动条并关闭惯性滑行，避免越过目标页。第二页图标的启动动画起点扣除当前页滚动偏移。其他应用的滚动容器保持原行为。
+
+s3.30固件及配套资源已安装并通过读回校验；桌面启动、时钟连续重开、跨应用返回及8帧分钟翻页通过，10本故事及原音量75保留。跟手效果待用户现场确认。
 
 同时修复应用仍被标记为运行中、却已经失去前台的情况。原启动函数直接返回成功，桌面启动动画结束后仍留在桌面，看起来像时钟闪退；现在对这样的运行时应用先停止旧实例再正常启动，恢复真实前台和界面。桌面图标入口也在启动动画之前处理这种状态，正常前台应用保持原行为。
 
@@ -13,12 +17,12 @@
 ```powershell
 # 在codex-quota-monitor目录执行，端口按实际设备修改。
 .venv/Scripts/python.exe tools/deploy_phone_launcher.py --port COM3
-# 解压 packages/firmware/brookesia-0.8.3-s3.29-app-only.zip 后：
+# 解压 packages/firmware/brookesia-0.8.3-s3.30-app-only.zip 后：
 .venv/Scripts/python.exe tools/update_brookesia_app_only.py --port COM3 --build <解压目录> --backup <私有完整备份目录>
 .venv/Scripts/python.exe tools/verify_flip_clock.py --port COM3
 ```
 
-独立桌面资源在`packages/resources/phone-launcher-s3.28.json`，也包含在固件包的`launcher/app_launcher.json`中。安装器将旧文档、音量与故事列表备份到私有`runtime/phone-launcher-时间戳`；压缩JSON后写入，再读取核对。回退s3.27时也需要恢复该目录中的旧`app_launcher.json`，然后重新启动。不要只回退应用分区而保留新版桌面文档。
+独立桌面资源在`packages/resources/phone-launcher-s3.30.json`，也包含在固件包的`launcher/app_launcher.json`中。安装器将旧文档、音量与故事列表备份到私有`runtime/phone-launcher-时间戳`；压缩JSON后写入，再读取核对。s3.28/s3.29使用旧的`phone-launcher-s3.28.json`，s3.30更新时必须同时更新桌面文档。回退旧版本时需要恢复对应的旧`app_launcher.json`，然后重新启动。不要只回退应用分区而保留新版桌面文档。
 
 源码重建顺序为固定上游、`patches/brookesia-s3.patch`、`patches/phone-launcher.patch`及平台文件，`tools/prepare_workspace.py`已包含顺序。新补丁覆盖桌面分页及运行时前台恢复。设备启动后必须等待桌面处于Running，再运行应用检查，避免在系统仍注册资源时启动应用。
 
