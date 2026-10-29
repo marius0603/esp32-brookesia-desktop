@@ -41,6 +41,18 @@
         "en",
         "zh_CN"
       ]
+    },
+    {
+      "id": "desktop_theme",
+      "kind": "file",
+      "src": "desktop-theme-extra.ttf",
+      "languages": [
+        "en",
+        "zh_CN"
+      ],
+      "fallbacks": [
+        "${font.zh_CN}"
+      ]
     }
   ]
 }

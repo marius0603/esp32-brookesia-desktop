@@ -30,14 +30,15 @@ def main():
     manifest['features'] = {'separate_websocket_tx_lock': bool(sdkconfig.get('ESP_WS_CLIENT_SEPARATE_TX_LOCK'))}
     temporary = output.with_suffix('.zip.tmp')
     with zipfile.ZipFile(temporary, 'w', zipfile.ZIP_DEFLATED) as archive:
-        native_scroll=desc['project_version']=='0.8.3-s3.30'
-        launcher=ROOT/('packages/resources/phone-launcher-s3.30.json' if native_scroll else 'packages/resources/phone-launcher-s3.28.json')
-        if desc['project_version'] in ('0.8.3-s3.28','0.8.3-s3.29','0.8.3-s3.30'):
+        native_scroll=desc['project_version'] in ('0.8.3-s3.30','0.8.3-s3.31')
+        launcher=ROOT/('packages/resources/desktop-themes-launcher-s3.31.json' if desc['project_version']=='0.8.3-s3.31' else 'packages/resources/phone-launcher-s3.30.json' if native_scroll else 'packages/resources/phone-launcher-s3.28.json')
+        if desc['project_version'] in ('0.8.3-s3.28','0.8.3-s3.29','0.8.3-s3.30','0.8.3-s3.31'):
             data=launcher.read_bytes()
             archive.writestr('launcher/app_launcher.json',data)
             manifest['files']['launcher/app_launcher.json']={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
             manifest['features']['phone_launcher']=True
             manifest['features']['native_launcher_scroll']=native_scroll
+            manifest['features']['desktop_theme_switch']=desc['project_version']=='0.8.3-s3.31'
         for name in keep.values():
             path = (build / name).resolve()
             assert path.is_relative_to(build) and path.is_file()
@@ -57,7 +58,7 @@ def main():
             + ('Before updating to s3.30, run tools/deploy_phone_launcher.py to install the native-scroll launcher document.\n'
                'launcher/app_launcher.json is a separate filesystem resource, not a Flash partition image.\n'
                's3.28 and s3.29 share the earlier document; restoring those versions also requires restoring that document.\n'
-               if desc['project_version'] in ('0.8.3-s3.28','0.8.3-s3.29','0.8.3-s3.30') else ''))
+               if desc['project_version'] in ('0.8.3-s3.28','0.8.3-s3.29','0.8.3-s3.30') else 's3.31 additionally needs tools/deploy_desktop_themes.py to install the desktop artwork and theme chooser.\n' if desc['project_version']=='0.8.3-s3.31' else ''))
     with zipfile.ZipFile(temporary) as archive:
         assert archive.testzip() is None
     temporary.replace(output)

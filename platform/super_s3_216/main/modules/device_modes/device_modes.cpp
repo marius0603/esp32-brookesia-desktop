@@ -41,6 +41,7 @@ std::atomic<uint32_t> key_applied{0};std::atomic<int> key_last_gpio{-1},key_last
 std::atomic<bool> manual_dnd{false},quiet_enabled{false};
 std::atomic<int> quiet_start{1320},quiet_end{420};
 std::atomic<int> deep_minutes{0};
+std::atomic<int> desktop_theme{0},desktop_theme_applied{-1};
 std::atomic<uint32_t> deep_activity_ms{0};
 std::atomic<bool> preferences_loaded{false},test_idle_deep{false};
 std::atomic<int> story_dim{1000};
@@ -67,6 +68,7 @@ private:
         uint8_t brightness=0;auto backlight=hal::acquire_first_interface<hal::display::BacklightIface>();
         const bool brightness_valid=backlight && backlight->get_brightness(brightness);
         return {{"firmware_version",esp_app_get_description()->version},
+{"desktop_theme_index",brookesia_board_desktop_theme()},{"desktop_theme_saved_index",desktop_theme.load()},{"desktop_theme_applied",desktop_theme_applied.load()},{"cyber_theme_available",brookesia_board_cyber_available()},
                 {"deep_sleep",board_deep_sleep_state()},{"auto_sleep_enabled",automatic.load()},{"timeout_seconds",600},
                 {"auto_deep_sleep_minutes",deep_minutes.load()},{"auto_deep_sleep_audio_busy",local_audio::busy()},
                 {"auto_deep_sleep_remaining_seconds",idle_deep_sleep::remaining(now_ms(),deep_activity_ms.load(),deep_minutes.load()*60)},
@@ -146,6 +148,7 @@ private:
     }
     std::vector<FunctionSchema> get_function_schemas() override {
         return {{"GetSpeakerVolume","Read actual codec volume, mute and DAC register",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Speaker volume diagnostics"}},
+{"SetDesktopTheme","Select Q or cyberpunk desktop",{{"Index","0 Q, 1 cyberpunk",FunctionValueType::Number}}},
                 {"ProfileRefresh","Measure native full-screen refresh",{{"Force","Force one whole-screen redraw",FunctionValueType::Boolean}},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Refresh timing"}},
                 {"GetWeatherLayers","Read visible native layer opacity for weather diagnostics",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Visible surfaces"}},
                 {"GetState","Get screen and sound mode state",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Modes"}},
@@ -162,6 +165,7 @@ private:
     }
     FunctionHandlerList get_function_handlers() override {
         return {{"GetSpeakerVolume",[this](FunctionParameterMap &&)->FunctionResult{return speaker_volume();}},
+{"SetDesktopTheme",[](FunctionParameterMap &&p)->FunctionResult{const double value=std::get<double>(p.at("Index"));if(!std::isfinite(value) || (value!=0 && value!=1) || !brookesia_board_set_desktop_theme(int(value)))return {.success=false,.error_message="Theme unavailable: select 0 Q or 1 cyberpunk with installed SD assets"};return {.success=true};}},
                 {"ProfileRefresh",[](FunctionParameterMap &&p)->FunctionResult{
                     if(esp_lv_adapter_lock(1000)!=ESP_OK)return {.success=false,.error_message="GUI busy"};
                     auto result=board_display_profile(std::get<bool>(p.at("Force")));
@@ -223,6 +227,9 @@ extern "C" void brookesia_board_set_quiet_hours(bool on,int start,int end){
 extern "C" bool brookesia_board_offline_voice_enabled(){return preferences_loaded && offline_enabled;}
 extern "C" void brookesia_board_set_offline_voice(bool value){offline_enabled=value;dirty=true;}
 extern "C" int brookesia_board_user_volume(){return preferences_loaded?desired_volume.load():-1;}
+extern "C" int brookesia_board_desktop_theme(){return desktop_theme==1 && brookesia_board_cyber_available()?1:0;}
+extern "C" bool brookesia_board_set_desktop_theme(int index){if(!preferences_loaded || (index!=0 && index!=1) || (index==1 && !brookesia_board_cyber_available()))return false;desktop_theme=index;dirty=true;return true;}
+extern "C" void brookesia_board_desktop_theme_applied(int index){desktop_theme_applied=index;}
 extern "C" int brookesia_board_volume_filter(int volume){
     if(!dnd && preferences_loaded && desired_volume.exchange(volume)!=volume)dirty=true;
     return dnd?0:volume;
@@ -326,6 +333,7 @@ void device_modes_poll(){
     if(!preferences_loaded){
         nvs_handle_t h;uint8_t a=1,d=0;int32_t resume=75;
         if(nvs_open("DeviceModes",NVS_READONLY,&h)==ESP_OK){
+uint8_t theme=0;nvs_get_u8(h,"desktop_theme",&theme);desktop_theme=theme==1?1:0;
             uint8_t off=0;nvs_get_u8(h,"offline_voice",&off);offline_enabled=off!=0;
             uint16_t minutes=0;nvs_get_u16(h,"deep_min",&minutes);deep_minutes=idle_deep_sleep::index(minutes)>=0?minutes:0;
             nvs_get_u8(h,"auto_sleep",&a);nvs_get_u8(h,"dnd",&d);nvs_get_i32(h,"resume_volume",&resume);
@@ -362,7 +370,7 @@ void device_modes_poll(){
     if(dirty.exchange(false)){
         nvs_handle_t h;bool saved=false;
         if(nvs_open("DeviceModes",NVS_READWRITE,&h)==ESP_OK){
-            saved=nvs_set_u8(h,"offline_voice",offline_enabled?1:0)==ESP_OK && nvs_set_u8(h,"auto_sleep",automatic?1:0)==ESP_OK && nvs_set_u8(h,"dnd",manual_dnd?1:0)==ESP_OK && nvs_set_i32(h,"resume_volume",desired_volume.load())==ESP_OK && nvs_set_u8(h,"quiet_on",quiet_enabled?1:0)==ESP_OK && nvs_set_i32(h,"quiet_start",quiet_start.load())==ESP_OK && nvs_set_i32(h,"quiet_end",quiet_end.load())==ESP_OK && nvs_set_u16(h,"deep_min",deep_minutes.load())==ESP_OK && nvs_commit(h)==ESP_OK;
+            saved=nvs_set_u8(h,"desktop_theme",desktop_theme.load())==ESP_OK && nvs_set_u8(h,"offline_voice",offline_enabled?1:0)==ESP_OK && nvs_set_u8(h,"auto_sleep",automatic?1:0)==ESP_OK && nvs_set_u8(h,"dnd",manual_dnd?1:0)==ESP_OK && nvs_set_i32(h,"resume_volume",desired_volume.load())==ESP_OK && nvs_set_u8(h,"quiet_on",quiet_enabled?1:0)==ESP_OK && nvs_set_i32(h,"quiet_start",quiet_start.load())==ESP_OK && nvs_set_i32(h,"quiet_end",quiet_end.load())==ESP_OK && nvs_set_u16(h,"deep_min",deep_minutes.load())==ESP_OK && nvs_commit(h)==ESP_OK;
             nvs_close(h);
         }
         if(!saved)dirty=true;

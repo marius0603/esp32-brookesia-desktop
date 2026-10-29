@@ -155,24 +155,7 @@
  } // namespace esp_brookesia::system::super
 --- a/system/brookesia_system_super/src/private/shell_app.hpp
 +++ b/system/brookesia_system_super/src/private/shell_app.hpp
-@@ -161,6 +161,7 @@
-     void subscribe_sntp_events();
-     void disconnect_sntp_events();
-     void refresh_status_clock();
-+    void refresh_wallpaper_shift();
-     void schedule_status_clock_timer();
-     void stop_status_clock_timer();
-     void handle_display_touch_gesture(const service::Display::TouchGestureInfo &info);
-@@ -214,6 +215,8 @@
-     core::TimerId gesture_exit_hold_timer_id_ = core::INVALID_TIMER_ID;
-     core::TimerId status_peek_auto_hide_timer_id_ = core::INVALID_TIMER_ID;
-     core::TimerId status_clock_timer_id_ = core::INVALID_TIMER_ID;
-+    std::optional<std::chrono::steady_clock::time_point> wallpaper_next_shift_;
-+    unsigned wallpaper_shift_step_ = 0;
-     std::vector<gui::ScopedConnection> overlay_action_connections_;
-     std::vector<gui::ScopedConnection> launcher_action_connections_;
-     std::vector<gui::ScopedConnection> keyboard_action_connections_;
-@@ -240,6 +243,13 @@
+@@ -243,6 +243,13 @@
      std::vector<core::AppId> launcher_order_;
      std::unordered_map<std::string, core::AppId> launcher_instance_to_app_;
      size_t launcher_slot_count_ = 0;
@@ -255,25 +238,9 @@
          }
 --- a/system/brookesia_system_core/src/app/manager.cpp
 +++ b/system/brookesia_system_core/src/app/manager.cpp
-@@ -12,6 +12,9 @@
- #include <string>
- #include <string_view>
- #include <utility>
-+
-+extern "C" bool brookesia_child_visible(const char *) __attribute__((weak));
-+extern "C" const char *brookesia_child_launch_error(const char *) __attribute__((weak));
- 
- #include "brookesia/system_core/macro_configs.h"
- #if !BROOKESIA_SYSTEM_CORE_SYSTEM_ENABLE_DEBUG_LOG
-@@ -605,8 +608,17 @@
-         return std::unexpected(record_result.error());
+@@ -614,7 +614,11 @@
+         }
      }
-     auto &record = *record_result.value();
-+    if (brookesia_child_launch_error) {
-+        if (const char *reason = brookesia_child_launch_error(record.info.manifest.id.c_str())) {
-+            return std::unexpected(reason);
-+        }
-+    }
      if (record.info.state == AppState::Running) {
 -        return {};
 +        // Runtime apps can remain running after another app replaced the
@@ -284,16 +251,6 @@
      }
  
      if (record.info.manifest.kind == AppKind::Runtime) {
-@@ -1655,6 +1667,9 @@
-     apps.reserve(impl_->apps_.size());
-     for (const auto &[_, record] : impl_->apps_) {
-         apps.push_back(record.info);
-+        if (brookesia_child_visible && !brookesia_child_visible(record.info.manifest.id.c_str())) {
-+            apps.back().manifest.visible = false;
-+        }
-     }
-     return apps;
- }
 --- a/gui/brookesia_gui_lvgl/src/props_common.cpp
 +++ b/gui/brookesia_gui_lvgl/src/props_common.cpp
 @@ -52,6 +52,13 @@

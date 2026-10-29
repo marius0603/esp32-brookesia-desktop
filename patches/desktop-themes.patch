@@ -1,0 +1,505 @@
+--- a/app/brookesia_app_settings/package/res/screens/display.json
++++ b/app/brookesia_app_settings/package/res/screens/display.json
+@@ -1 +1 @@
+-{"type":"viewScreen","id":"display","mountMode":"dynamic","commonProps":{"scrollable":false},"styleRefs":["app.page"],"children":[{"type":"container","id":"page","commonProps":{"scrollable":true},"layout":{"type":"flex","flexFlow":"column","gap":"${constant.settings.layout.pageGap}"},"placement":{"mode":"absolute","x":"${constant.settings.layout.pageX}","y":"${constant.settings.layout.pageY}","width":"${constant.settings.layout.pageWidth}","height":"${constant.settings.layout.pageHeight}"},"children":[{"type":"templateRef","id":"deep_sleep_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"label","id":"auto_title","labelProps":{"text":"自动深度睡眠"},"styleRefs":["app.cardTitle"],"placement":{"mode":"flow","width":"match","height":"wrap"}},{"type":"dropdown","id":"after","dropdownProps":{"options":["关闭","10 分钟","20 分钟","30 分钟","1 小时","2 小时","4 小时"],"selectedIndex":0},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.display.deep_sleep_after"}],"placement":{"mode":"flow","width":"match","height":"56dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}},{"type":"label","id":"auto_hint","labelProps":{"text":"仅本次有效，唤醒后关闭；播放中暂缓"},"styleRefs":["app.caption"],"placement":{"mode":"flow","width":"match","height":"wrap"}},{"type":"templateRef","id":"deep_sleep","templateId":"setting_row","overrides":{".":{"commonProps":{"clickable":true},"events":[{"type":"clicked","action":"settings.display.deep_sleep"}]},"title":{"labelProps":{"text":"立即深度睡眠"}},"value":{"labelProps":{"text":""}}}},{"type":"label","id":"hint","labelProps":{"text":"轻触屏幕唤醒，唤醒后重新启动"},"styleRefs":["app.caption"],"placement":{"mode":"flow","width":"match","height":"wrap"}}]}},{"type":"templateRef","id":"auto_rotation_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_rotation","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动旋转"}},"text/subtitle":{"labelProps":{"text":"关闭后锁定当前方向"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_rotation"}]}}}]}},{"type":"templateRef","id":"device_modes_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_sleep","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动息屏"}},"text/subtitle":{"labelProps":{"text":"无操作 10 分钟后息屏，轻触唤醒"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_sleep"}]}}}]}},{"type":"container","id":"theme_modes","layout":{"type":"flex","flexFlow":"rowWrap","gap":"${constant.settings.layout.cardGap}","mainAlign":"start","crossAlign":"start"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"},"children":[{"type":"templateRef","id":"light_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.light"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.base}","radius":"18dp"}},"label":{"labelProps":{"text":"Light mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}},{"type":"templateRef","id":"dark_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.dark"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.overlay}","radius":"18dp"}},"label":{"labelProps":{"text":"Dark mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}}]},{"type":"label","id":"brightness_caption","styleRefs":["app.caption"],"labelProps":{"text":"Brightness level"},"placement":{"mode":"flow"},"bindings":{"labelProps.text":"labelProps.text"}},{"type":"templateRef","id":"brightness_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"${constant.settings.layout.cardGap}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"brightness_row","templateId":"slider_row","overrides":{"title":{"labelProps":{"text":"Screen brightness"}},"slider":{"events":[{"type":"valueChanged","action":"settings.display.brightness"}],"rangeProps":{"min":0,"max":100,"value":72}}}}]}}]}]}
++{"type":"viewScreen","id":"display","mountMode":"dynamic","commonProps":{"scrollable":false},"styleRefs":["app.page"],"children":[{"type":"container","id":"page","commonProps":{"scrollable":true},"layout":{"type":"flex","flexFlow":"column","gap":"${constant.settings.layout.pageGap}"},"placement":{"mode":"absolute","x":"${constant.settings.layout.pageX}","y":"${constant.settings.layout.pageY}","width":"${constant.settings.layout.pageWidth}","height":"${constant.settings.layout.pageHeight}"},"children":[{"type":"templateRef","id":"desktop_theme_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"label","id":"title","labelProps":{"text":"桌面主题"},"styleRefs":["app.cardTitle"],"style":{"font":"${font.desktop_theme}"},"placement":{"mode":"flow","width":"match","height":"wrap"}},{"type":"dropdown","id":"choice","dropdownProps":{"options":["经典Q版","赛博朋克"],"selectedIndex":0},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.display.desktop_theme"}],"placement":{"mode":"flow","width":"match","height":"56dp"},"style":{"font":"${font.desktop_theme}","fontSize":24,"bgColor":"#fff1df","textColor":"#533b32","radius":10,"padding":6}}]}},{"type":"templateRef","id":"deep_sleep_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"label","id":"auto_title","labelProps":{"text":"自动深度睡眠"},"styleRefs":["app.cardTitle"],"placement":{"mode":"flow","width":"match","height":"wrap"}},{"type":"dropdown","id":"after","dropdownProps":{"options":["关闭","10 分钟","20 分钟","30 分钟","1 小时","2 小时","4 小时"],"selectedIndex":0},"bindings":{"dropdownProps.selectedIndex":"selected"},"events":[{"type":"valueChanged","action":"settings.display.deep_sleep_after"}],"placement":{"mode":"flow","width":"match","height":"56dp"},"style":{"bgColor":"#fff1df","textColor":"#533b32","fontSize":24,"radius":10,"padding":6}},{"type":"label","id":"auto_hint","labelProps":{"text":"仅本次有效，唤醒后关闭；播放中暂缓"},"styleRefs":["app.caption"],"placement":{"mode":"flow","width":"match","height":"wrap"}},{"type":"templateRef","id":"deep_sleep","templateId":"setting_row","overrides":{".":{"commonProps":{"clickable":true},"events":[{"type":"clicked","action":"settings.display.deep_sleep"}]},"title":{"labelProps":{"text":"立即深度睡眠"}},"value":{"labelProps":{"text":""}}}},{"type":"label","id":"hint","labelProps":{"text":"轻触屏幕唤醒，唤醒后重新启动"},"styleRefs":["app.caption"],"placement":{"mode":"flow","width":"match","height":"wrap"}}]}},{"type":"templateRef","id":"auto_rotation_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_rotation","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动旋转"}},"text/subtitle":{"labelProps":{"text":"关闭后锁定当前方向"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_rotation"}]}}}]}},{"type":"templateRef","id":"device_modes_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"auto_sleep","templateId":"switch_row","overrides":{"text/title":{"labelProps":{"text":"自动息屏"}},"text/subtitle":{"labelProps":{"text":"无操作 10 分钟后息屏，轻触唤醒"}},"toggle":{"toggleProps":{"checked":true},"events":[{"type":"valueChanged","action":"settings.display.auto_sleep"}]}}}]}},{"type":"container","id":"theme_modes","layout":{"type":"flex","flexFlow":"rowWrap","gap":"${constant.settings.layout.cardGap}","mainAlign":"start","crossAlign":"start"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"},"children":[{"type":"templateRef","id":"light_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.light"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.base}","radius":"18dp"}},"label":{"labelProps":{"text":"Light mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}},{"type":"templateRef","id":"dark_mode","templateId":"theme_mode_card","overrides":{".":{"events":[{"type":"clicked","action":"settings.display.dark"}],"placement":{"mode":"flow","alignSelf":"stretch"}},"preview":{"style":{"bgColor":"${color.bg.overlay}","radius":"18dp"}},"label":{"labelProps":{"text":"Dark mode"},"styleRefs":["app.cardTitle"],"bindings":{"labelProps.text":"labelProps.text","style.textColor":"textColor"}}}}]},{"type":"label","id":"brightness_caption","styleRefs":["app.caption"],"labelProps":{"text":"Brightness level"},"placement":{"mode":"flow"},"bindings":{"labelProps.text":"labelProps.text"}},{"type":"templateRef","id":"brightness_card","templateId":"settings_card","overrides":{".":{"style":{"padding":"${constant.settings.layout.cardPadding}"},"layout":{"gap":"${constant.settings.layout.cardGap}"},"placement":{"mode":"flow","width":"match","height":"wrap","alignSelf":"stretch"}}},"slots":{"content":[{"type":"templateRef","id":"brightness_row","templateId":"slider_row","overrides":{"title":{"labelProps":{"text":"Screen brightness"}},"slider":{"events":[{"type":"valueChanged","action":"settings.display.brightness"}],"rangeProps":{"min":0,"max":100,"value":72}}}}]}}]}]}
+--- a/app/brookesia_app_settings/src/app/lifecycle.ipp
++++ b/app/brookesia_app_settings/src/app/lifecycle.ipp
+@@ -635,7 +635,14 @@
+     }
+ 
+     std::vector<system::core::GuiActionHandlerSubscription> subscriptions;
+-    subscriptions.reserve(20);
++    subscriptions.reserve(21);
++    subscriptions.push_back({.action="settings.display.desktop_theme",.handler=[this](const gui::Event &event){
++        auto selected=event.get_int64("selectedIndex");
++        if(context_ && selected && *selected>=0 && *selected<=1 && brookesia_board_set_desktop_theme){
++            if(!brookesia_board_set_desktop_theme(int(*selected)))BROOKESIA_LOGW("Desktop theme unavailable; install its SD resources and restart");
++            (void)refresh_display_state(*context_);
++        }
++    }});
+     subscriptions.push_back({.action="settings.display.deep_sleep_after",.handler=[this](const gui::Event &event){
+         auto selected=event.get_int64("selectedIndex");
+         if(context_ && selected && brookesia_board_set_auto_deep_sleep_index && *selected>=0 && *selected<7){
+--- a/app/brookesia_app_settings/src/private/settings_app_internal.hpp
++++ b/app/brookesia_app_settings/src/private/settings_app_internal.hpp
+@@ -4,6 +4,10 @@
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ #pragma once
++extern "C" int brookesia_board_desktop_theme() __attribute__((weak));
++extern "C" bool brookesia_board_set_desktop_theme(int) __attribute__((weak));
++extern "C" void brookesia_board_desktop_theme_applied(int) __attribute__((weak));
++
+ 
+ extern "C" int brookesia_board_request_deep_sleep(unsigned) __attribute__((weak));
+ extern "C" int brookesia_board_auto_deep_sleep_index() __attribute__((weak));
+--- a/app/brookesia_app_settings/src/service/device.ipp
++++ b/app/brookesia_app_settings/src/service/device.ipp
+@@ -320,6 +320,7 @@
+     const bool enabled = device_ui_state_.display_service_ready && device_ui_state_.display_backlight_supported;
+     std::vector<gui::BindingValueUpdate> updates;
+     add_control_state_updates(updates, DISPLAY_BRIGHTNESS_ROW_PATH, DISPLAY_BRIGHTNESS_SLIDER_PATH, enabled);
++    add_binding_update(updates,"/display/page/desktop_theme_card/choice","selected",std::to_string(brookesia_board_desktop_theme?brookesia_board_desktop_theme():0));
+     add_binding_update(updates,"/display/page/deep_sleep_card/after","selected",
+         std::to_string(brookesia_board_auto_deep_sleep_index?brookesia_board_auto_deep_sleep_index():0));
+     const std::string mode_row="/display/page/device_modes_card/";
+--- a/service/system/brookesia_service_usb/src/service_usb.cpp
++++ b/service/system/brookesia_service_usb/src/service_usb.cpp
+@@ -160,12 +160,17 @@
+     }
+     const bool sd_audio = remote_path.starts_with("sd-audiobooks/"); const bool sd_learning = remote_path.starts_with("sd-learning/");
+     const bool sd_voice = remote_path.starts_with("offline-voice/");
+-    const std::filesystem::path relative(sd_audio ? remote_path.substr(14) : sd_voice ? remote_path.substr(14) : sd_learning ? remote_path.substr(12) : remote_path);
++    const bool sd_theme = remote_path.starts_with("sd-themes/");
++    const std::filesystem::path relative(sd_audio ? remote_path.substr(14) : sd_voice ? remote_path.substr(14) : sd_learning ? remote_path.substr(12) : sd_theme ? remote_path.substr(10) : remote_path);
+     if (relative.empty() || relative.is_absolute() || path_has_parent_reference(relative)) {
+         return std::unexpected("path must be relative and must not contain '..'");
+     }
+ 
+-    const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : sd_voice ? "/sdcard/offline-voice" : sd_learning ? "/sdcard/learning" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
++    const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : sd_voice ? "/sdcard/offline-voice" : sd_learning ? "/sdcard/learning" : sd_theme ? "/sdcard/themes" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
++    if (sd_theme) {
++        const auto extension=relative.extension().string();
++        if(extension!=".bin" && extension!=".json" && extension!=".png" && extension!=".ttf")return std::unexpected("Invalid SD theme asset extension");
++    }
+     if (sd_audio || sd_learning) {
+         auto extension = relative.extension().string();
+         std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c){return std::tolower(c);});
+@@ -775,8 +780,9 @@
+         // Keep large audio transfers on SD from their first byte, including
+         // SHA-256 staging; Flash may have less free space than one chapter.
+         const bool sd_audio = transfer->destination.starts_with("/sdcard/audiobooks/");
++        const bool sd_theme = transfer->destination.starts_with("/sdcard/themes/");
+         const bool sd_voice = transfer->destination.starts_with("/sdcard/offline-voice/"); const bool sd_learning = transfer->destination.starts_with("/sdcard/learning/");
+-        const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : sd_voice ? "/sdcard/offline-voice" : sd_learning ? "/sdcard/learning" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
++        const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : sd_voice ? "/sdcard/offline-voice" : sd_learning ? "/sdcard/learning" : sd_theme ? "/sdcard/themes" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
+         const std::filesystem::path temp_directory = root / ".brookesia_usb";
+         std::error_code error_code;
+         std::filesystem::create_directories(temp_directory, error_code);
+--- a/system/brookesia_system_super/resource/shell/screens/app_launcher.json
++++ b/system/brookesia_system_super/resource/shell/screens/app_launcher.json
+@@ -1,160 +1 @@
+-{
+-    "type": "viewScreen",
+-    "id": "launcher",
+-    "commonProps": {
+-        "scrollable": false
+-    },
+-    "style": {
+-        "padding": 0
+-    },
+-    "styleRefs": [
+-        "shell.desktop"
+-    ],
+-    "children": [
+-        {
+-            "type": "container",
+-            "id": "content",
+-            "commonProps": {
+-                "scrollable": false
+-            },
+-            "style": {
+-                "padding": 0
+-            },
+-            "styleRefs": [
+-                "shell.desktop"
+-            ],
+-            "placement": {
+-                "mode": "absolute",
+-                "x": 0,
+-                "y": "${constant.ui.content.metric.y}",
+-                "width": "${env.widthDp}",
+-                "height": "${expr(${env.heightDp} - ${constant.ui.content.metric.y})}"
+-            },
+-            "children": [
+-                {
+-                    "type": "container",
+-                    "id": "grid_stage",
+-                    "commonProps": {
+-                        "scrollable": true
+-                    },
+-                    "style": {
+-                        "padding": 0
+-                    },
+-                    "bindings": {
+-                        "placement.x": "grid_x",
+-                        "placement.width": "grid_width"
+-                    },
+-                    "placement": {
+-                        "mode": "absolute",
+-                        "x": "${expr((${env.widthDp} - ${constant.ui.content.metric.launcherGridWidth}) / 2)}",
+-                        "y": "${constant.ui.content.metric.launcherGridTop}",
+-                        "width": "${constant.ui.content.metric.launcherGridWidth}",
+-                        "height": "${expr(${env.heightDp} - ${constant.ui.content.metric.y} - ${constant.ui.content.metric.launcherGridTop} - 44dp)}"
+-                    },
+-                    "children": [
+-                        {
+-                            "type": "container",
+-                            "id": "slot_grid",
+-                            "commonProps": {
+-                                "clickable": false,
+-                                "scrollable": false
+-                            },
+-                            "bindings": {
+-                                "placement.height": "content_height"
+-                            },
+-                            "style": {
+-                                "padding": 0
+-                            },
+-                            "layout": {
+-                                "type": "flex",
+-                                "flexFlow": "rowWrap",
+-                                "gap": "${constant.ui.content.metric.launcherItemGap}",
+-                                "mainAlign": "start",
+-                                "crossAlign": "start"
+-                            },
+-                            "placement": {
+-                                "mode": "absolute",
+-                                "x": 0,
+-                                "y": 0,
+-                                "width": "match",
+-                                "height": "match"
+-                            },
+-                            "children": []
+-                        },
+-                        {
+-                            "type": "container",
+-                            "id": "item_layer",
+-                            "commonProps": {
+-                                "clickable": false,
+-                                "scrollable": false
+-                            },
+-                            "bindings": {
+-                                "placement.height": "content_height",
+-                                "placement.width": "content_width"
+-                            },
+-                            "style": {
+-                                "padding": 0
+-                            },
+-                            "placement": {
+-                                "mode": "absolute",
+-                                "x": 0,
+-                                "y": 0,
+-                                "width": "match",
+-                                "height": "match"
+-                            },
+-                            "children": []
+-                        },
+-                        {
+-                            "type": "container",
+-                            "id": "drag_layer",
+-                            "commonProps": {
+-                                "hidden": true,
+-                                "clickable": false,
+-                                "scrollable": false
+-                            },
+-                            "bindings": {
+-                                "placement.height": "content_height"
+-                            },
+-                            "style": {
+-                                "padding": 0
+-                            },
+-                            "placement": {
+-                                "mode": "absolute",
+-                                "x": 0,
+-                                "y": 0,
+-                                "width": "match",
+-                                "height": "match"
+-                            },
+-                            "children": []
+-                        }
+-                    ]
+-                },
+-                {
+-                    "type": "label",
+-                    "id": "pages",
+-                    "commonProps": {
+-                        "clickable": false
+-                    },
+-                    "bindings": {
+-                        "labelProps.text": "text"
+-                    },
+-                    "labelProps": {
+-                        "text": "●"
+-                    },
+-                    "placement": {
+-                        "mode": "absolute",
+-                        "x": 0,
+-                        "y": "${expr(${env.heightDp} - ${constant.ui.content.metric.y} - 38dp)}",
+-                        "width": "match",
+-                        "height": 28
+-                    },
+-                    "style": {
+-                        "fontSize": 18,
+-                        "textColor": "#775145",
+-                        "textAlign": "center"
+-                    }
+-                }
+-            ]
+-        }
+-    ]
+-}
++{"type":"viewScreen","id":"launcher","commonProps":{"scrollable":false},"style":{"padding":0},"styleRefs":["shell.desktop"],"children":[{"type":"container","id":"content","commonProps":{"scrollable":false},"style":{"padding":0},"styleRefs":["shell.desktop"],"placement":{"mode":"absolute","x":0,"y":"${constant.ui.content.metric.y}","width":"${env.widthDp}","height":"${expr(${env.heightDp} - ${constant.ui.content.metric.y})}"},"children":[{"type":"container","id":"grid_stage","commonProps":{"scrollable":true},"style":{"padding":0},"bindings":{"placement.x":"grid_x","placement.width":"grid_width"},"placement":{"mode":"absolute","x":"${expr((${env.widthDp} - ${constant.ui.content.metric.launcherGridWidth}) / 2)}","y":"${constant.ui.content.metric.launcherGridTop}","width":"${constant.ui.content.metric.launcherGridWidth}","height":242},"children":[{"type":"container","id":"slot_grid","commonProps":{"clickable":false,"scrollable":false},"bindings":{"placement.height":"content_height"},"style":{"padding":0},"layout":{"type":"flex","flexFlow":"rowWrap","gap":"${constant.ui.content.metric.launcherItemGap}","mainAlign":"start","crossAlign":"start"},"placement":{"mode":"absolute","x":0,"y":0,"width":"match","height":"match"},"children":[]},{"type":"container","id":"item_layer","commonProps":{"clickable":false,"scrollable":false},"bindings":{"placement.height":"content_height","placement.width":"content_width"},"style":{"padding":0},"placement":{"mode":"absolute","x":0,"y":0,"width":"match","height":"match"},"children":[]},{"type":"container","id":"drag_layer","commonProps":{"hidden":true,"clickable":false,"scrollable":false},"bindings":{"placement.height":"content_height"},"style":{"padding":0},"placement":{"mode":"absolute","x":0,"y":0,"width":"match","height":"match"},"children":[]}]},{"type":"label","id":"pages","commonProps":{"clickable":false},"bindings":{"labelProps.text":"text","style.textColor":"theme_text"},"labelProps":{"text":"●"},"placement":{"mode":"absolute","x":0,"y":"${expr(${env.heightDp} - ${constant.ui.content.metric.y} - 38dp)}","width":"match","height":28},"style":{"fontSize":18,"textColor":"#775145","textAlign":"center"}}]}]}
+--- a/system/brookesia_system_super/resource/shell/templates/launcher_app_button.json
++++ b/system/brookesia_system_super/resource/shell/templates/launcher_app_button.json
+@@ -1,142 +1 @@
+-{
+-    "type": "viewTemplate",
+-    "id": "launcher_app_button",
+-    "node": {
+-        "type": "button",
+-        "bindings": {
+-            "placement.x": "x",
+-            "placement.y": "y"
+-        },
+-        "interactionRefs": [
+-            "press.scale"
+-        ],
+-        "events": [
+-            {
+-                "type": "clicked",
+-                "effects": [
+-                    {
+-                        "type": "emitAction",
+-                        "action": "super.launch.app",
+-                        "requireValidPress": true
+-                    }
+-                ]
+-            }
+-        ],
+-        "style": {
+-            "padding": 0
+-        },
+-        "layout": {
+-            "type": "flex",
+-            "flexFlow": "column",
+-            "gap": "${constant.ui.content.metric.launcherLabelGap}",
+-            "mainAlign": "center",
+-            "crossAlign": "center"
+-        },
+-        "placement": {
+-            "mode": "absolute",
+-            "width": "${constant.ui.content.metric.launcherItemWidth}",
+-            "height": "${constant.ui.content.metric.launcherItemHeight}"
+-        },
+-        "children": [
+-            {
+-                "type": "container",
+-                "id": "icon_box",
+-                "commonProps": {
+-                    "clickable": false
+-                },
+-                "layout": {
+-                    "type": "flex",
+-                    "mainAlign": "center",
+-                    "crossAlign": "center"
+-                },
+-                "placement": {
+-                    "width": "${constant.ui.content.metric.launcherIconTileSize}",
+-                    "height": "${constant.ui.content.metric.launcherIconTileSize}"
+-                },
+-                "children": [
+-                    {
+-                        "type": "image",
+-                        "id": "icon_image",
+-                        "commonProps": {
+-                            "clickable": false,
+-                            "hidden": true
+-                        },
+-                        "bindings": {
+-                            "imageProps.src": "src",
+-                            "commonProps.hidden": "hidden"
+-                        },
+-                        "imageProps": {
+-                            "src": "",
+-                            "innerAlign": "contain"
+-                        },
+-                        "placement": {
+-                            "width": "${constant.ui.content.metric.launcherIconSize}",
+-                            "height": "${constant.ui.content.metric.launcherIconSize}"
+-                        }
+-                    },
+-                    {
+-                        "type": "label",
+-                        "id": "icon",
+-                        "commonProps": {
+-                            "clickable": false,
+-                            "hidden": true
+-                        },
+-                        "bindings": {
+-                            "labelProps.text": "text",
+-                            "commonProps.hidden": "hidden"
+-                        },
+-                        "labelProps": {
+-                            "text": ""
+-                        },
+-                        "styleRefs": [
+-                            "shell.launcherFallbackIcon"
+-                        ]
+-                    }
+-                ],
+-                "styleRefs": [
+-                    "shell.launcherIconTile"
+-                ]
+-            },
+-            {
+-                "type": "container",
+-                "id": "title_box",
+-                "commonProps": {
+-                    "clickable": false
+-                },
+-                "layout": {
+-                    "type": "flex",
+-                    "mainAlign": "center",
+-                    "crossAlign": "center"
+-                },
+-                "placement": {
+-                    "width": "${constant.ui.content.metric.launcherItemWidth}",
+-                    "height": "${constant.ui.content.metric.launcherTitleBoxHeight}"
+-                },
+-                "children": [
+-                    {
+-                        "type": "label",
+-                        "id": "app_name",
+-                        "commonProps": {
+-                            "clickable": false
+-                        },
+-                        "bindings": {
+-                            "labelProps.text": "name"
+-                        },
+-                        "labelProps": {
+-                            "text": ""
+-                        },
+-                        "style": {
+-                            "fontSize": "${constant.ui.metric.captionFont}"
+-                        },
+-                        "styleRefs": [
+-                            "shell.launcherAppLabel"
+-                        ]
+-                    }
+-                ]
+-            }
+-        ],
+-        "styleRefs": [
+-            "shell.launcherAppButton"
+-        ]
+-    }
+-}
++{"type":"viewTemplate","id":"launcher_app_button","node":{"type":"button","bindings":{"placement.x":"x","placement.y":"y"},"interactionRefs":["press.scale"],"events":[{"type":"clicked","effects":[{"type":"emitAction","action":"super.launch.app","requireValidPress":true}]}],"style":{"padding":0},"layout":{"type":"flex","flexFlow":"column","gap":"${constant.ui.content.metric.launcherLabelGap}","mainAlign":"center","crossAlign":"center"},"placement":{"mode":"absolute","width":"${constant.ui.content.metric.launcherItemWidth}","height":"${constant.ui.content.metric.launcherItemHeight}"},"children":[{"type":"container","id":"icon_box","commonProps":{"clickable":false},"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"placement":{"width":"${constant.ui.content.metric.launcherIconTileSize}","height":"${constant.ui.content.metric.launcherIconTileSize}"},"children":[{"type":"image","id":"icon_image","commonProps":{"clickable":false,"hidden":true},"bindings":{"imageProps.src":"src","commonProps.hidden":"hidden"},"imageProps":{"src":"","innerAlign":"contain"},"placement":{"width":"${constant.ui.content.metric.launcherIconSize}","height":"${constant.ui.content.metric.launcherIconSize}"}},{"type":"label","id":"icon","commonProps":{"clickable":false,"hidden":true},"bindings":{"labelProps.text":"text","commonProps.hidden":"hidden"},"labelProps":{"text":""},"styleRefs":["shell.launcherFallbackIcon"]}],"styleRefs":["shell.launcherIconTile"]},{"type":"container","id":"title_box","commonProps":{"clickable":false},"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"placement":{"width":"${constant.ui.content.metric.launcherItemWidth}","height":"${constant.ui.content.metric.launcherTitleBoxHeight}"},"children":[{"type":"label","id":"app_name","commonProps":{"clickable":false},"bindings":{"labelProps.text":"name"},"labelProps":{"text":""},"style":{"fontSize":"${constant.ui.metric.captionFont}"},"styleRefs":["shell.launcherAppLabel"]}]}],"styleRefs":["shell.launcherAppButton"]}}
+--- a/system/brookesia_system_super/src/private/shell_app.hpp
++++ b/system/brookesia_system_super/src/private/shell_app.hpp
+@@ -251,6 +251,8 @@
+     void set_launcher_page(size_t page, bool animate);
+     void handle_launcher_swipe(const service::Display::TouchGestureInfo &info);
+     std::vector<DisplaySourceRestoreRecord> display_source_restore_records_;
++    int desktop_theme_applied_ = -1;
++    void refresh_desktop_theme(bool force = false);
+     bool launcher_populated_ = false;
+     std::string applied_i18n_locale_;
+     std::shared_ptr<ExpansionNotifications> expansion_notifications_;
+--- a/system/brookesia_system_super/src/shell_app.cpp
++++ b/system/brookesia_system_super/src/shell_app.cpp
+@@ -9,6 +9,10 @@
+ #endif
+ 
+ #include <filesystem>
++extern "C" int brookesia_board_desktop_theme() __attribute__((weak));
++extern "C" bool brookesia_board_set_desktop_theme(int) __attribute__((weak));
++extern "C" void brookesia_board_desktop_theme_applied(int) __attribute__((weak));
++
+ 
+ #include "brookesia/lib_utils/function_guard.hpp"
+ #include "private/shell_app.hpp"
+@@ -94,6 +98,7 @@
+ {
+     BROOKESIA_LOG_TRACE_GUARD_WITH_THIS();
+     context_ = &context;
++    desktop_theme_applied_ = -1;
+     (void)ensure_display_operation();
+ 
+     auto result = load_fonts(context);
+@@ -194,6 +199,7 @@
+         status_clock_timer_id_ = core::INVALID_TIMER_ID;
+         refresh_status_clock();
+         refresh_wallpaper_shift();
++        refresh_desktop_theme();
+         schedule_status_clock_timer();
+         return {};
+     }
+--- a/system/brookesia_system_super/src/shell_app_launcher.cpp
++++ b/system/brookesia_system_super/src/shell_app_launcher.cpp
+@@ -7,6 +7,10 @@
+ #if !BROOKESIA_SYSTEM_SUPER_ENABLE_DEBUG_LOG
+ #   define BROOKESIA_LOG_DISABLE_DEBUG_TRACE 1
+ #endif
++
++extern "C" int brookesia_board_desktop_theme() __attribute__((weak));
++extern "C" bool brookesia_board_set_desktop_theme(int) __attribute__((weak));
++extern "C" void brookesia_board_desktop_theme_applied(int) __attribute__((weak));
+ 
+ #include <algorithm>
+ #include <array>
+@@ -253,7 +257,7 @@
+                 binding_updates,
+                 image_icon_path,
+                 "src",
+-                core::resolve_app_icon_resource_id(app.manifest)
++                (brookesia_board_desktop_theme && brookesia_board_desktop_theme()==1)?"cyber."+app.manifest.id:core::resolve_app_icon_resource_id(app.manifest)
+             );
+             add_binding_update(binding_updates, image_icon_path, "hidden", "false");
+             add_binding_update(binding_updates, fallback_icon_path, "hidden", "true");
+@@ -307,8 +311,33 @@
+     }
+ 
+     launcher_populated_ = true;
++    refresh_desktop_theme(true);
+     set_launcher_page(launcher_page_, false);
+     return {};
++}
++
++
++void ShellApp::refresh_desktop_theme(bool force)
++{
++    if(!context_ || !launcher_populated_)return;
++    const int selected=brookesia_board_desktop_theme?brookesia_board_desktop_theme():0;
++    if(!force && selected==desktop_theme_applied_)return;
++    std::vector<gui::BindingValueUpdate> updates;
++    for(const auto &app:owner_.list_apps()) {
++        if(!app.manifest.visible || !core::has_app_icon_image(app.manifest))continue;
++        const auto path=make_launcher_item_path(app.app_id);
++        const auto source=selected==1?"cyber."+app.manifest.id:core::resolve_app_icon_resource_id(app.manifest);
++        add_binding_update(updates,path+"/"+SUPER_LAUNCHER_IMAGE_ICON_ID,"src",source);
++        add_binding_update(updates,path+"/"+SUPER_LAUNCHER_LABEL_ID,"theme_text",selected==1?"#edf5ff":"#664c40");
++    }
++    add_binding_update(updates,"/launcher/content/pages","theme_text",selected==1?"#65edff":"#775145");
++    auto result=context_->gui().set_binding_values(updates);
++    if(!result){BROOKESIA_LOGW("Desktop theme icons failed: %1%",result.error());return;}
++    auto wallpaper=context_->gui().set_view_src("/background/cream_wallpaper",selected==1?"cyber.wallpaper":"cream.wallpaper");
++    if(!wallpaper){BROOKESIA_LOGW("Desktop wallpaper failed: %1%",wallpaper.error());return;}
++    desktop_theme_applied_=selected;
++    if(brookesia_board_desktop_theme_applied)brookesia_board_desktop_theme_applied(selected);
++    BROOKESIA_LOGI("Desktop theme applied: %1%",selected==1?"cyberpunk-v1":"cartoon-q-v1");
+ }
+ 
+ std::expected<void, std::string> ShellApp::refresh_launcher()
+@@ -353,7 +382,7 @@
+                 updates,
+                 image_icon_path,
+                 "src",
+-                core::resolve_app_icon_resource_id(app.manifest)
++                (brookesia_board_desktop_theme && brookesia_board_desktop_theme()==1)?"cyber."+app.manifest.id:core::resolve_app_icon_resource_id(app.manifest)
+             );
+             add_binding_update(updates, image_icon_path, "hidden", "false");
+             add_binding_update(updates, fallback_icon_path, "hidden", "true");
+--- a/system/brookesia_system_super/src/shell_launch.cpp
++++ b/system/brookesia_system_super/src/shell_launch.cpp
+@@ -108,7 +108,7 @@
+         updates,
+         SUPER_APP_MODAL_LAUNCH_ICON_IMAGE_PATH,
+         "src",
+-        has_icon ? core::resolve_app_icon_resource_id(app.manifest) : SUPER_DEFAULT_IMAGE_ID
++        has_icon ? (desktop_theme_applied_==1?"cyber."+app.manifest.id:core::resolve_app_icon_resource_id(app.manifest)) : SUPER_DEFAULT_IMAGE_ID
+     );
+     add_binding_update(updates, SUPER_APP_MODAL_LAUNCH_ICON_IMAGE_PATH, "hidden", bool_to_binding(!has_icon));
+     add_binding_update(

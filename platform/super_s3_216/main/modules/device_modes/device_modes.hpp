@@ -25,3 +25,7 @@ extern "C" void brookesia_board_story_sleep_done();
 extern "C" void brookesia_board_volume_keys_resume();
 
 extern "C" int brookesia_board_user_volume();
+extern "C" int brookesia_board_desktop_theme();
+extern "C" bool brookesia_board_set_desktop_theme(int);
+extern "C" bool brookesia_board_cyber_available();
+extern "C" void brookesia_board_desktop_theme_applied(int);

@@ -4,7 +4,7 @@
 
 | 内容 | 版本与当前行为 |
 | --- | --- |
-| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.30；保留原壁纸的流畅桌面及预处理Q版图标，手机式原生横向分页，每页6个应用及页码圆点，修复时钟等运行时应用失去前台后再次打开留在桌面；保留离线轻学习、电脑语音助手、公网 WSS、听书触摸锁屏、双击音量＋解锁、离线命令、Q 版主题、持久化音量、自动息屏、定时勿扰、儿童模式及重力旋转 |
+| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.31；设置中可切换经典Q版与赛博朋克桌面，壁纸和10个图标同步更换并记住选择；图标原生预载、手机式跟手分页，每页6个应用及页码圆点；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转 |
 | 额度显示 | 0.2.3，黑底双圆角卡片、34号“5小时/每周”标题、48号真实剩余百分比、吃豆人动画、30号倒计时和同步胶囊；随包保留Q版图标 |
 | 天气 | 0.2.6，默认上海、开发板直接联网、各天气动态背景、云形图片、24 小时预报 |
 | 听书 | 0.3.3，图标切换顺序播放、随机播放与单故事循环，自动保存模式；音量与锁屏置顶、Q版图标、中文书名、大号播放按钮、睡眠选择框、语音控制、章节与书签；连按两次音量＋解锁，最后2分钟声音/亮度渐弱，到时离线“晚安”并停播 |
@@ -20,6 +20,7 @@
 重力感应开关、校准与已有设备安装步骤见 [AUTO_ROTATION.md](codex-quota-monitor/AUTO_ROTATION.md)。
 儿童模式设置与验证见 [CHILD_MODE.md](codex-quota-monitor/CHILD_MODE.md)，主题资源迁移见 [SD_RESOURCES.md](codex-quota-monitor/SD_RESOURCES.md)。
 听书定时、中文样例及离线语音合成见 [AUDIOBOOK.md](codex-quota-monitor/AUDIOBOOK.md)。当前 Q 版图标和壁纸见 [主题说明](themes/cartoon-q-v1/README.md)。
+赛博朋克主题、设置中的切换入口、安装及回退见 [赛博朋克桌面](themes/cyberpunk-v1/README.md)。原Q版资源继续保留。
 助手实体音量键及界面同步修复见 [ASSISTANT_VOLUME.md](codex-quota-monitor/ASSISTANT_VOLUME.md)。
 电脑模型、跨网络连接、设备安装与验证见 [电脑语音助手](pc-voice-bridge/README.md)。当前公网入口为临时隧道，重建后需更新设备地址；长期使用需固定入口。
 离线命令词、模型部署与童声验证范围见 [OFFLINE_VOICE.md](codex-quota-monitor/OFFLINE_VOICE.md)。

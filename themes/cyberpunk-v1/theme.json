@@ -1,0 +1,138 @@
+{
+  "schema": 1,
+  "id": "cyberpunk-v1",
+  "name": "赛博朋克",
+  "version": "1.0.0",
+  "size": 92,
+  "icons": {
+    "brookesia.general.settings": "brookesia.general.settings.bin",
+    "brookesia.general.files": "brookesia.general.files.bin",
+    "brookesia.general.app_store": "brookesia.general.app_store.bin",
+    "local.codex.quota": "local.codex.quota.bin",
+    "local.weather": "local.weather.bin",
+    "local.audiobook": "local.audiobook.bin",
+    "local.flipclock": "local.flipclock.bin",
+    "local.voiceassistant": "local.voiceassistant.bin",
+    "local.childmode": "local.childmode.bin",
+    "local.lightlearning": "local.lightlearning.bin"
+  },
+  "files": {
+    "brookesia.general.app_store.bin": {
+      "bytes": 13628,
+      "sha256": "261f8e771648d75882f97b580dc249571d7a0f96bd84320cb365ab003e34ca60"
+    },
+    "brookesia.general.files.bin": {
+      "bytes": 13602,
+      "sha256": "34ea2309a953d6e47b369cb5f8218b82c6d0c02b7ad6f3dbbdb66fe14aed3fac"
+    },
+    "brookesia.general.settings.bin": {
+      "bytes": 11662,
+      "sha256": "51d148eacf767bcc7ee0a11816cc3a6d6633b40d24e7ac67a6c7d8cfd56d38ae"
+    },
+    "local.audiobook.bin": {
+      "bytes": 12351,
+      "sha256": "7be428a6d50ce3dbf187a101e6cb4844c5bccb1cad09713e5509d8eed3faa8f2"
+    },
+    "local.childmode.bin": {
+      "bytes": 14590,
+      "sha256": "75c9b12a2647a2a208a63353b9ff989f70fa7acf225764c1612e4b2d05eaeddb"
+    },
+    "local.codex.quota.bin": {
+      "bytes": 13712,
+      "sha256": "d067e9e8382f93e0316e2a4d713de5b53ac7c4e952b3673af92139eaf6f94e27"
+    },
+    "local.flipclock.bin": {
+      "bytes": 12914,
+      "sha256": "82d72cf0c01319cfe3f1fb57d969bc5f3f31737ffba9f58e393d6c2b2442dae0"
+    },
+    "local.lightlearning.bin": {
+      "bytes": 11983,
+      "sha256": "ee351e6bb21e00c92e002afade67009e1a1faaa1f47d230fa77ff347592178ce"
+    },
+    "local.voiceassistant.bin": {
+      "bytes": 13435,
+      "sha256": "4c15134ae166dd4453ee4f1d1692b3d6ab956213a27604dcf596b498ab7b898c"
+    },
+    "local.weather.bin": {
+      "bytes": 12313,
+      "sha256": "a610ded33145704d9eb5acfbf0c9b5750562dafcd4bbb992187ffc16f3a296d4"
+    },
+    "wallpaper.bin": {
+      "bytes": 275829,
+      "sha256": "cb65bc4a7c5d84df387dbf8c14e84c0093e26703dcd69d602342c3a7fc3f154a"
+    }
+  },
+  "crops": {
+    "brookesia.general.settings": [
+      40,
+      24,
+      430,
+      380
+    ],
+    "brookesia.general.files": [
+      445,
+      28,
+      800,
+      380
+    ],
+    "brookesia.general.app_store": [
+      810,
+      24,
+      1175,
+      380
+    ],
+    "local.codex.quota": [
+      1190,
+      32,
+      1540,
+      380
+    ],
+    "local.weather": [
+      1560,
+      28,
+      1945,
+      380
+    ],
+    "local.audiobook": [
+      38,
+      385,
+      432,
+      730
+    ],
+    "local.flipclock": [
+      438,
+      385,
+      805,
+      730
+    ],
+    "local.voiceassistant": [
+      810,
+      385,
+      1180,
+      730
+    ],
+    "local.childmode": [
+      1190,
+      385,
+      1540,
+      730
+    ],
+    "local.lightlearning": [
+      1550,
+      385,
+      1950,
+      730
+    ]
+  },
+  "sources": {
+    "icons-atlas.png": {
+      "bytes": 2226670,
+      "sha256": "f68518f39cd79279afe3dfad7369bd2c32e272a9cd4456cd428b866f5844daef"
+    },
+    "wallpaper.png": {
+      "bytes": 1797856,
+      "sha256": "97c96548b08a8d0a8318fbbe156bc06b7966017dfa799b8a52f5de39148e82eb"
+    }
+  },
+  "wallpaper": "wallpaper.bin"
+}

@@ -55,5 +55,7 @@
   "packages/resources/launcher-optimized-1.0.0.zip": "367cf8b2d5a1087d60016e78faf05fd6406eb21272615d73b3bbfa472e989832",
   "packages/content/learning-starter-1.4.0.zip": "588e62ac50024d9a859591efc546dc60ba7fab1d3d2f2aee78f77b9d93039899",
   "packages/apps/local.audiobook.debug.0.3.2.bpk": "6610a90ac9d4454e735967f02d04db2c4e1ac63783da1618aec094fba7108585",
-  "packages/apps/local.audiobook.debug.0.3.3.bpk": "48a088a4f18ac5c7fd7d2a9b303bfeb81f8af15279862b31b608158f6df49ebf"
+  "packages/apps/local.audiobook.debug.0.3.3.bpk": "48a088a4f18ac5c7fd7d2a9b303bfeb81f8af15279862b31b608158f6df49ebf",
+  "packages/resources/cyberpunk-desktop-1.0.0.zip": "c9da28fdf8064cab8597d62f4e41add272edc53cd7809ae10bc6eb27e7dd0d5f",
+  "packages/firmware/brookesia-0.8.3-s3.31-app-only.zip": "23d4ab627f418dba1e421bf32ce1fdce6988f997fc103c15708525d93081db0a"
 }
