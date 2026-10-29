@@ -16,7 +16,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', required=True)
     args = parser.parse_args()
-    version = json.loads((ROOT.parent / 'versions.json').read_text())['apps']['local.audiobook']
+    version = json.loads((ROOT.parent / 'versions.json').read_text(encoding='utf-8'))['apps']['local.audiobook']
     package = ROOT.parent / 'packages/apps' / ('local.audiobook.debug.' + version + '.bpk')
     with zipfile.ZipFile(package) as archive:
         assert archive.testzip() is None
@@ -43,6 +43,20 @@ def main():
         app = next(a for a in call(client, 'SystemCore', 'ListApps') if a['manifest']['id'] == 'local.audiobook')
         call(client, 'Storage', 'FSCopyTree', {'From': '/littlefs/apps/local.audiobook',
                                              'To': report['backup'], 'Overwrite': False})
+        # Keep the installed native launcher cache while adding new app images.
+        image_path = '/littlefs/apps/local.audiobook/res/images/index.json'
+        installed_images = json.loads(call(client, 'Storage', 'FSReadText', {'Path': image_path}))
+        launcher = next(i for i in installed_images['images'] if i['id'] == 'launcher_icon')
+        preserved_package = ROOT / 'runtime' / ('audiobook-preserved-' + version + '.bpk')
+        with zipfile.ZipFile(package) as source, zipfile.ZipFile(preserved_package, 'w', zipfile.ZIP_DEFLATED) as target:
+            for name in source.namelist():
+                data = source.read(name)
+                if name == 'res/images/index.json':
+                    images = json.loads(data)
+                    images['images'] = [launcher if i['id'] == 'launcher_icon' else i for i in images['images']]
+                    data = (json.dumps(images, ensure_ascii=False, separators=(',', ':'))+'\n').encode()
+                target.writestr(name, data)
+        package = preserved_package
         if app['state'] in ('Running', 'Paused', 'Starting'):
             call(client, 'SystemCore', 'StopApp', {'AppId': app['app_id']})
         bookmark = call(client, 'Storage', 'FSReadText', {'Path': bookmark_path}) if bookmark_exists else None
@@ -62,6 +76,8 @@ def main():
         client.hello()
         app = next(a for a in call(client, 'SystemCore', 'ListApps') if a['manifest']['id'] == 'local.audiobook')
         assert app['manifest']['version'] == version
+        installed_images = json.loads(call(client, 'Storage', 'FSReadText', {'Path': image_path}))
+        assert next(i for i in installed_images['images'] if i['id'] == 'launcher_icon') == launcher
         call(client, 'SystemCore', 'StartApp', {'AppId': app['app_id']})
         if before['active'] and before['path'] and before['path'] != '@tone':
             try:

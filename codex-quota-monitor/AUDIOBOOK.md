@@ -1,4 +1,14 @@
-# 听书 0.3.1（锁屏需要固件 s3.23及以上）
+# 听书 0.3.2（锁屏需要固件 s3.23及以上）
+
+底部右侧新增播放模式图标，点击按“顺序 → 随机 → 单故事循环”切换，自动记住上次选择。切换模式不中断当前故事，下一次播完后按新模式处理。
+
+| 图标 | 模式 | 播完后的行为 |
+| --- | --- | --- |
+| ![顺序](../brookesia-apps/audiobook/src/res/images/mode-sequence.png) | 顺序播放 | 按书单顺序播放下一篇，最后一篇播完停止 |
+| ![随机](../brookesia-apps/audiobook/src/res/images/mode-random.png) | 随机播放 | 随机选择另一篇；只有一篇时从头重播 |
+| ![单故事循环](../brookesia-apps/audiobook/src/res/images/mode-repeat_one.png) | 单故事循环 | 从头重播当前故事 |
+
+随机模式的上一章、下一章也会随机选另一篇；单故事循环仍允许手动切换章节。暂停、手动停止、播放失败、测试音结束及睡眠定时结束不会触发自动续播。播放完的书签归零，重新播放可从头开始；睡眠中止继续保留当前位置。模式单独保存在 `/littlefs/audiobook-play-mode.json`。
 
 ## 简洁播放器
 
@@ -15,11 +25,15 @@
 codex-quota-monitor/.venv/Scripts/python.exe codex-quota-monitor/tools/deploy_audiobook_layout.py --port COM3
 ```
 
-安装器将旧应用备份到SD卡，保留书单、书签和音量，并恢复更新前的正常播放/暂停状态。
+安装器将旧应用备份到SD卡，保留书单、书签和音量，并恢复更新前的正常播放/暂停状态；合并新资源时保留设备已有的优化桌面图标索引。
 若正在运行睡眠定时，先等待定时结束或在设备取消，安装器会拒绝重置正在运行的定时。
 更新完成、USB验证连接关闭后，可通过 `codex-quota-monitor/start.ps1` 恢复额度同步。
-安装包为 `packages/apps/local.audiobook.debug.0.3.1.bpk`，校验值见 `packages/SHA256.json`。
-源码构建沿用 `tools/build_brookesia_app.py`，JS检查为 `node brookesia-apps/audiobook/tests/main.test.cjs`。
+安装包为 `packages/apps/local.audiobook.debug.0.3.2.bpk`，校验值见 `packages/SHA256.json`。
+在仓库根目录用 `codex-quota-monitor/.venv/Scripts/python.exe codex-quota-monitor/tools/package_audiobook.py` 运行回归并生成可安装包。图标SVG原稿随源码保留，用 `brookesia-apps/audiobook/tools/build_mode_icons.cjs` 和sharp重建PNG（可通过SHARP_MODULE指定模块路径）。
+
+`tools/verify_audiobook_modes.py --port COM3` 向SD临时加入一个唯一命名的4秒静音WAV，使用已安装应用和原生播放器验证顺序续播、随机换篇、单故事重播及睡眠定时优先停止，检查后移除临时文件并恢复书签、模式和音量。短WAV避开部分MP3没有时长头、跳转到结尾耗时较长的情况。先暂停额度采集，完成后恢复。书单末尾停止、空/单篇书单、模式保存、手动换篇及错误状态由JS回归覆盖。
+
+2026-10-29已安装0.3.2并通过上述4项实机检查。临时文件已清除，书单恢复10篇，音量恢复75%，书签及原桌面图标缓存保留。测试还验证了旧的睡眠结束状态不会为已移除的音频覆盖书签。设备Flash接近安装暂存空间上限，最终小幅书签保护修正采用备份后的单文件更新，读回与正式包源码一致。
 
 ## 操作
 

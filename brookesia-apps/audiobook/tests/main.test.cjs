@@ -86,7 +86,7 @@ ctx.brookesia_app.on_action('lockScreen');assert(locked);
 assert.equal(calls.filter(c=>c.n==='Stop').length,audioStops,'Screen lock must not stop the story');
 assert.equal(calls.filter(c=>c.n==='SetSleepTimer').length,beforeInvalid,'Screen lock must preserve sleep countdown');
 assert.equal(calls.filter(c=>c.n==='LockScreen').length,1);
-for(const row of screen.children.filter(n=>['transport','tools'].includes(n.id)))for(const button of row.children){assert(button.placement.height>=48);assert(button.children[0].style.fontSize>=22);}
+for(const row of screen.children.filter(n=>['transport','tools'].includes(n.id)))for(const button of row.children){assert(button.placement.height>=48);if(button.children[0].type==='label')assert(button.children[0].style.fontSize>=22);}
 console.log('Audiobook regression passed: automatic scan, playback/bookmarks, sleep presets/fade/completion, hardware-volume refresh and larger controls');
 
 const bindingCount=bindings.length;
@@ -118,3 +118,44 @@ ctx.brookesia_app.on_pause();ctx.brookesia_app.on_resume();
 assert.equal(texts['/main/player/chapter'],'小蝌蚪找妈妈');
 assert.equal(JSON.parse(stored['/littlefs/audiobook-bookmark.json']).path,tracks[2].path);
 console.log('Story titles passed: all 10 Chinese names, filename fallback, chapter changes and bookmark resume');
+
+// Real EOF transitions: sequence stops at the end, shuffle excludes the current
+// chapter, and repeat-one restarts at zero without defeating sleep completion.
+function setup(mode,count=2){
+ tracks=Array.from({length:count},(_,i)=>({path:'/sdcard/audiobooks/'+i+'.wav'}));
+ stored={'/littlefs/audiobook-play-mode.json':JSON.stringify({mode})};
+ state={path:'',state:'Idle',position:0,duration:60,active:false};
+ vm.runInContext(code,ctx);ctx.brookesia_app.on_start();ctx.brookesia_app.on_action('toggle');
+}
+function finish(){state={...state,state:'Ended',position:60,active:false};ctx.brookesia_app.on_timer();}
+setup('sequence');finish();assert.equal(state.path,tracks[1].path);assert.equal(state.position,0);
+let before=calls.filter(c=>c.n==='Play').length;finish();ctx.brookesia_app.on_timer();
+assert.equal(calls.filter(c=>c.n==='Play').length,before,'Sequential last chapter must stop');
+ctx.brookesia_app.on_stop();assert.equal(JSON.parse(stored['/littlefs/audiobook-bookmark.json']).position,0);
+ctx.brookesia_app.on_start();ctx.brookesia_app.on_action('toggle');assert.equal(state.position,0);
+setup('random');for(let i=0;i<12;i++){const previous=state.path;finish();assert.notEqual(state.path,previous);assert.equal(state.position,0);}
+const previous=state.path;ctx.brookesia_app.on_action('next');assert.notEqual(state.path,previous);
+setup('repeat_one');for(let i=0;i<3;i++){finish();assert.equal(state.path,tracks[0].path);assert.equal(state.position,0);}
+ctx.brookesia_app.on_action('next');assert.equal(state.path,tracks[1].path,'Manual navigation remains available in repeat-one');
+for(const mode of ['sequence','random','repeat_one']){
+ setup(mode);before=calls.filter(c=>c.n==='Play').length;
+ for(const status of ['Paused','Stopped','Error','SleepEnded']){state={...state,state:status,active:status==='Paused'};ctx.brookesia_app.on_timer();}
+ assert.equal(calls.filter(c=>c.n==='Play').length,before,'Never restart after sleep, pause, stop or error');
+ state={...state,path:'@tone',state:'Playing',active:true};ctx.brookesia_app.on_timer();finish();
+ assert.equal(calls.filter(c=>c.n==='Play').length,before,'Test tone must not start stories');
+}
+setup('random',1);finish();assert.equal(state.path,tracks[0].path);
+setup('repeat_one',0);finish();assert.equal(state.path,'');
+setup('sequence');before=calls.filter(c=>c.n==='Play').length;
+for(const mode of ['random','repeat_one','sequence']){
+ ctx.brookesia_app.on_action('playMode');assert.equal(JSON.parse(stored['/littlefs/audiobook-play-mode.json']).mode,mode);
+ assert.equal(calls.filter(c=>c.n==='SetViewSrc').at(-1).a.Src,'mode_'+mode);
+}
+assert.equal(calls.filter(c=>c.n==='Play').length,before,'Mode changes must not interrupt playback');
+setup('random');ctx.brookesia_app.on_stop();vm.runInContext(code,ctx);ctx.brookesia_app.on_start();
+assert.equal(calls.filter(c=>c.n==='SetViewSrc').at(-1).a.Src,'mode_random','Saved mode must survive app restart');
+setup('invalid');assert.equal(calls.filter(c=>c.n==='SetViewSrc').at(-1).a.Src,'mode_sequence');
+const savedBookmark=stored['/littlefs/audiobook-bookmark.json'];
+state={...state,path:'/sdcard/audiobooks/removed.wav',state:'SleepEnded',active:false};ctx.brookesia_app.on_timer();
+assert.equal(stored['/littlefs/audiobook-bookmark.json'],savedBookmark,'Stale sleep completion for an absent track must not overwrite the bookmark');
+console.log('Playback modes passed: EOF ordering, shuffle exclusion, repeat-one, empty/single libraries, bookmarks, sleep/stop safeguards and persistence.');

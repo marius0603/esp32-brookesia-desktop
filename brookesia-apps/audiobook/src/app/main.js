@@ -13,12 +13,17 @@ const storyTitles={
   '10-wangyangbulao.mp3':'亡羊补牢'
 };
 const sleepMinutes=[0,15,30,45];
+const playModes=['sequence','random','repeat_one'];
+let playMode='sequence';
 let gui, audio, storage, modes, timer, playback, localVoice, tracks=[], index=0, current=null, playing=null, hidden=false, cache={}, volume=20, bookmark=null, lastSaved=0,sleepSelected=-1;
 function call(handle,name,args){const r=JSON.parse(brookesia.call_function(handle,name,JSON.stringify(args||{})));if(!r.success)throw new Error(r.error||r.error_message||name);return r.data;}
 const textPaths={volume:'header/volume',chapter:'player/chapter',progress:'player/progress',status:'player/status',sleepStatus:'sleep/sleepStatus'};
 function text(id,value){value=String(value);if(cache[id]===value||hidden)return;call(gui,'SetText',{Path:'/main/'+(textPaths[id]||id),Text:value});cache[id]=value;}
 function clock(seconds){seconds=Math.max(0,Math.floor(Number(seconds)||0));return Math.floor(seconds/3600)+':'+String(Math.floor(seconds%3600/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');}
-function save(){if(!playing||!playing.path||playing.path==='@tone')return;bookmark={path:playing.path,position:playing.position||0};call(storage,'FSWriteText',{Path:'/littlefs/audiobook-bookmark.json',Data:JSON.stringify(bookmark)});lastSaved=Date.now();}
+function save(){if(!playing||!playing.path||playing.path==='@tone')return;bookmark={path:playing.path,position:playing.state==='Ended'?0:playing.position||0};call(storage,'FSWriteText',{Path:'/littlefs/audiobook-bookmark.json',Data:JSON.stringify(bookmark)});lastSaved=Date.now();}
+function syncMode(){if(hidden||cache.mode===playMode)return;call(gui,'SetViewSrc',{Path:'/main/tools/mode/icon',Src:'mode_'+playMode});cache.mode=playMode;}
+function randomIndex(){if(tracks.length<2)return index;const at=Math.floor(Math.random()*(tracks.length-1));return at>=index?at+1:at;}
+function startAt(at){index=at;current=tracks[index];bookmark={path:current.path,position:0};play();}
 function refresh(){
   const result=call(audio,'List');tracks=Array.isArray(result.tracks)?result.tracks:[];
   if(tracks.length){const at=bookmark?tracks.findIndex(t=>t.path===bookmark.path):-1;index=at>=0?at:Math.min(index,tracks.length-1);current=tracks[index];text('chapter',title(current));text('status','第 '+(index+1)+' / '+tracks.length+' 章');}
@@ -33,7 +38,7 @@ function play(){
   const position=bookmark&&bookmark.path===current.path?bookmark.position:0;
   call(audio,'Play',{Path:current.path,Position:position});text('chapter',title(current));poll();
 }
-function move(delta){if(!tracks.length)return;save();index=Math.max(0,Math.min(tracks.length-1,index+delta));current=tracks[index];bookmark={path:current.path,position:0};play();}
+function move(delta){if(!tracks.length)return;save();startAt(playMode==='random'?randomIndex():Math.max(0,Math.min(tracks.length-1,index+delta)));}
 function syncSleep(next){
   const selected=next.sleep_active?Math.max(0,sleepMinutes.indexOf(next.sleep_minutes)):0;
   if(selected===sleepSelected)return;
@@ -41,12 +46,15 @@ function syncSleep(next){
 }
 function poll(){
   const next=call(audio,'GetState');
+  syncMode();
   syncSleep(next);
   const actual=tracks.findIndex(t=>t.path===next.path);
   if(actual>=0&&(!current||current.path!==next.path)){index=actual;current=tracks[index];text('chapter',title(current));}
-  if(playing&&playing.state!=='Ended'&&next.state==='Ended'&&next.path!=='@tone'){
+  if(playing&&playing.state!=='Ended'&&next.state==='Ended'&&actual>=0){
     playing=next;bookmark={path:next.path,position:0};save();
-    if(index+1<tracks.length){index++;current=tracks[index];bookmark={path:current.path,position:0};play();return;}
+    if(playMode==='repeat_one'){startAt(index);return;}
+    if(playMode==='random'){startAt(randomIndex());return;}
+    if(index+1<tracks.length){startAt(index+1);return;}
   }
   const sleepJustEnded=next.state==='SleepEnded'&&(!playing||playing.state!=='SleepEnded');
   playing=next;
@@ -59,12 +67,16 @@ function poll(){
   text('sleepStatus',next.sleep_finishing?'晚安':next.sleep_active?String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):next.sleep_completed?'已结束':'');
   try{const sound=call(modes,'GetState');volume=call(playback,'GetVolume');text('volume',sound.do_not_disturb?'音量 '+sound.resume_volume+'% · 静音':'音量 '+volume+'%');}catch(_){}
   try{const local=call(localVoice,'GetState');text('tools/voice/label',local.listening?'正在听':'语音控制');if(local.error)text('status','离线语音：'+local.error);}catch(_){}
-  if(sleepJustEnded)save();
+  if(sleepJustEnded&&actual>=0)save();
   text('progress',clock(next.position)+(next.duration?' / '+clock(next.duration):''));
   text('transport/toggle/label',next.active&&next.state!=='Paused'?'暂停':'播放');
   if(next.active&&next.path!=='@tone'&&Date.now()-lastSaved>15000)save();
 }
 function action(name){
+  if(name==='playMode'){
+    const selected=playModes[(playModes.indexOf(playMode)+1)%playModes.length];
+    call(storage,'FSWriteText',{Path:'/littlefs/audiobook-play-mode.json',Data:JSON.stringify({mode:selected})});playMode=selected;syncMode();return;
+  }
   if(name==='offlineSpeak'){call(localVoice,'ListenNow');text('status','正在听');return;}
   if(name==='lockScreen'){save();call(modes,'LockScreen');return;}
   if(name==='sleepChoice'){
@@ -82,7 +94,8 @@ function action(name){
 }
 globalThis.brookesia_app={
   on_start(){gui=brookesia.start_service('SystemGui');audio=brookesia.start_service('Audiobook');modes=brookesia.start_service('DeviceModes');storage=brookesia.start_service('Storage');timer=brookesia.start_service('SystemTimer');playback=brookesia.start_service('AudioPlayback');localVoice=brookesia.start_service('OfflineVoice');
-    for(const name of ['previous','next','toggle','sleepChoice','offlineSpeak','lockScreen'])call(gui,'SubscribeAction',{Action:name});
+    for(const name of ['previous','next','toggle','sleepChoice','offlineSpeak','lockScreen','playMode'])call(gui,'SubscribeAction',{Action:name});
+    try{const saved=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/audiobook-play-mode.json'}));if(saved&&playModes.includes(saved.mode))playMode=saved.mode;}catch(_){}
     try{bookmark=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/audiobook-bookmark.json'}));}catch(_){}
     try{volume=call(playback,'GetVolume');}catch(_){}
     hidden=false;sleepSelected=-1;text('volume','音量 '+volume+'%');refresh();poll();call(timer,'StartPeriodic',{Name:'audiobook',IntervalMs:1000});return true;},

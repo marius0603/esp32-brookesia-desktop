@@ -451,7 +451,7 @@
           "type": "button",
           "id": "voice",
           "placement": {
-            "width": 400,
+            "width": 312,
             "height": 48
           },
           "style": {
@@ -483,6 +483,48 @@
               },
               "labelProps": {
                 "text": "语音控制"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "mode",
+          "placement": {
+            "width": 72,
+            "height": 48
+          },
+          "style": {
+            "bgColor": "#182235",
+            "radius": 16,
+            "padding": 0,
+            "borderColor": "#2c3c55",
+            "borderWidth": 1
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "playMode"
+            }
+          ],
+          "children": [
+            {
+              "type": "image",
+              "id": "icon",
+              "placement": {
+                "width": 36,
+                "height": 36
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "imageProps": {
+                "src": "${image.mode_sequence}"
               }
             }
           ]
