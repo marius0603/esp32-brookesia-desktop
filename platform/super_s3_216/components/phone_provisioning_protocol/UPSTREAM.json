@@ -1,0 +1,67 @@
+{
+  "repository": "https://github.com/espressif/idf-extra-components",
+  "commit": "691c87db8e8dfede3455b0bcdd7a1c2dee50c173",
+  "path": "network_provisioning",
+  "files": {
+    "LICENSE": {
+      "sha256": "f0f612d1627194ddd07c8b5b238a514ae9794632e5470c00f16237def7dc2246",
+      "bytes": 11365
+    },
+    "include/network_provisioning/network_config.h": {
+      "sha256": "a5d2310bd3d928d45bc4cd08f5f6404c5facd717ebcf08afc35e01738a877012",
+      "bytes": 7205
+    },
+    "include/network_provisioning/network_scan.h": {
+      "sha256": "7c666e1fb8c82d4338cdc3c1f2d9b3b6579d517f2aa1c8e50ccc2fdcc9509c23",
+      "bytes": 6991
+    },
+    "src/network_config.c": {
+      "sha256": "ef905fa4ebc734583d4c43f3701a2368e8db6c43dc5197dc9edf4ddf2fc1fa01",
+      "bytes": 24286
+    },
+    "src/network_scan.c": {
+      "sha256": "03a89e0bbc8439dc1fcc39054f1a14322b668f4e8843ba8637c36595470237b8",
+      "bytes": 22918
+    },
+    "proto-c/network_config.pb-c.h": {
+      "sha256": "cf80ca717d39acc9ae8c191f778787dd6df2547209d32928e75b968dbd0ec81f",
+      "bytes": 22399
+    },
+    "proto-c/network_config.pb-c.c": {
+      "sha256": "83a80f8c70c43563d6f84d2fa604698beb88f3290f9aa3e2130b79d5256d90cd",
+      "bytes": 45723
+    },
+    "proto-c/network_scan.pb-c.h": {
+      "sha256": "163501892e108ba2c3d6d7b2cb41c7ab5b205e315d9848608e70441efecb11dd",
+      "bytes": 24195
+    },
+    "proto-c/network_scan.pb-c.c": {
+      "sha256": "b92de47f977b7b7cceb1d55f60ea303380aa55e2fcc6b64fec132b8ed5124a59",
+      "bytes": 53092
+    },
+    "proto-c/network_constants.pb-c.h": {
+      "sha256": "64bbc12b52131eb177ba837b3b32cd4a77b6291d2a375db401ef84773fb09e15",
+      "bytes": 6989
+    },
+    "proto-c/network_constants.pb-c.c": {
+      "sha256": "8240e2e03525f9ba09ad6c7dd9de9c114b3ac79c25be3b9ed7157e7b3c8b45d4",
+      "bytes": 15545
+    },
+    "proto/network_config.proto": {
+      "sha256": "596fc1262cfdacfdf357de0296e8767610a656cce66e1d6dd15b9fd6353e6423",
+      "bytes": 2281
+    },
+    "proto/network_scan.proto": {
+      "sha256": "2c756397e596298eef262bf004a37961b152f96a54b33bcc9275fc0700aaf1cc",
+      "bytes": 2449
+    },
+    "proto/network_constants.proto": {
+      "sha256": "81074d397e7cee53b0efd9da4158e7a33a04d221bb1427bf7c67cf5651867a95",
+      "bytes": 933
+    }
+  },
+  "adaptations": [
+    "Only config/scan codecs; Wi-Fi operations are supplied by the application through existing Brookesia Wifi service.",
+    "Binary BSSID response allocation uses malloc/memcpy instead of strndup."
+  ]
+}

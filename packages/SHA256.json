@@ -59,5 +59,8 @@
   "packages/resources/cyberpunk-desktop-1.0.0.zip": "c9da28fdf8064cab8597d62f4e41add272edc53cd7809ae10bc6eb27e7dd0d5f",
   "packages/firmware/brookesia-0.8.3-s3.31-app-only.zip": "23d4ab627f418dba1e421bf32ce1fdce6988f997fc103c15708525d93081db0a",
   "packages/content/virtual-pet-xiaoli-1.0.0.zip": "dd236689c9aded6c9443d762acd3ad2f8c9461e05a983b7736b24d5e535403ea",
-  "packages/apps/local.virtualpet.debug.0.1.2.bpk": "ff8b7d7c8ba19fe1ab6dea9a377c0e7190c1272f07cd82aae7b3d2add5cd280a"
+  "packages/apps/local.virtualpet.debug.0.1.2.bpk": "ff8b7d7c8ba19fe1ab6dea9a377c0e7190c1272f07cd82aae7b3d2add5cd280a",
+  "packages/resources/phone-provisioning-s3.32.zip": "cdfa9d7f81ce0d86d04b39dc4e96a6cf6600d079d5c13e8ec6afd15118d75f6b",
+  "packages/firmware/brookesia-0.8.3-s3.32-app-only.zip": "740fcb8eed87b1e923cafc155207f4de84aa8026e9543accfb13a7c70774e15a",
+  "packages/resources/phone-provisioning-wifi-s3.32.json": "87aa3359f92b4cec78f23eb66111ab9f54d3f262390b3dcd3fb6d1ddfd3c0769"
 }

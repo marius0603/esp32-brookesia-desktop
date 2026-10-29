@@ -30,15 +30,23 @@ def main():
     manifest['features'] = {'separate_websocket_tx_lock': bool(sdkconfig.get('ESP_WS_CLIENT_SEPARATE_TX_LOCK'))}
     temporary = output.with_suffix('.zip.tmp')
     with zipfile.ZipFile(temporary, 'w', zipfile.ZIP_DEFLATED) as archive:
-        native_scroll=desc['project_version'] in ('0.8.3-s3.30','0.8.3-s3.31')
-        launcher=ROOT/('packages/resources/desktop-themes-launcher-s3.31.json' if desc['project_version']=='0.8.3-s3.31' else 'packages/resources/phone-launcher-s3.30.json' if native_scroll else 'packages/resources/phone-launcher-s3.28.json')
-        if desc['project_version'] in ('0.8.3-s3.28','0.8.3-s3.29','0.8.3-s3.30','0.8.3-s3.31'):
+        native_scroll=desc['project_version'] in ('0.8.3-s3.30','0.8.3-s3.31','0.8.3-s3.32')
+        launcher=ROOT/('packages/resources/desktop-themes-launcher-s3.31.json' if desc['project_version'] in ('0.8.3-s3.31','0.8.3-s3.32') else 'packages/resources/phone-launcher-s3.30.json' if native_scroll else 'packages/resources/phone-launcher-s3.28.json')
+        if desc['project_version'] in ('0.8.3-s3.28','0.8.3-s3.29','0.8.3-s3.30','0.8.3-s3.31','0.8.3-s3.32'):
             data=launcher.read_bytes()
             archive.writestr('launcher/app_launcher.json',data)
             manifest['files']['launcher/app_launcher.json']={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
             manifest['features']['phone_launcher']=True
             manifest['features']['native_launcher_scroll']=native_scroll
-            manifest['features']['desktop_theme_switch']=desc['project_version']=='0.8.3-s3.31'
+            manifest['features']['desktop_theme_switch']=desc['project_version'] in ('0.8.3-s3.31','0.8.3-s3.32')
+            if desc['project_version']=='0.8.3-s3.32':
+                manifest['features']['phone_ble_provisioning']=bool(sdkconfig.get('BT_NIMBLE_ENABLED') and sdkconfig.get('ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_1'))
+                assert manifest['features']['phone_ble_provisioning'] and not sdkconfig.get('ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_0')
+                manifest['features']['ble_controller_flash_code']=bool(sdkconfig.get('BT_CTRL_RUN_IN_FLASH_ONLY'))
+                assert manifest['features']['ble_controller_flash_code'],'Phone provisioning needs controller RAM savings with Settings open'
+                data=(ROOT/'packages/resources/phone-provisioning-wifi-s3.32.json').read_bytes()
+                archive.writestr('settings/wifi.json',data)
+                manifest['files']['settings/wifi.json']={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
         for name in keep.values():
             path = (build / name).resolve()
             assert path.is_relative_to(build) and path.is_file()
@@ -58,7 +66,7 @@ def main():
             + ('Before updating to s3.30, run tools/deploy_phone_launcher.py to install the native-scroll launcher document.\n'
                'launcher/app_launcher.json is a separate filesystem resource, not a Flash partition image.\n'
                's3.28 and s3.29 share the earlier document; restoring those versions also requires restoring that document.\n'
-               if desc['project_version'] in ('0.8.3-s3.28','0.8.3-s3.29','0.8.3-s3.30') else 's3.31 additionally needs tools/deploy_desktop_themes.py to install the desktop artwork and theme chooser.\n' if desc['project_version']=='0.8.3-s3.31' else ''))
+               if desc['project_version'] in ('0.8.3-s3.28','0.8.3-s3.29','0.8.3-s3.30') else 's3.31 additionally needs tools/deploy_desktop_themes.py to install the desktop artwork and theme chooser.\n' if desc['project_version']=='0.8.3-s3.31' else 's3.32 additionally needs tools/deploy_phone_provisioning.py to install the Wi-Fi Settings entry; existing themes and launcher resources stay in place.\n' if desc['project_version']=='0.8.3-s3.32' else ''))
     with zipfile.ZipFile(temporary) as archive:
         assert archive.testzip() is None
     temporary.replace(output)

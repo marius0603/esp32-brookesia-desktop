@@ -1,0 +1,4 @@
+# Optional computer-side verification; the Android app and board do not need these.
+bleak==2.0.0
+protobuf==5.29.5
+cryptography>=42,<47

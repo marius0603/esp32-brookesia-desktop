@@ -19,6 +19,7 @@
 #include "child_mode/child_mode.hpp"
 #include "sd_resources/sd_resources.hpp"
 #include "learning_audio/learning_audio.hpp"
+#include "phone_provisioning/phone_provisioning.hpp"
 
 using namespace esp_brookesia;
 
@@ -41,6 +42,7 @@ bool GeneralServices::init()
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_child_mode_service()), false, "Failed to register child mode service");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_sd_resources_service()), false, "Failed to register SD resource service");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_learning_audio_service()), false, "Failed to register learning audio service");
+    BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_phone_provisioning_service()), false, "Failed to register phone provisioning");
 
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_offline_voice_service()), false, "Failed to register offline voice");
 
@@ -108,6 +110,8 @@ bool GeneralServices::start_audio_services()
     BROOKESIA_CHECK_FALSE_RETURN(modes_binding.is_valid(), false, "Failed to bind device modes");
     static auto rotation_binding = service::ServiceManager::get_instance().bind("AutoRotation");
     BROOKESIA_CHECK_FALSE_RETURN(rotation_binding.is_valid(), false, "Failed to bind auto rotation service");
+    static auto phone_binding = service::ServiceManager::get_instance().bind("PhoneProvisioning");
+    BROOKESIA_CHECK_FALSE_RETURN(phone_binding.is_valid(), false, "Failed to bind phone provisioning");
 
     if (!AudioPlaybackHelper::is_available()) {
         BROOKESIA_LOGW("Audio playback service is not available");
