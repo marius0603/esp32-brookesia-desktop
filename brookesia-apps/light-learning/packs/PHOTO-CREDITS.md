@@ -1,6 +1,6 @@
-# Animal photograph credits — starter 1.3.0
+# Animal photograph credits — starter 1.4.0
 
-The animal cards use real photographs, not generated animals. Each photograph was resized, fitted without cropping onto a 256×192 background, and converted to PNG. The derived photo retains the license listed below. Padding is part of the display asset. The source URLs, original SHA256 values and changes are also included in `photo-sources.json`, distributed with the SD content pack.
+The animal cards use real photographs, not generated animals. Each photograph was cropped around the animal and resized to a uniform 240×162 landscape PNG without padding or stretching, matching the device’s 400×270 photo area. Per-photo crop focal points and zoom are recorded in `photo-sources.json`. The derived photo retains the license listed below. The source URLs, original SHA256 values and changes are also included in `photo-sources.json`, distributed with the SD content pack.
 
 | Asset | Photographer | Original photograph | License for the photo and resized copy |
 | --- | --- | --- | --- |

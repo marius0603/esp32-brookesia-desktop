@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import struct
 import wave
 import zipfile
 from runtime_paths import find_node
@@ -39,7 +40,10 @@ def main():
             assert 0<w.getnframes()<=16000*20,path
         files['packs/starter/'+item['audio']]=path.read_bytes()
     for item in pack['cards']:
-        files['packs/starter/'+item['image']]=(APP/'packs/starter'/item['image']).read_bytes()
+        data=(APP/'packs/starter'/item['image']).read_bytes()
+        assert data.startswith(b'\x89PNG\r\n\x1a\n')
+        assert struct.unpack('>II',data[16:24])==(240,162),'Animal photos must fill the 400x270 display without bars'
+        files['packs/starter/'+item['image']]=data
     for filename in ('photo-sources.json','PHOTO-CREDITS.json','audio-sources.json'):
         if (APP/'packs'/filename).exists():files[filename]=(APP/'packs'/filename).read_bytes()
     if 'audio-sources.json' in files:

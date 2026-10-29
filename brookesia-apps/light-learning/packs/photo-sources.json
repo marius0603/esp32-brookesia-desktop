@@ -10,7 +10,12 @@
       "page": "https://commons.wikimedia.org/wiki/File:Cat_November_2010-1a.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Cat_November_2010-1a.jpg",
       "original_sha256": "59ec9bf12a5b63e0913e986b9566b96228c9f8921fda4fb87bf2a7f9acff3dd2",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.5,
+        "center_y": 0.28,
+        "zoom": 1
+      }
     },
     {
       "id": "dog",
@@ -21,7 +26,12 @@
       "page": "https://commons.wikimedia.org/wiki/File:Sitting_golden_retriever.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Sitting_golden_retriever.jpg",
       "original_sha256": "7dc7fba30fa7925b4e9962e29a8deab4b513598df53504ac61dd2b41823a2410",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.5,
+        "center_y": 0.35,
+        "zoom": 1
+      }
     },
     {
       "id": "cow",
@@ -32,7 +42,12 @@
       "page": "https://commons.wikimedia.org/wiki/File:Holstein_cow.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Holstein_cow.jpg",
       "original_sha256": "e48f12616512a94296def42e2fc5b80999237adbccb9e6d44fe47d73a6b7e85c",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.57,
+        "center_y": 0.5,
+        "zoom": 1
+      }
     },
     {
       "id": "horse",
@@ -43,7 +58,12 @@
       "page": "https://commons.wikimedia.org/wiki/File:20181129_White_Horse.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/0/07/20181129_White_Horse.jpg",
       "original_sha256": "8299d80f527c2a18a2cb76acf6c68d8d7fce049bfa1b9fa98d0597ee89f15a2c",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.5,
+        "center_y": 0.5,
+        "zoom": 1
+      }
     },
     {
       "id": "rabbit",
@@ -54,7 +74,12 @@
       "page": "https://commons.wikimedia.org/wiki/File:Rabbit_on_grass_%282%29.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Rabbit_on_grass_%282%29.jpg",
       "original_sha256": "643922de4aef0100510dccf0c44ca78b0b4257ce49729d3778086eda33f5d1e5",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.48,
+        "center_y": 0.48,
+        "zoom": 2.4
+      }
     },
     {
       "id": "duck",
@@ -65,7 +90,12 @@
       "page": "https://commons.wikimedia.org/wiki/File:2014-08-31-domestic-duck.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/e/e2/2014-08-31-domestic-duck.jpg",
       "original_sha256": "b6c49f231d335d910a9802ee0ddbdb83f4bb833dca4510f317954f06a730bbd8",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.5,
+        "center_y": 0.5,
+        "zoom": 1
+      }
     },
     {
       "id": "pig",
@@ -76,7 +106,12 @@
       "page": "https://commons.wikimedia.org/wiki/File:Pig_USDA01c0116.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/d/db/Pig_USDA01c0116.jpg",
       "original_sha256": "80c60e81be538932ce5d7e1595f4d26e5193436e56925816c6c8a98229788abc",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.5,
+        "center_y": 0.44,
+        "zoom": 1
+      }
     },
     {
       "id": "sheep",
@@ -87,7 +122,12 @@
       "page": "https://commons.wikimedia.org/wiki/File:Sheep_on_grass.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/a/af/Sheep_on_grass.jpg",
       "original_sha256": "83e9369c83a5f862a309ebc6c06b39752a867f8b4deb3e7a62cd8570566d4297",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.5,
+        "center_y": 0.5,
+        "zoom": 1
+      }
     },
     {
       "id": "chicken",
@@ -98,7 +138,12 @@
       "page": "https://commons.wikimedia.org/wiki/File:Andalusian_Blue_chicken_%28male%29.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Andalusian_Blue_chicken_%28male%29.jpg",
       "original_sha256": "a5e0aa8bfc77727aa33a94fa96802c8e87a838772528c060c6bd49d1a4c0885a",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.5,
+        "center_y": 0.44,
+        "zoom": 1
+      }
     },
     {
       "id": "bird",
@@ -109,7 +154,12 @@
       "page": "https://commons.wikimedia.org/wiki/File:Parus_major_m.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/2/2d/Parus_major_m.jpg",
       "original_sha256": "2344e7c3d7820f4b03c006b93d2c7124410f4f050136d06fe717ea60f8d231b6",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.54,
+        "center_y": 0.57,
+        "zoom": 1.15
+      }
     },
     {
       "id": "fish",
@@ -120,7 +170,12 @@
       "page": "https://commons.wikimedia.org/wiki/File:Goldifishgroupkoi.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/2/26/Goldifishgroupkoi.jpg",
       "original_sha256": "d2e7e8dd2b7eed06035419facdb53f68571052b2bbd8438cdde1edcaf48fb17f",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.5,
+        "center_y": 0.5,
+        "zoom": 1
+      }
     },
     {
       "id": "bear",
@@ -131,7 +186,12 @@
       "page": "https://commons.wikimedia.org/wiki/File:2010-brown-bear.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/7/79/2010-brown-bear.jpg",
       "original_sha256": "4e6ee26f298799e211925d6e7abb2432a6962efaa294c759c77fd6c05f0e3d02",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.5,
+        "center_y": 0.32,
+        "zoom": 1
+      }
     },
     {
       "id": "lion",
@@ -142,7 +202,12 @@
       "page": "https://commons.wikimedia.org/wiki/File:Lion_waiting_in_Namibia.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/7/73/Lion_waiting_in_Namibia.jpg",
       "original_sha256": "564e2b276db9c097c0b1496fa2c60e092b971094f9c9de1dfa489f90add1686f",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.5,
+        "center_y": 0.5,
+        "zoom": 1
+      }
     },
     {
       "id": "tiger",
@@ -153,7 +218,12 @@
       "page": "https://commons.wikimedia.org/wiki/File:Panthera_tigris_tigris_original.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Panthera_tigris_tigris_original.jpg",
       "original_sha256": "64c498175c2ba7387dfc145a8f0431c1cac105b85013f2a057d6c672bc4ee290",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.5,
+        "center_y": 0.5,
+        "zoom": 1
+      }
     },
     {
       "id": "monkey",
@@ -164,7 +234,20 @@
       "page": "https://commons.wikimedia.org/wiki/File:The_Sitting_Monkey.jpg",
       "download_url": "https://upload.wikimedia.org/wikipedia/commons/4/47/The_Sitting_Monkey.jpg",
       "original_sha256": "ce7ca58f701cb27c81bb6ad1e524a4ce8ddb138d02f78cb2efe01ad129e7b442",
-      "changes": "Resized and fitted to 256x192 with padding, converted to PNG; photograph content unchanged."
+      "changes": "Cropped around the animal using the recorded focal point, resized to 240x162 landscape without padding or stretching, and converted to palette PNG.",
+      "crop": {
+        "center_x": 0.5,
+        "center_y": 0.3,
+        "zoom": 1
+      }
     }
-  ]
+  ],
+  "output": {
+    "width": 240,
+    "height": 162,
+    "fit": "cover",
+    "padding": false,
+    "display_width": 400,
+    "display_height": 270
+  }
 }

@@ -20,7 +20,7 @@ def install_app(port,package):
 def main():
     p=argparse.ArgumentParser()
     p.add_argument('--port',required=True)
-    p.add_argument('--content',type=Path,default=REPO/'packages/content/learning-starter-1.3.0.zip')
+    p.add_argument('--content',type=Path,default=REPO/'packages/content/learning-starter-1.4.0.zip')
     p.add_argument('--content-only',action='store_true')
     args=p.parse_args()
     stage=ROOT/'runtime'/('learning-install-'+datetime.now().strftime('%Y%m%d-%H%M%S'))

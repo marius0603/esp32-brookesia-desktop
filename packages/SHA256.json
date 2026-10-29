@@ -52,5 +52,6 @@
   "packages/firmware/brookesia-0.8.3-s3.29-app-only.zip": "8bb5c05d63c8a8fa79d65728e730e5ba4e0fb2f8800c01312fbdec28801d5e2b",
   "packages/firmware/brookesia-0.8.3-s3.30-app-only.zip": "bebb9e0131618621fb3e2ee1046e92161647246adda06a87aa025a9fa00dbf4e",
   "packages/resources/phone-launcher-s3.30.json": "787da5af6a46cf09d8208f4220561ae99ec74ebff0936244a5f5b74004372a18",
-  "packages/resources/launcher-optimized-1.0.0.zip": "367cf8b2d5a1087d60016e78faf05fd6406eb21272615d73b3bbfa472e989832"
+  "packages/resources/launcher-optimized-1.0.0.zip": "367cf8b2d5a1087d60016e78faf05fd6406eb21272615d73b3bbfa472e989832",
+  "packages/content/learning-starter-1.4.0.zip": "588e62ac50024d9a859591efc546dc60ba7fab1d3d2f2aee78f77b9d93039899"
 }
