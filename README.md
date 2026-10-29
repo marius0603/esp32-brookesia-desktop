@@ -9,6 +9,7 @@
 | 天气 | 0.2.6，默认上海、开发板直接联网、各天气动态背景、云形图片、24 小时预报 |
 | 听书 | 0.3.3，图标切换顺序播放、随机播放与单故事循环，自动保存模式；音量与锁屏置顶、Q版图标、中文书名、大号播放按钮、睡眠选择框、语音控制、章节与书签；连按两次音量＋解锁，最后2分钟声音/亮度渐弱，到时离线“晚安”并停播 |
 | 翻页时钟 | 0.1.1，只显示大号北京时间 HH:MM，分钟变化时翻页 |
+| 电子宠物 | 0.1.2，原创小马“小栗”的眨眼、吃饭与睡觉动画，原生呼吸，吃饭单层显示避免重影；按北京时间三餐和跨夜睡觉，支持喂食、陪伴、作息查看和临时睡觉预览；本地运行，资源存SD卡 |
 | 小马助手 | 0.2.2，简洁对话卡片与说话/发送大按钮，移除音量加减、断开、停止及录音测试按键；电脑 Qwen3-ASR → DS → Qwen3-TTS，可切换小智，保留实体音量与勿扰 |
 | 离线语音 | 0.1.0 试验版，先说“你好小智”，本机处理八类命令；存在漏识别，童声准确率尚未验证；SD 模型与中文剩余时间提示，不上传命令录音 |
 | 儿童模式 | 0.1.1，家长 PIN、应用白名单、音量上限、每日时长和可选夜间休息；增加轻学习授权选项，保留原有设置 |
@@ -26,6 +27,7 @@
 离线命令词、模型部署与童声验证范围见 [OFFLINE_VOICE.md](codex-quota-monitor/OFFLINE_VOICE.md)。
 轻学习安装、录音说明及 JSON 内容包格式见 [LEARNING.md](codex-quota-monitor/LEARNING.md)。
 桌面翻页和时钟恢复修复、资源安装顺序及回退见 [PHONE_LAUNCHER.md](codex-quota-monitor/PHONE_LAUNCHER.md)。
+电子宠物形象、作息、SD动画资源及安装说明见 [小栗](brookesia-apps/virtual-pet/README.md)。
 当前系统属于官方开发分支的本地 S3 适配，未恢复微雪出厂 AIChats 等完整应用。
 
 ## 在另一台 Windows 电脑开始
@@ -60,7 +62,7 @@ npm --prefix tools/brookesia-toolkit install
 .\start.ps1
 ```
 
-其他应用目录是 `codex-quota`、`weather`、`audiobook`、`voice-assistant`、`child-mode`、`light-learning`；打包文件名以各自 `src/manifest.json` 的版本为准。
+其他应用目录是 `codex-quota`、`weather`、`audiobook`、`voice-assistant`、`child-mode`、`light-learning`、`virtual-pet`；打包文件名以各自 `src/manifest.json` 的版本为准。电子宠物先用专用部署器安装SD资源，再安装小型应用包，见应用说明。
 安装 App 无需重刷系统。听书需要 s3.3 固件提供的 Audiobook 服务；时钟依赖已有 PNG 解码与 SNTP。
 小马助手 0.2.2 需要 s3.25 原生服务。默认电脑模式，点击“电脑模式/小智模式”按钮可切换；小智首次使用仍需在平台添加设备。点击说话，等待按钮显示“发送”后开始说话，再次点击发送；最长30秒，录音先完整缓存在设备内存中，再上传电脑。
 电脑端 Node.js 从 PATH 查找，也可通过 `QUOTA_NODE` 指定。

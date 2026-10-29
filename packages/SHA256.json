@@ -57,5 +57,7 @@
   "packages/apps/local.audiobook.debug.0.3.2.bpk": "6610a90ac9d4454e735967f02d04db2c4e1ac63783da1618aec094fba7108585",
   "packages/apps/local.audiobook.debug.0.3.3.bpk": "48a088a4f18ac5c7fd7d2a9b303bfeb81f8af15279862b31b608158f6df49ebf",
   "packages/resources/cyberpunk-desktop-1.0.0.zip": "c9da28fdf8064cab8597d62f4e41add272edc53cd7809ae10bc6eb27e7dd0d5f",
-  "packages/firmware/brookesia-0.8.3-s3.31-app-only.zip": "23d4ab627f418dba1e421bf32ce1fdce6988f997fc103c15708525d93081db0a"
+  "packages/firmware/brookesia-0.8.3-s3.31-app-only.zip": "23d4ab627f418dba1e421bf32ce1fdce6988f997fc103c15708525d93081db0a",
+  "packages/content/virtual-pet-xiaoli-1.0.0.zip": "dd236689c9aded6c9443d762acd3ad2f8c9461e05a983b7736b24d5e535403ea",
+  "packages/apps/local.virtualpet.debug.0.1.2.bpk": "ff8b7d7c8ba19fe1ab6dea9a377c0e7190c1272f07cd82aae7b3d2add5cd280a"
 }

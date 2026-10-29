@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "version": "1.0.0",
+  "pet": "xiaoli",
+  "frame_size": [
+    320,
+    320
+  ],
+  "decoded_frame_bytes": 1638400,
+  "files": {
+    "launcher.bin": {
+      "bytes": 10898,
+      "sha256": "76e7b7b756be90a5684f4a017fd75997ddbc91a188c1e5a12074760695f56e7e"
+    },
+    "schedule.json": {
+      "bytes": 257,
+      "sha256": "43382a08a33e32ef0070c8af408a288168bbc168d16a346989ec57c2328629e1"
+    },
+    "frames/eat-0.bin": {
+      "bytes": 100139,
+      "sha256": "2f693f0d30c902d8c7361816c60d6223db439eac3d20dcf34fc71d13660a7e2c"
+    },
+    "frames/eat-1.bin": {
+      "bytes": 104720,
+      "sha256": "76dd73bb160db43ac864ca3559f12bca2d58bf100bc548c3f9e3297ef96f2ae9"
+    },
+    "frames/eat-2.bin": {
+      "bytes": 94738,
+      "sha256": "16dcdb0a24c7271d271d83d58764e927857263333f65f843b58ebab422379c47"
+    },
+    "frames/idle-0.bin": {
+      "bytes": 81003,
+      "sha256": "1dfe5ce4153c08abf70aa9d1907e33fd10c50c542b07406ed4d4158837760603"
+    },
+    "frames/idle-1.bin": {
+      "bytes": 79500,
+      "sha256": "cbae06ba9fa58ce93134113ba2f04ae23065f474aa97ffe38f9c67abcdf15bdd"
+    },
+    "frames/idle-2.bin": {
+      "bytes": 79290,
+      "sha256": "8db3ca541a0f1cf2352196bbb983f464e89a308611cb44b7bec0cae8d8376f9e"
+    },
+    "frames/sleep-0.bin": {
+      "bytes": 101790,
+      "sha256": "abc05dd8b165a1ad590a6de26212a5939f8054188fdd7579c5bbba9e7f1808b2"
+    },
+    "frames/sleep-1.bin": {
+      "bytes": 100604,
+      "sha256": "9242d047820d58eb2861e011b85c1c09b48a542668f8f9fe24d8efba0572ffa8"
+    }
+  }
+}

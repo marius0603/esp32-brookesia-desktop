@@ -1,0 +1,7 @@
+{
+  "schema":1,
+  "timezone":"Asia/Shanghai",
+  "utc_offset_minutes":480,
+  "meals":[{"name":"早餐","start":450,"duration":30},{"name":"午餐","start":720,"duration":30},{"name":"晚餐","start":1110,"duration":30}],
+  "sleep":{"start":1320,"end":420}
+}

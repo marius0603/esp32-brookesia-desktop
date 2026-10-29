@@ -1,0 +1,549 @@
+{
+  "type": "viewScreen",
+  "id": "main",
+  "commonProps": {
+    "scrollable": false
+  },
+  "style": {
+    "bgColor": "#fff7e8",
+    "padding": 0
+  },
+  "children": [
+    {
+      "type": "container",
+      "id": "home",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "hidden": false,
+        "scrollable": false
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "pet",
+          "placement": {
+            "mode": "absolute",
+            "x": 80,
+            "y": 80,
+            "width": 320,
+            "height": 320
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "commonProps": {
+            "clickable": true,
+            "scrollable": false
+          },
+          "bindings": {
+            "placement.y": "y"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "petTap"
+            }
+          ],
+          "children": [
+            {
+              "type": "image",
+              "id": "base",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 320
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "style": {
+                "opacity": 255
+              },
+              "bindings": {
+                "style.opacity": "opacity"
+              },
+              "imageProps": {
+                "src": "${image.pet_idle_0}",
+                "innerAlign": "center"
+              }
+            },
+            {
+              "type": "image",
+              "id": "blend",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 320,
+                "height": 320
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "style": {
+                "opacity": 255
+              },
+              "bindings": {
+                "style.opacity": "opacity"
+              },
+              "imageProps": {
+                "src": "${image.pet_idle_0}",
+                "innerAlign": "center"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "feed",
+          "placement": {
+            "mode": "absolute",
+            "x": 54,
+            "y": 404,
+            "width": 112,
+            "height": 44
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#eedac4",
+            "radius": 18,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "feed"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 24,
+                "textColor": "#674536"
+              },
+              "labelProps": {
+                "text": "喂食"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "touch",
+          "placement": {
+            "mode": "absolute",
+            "x": 184,
+            "y": 404,
+            "width": 112,
+            "height": 44
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#eedac4",
+            "radius": 18,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "pet"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 24,
+                "textColor": "#674536"
+              },
+              "labelProps": {
+                "text": "陪伴"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "schedule",
+          "placement": {
+            "mode": "absolute",
+            "x": 314,
+            "y": 404,
+            "width": 112,
+            "height": 44
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#eedac4",
+            "radius": 18,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "schedule"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 24,
+                "textColor": "#674536"
+              },
+              "labelProps": {
+                "text": "作息"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "schedule",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "hidden": true,
+        "scrollable": false
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "heading",
+          "placement": {
+            "mode": "absolute",
+            "x": 60,
+            "y": 100,
+            "width": 360,
+            "height": 40
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 30,
+            "textColor": "#674536",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "小栗的作息"
+          }
+        },
+        {
+          "type": "label",
+          "id": "meal0",
+          "placement": {
+            "mode": "absolute",
+            "x": 80,
+            "y": 159,
+            "width": 320,
+            "height": 36
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 24,
+            "textColor": "#674536",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "早餐   07:30"
+          }
+        },
+        {
+          "type": "label",
+          "id": "meal1",
+          "placement": {
+            "mode": "absolute",
+            "x": 80,
+            "y": 207,
+            "width": 320,
+            "height": 36
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 24,
+            "textColor": "#674536",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "午餐   12:00"
+          }
+        },
+        {
+          "type": "label",
+          "id": "meal2",
+          "placement": {
+            "mode": "absolute",
+            "x": 80,
+            "y": 255,
+            "width": 320,
+            "height": 36
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 24,
+            "textColor": "#674536",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "晚餐   18:30"
+          }
+        },
+        {
+          "type": "label",
+          "id": "sleep",
+          "placement": {
+            "mode": "absolute",
+            "x": 60,
+            "y": 308,
+            "width": 360,
+            "height": 36
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 24,
+            "textColor": "#674536",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "睡觉   22:00 - 07:00"
+          }
+        },
+        {
+          "type": "button",
+          "id": "sleepPreview",
+          "placement": {
+            "mode": "absolute",
+            "x": 67,
+            "y": 390,
+            "width": 166,
+            "height": 44
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#eedac4",
+            "radius": 18,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "sleepPreview"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 24,
+                "textColor": "#674536"
+              },
+              "labelProps": {
+                "text": "看看睡觉"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "back",
+          "placement": {
+            "mode": "absolute",
+            "x": 247,
+            "y": 390,
+            "width": 166,
+            "height": 44
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#eedac4",
+            "radius": 18,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "back"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 24,
+                "textColor": "#674536"
+              },
+              "labelProps": {
+                "text": "返回"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "label",
+      "id": "title",
+      "placement": {
+        "mode": "absolute",
+        "x": 48,
+        "y": 32,
+        "width": 160,
+        "height": 44
+      },
+      "style": {
+        "font": "${font.zh_CN}",
+        "fontSize": 34,
+        "textColor": "#674536",
+        "textAlign": "left"
+      },
+      "labelProps": {
+        "text": "小栗"
+      }
+    },
+    {
+      "type": "label",
+      "id": "clock",
+      "placement": {
+        "mode": "absolute",
+        "x": 310,
+        "y": 38,
+        "width": 120,
+        "height": 38
+      },
+      "style": {
+        "font": "${font.zh_CN}",
+        "fontSize": 28,
+        "textColor": "#674536",
+        "textAlign": "right"
+      },
+      "labelProps": {
+        "text": "--:--"
+      }
+    },
+    {
+      "type": "label",
+      "id": "status",
+      "placement": {
+        "mode": "absolute",
+        "x": 130,
+        "y": 76,
+        "width": 220,
+        "height": 32
+      },
+      "style": {
+        "font": "${font.zh_CN}",
+        "fontSize": 22,
+        "textColor": "#497d78",
+        "textAlign": "center"
+      },
+      "labelProps": {
+        "text": "陪你一起"
+      }
+    },
+    {
+      "type": "label",
+      "id": "hint",
+      "placement": {
+        "mode": "absolute",
+        "x": 40,
+        "y": 451,
+        "width": 400,
+        "height": 24
+      },
+      "style": {
+        "font": "${font.zh_CN}",
+        "fontSize": 16,
+        "textColor": "#8d7966",
+        "textAlign": "center"
+      },
+      "labelProps": {
+        "text": ""
+      }
+    }
+  ]
+}

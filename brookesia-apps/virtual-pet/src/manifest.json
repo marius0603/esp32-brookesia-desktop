@@ -1,0 +1,5 @@
+{
+  "package": {"id":"local.virtualpet","name":{"en":"Little Chestnut","zh_CN":"电子宠物"},"version":"0.1.2","visible":true,"systems":["super"]},
+  "runtime":{"type":"JavaScript","entry":"app/main.js","resource_dir":"res","arguments":[]},
+  "services":[{"name":"SNTP","version":"0.8.2"},{"name":"Storage","version":"0.8.3"}]
+}
