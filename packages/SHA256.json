@@ -54,5 +54,6 @@
   "packages/resources/phone-launcher-s3.30.json": "787da5af6a46cf09d8208f4220561ae99ec74ebff0936244a5f5b74004372a18",
   "packages/resources/launcher-optimized-1.0.0.zip": "367cf8b2d5a1087d60016e78faf05fd6406eb21272615d73b3bbfa472e989832",
   "packages/content/learning-starter-1.4.0.zip": "588e62ac50024d9a859591efc546dc60ba7fab1d3d2f2aee78f77b9d93039899",
-  "packages/apps/local.audiobook.debug.0.3.2.bpk": "6610a90ac9d4454e735967f02d04db2c4e1ac63783da1618aec094fba7108585"
+  "packages/apps/local.audiobook.debug.0.3.2.bpk": "6610a90ac9d4454e735967f02d04db2c4e1ac63783da1618aec094fba7108585",
+  "packages/apps/local.audiobook.debug.0.3.3.bpk": "48a088a4f18ac5c7fd7d2a9b303bfeb81f8af15279862b31b608158f6df49ebf"
 }

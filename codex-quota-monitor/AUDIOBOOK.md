@@ -1,4 +1,6 @@
-# 听书 0.3.2（锁屏需要固件 s3.23及以上）
+# 听书 0.3.3（锁屏需要固件 s3.23及以上）
+
+0.3.3重新绘制单故事循环图标：箭头位于外围上下两侧，数字“1”独立居中，保留36×36尺寸并拉开笔画间距。资源JSON在打包时压紧，降低安装暂存空间；原有播放逻辑保持一致。已安装并核对启动、图标文件尺寸、原故事、书签和音量。
 
 底部右侧新增播放模式图标，点击按“顺序 → 随机 → 单故事循环”切换，自动记住上次选择。切换模式不中断当前故事，下一次播完后按新模式处理。
 
@@ -28,7 +30,7 @@ codex-quota-monitor/.venv/Scripts/python.exe codex-quota-monitor/tools/deploy_au
 安装器将旧应用备份到SD卡，保留书单、书签和音量，并恢复更新前的正常播放/暂停状态；合并新资源时保留设备已有的优化桌面图标索引。
 若正在运行睡眠定时，先等待定时结束或在设备取消，安装器会拒绝重置正在运行的定时。
 更新完成、USB验证连接关闭后，可通过 `codex-quota-monitor/start.ps1` 恢复额度同步。
-安装包为 `packages/apps/local.audiobook.debug.0.3.2.bpk`，校验值见 `packages/SHA256.json`。
+安装包为 `packages/apps/local.audiobook.debug.0.3.3.bpk`，校验值见 `packages/SHA256.json`。
 在仓库根目录用 `codex-quota-monitor/.venv/Scripts/python.exe codex-quota-monitor/tools/package_audiobook.py` 运行回归并生成可安装包。图标SVG原稿随源码保留，用 `brookesia-apps/audiobook/tools/build_mode_icons.cjs` 和sharp重建PNG（可通过SHARP_MODULE指定模块路径）。
 
 `tools/verify_audiobook_modes.py --port COM3` 向SD临时加入一个唯一命名的4秒静音WAV，使用已安装应用和原生播放器验证顺序续播、随机换篇、单故事重播及睡眠定时优先停止，检查后移除临时文件并恢复书签、模式和音量。短WAV避开部分MP3没有时长头、跳转到结尾耗时较长的情况。先暂停额度采集，完成后恢复。书单末尾停止、空/单篇书单、模式保存、手动换篇及错误状态由JS回归覆盖。
