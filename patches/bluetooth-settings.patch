@@ -1,0 +1,379 @@
+--- a/app/brookesia_app_settings/src/app/lifecycle.ipp
++++ b/app/brookesia_app_settings/src/app/lifecycle.ipp
+@@ -310,12 +310,17 @@
+ {
+     BROOKESIA_LOG_TRACE_GUARD_WITH_THIS();
+     if(name=="quiet_hours_refresh"){
+-        if(context_){if(current_page_==PAGE_SOUND)(void)refresh_sound_state(context);if(current_page_==PAGE_WIFI && brookesia_board_phone_provisioning_text){
+-            const auto text=brookesia_board_phone_provisioning_text();
+-            (void)context.gui().set_binding_value("/wifi/page/phone_provisioning/status","text",text?text:"");
+-            (void)context.gui().set_binding_value("/wifi/page/phone_provisioning/start/label","text",brookesia_board_phone_provisioning_active && brookesia_board_phone_provisioning_active()?"结束连接":"开始配网");
+-            (void)context.gui().set_binding_value("/wifi/page/phone_provisioning/remote/label","text",brookesia_board_phone_provisioning_active && brookesia_board_phone_provisioning_active()?"结束连接":"蓝牙遥控");
+-        }(void)context.timer().start_delayed("quiet_hours_refresh",1000);}
++        if(context_){
++            if(current_page_==PAGE_SOUND)(void)refresh_sound_state(context);
++            if((current_page_==PAGE_WIFI || current_page_=="bluetooth") && brookesia_board_phone_provisioning_text){
++                const std::string base=current_page_==PAGE_WIFI?"/wifi/page/phone_provisioning":"/bluetooth/page/phone_provisioning";
++                const auto text=brookesia_board_phone_provisioning_text();
++                const bool active=brookesia_board_phone_provisioning_active && brookesia_board_phone_provisioning_active();
++                (void)context.gui().set_binding_value(base+"/status","text",text?text:"");
++                (void)context.gui().set_binding_value(base+(current_page_==PAGE_WIFI?"/start/label":"/remote/label"),"text",active?"结束连接":current_page_==PAGE_WIFI?"开始配网":"开启蓝牙遥控");
++            }
++            (void)context.timer().start_delayed("quiet_hours_refresh",1000);
++        }
+         return {};
+     }
+     if (name == WIFI_SCAN_RETRY_TIMER_NAME) {
+--- a/app/brookesia_app_settings/src/private/settings_app_internal.hpp
++++ b/app/brookesia_app_settings/src/private/settings_app_internal.hpp
+@@ -332,7 +332,7 @@
+     "Debug.ThreadStackHighWaterMarkThresholdBytes";
+ inline constexpr uint32_t SETTINGS_STORAGE_TIMEOUT_MS = WIFI_SERVICE_TIMEOUT_MS;
+ 
+-inline constexpr std::array<const char *, 18> NAVIGATION_ACTIONS = {
++inline constexpr std::array<const char *, 19> NAVIGATION_ACTIONS = {
+     ACTION_OPEN_HOME,
+     "settings.back.device",
+     "settings.back.wifi",
+@@ -344,6 +344,7 @@
+     ACTION_BACK_DEBUG,
+     "settings.open.device",
+     "settings.open.wifi",
++    "settings.open.bluetooth",
+     ACTION_OPEN_WIFI_CONNECT,
+     "settings.open.sound",
+     "settings.open.display",
+--- a/app/brookesia_app_settings/src/settings_app.cpp
++++ b/app/brookesia_app_settings/src/settings_app.cpp
+@@ -299,7 +299,7 @@
+     "Debug.ThreadStackHighWaterMarkThresholdBytes";
+ static constexpr uint32_t SETTINGS_STORAGE_TIMEOUT_MS = WIFI_SERVICE_TIMEOUT_MS;
+ 
+-static constexpr std::array<const char *, 18> NAVIGATION_ACTIONS = {
++static constexpr std::array<const char *, 19> NAVIGATION_ACTIONS = {
+     ACTION_OPEN_HOME,
+     "settings.back.device",
+     "settings.back.wifi",
+@@ -311,6 +311,7 @@
+     ACTION_BACK_DEBUG,
+     "settings.open.device",
+     "settings.open.wifi",
++    "settings.open.bluetooth",
+     ACTION_OPEN_WIFI_CONNECT,
+     "settings.open.sound",
+     "settings.open.display",
+@@ -463,7 +464,7 @@
+            std::to_string(BROOKESIA_APP_SETTINGS_VER_PATCH);
+ }
+ 
+-static constexpr std::array<NavigationTarget, 18> NAVIGATION_TARGETS = {
++static constexpr std::array<NavigationTarget, 19> NAVIGATION_TARGETS = {
+     NavigationTarget{ACTION_OPEN_HOME, PAGE_HOME},
+     NavigationTarget{"settings.back.device", PAGE_HOME},
+     NavigationTarget{"settings.back.wifi", PAGE_HOME},
+@@ -475,6 +476,7 @@
+     NavigationTarget{ACTION_BACK_DEBUG, PAGE_DEVICE},
+     NavigationTarget{"settings.open.device", PAGE_DEVICE},
+     NavigationTarget{"settings.open.wifi", PAGE_WIFI},
++    NavigationTarget{"settings.open.bluetooth", "bluetooth"},
+     NavigationTarget{ACTION_OPEN_WIFI_CONNECT, PAGE_WIFI_CONNECT},
+     NavigationTarget{"settings.open.sound", PAGE_SOUND},
+     NavigationTarget{"settings.open.display", PAGE_DISPLAY},
+--- a/app/brookesia_app_settings/src/screen/common.ipp
++++ b/app/brookesia_app_settings/src/screen/common.ipp
+@@ -17,7 +17,7 @@
+         updates,
+         HEADER_TITLE_PATH,
+         "labelProps.text",
+-        localized_text(current_locale_, current_page_)
++        current_page_ == "bluetooth" ? "蓝牙" : localized_text(current_locale_, current_page_)
+     );
+     return context.gui().set_binding_values(updates);
+ }
+--- a/app/brookesia_app_settings/package/res/root.json
++++ b/app/brookesia_app_settings/package/res/root.json
+@@ -6,6 +6,7 @@
+         "screens/settings_home.json",
+         "screens/my_device.json",
+         "screens/wifi.json",
++        "screens/bluetooth.json",
+         "screens/wifi_connect.json",
+         "screens/sound.json",
+         "screens/display.json",
+--- a/app/brookesia_app_settings/package/res/flows/content.json
++++ b/app/brookesia_app_settings/package/res/flows/content.json
+@@ -11,7 +11,8 @@
+         "more",
+         "language",
+         "time_zone",
+-        "debug"
++        "debug",
++        "bluetooth"
+     ],
+     "initial": "settings_home",
+     "transitions": [
+@@ -104,6 +105,11 @@
+             "from": [],
+             "action": "settings.back.debug",
+             "to": "my_device"
++        },
++        {
++            "from": [],
++            "action": "settings.open.bluetooth",
++            "to": "bluetooth"
+         }
+     ]
+ }
+--- a/app/brookesia_app_settings/package/res/screens/settings_home.json
++++ b/app/brookesia_app_settings/package/res/screens/settings_home.json
+@@ -136,6 +136,39 @@
+                             },
+                             {
+                                 "type": "templateRef",
++                                "id": "bluetooth",
++                                "templateId": "nav_menu_item",
++                                "overrides": {
++                                    ".": {
++                                        "events": [
++                                            {
++                                                "type": "clicked",
++                                                "action": "settings.open.bluetooth"
++                                            }
++                                        ]
++                                    },
++                                    "icon": {
++                                        "imageProps": {
++                                            "src": "${image.home.wifi}"
++                                        },
++                                        "style": {
++                                            "bgColor": "${color.info.soft}"
++                                        }
++                                    },
++                                    "title_box/title": {
++                                        "labelProps": {
++                                            "text": "蓝牙"
++                                        }
++                                    },
++                                    "value_box/value": {
++                                        "labelProps": {
++                                            "text": "手机遥控"
++                                        }
++                                    }
++                                }
++                            },
++                            {
++                                "type": "templateRef",
+                                 "id": "sound",
+                                 "templateId": "nav_menu_item",
+                                 "overrides": {
+--- a/app/brookesia_app_settings/package/res/screens/wifi.json
++++ b/app/brookesia_app_settings/package/res/screens/wifi.json
+@@ -48,7 +48,7 @@
+                     "placement": {
+                         "mode": "flow",
+                         "width": "match",
+-                        "height": 278,
++                        "height": 222,
+                         "alignSelf": "stretch"
+                     },
+                     "children": [
+@@ -61,7 +61,7 @@
+                                 "textColor": "#edf5ff"
+                             },
+                             "labelProps": {
+-                                "text": "手机蓝牙"
++                                "text": "手机配网"
+                             },
+                             "placement": {
+                                 "mode": "flow",
+@@ -127,48 +127,6 @@
+                                     },
+                                     "labelProps": {
+                                         "text": "开始配网"
+-                                    }
+-                                }
+-                            ]
+-                        },
+-                        {
+-                            "type": "button",
+-                            "id": "remote",
+-                            "placement": {
+-                                "mode": "flow",
+-                                "width": "match",
+-                                "height": 44
+-                            },
+-                            "style": {
+-                                "radius": 12,
+-                                "padding": 0,
+-                                "bgColor": "#24516b"
+-                            },
+-                            "layout": {
+-                                "type": "flex",
+-                                "mainAlign": "center",
+-                                "crossAlign": "center"
+-                            },
+-                            "events": [
+-                                {
+-                                    "type": "clicked",
+-                                    "action": "settings.wifi.phone_remote"
+-                                }
+-                            ],
+-                            "children": [
+-                                {
+-                                    "type": "label",
+-                                    "id": "label",
+-                                    "bindings": {
+-                                        "labelProps.text": "text"
+-                                    },
+-                                    "style": {
+-                                        "font": "${font.zh_CN}",
+-                                        "fontSize": 22,
+-                                        "textColor": "#ffffff"
+-                                    },
+-                                    "labelProps": {
+-                                        "text": "蓝牙遥控"
+                                     }
+                                 }
+                             ]
+--- /dev/null
++++ b/app/brookesia_app_settings/package/res/screens/bluetooth.json
+@@ -0,0 +1,139 @@
++{
++    "type": "viewScreen",
++    "id": "bluetooth",
++    "mountMode": "dynamic",
++    "commonProps": {
++        "scrollable": false
++    },
++    "styleRefs": [
++        "app.page"
++    ],
++    "children": [
++        {
++            "type": "container",
++            "id": "page",
++            "commonProps": {
++                "scrollable": true
++            },
++            "layout": {
++                "type": "flex",
++                "flexFlow": "column",
++                "gap": "${constant.settings.layout.pageGap}"
++            },
++            "placement": {
++                "mode": "absolute",
++                "x": "${constant.settings.layout.pageX}",
++                "y": "${constant.settings.layout.pageY}",
++                "width": "${constant.settings.layout.pageWidth}",
++                "height": "${constant.settings.layout.pageHeight}"
++            },
++            "children": [
++                {
++                    "type": "container",
++                    "id": "phone_provisioning",
++                    "styleRefs": [
++                        "app.card"
++                    ],
++                    "style": {
++                        "padding": 16
++                    },
++                    "commonProps": {
++                        "scrollable": false
++                    },
++                    "layout": {
++                        "type": "flex",
++                        "flexFlow": "column",
++                        "gap": 8
++                    },
++                    "placement": {
++                        "mode": "flow",
++                        "width": "match",
++                        "height": 222,
++                        "alignSelf": "stretch"
++                    },
++                    "children": [
++                        {
++                            "type": "label",
++                            "id": "title",
++                            "style": {
++                                "font": "${font.zh_CN}",
++                                "fontSize": 24,
++                                "textColor": "#edf5ff"
++                            },
++                            "labelProps": {
++                                "text": "蓝牙遥控"
++                            },
++                            "placement": {
++                                "mode": "flow",
++                                "width": "match",
++                                "height": 30
++                            }
++                        },
++                        {
++                            "type": "label",
++                            "id": "status",
++                            "bindings": {
++                                "labelProps.text": "text"
++                            },
++                            "style": {
++                                "font": "${font.zh_CN}",
++                                "fontSize": 20,
++                                "textColor": "#c6d5e8"
++                            },
++                            "labelProps": {
++                                "text": "开启后在手机小马遥控中连接"
++                            },
++                            "placement": {
++                                "mode": "flow",
++                                "width": "match",
++                                "height": 98
++                            }
++                        },
++                        {
++                            "type": "button",
++                            "id": "remote",
++                            "placement": {
++                                "mode": "flow",
++                                "width": "match",
++                                "height": 44
++                            },
++                            "style": {
++                                "radius": 12,
++                                "padding": 0,
++                                "bgColor": "#24516b"
++                            },
++                            "layout": {
++                                "type": "flex",
++                                "mainAlign": "center",
++                                "crossAlign": "center"
++                            },
++                            "events": [
++                                {
++                                    "type": "clicked",
++                                    "action": "settings.wifi.phone_remote"
++                                }
++                            ],
++                            "children": [
++                                {
++                                    "type": "label",
++                                    "id": "label",
++                                    "bindings": {
++                                        "labelProps.text": "text"
++                                    },
++                                    "style": {
++                                        "font": "${font.zh_CN}",
++                                        "fontSize": 22,
++                                        "textColor": "#ffffff"
++                                    },
++                                    "labelProps": {
++                                        "text": "开启蓝牙遥控"
++                                    }
++                                }
++                            ]
++                        }
++                    ]
++                }
++            ]
++        }
++    ]
++}

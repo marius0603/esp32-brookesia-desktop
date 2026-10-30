@@ -4,7 +4,7 @@
 
 | 内容 | 版本与当前行为 |
 | --- | --- |
-| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.33；手机BLE加密配网与独立蓝牙遥控；可切换经典Q版与赛博朋克桌面，壁纸和10个图标同步更换并记住选择；图标原生预载、手机式跟手分页，每页6个应用及页码圆点；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转 |
+| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.34；手机BLE加密配网与独立蓝牙遥控；可切换经典Q版与赛博朋克桌面，壁纸和10个图标同步更换并记住选择；图标原生预载、手机式跟手分页，每页6个应用及页码圆点；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转 |
 | 额度显示 | 0.2.3，黑底双圆角卡片、34号“5小时/每周”标题、48号真实剩余百分比、吃豆人动画、30号倒计时和同步胶囊；随包保留Q版图标 |
 | 天气 | 0.2.6，默认上海、开发板直接联网、各天气动态背景、云形图片、24 小时预报 |
 | 听书 | 0.3.3，图标切换顺序播放、随机播放与单故事循环，自动保存模式；音量与锁屏置顶、Q版图标、中文书名、大号播放按钮、睡眠选择框、语音控制、章节与书签；连按两次音量＋解锁，最后2分钟声音/亮度渐弱，到时离线“晚安”并停播 |
@@ -18,7 +18,7 @@
 本仓库不含 Codex 登录凭据、Wi-Fi 密码、设备完整 Flash 备份、运行额度数据或下载的书籍。
 自动息屏和定时勿扰见 [DEVICE_MODES.md](codex-quota-monitor/DEVICE_MODES.md)。
 安卓手机安装官方ESP BLE Prov后，在“设置 → Wi-Fi → 手机配网”开启入口；配对码和使用步骤见 [手机配网](codex-quota-monitor/PHONE_PROVISIONING.md)。
-手机直接蓝牙遥控见 [小马遥控](phone-remote/README.md)，提供独立安卓安装包；配网和遥控入口位于“设置 → Wi-Fi → 手机蓝牙”。
+手机直接蓝牙遥控见 [小马遥控](phone-remote/README.md)，提供独立安卓安装包；配网和遥控入口位于“设置 → 蓝牙”。
 壁纸微移的行为与已有设备更新步骤见 [WALLPAPER_SHIFT.md](codex-quota-monitor/WALLPAPER_SHIFT.md)。
 重力感应开关、校准与已有设备安装步骤见 [AUTO_ROTATION.md](codex-quota-monitor/AUTO_ROTATION.md)。
 儿童模式设置与验证见 [CHILD_MODE.md](codex-quota-monitor/CHILD_MODE.md)，主题资源迁移见 [SD_RESOURCES.md](codex-quota-monitor/SD_RESOURCES.md)。
@@ -47,7 +47,7 @@ python -m venv .venv
 npm --prefix tools/brookesia-toolkit install
 ```
 
-准备脚本会下载 `versions.json` 固定的 Brookesia 提交，依次应用S3适配、分页桌面、桌面主题及手机配网四个补丁，再装入 `platform/super_s3_216` 工程。
+准备脚本会下载 `versions.json` 固定的 Brookesia 提交，依次应用S3适配、分页桌面、桌面主题、手机配网、蓝牙遥控及独立蓝牙设置六个补丁，再装入 `platform/super_s3_216` 工程。
 整个上游代码无需重复保存在此仓库；首次准备需要网络。脚本拒绝覆盖已有不同内容的源码。
 目录关系必须保留：`codex-quota-monitor`、`brookesia-apps` 与生成的 `esp-brookesia-v08` 同级。
 
