@@ -40,7 +40,7 @@ def main():
     for state,poses in groups.items():
         for i,im in enumerate(poses):
             name=state+'-'+str(i)+'.bin';native(im,out/name)
-            images.append({'id':'pet_'+state+'_'+str(i),'src':'/sdcard/pets/xiaoli/frames/'+name,'width':320,'height':320,'preload':True})
+            images.append({'id':'pet_'+state+'_'+str(i),'src':'/sdcard/pets/xiaoli/frames/'+name,'width':320,'height':320,'preload':False})
             contact.paste(im,((n%4)*320,(n//4)*350));draw.text(((n%4)*320+12,(n//4)*350+322),state+' '+str(i),fill='#674536');n+=1
     icon=Image.new('RGB',(92,92),BG)
     hero=groups['idle'][0].crop((35,15,292,272)).resize((92,92),Image.Resampling.LANCZOS);icon.paste(hero)

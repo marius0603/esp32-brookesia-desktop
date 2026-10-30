@@ -2,7 +2,7 @@
   "upstream": "https://github.com/espressif/esp-brookesia.git",
   "commit": "68ac00e7aa9012cd8cbf0cbf6bee155801db0e8c",
   "esp_idf": "6.0.2",
-  "firmware": "0.8.3-s3.35",
+  "firmware": "0.8.3-s3.36",
   "toolkit": "1.0.1",
   "apps": {
     "local.audiobook": "0.3.3",
@@ -12,7 +12,7 @@
     "local.voiceassistant": "0.2.2",
     "local.childmode": "0.1.1",
     "local.lightlearning": "0.1.2",
-    "local.virtualpet": "0.1.2"
+    "local.virtualpet": "0.1.3"
   },
   "device": "ESP32-S3-Touch-AMOLED-2.16",
   "theme": "cyberpunk-v1",

@@ -1,4 +1,3 @@
-#include "modules/phone_provisioning/navigation.hpp"
 /*
  * SPDX-FileCopyrightText: 2026 Espressif Systems (Shanghai) CO LTD
  *
@@ -15,6 +14,20 @@
 #include "modules/display.hpp"
 #include "modules/child_mode/child_mode.hpp"
 #include "modules/device_modes/deep_sleep.hpp"
+#include "modules/phone_provisioning/navigation.hpp"
+#include "modules/audio_ownership.hpp"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+extern "C" bool brookesia_board_single_app_mode(){return true;}
+extern "C" const char *brookesia_board_before_app_start(){
+    // Disconnect requests are asynchronous. The assistant releases ownership
+    // only after its network callbacks have stopped and audio buffers are freed.
+    // Keep the next page from allocating over those still-live resources.
+    for(int i=0;local_audio::owner.load()==local_audio::Assistant && i<2000;++i)
+        vTaskDelay(pdMS_TO_TICKS(10));
+    return local_audio::owner.load()==local_audio::Assistant?"语音连接正在关闭，请稍后重试":nullptr;
+}
 
 using namespace esp_brookesia;
 

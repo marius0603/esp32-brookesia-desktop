@@ -1,0 +1,587 @@
+--- a/system/brookesia_system_core/src/app/manager.cpp
++++ b/system/brookesia_system_core/src/app/manager.cpp
+@@ -13,6 +13,9 @@
+ #include <string_view>
+ #include <utility>
+ 
++extern "C" void brookesia_board_app_phase(const char *) __attribute__((weak));
++extern "C" bool brookesia_board_single_app_mode() __attribute__((weak));
++extern "C" const char *brookesia_board_before_app_start() __attribute__((weak));
+ extern "C" bool brookesia_child_visible(const char *) __attribute__((weak));
+ extern "C" const char *brookesia_child_launch_error(const char *) __attribute__((weak));
+ 
+@@ -613,6 +616,22 @@
+             return std::unexpected(reason);
+         }
+     }
++    const bool single_app = brookesia_board_single_app_mode && brookesia_board_single_app_mode();
++    if (single_app && record.info.manifest.id != "brookesia.system.super.shell") {
++        // Close UI apps before allocating the new page. Services remain owned
++        // by ServiceManager; the S3 cannot retain every JS VM and image cache.
++        for (const auto &other : list_apps()) {
++            if (other.app_id == app_id || other.manifest.id == "brookesia.system.super.shell") continue;
++            if (other.state != AppState::Running && other.state != AppState::Paused) continue;
++            auto closed = stop_app(other.app_id);
++            if (!closed) return closed;
++        }
++        if (record.info.state == AppState::Running) {
++            if (impl_->active_app_id_ == app_id) return on_app_started(record.info);
++            auto closed = stop_app(app_id);
++            if (!closed) return closed;
++        }
++    }
+     if (record.info.state == AppState::Running) {
+         // Runtime apps can remain running after another app replaced the
+         // foreground. A successful no-op here leaves the launcher visible.
+@@ -660,8 +679,16 @@
+             elapsed_ms_since(start_profile_started_at, now)
+         );
+     };
++    if (brookesia_board_before_app_start) {
++        if (brookesia_board_app_phase) brookesia_board_app_phase("start.wait-audio-release");
++        if (const char *error = brookesia_board_before_app_start()) {
++            record.info.last_error = error;
++            return std::unexpected(error);
++        }
++    }
+     auto heap_before_start = heap_trace::capture();
+     heap_trace::log("system.start", "before start", record.info.manifest.id, heap_before_start);
++    if (brookesia_board_app_phase) brookesia_board_app_phase("start.transition");
+     record.info.state = AppState::Starting;
+     record.info.last_error.clear();
+ 
+@@ -689,6 +716,7 @@
+         impl_->hide_transient_overlay(launch_transition);
+     });
+ 
++    if (brookesia_board_app_phase) brookesia_board_app_phase("start.gui-prepare");
+     const auto gui_prepare_started_at = SteadyClock::now();
+     auto gui_prepare_result = impl_->run_task_sync<std::expected<void, std::string>>(
+                                   SYSTEM_GUI_TASK_GROUP,
+@@ -707,6 +735,7 @@
+         };
+         auto heap_before_gui = heap_trace::capture();
+         heap_trace::log("system.gui", "before prepare", record.info.manifest.id, heap_before_gui);
++        if (brookesia_board_app_phase) brookesia_board_app_phase("start.resources");
+         const auto resource_started_at = SteadyClock::now();
+         auto resource_result = impl_->register_app_gui_resources(record);
+         if (!resource_result)
+@@ -722,6 +751,7 @@
+             heap_trace::capture(),
+             &heap_before_gui
+         );
++        if (brookesia_board_app_phase) brookesia_board_app_phase("start.root-document");
+         const auto root_started_at = SteadyClock::now();
+         auto gui_result = impl_->ensure_gui_loaded(record);
+         if (!gui_result)
+@@ -738,6 +768,7 @@
+             heap_trace::capture(),
+             &heap_before_gui
+         );
++        if (brookesia_board_app_phase) brookesia_board_app_phase("start.mount");
+         if (record.document_id.has_value())
+         {
+             const auto screen_flow_started_at = SteadyClock::now();
+@@ -802,6 +833,7 @@
+     } else {
+         auto heap_before_runtime = heap_trace::capture();
+         heap_trace::log("system.runtime", "before runtime load", record.info.manifest.id, heap_before_runtime);
++        if (brookesia_board_app_phase) brookesia_board_app_phase("start.runtime");
+         const auto runtime_load_started_at = SteadyClock::now();
+         start_result = impl_->ensure_runtime_loaded(record);
+         log_start_profile("runtime_load", runtime_load_started_at);
+@@ -841,6 +873,7 @@
+                     record.info.manifest.id,
+                     heap_before_lifecycle
+                 );
++                if (brookesia_board_app_phase) brookesia_board_app_phase("start.on-start");
+                 const auto runtime_lifecycle_started_at = SteadyClock::now();
+                 start_result = impl_->call_runtime_lifecycle(record, LIFECYCLE_ON_START);
+                 log_start_profile("runtime_lifecycle_on_start", runtime_lifecycle_started_at);
+@@ -881,6 +914,7 @@
+         show_lifecycle_error_dialog(*this, record.info, "start", LIFECYCLE_ON_START, start_result.error());
+         return start_result;
+     }
++    if (brookesia_board_app_phase) brookesia_board_app_phase("start.foreground");
+     record.info.state = AppState::Running;
+     impl_->active_app_id_ = app_id;
+     const auto started_hook_started_at = SteadyClock::now();
+@@ -967,9 +1001,11 @@
+     }
+     auto heap_before_stop = heap_trace::capture();
+     heap_trace::log("system.stop", "before stop", record.info.manifest.id, heap_before_stop);
++    if (brookesia_board_app_phase) brookesia_board_app_phase("stop.transient");
+     record.info.state = AppState::Stopping;
+     impl_->cleanup_app_transient_resources(record);
+     release_runtime_dataflow_operations(record.runtime_app_id);
++    if (brookesia_board_app_phase) brookesia_board_app_phase("stop.on-stop");
+     std::expected<void, std::string> stop_result = {};
+     if (record.info.manifest.kind == AppKind::Native) {
+         if (record.native_app && record.context) {
+@@ -1010,6 +1046,7 @@
+         }
+         record.runtime_started = false;
+     }
++    if (brookesia_board_app_phase) brookesia_board_app_phase("stop.gui");
+     auto cleanup_result = impl_->run_task_sync<std::expected<void, std::string>>(
+                               SYSTEM_GUI_TASK_GROUP,
+     [this, &record]() -> std::expected<void, std::string> {
+@@ -1027,8 +1064,13 @@
+     },
+     std::unexpected("Failed to post app GUI cleanup task")
+                           );
++    if (brookesia_board_app_phase) brookesia_board_app_phase("stop.runtime");
+     if (!cleanup_result) {
+         BROOKESIA_LOGW("Failed to cleanup app GUI while stopping app: %1%", cleanup_result.error());
++    }
++    if (brookesia_board_single_app_mode && brookesia_board_single_app_mode() &&
++            record.info.manifest.kind == AppKind::Runtime) {
++        impl_->unload_runtime(record);
+     }
+     if (!stop_result) {
+         record.info.state = AppState::Error;
+@@ -1040,6 +1082,7 @@
+         show_lifecycle_error_dialog(*this, record.info, "stop", LIFECYCLE_ON_STOP, stop_result.error());
+         return stop_result;
+     }
++    if (brookesia_board_app_phase) brookesia_board_app_phase("stop.foreground");
+     record.info.state = AppState::Stopped;
+     if (impl_->active_app_id_ == app_id) {
+         impl_->active_app_id_ = INVALID_APP_ID;
+--- a/system/brookesia_system_core/src/private/system/impl.hpp
++++ b/system/brookesia_system_core/src/private/system/impl.hpp
+@@ -20,6 +20,7 @@
+ 
+ #include "boost/json.hpp"
+ #include "boost/thread/future.hpp"
++#include "boost/exception_ptr.hpp"
+ #if defined(__EMSCRIPTEN__)
+ #include "brookesia/gui_interface/wasm/gui_task_queue.hpp"
+ #endif
+@@ -29,6 +30,8 @@
+ #include "brookesia/system_core/service/timer.hpp"
+ #include "brookesia/system_core/system/system.hpp"
+ #include "private/runtime/host_bridge.hpp"
++
++extern "C" void brookesia_board_app_task_error(const char *) __attribute__((weak));
+ 
+ namespace esp_brookesia::system::core {
+ 
+@@ -163,12 +166,29 @@
+         auto result_promise = std::make_shared<boost::promise<Result>>();
+         auto result_future = result_promise->get_future();
+         auto task = [result_promise, fn = std::forward<Fn>(fn)]() mutable {
+-            result_promise->set_value(fn());
++            try {
++                result_promise->set_value(fn());
++            } catch (...) {
++                // TaskScheduler catches user exceptions, but the synchronous
++                // caller still owns this promise. Always complete its future.
++                result_promise->set_exception(boost::current_exception());
++            }
+         };
+         if (!task_scheduler_->post(std::move(task), nullptr, group)) {
+             return std::move(post_error_result);
+         }
+-        return result_future.get();
++        try {
++            return result_future.get();
++        } catch (const std::exception &error) {
++            if (brookesia_board_app_task_error) brookesia_board_app_task_error(error.what());
++            if constexpr (requires { Result(std::unexpected(std::string{})); }) {
++                return Result(std::unexpected("System task exception (" + group + "): " + error.what()));
++            }
++            return std::move(post_error_result);
++        } catch (...) {
++            if (brookesia_board_app_task_error) brookesia_board_app_task_error("Unknown system task exception");
++            return std::move(post_error_result);
++        }
+     }
+ 
+     std::expected<void, std::string> post_gui_task(lib_utils::TaskScheduler::OnceTask task);
+--- a/gui/brookesia_gui_interface/src/runtime.cpp
++++ b/gui/brookesia_gui_interface/src/runtime.cpp
+@@ -5,6 +5,8 @@
+  */
+ #include "private/runtime_impl.hpp"
+ 
++extern "C" void brookesia_board_app_phase(const char *) __attribute__((weak));
++
+ namespace esp_brookesia::gui {
+ ;
+ 
+@@ -66,6 +68,7 @@
+     const auto total_start = RuntimeProfileClock::now();
+     auto stage_start = total_start;
+     const auto parse_environment = impl_->make_parse_environment(environment);
++    if(brookesia_board_app_phase)brookesia_board_app_phase("gui.parse");
+     auto parsed_document = parse_document_file_with_metadata(path, parse_environment);
+     auto stage_end = RuntimeProfileClock::now();
+     if (!parsed_document) {
+@@ -96,6 +99,7 @@
+     );
+ 
+     stage_start = RuntimeProfileClock::now();
++    if(brookesia_board_app_phase)brookesia_board_app_phase("gui.load-tree");
+     auto result = impl_->load(
+                       path,
+                       std::move(parsed_document->document),
+--- a/gui/brookesia_gui_interface/src/runtime_document.cpp
++++ b/gui/brookesia_gui_interface/src/runtime_document.cpp
+@@ -6,6 +6,8 @@
+ #include "private/runtime_impl.hpp"
+ 
+ extern "C" bool brookesia_board_image_needs_resolution(const char *) __attribute__((weak));
++
++extern "C" void brookesia_board_app_phase(const char *) __attribute__((weak));
+ 
+ namespace esp_brookesia::gui {
+ 
+@@ -298,6 +300,7 @@
+             return std::unexpected("Failed to store GUI tree");
+         }
+         stage_start = RuntimeProfileClock::now();
++        if(brookesia_board_app_phase)brookesia_board_app_phase("gui.validate-images");
+         auto resource_validation = validate_resource_references(*stored_tree);
+         stage_end = RuntimeProfileClock::now();
+         GUI_INTERFACE_PROFILE_LOGI(
+@@ -317,6 +320,7 @@
+         hp_log("after tree move+validate (H_C)", hp_entry, hp_before_preload);
+ #endif
+         stage_start = RuntimeProfileClock::now();
++        if(brookesia_board_app_phase)brookesia_board_app_phase("gui.preload-images");
+         auto preload_result = preload_tree_image_resources(*stored_tree);
+         stage_end = RuntimeProfileClock::now();
+         GUI_INTERFACE_PROFILE_LOGI(
+@@ -337,6 +341,7 @@
+         hp_log("after image preload (H_A)", hp_before_preload, hp_after_preload);
+ #endif
+ 
++        if(brookesia_board_app_phase)brookesia_board_app_phase("gui.build-screens");
+         const auto eager_stage_start = RuntimeProfileClock::now();
+         size_t eager_screen_count = 0;
+         size_t deferred_screen_count = 0;
+--- a/app/brookesia_app_store/include/brookesia/app_store/app_store_app.hpp
++++ b/app/brookesia_app_store/include/brookesia/app_store/app_store_app.hpp
+@@ -10,6 +10,10 @@
+ #include <functional>
+ #include <map>
+ #include <memory>
++#include <mutex>
++#include <tuple>
++#include <type_traits>
++#include <utility>
+ #include <optional>
+ #include <string>
+ #include <string_view>
+@@ -568,6 +572,46 @@
+     std::string tr(std::string_view key) const;
+     std::string current_language() const;
+ 
++    // Service and GUI threads only enqueue owned values. App timers drain these
++    // jobs in the same execution domain as on_start/on_stop. Each launch gets
++    // a new scope, so late completions cannot access a closed or reopened app.
++    struct AsyncWork {
++        std::function<void()> run;
++        std::function<void()> discard;
++    };
++    struct CallbackQueue {
++        std::mutex mutex;
++        bool active = true;
++        std::vector<AsyncWork> jobs;
++    };
++    std::shared_ptr<CallbackQueue> callback_queue_;
++    void close_app_callbacks();
++    void poll_app_callbacks();
++
++    template<class... Args, class Fn, class Drop = std::nullptr_t>
++    std::function<void(Args...)> app_callback(Fn fn, Drop drop = nullptr)
++    {
++        auto queue = callback_queue_;
++        return [queue, fn = std::move(fn), drop = std::move(drop)](Args... args) mutable {
++            auto values = std::make_shared<std::tuple<std::decay_t<Args>...>>(std::forward<Args>(args)...);
++            AsyncWork work;
++            work.run = [fn, values]() mutable { std::apply(fn, std::move(*values)); };
++            if constexpr (!std::is_same_v<Drop, std::nullptr_t>) {
++                work.discard = [drop, values]() mutable { std::apply(drop, std::move(*values)); };
++            }
++            if (queue) {
++                std::lock_guard lock(queue->mutex);
++                if (queue->active) {
++                    queue->jobs.push_back(std::move(work));
++                    return;
++                }
++            }
++            if (work.discard) {
++                work.discard();
++            }
++        };
++    }
++
+     struct Impl;
+     std::unique_ptr<Impl> impl_;
+ };
+--- a/app/brookesia_app_store/src/app_store_app.cpp
++++ b/app/brookesia_app_store/src/app_store_app.cpp
+@@ -676,6 +676,41 @@
+ {
+ }
+ 
+-AppStoreApp::~AppStoreApp() = default;
++AppStoreApp::~AppStoreApp()
++{
++    close_app_callbacks();
++}
++
++void AppStoreApp::close_app_callbacks()
++{
++    if (!callback_queue_) {
++        return;
++    }
++    std::vector<AsyncWork> pending;
++    {
++        std::lock_guard lock(callback_queue_->mutex);
++        callback_queue_->active = false;
++        pending.swap(callback_queue_->jobs);
++    }
++    // Late accepted HTTP requests must still be canceled, without accessing
++    // AppStoreApp or its AppContext from the service worker.
++    for (auto &job : pending) {
++        if (job.discard) {
++            job.discard();
++        }
++    }
++}
++
++void AppStoreApp::poll_app_callbacks()
++{
++    std::vector<AsyncWork> pending;
++    {
++        std::lock_guard lock(callback_queue_->mutex);
++        pending.swap(callback_queue_->jobs);
++    }
++    for (auto &job : pending) {
++        job.run();
++    }
++}
+ 
+ } // namespace esp_brookesia::app::app_store
+--- a/app/brookesia_app_store/src/app/lifecycle.ipp
++++ b/app/brookesia_app_store/src/app/lifecycle.ipp
+@@ -47,6 +47,13 @@
+ std::expected<void, std::string> AppStoreApp::on_start(system::core::AppContext &context)
+ {
+     BROOKESIA_LOG_TRACE_GUARD_WITH_THIS();
++    close_app_callbacks();
++    callback_queue_ = std::make_shared<CallbackQueue>();
++    auto callback_timer = context.timer().start_periodic("app_store.async_callbacks", 50);
++    if (!callback_timer) {
++        close_app_callbacks();
++        return std::unexpected(callback_timer.error());
++    }
+     context_ = &context;
+     network_ready_ = true;
+     terminal_download_request_ids_.clear();
+@@ -75,6 +82,7 @@
+ std::expected<void, std::string> AppStoreApp::on_stop(system::core::AppContext &context)
+ {
+     BROOKESIA_LOG_TRACE_GUARD_WITH_THIS();
++    close_app_callbacks();
+     ++async_generation_;
+     cancel_deferred_operation(context);
+     cancel_startup_load(context);
+@@ -200,6 +208,10 @@
+     std::string_view name
+ )
+ {
++    if (name == "app_store.async_callbacks") {
++        poll_app_callbacks();
++        return {};
++    }
+     if (name == STARTUP_LOAD_TIMER_NAME) {
+         if (timer_id != startup_load_timer_id_) {
+             BROOKESIA_LOGW(
+@@ -616,18 +628,18 @@
+ 
+     primary_action_connection_ = context.gui().subscribe_action(
+                                      ACTION_PRIMARY,
+-    [this](const gui::Event & event) {
++    app_callback<const gui::Event &>([this](const gui::Event & event) {
+         handle_primary_action(event);
+-    }
++    })
+                                  );
+     if (!primary_action_connection_.connected()) {
+         return std::unexpected("Failed to subscribe App Store item actions");
+     }
+     local_delete_action_connection_ = context.gui().subscribe_action(
+                                           ACTION_LOCAL_DELETE,
+-    [this](const gui::Event & event) {
++    app_callback<const gui::Event &>([this](const gui::Event & event) {
+         handle_local_delete_action(event);
+-    }
++    })
+                                       );
+     if (!local_delete_action_connection_.connected()) {
+         return std::unexpected("Failed to subscribe App Store local delete actions");
+--- a/app/brookesia_app_store/src/storage/storage.ipp
++++ b/app/brookesia_app_store/src/storage/storage.ipp
+@@ -92,37 +92,37 @@
+         return;
+     }
+ 
+-    auto on_progress = [this](
++    auto on_progress = app_callback<const std::string &, double, const boost::json::object &>([this](
+                            const std::string &, double request_id, const boost::json::object & progress_json
+     ) {
+         if (context_ != nullptr) {
+             schedule_http_event_processing(*context_, PendingHttpEventType::Progress, request_id, progress_json);
+         }
+-    };
+-    auto on_completed = [this](
++    });
++    auto on_completed = app_callback<const std::string &, double, const boost::json::object &>([this](
+                             const std::string &, double request_id, const boost::json::object & response_json
+     ) {
+         if (context_ != nullptr) {
+             schedule_http_event_processing(*context_, PendingHttpEventType::Completed, request_id, response_json);
+         }
+-    };
+-    auto on_failed = [this](
++    });
++    auto on_failed = app_callback<const std::string &, double, const boost::json::object &>([this](
+                          const std::string &, double request_id, const boost::json::object & response_json
+     ) {
+         if (context_ != nullptr) {
+             schedule_http_event_processing(*context_, PendingHttpEventType::Failed, request_id, response_json);
+         }
+-    };
+-    auto on_canceled = [this](
++    });
++    auto on_canceled = app_callback<const std::string &, double, const boost::json::object &>([this](
+                            const std::string &, double request_id, const boost::json::object & response_json
+     ) {
+         if (context_ != nullptr) {
+             schedule_http_event_processing(*context_, PendingHttpEventType::Canceled, request_id, response_json);
+         }
+-    };
+-    auto on_general_state_changed = [this](const std::string &, const std::string & state) {
++    });
++    auto on_general_state_changed = app_callback<const std::string &, const std::string &>([this](const std::string &, const std::string & state) {
+         handle_http_general_state_changed(state);
+-    };
++    });
+ 
+     http_event_connections_.push_back(HttpHelper::subscribe_event(HttpHelper::EventId::RequestProgress, on_progress));
+     http_event_connections_.push_back(HttpHelper::subscribe_event(HttpHelper::EventId::RequestCompleted, on_completed));
+@@ -365,9 +365,9 @@
+     }
+ 
+     const auto generation = async_generation_;
+-    auto handler = [this, generation](service::FunctionResult && result) {
++    auto handler = app_callback<service::FunctionResult &&>([this, generation](service::FunctionResult && result) {
+         handle_storage_filesystems_result(generation, std::move(result));
+-    };
++    });
+     if (!StorageHelper::call_function_async(StorageHelper::FunctionId::GetFileSystems, handler)) {
+         BROOKESIA_LOGW("Failed to submit storage filesystems request");
+         return;
+@@ -446,9 +446,9 @@
+         return;
+     }
+ 
+-    auto handler = [this, generation](service::FunctionResult && capacity_result) {
++    auto handler = app_callback<service::FunctionResult &&>([this, generation](service::FunctionResult && capacity_result) {
+         handle_storage_capacity_result(generation, std::move(capacity_result));
+-    };
++    });
+     if (!StorageHelper::call_function_async(
+                 StorageHelper::FunctionId::GetFileSystemCapacity,
+                 best_mount_point,
+@@ -688,9 +688,9 @@
+ 
+     while (local_package_scan_dir_cursor_ < local_package_scan_dirs_.size()) {
+         const auto packages_dir = local_package_scan_dirs_[local_package_scan_dir_cursor_++];
+-        auto result_handler = [this, generation, packages_dir](service::FunctionResult && result) mutable {
++        auto result_handler = app_callback<service::FunctionResult &&>([this, generation, packages_dir](service::FunctionResult && result) mutable {
+             handle_local_package_scan_stat_result(generation, packages_dir, std::move(result));
+-        };
++        });
+         if (StorageHelper::call_function_async(
+                     StorageHelper::FunctionId::FSStat,
+                     packages_dir.generic_string(),
+@@ -727,9 +727,9 @@
+         return;
+     }
+ 
+-    auto result_handler = [this, generation, packages_dir](service::FunctionResult && list_result) mutable {
++    auto result_handler = app_callback<service::FunctionResult &&>([this, generation, packages_dir](service::FunctionResult && list_result) mutable {
+         handle_local_package_scan_list_result(generation, packages_dir, std::move(list_result));
+-    };
++    });
+     if (!StorageHelper::call_function_async(
+                 StorageHelper::FunctionId::FSList,
+                 packages_dir.generic_string(),
+--- a/app/brookesia_app_store/src/network/http.ipp
++++ b/app/brookesia_app_store/src/network/http.ipp
+@@ -1186,7 +1186,7 @@
+ {
+     (void)context;
+     const auto generation = async_generation_;
+-    auto result_handler = [
++    auto result_handler = app_callback<service::FunctionResult &&>([
+                               this,
+                               generation,
+                               success_handler = std::move(success_handler),
+@@ -1198,7 +1198,12 @@
+             std::move(failure_handler),
+             std::move(result)
+         );
+-    };
++    }, [](service::FunctionResult &&result) {
++        auto request_id = HttpHelper::process_function_result<double>(result);
++        if (request_id) {
++            (void)HttpHelper::call_function_async(HttpHelper::FunctionId::CancelRequest, *request_id);
++        }
++    });
+ 
+     return HttpHelper::call_function_async(
+                HttpHelper::FunctionId::RequestAsync,
+@@ -1386,9 +1391,9 @@
+     }
+ 
+     const auto generation = async_generation_;
+-    auto handler = [this, generation, purpose](service::FunctionResult && result) {
++    auto handler = app_callback<service::FunctionResult &&>([this, generation, purpose](service::FunctionResult && result) {
+         handle_network_check_result(generation, purpose, std::move(result));
+-    };
++    });
+     if (!DeviceHelper::call_function_async(DeviceHelper::FunctionId::GetNetworkConnectivityInfo, handler)) {
+         BROOKESIA_LOGW("Failed to submit App Store network connectivity request");
+         return false;
+@@ -1563,9 +1568,9 @@
+ 
+     auto request_id = context.system_service().show_message_dialog(
+         std::move(options),
+-        [this](const system::core::MessageDialogResult &result) {
++        app_callback<const system::core::MessageDialogResult &>([this](const system::core::MessageDialogResult &result) {
+             handle_message_dialog_result(result);
+-        }
++        })
+     );
+     if (!request_id) {
+         BROOKESIA_LOGW("Failed to show App Store message dialog: %1%", request_id.error());
+--- a/app/brookesia_app_store/src/network/remote_index.ipp
++++ b/app/brookesia_app_store/src/network/remote_index.ipp
+@@ -29,9 +29,9 @@
+ 
+     while (startup_cache_cursor_ < startup_cache_candidates_.size()) {
+         const auto path = startup_cache_candidates_[startup_cache_cursor_++];
+-        auto result_handler = [this, generation, path](service::FunctionResult && result) mutable {
++        auto result_handler = app_callback<service::FunctionResult &&>([this, generation, path](service::FunctionResult && result) mutable {
+             handle_cached_index_load_result(generation, path, std::move(result));
+-        };
++        });
+         if (StorageHelper::call_function_async(
+                     StorageHelper::FunctionId::FSReadText,
+                     path.generic_string(),

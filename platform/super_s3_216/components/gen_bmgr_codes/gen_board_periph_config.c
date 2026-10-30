@@ -139,7 +139,8 @@ static periph_spi_config_t esp_bmgr_spi_display_cfg = {
         .data6_io_num = -1,
         .data7_io_num = -1,
         .data_io_default_level = false,
-        .max_transfer_sz = 9600,
+        // One SPI DMA descriptor: bound internal bounce memory while BLE is active.
+        .max_transfer_sz = 4092,
         .flags = 0,
         .isr_cpu_id = ESP_INTR_CPU_AFFINITY_AUTO,
         .intr_flags = 0,

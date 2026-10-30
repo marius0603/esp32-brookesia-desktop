@@ -11,6 +11,7 @@
 #include <cstring>
 #include <future>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <vector>
 #include "brookesia/service_manager/service/manager.hpp"
@@ -33,6 +34,15 @@ extern "C" {
 #include "network_provisioning/network_config.h"
 #include "network_provisioning/network_scan.h"
 }
+static std::atomic<const char *> app_lifecycle_stage{"idle"};
+static std::mutex app_error_mutex;
+static char app_task_error[256]{};
+extern "C" void brookesia_board_app_task_error(const char *message){
+    std::lock_guard<std::mutex> lock(app_error_mutex);
+    const auto count=std::min(std::strlen(message),sizeof(app_task_error)-1);
+    std::memcpy(app_task_error,message,count);app_task_error[count]=0;
+}
+extern "C" void brookesia_board_app_phase(const char *stage){app_lifecycle_stage=stage;}
 using namespace esp_brookesia::service;
 namespace {
 constexpr unsigned STACK=8192;
@@ -42,6 +52,17 @@ std::condition_variable scan_ready;
 std::atomic<bool> live{false},active{false},cancel{false},ble_connected{false},apply_pending{false},scan_pending{false};
 std::atomic<bool> worker_exit{false};
 std::atomic<bool> remote_mode{false};
+std::mutex remote_mutex;
+std::optional<boost::json::object> remote_command;
+std::shared_ptr<std::promise<boost::json::object>> remote_reply;
+void process_remote_command(bool stopping=false) {
+    std::optional<boost::json::object> command;
+    std::shared_ptr<std::promise<boost::json::object>> reply;
+    {std::lock_guard<std::mutex> lock(remote_mutex);command=std::move(remote_command);remote_command.reset();reply=std::move(remote_reply);}
+    if(!reply)return;
+    try{reply->set_value(stopping?boost::json::object{{"ok",false},{"error","蓝牙遥控正在关闭"}}:phone_remote::execute(*command));}
+    catch(...){reply->set_value(boost::json::object{{"ok",false},{"error","操作失败，请稍后重试"}});}
+}
 TaskHandle_t worker_task=nullptr;
 std::atomic<int> disconnect_reason{0};
 std::atomic<unsigned> stack_free{STACK},starts{0},successes{0},ip_events{0};
@@ -123,8 +144,10 @@ esp_err_t remote_endpoint(uint32_t,const uint8_t *in,ssize_t size,uint8_t **out,
     if(!active || !remote_mode || size<=0 || size>256)return ESP_ERR_INVALID_ARG;
     boost::system::error_code error;auto request=boost::json::parse(std::string_view(reinterpret_cast<const char *>(in),size),error);
     if(error || !request.is_object())return ESP_ERR_INVALID_ARG;
-    std::promise<boost::json::object> pending;auto future=pending.get_future();
-    if(!transport_scheduler->post([request=std::move(request),&pending]{pending.set_value(phone_remote::execute(request.as_object()));}))return ESP_ERR_NO_MEM;
+    auto pending=std::make_shared<std::promise<boost::json::object>>();auto future=pending->get_future();
+    {std::lock_guard<std::mutex> lock(remote_mutex);
+     if(!active || !remote_mode || remote_reply)return ESP_ERR_INVALID_STATE;
+     remote_command=std::move(request.as_object());remote_reply=pending;}
     auto response=boost::json::serialize(future.get());
     if(response.size()>480)response=R"({"ok":false,"error":"列表名称过长"})";
     *out=static_cast<uint8_t *>(malloc(response.size()));if(!*out)return ESP_ERR_NO_MEM;
@@ -168,6 +191,7 @@ bool begin() {
 void finish() {
     active=false;ble_connected=false;
     scan_ready.notify_all();
+    process_remote_command(true);
     if(pc){protocomm_ble_stop(pc);protocomm_delete(pc);pc=nullptr;}
     if(ble_events){esp_event_handler_instance_unregister(PROTOCOMM_TRANSPORT_BLE_EVENT,ESP_EVENT_ANY_ID,ble_events);ble_events=nullptr;}
     if(wifi_events){esp_event_handler_instance_unregister(WIFI_EVENT,WIFI_EVENT_STA_DISCONNECTED,wifi_events);wifi_events=nullptr;}
@@ -202,6 +226,9 @@ void run() {
     });
     const bool started=transport(true);int64_t scan_at=0;
     while(started && active && !cancel) {
+        // Reuse the PSRAM coordinator instead of blocking a ServiceManager
+        // worker while app lifecycles make nested synchronous service calls.
+        process_remote_command();
         const auto now=esp_timer_get_time();
         if(phone_provisioning::expired(now,opened_at,remote_mode?1800:phone_provisioning::WINDOW_SECONDS)){set_status("蓝牙连接已超时，请重新开始");break;}
         if(scan_pending.exchange(false)){scan_at=now;if(!invoke("TriggerScanStart").success){std::lock_guard<std::mutex> lock(mutex);scan_finished=true;scan_ready.notify_all();}}
@@ -234,6 +261,8 @@ bool request_start(bool remote=false) {
 boost::json::object snapshot(bool setup=false) {
     std::lock_guard<std::mutex> lock(mutex);
     boost::json::object result{{"active",active.load()},{"starting",live.load()&&!active.load()},{"ble_connected",ble_connected.load()},{"status",status},{"device_name",device_name},{"security",1},{"starts",starts.load()},{"successes",successes.load()},{"connected",connected},{"stack_free_min_bytes",stack_free.load()},{"internal_free_bytes",heap_caps_get_free_size(MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT)},{"largest_dma_block",heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL|MALLOC_CAP_DMA)},{"psram_free_bytes",heap_caps_get_free_size(MALLOC_CAP_SPIRAM)}};
+    result["app_lifecycle_stage"]=app_lifecycle_stage.load();
+    {std::lock_guard<std::mutex> lock(app_error_mutex);result["last_task_error"]=app_task_error;}
     result["dma_free_bytes"]=heap_caps_get_free_size(MALLOC_CAP_INTERNAL|MALLOC_CAP_DMA);
     result["mode"]=remote_mode?"remote":"provisioning";
     if(active)result["remaining_seconds"]=std::max<int64_t>(0,(remote_mode?1800:phone_provisioning::WINDOW_SECONDS)-(esp_timer_get_time()-opened_at)/1000000);

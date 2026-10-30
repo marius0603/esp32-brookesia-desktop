@@ -3,7 +3,16 @@
 const ROOT='/sdcard/pets/xiaoli/', FRAME_IDS=['pet_idle_0','pet_idle_1','pet_idle_2','pet_eat_0','pet_eat_1','pet_eat_2','pet_sleep_0','pet_sleep_1'];
 const DEFAULTS={schema:1,timezone:'Asia/Shanghai',utc_offset_minutes:480,meals:[{name:'早餐',start:450,duration:30},{name:'午餐',start:720,duration:30},{name:'晚餐',start:1110,duration:30}],sleep:{start:1320,end:420}};
 let gui,timer,storage,system,timerId=0,hidden=true,background=false,panel=false,config=DEFAULTS,override=null,mode='',phaseStart=0,cache={},frames=0,lastReport=0,lastNow=0,lastFocus=0,configError=false;
-let breathId=0,fadeId=0,fadeUntil=0;
+let breathId=0,fadeId=0,fadeUntil=0,loadedFrames=[];
+function releaseFrames(){if(loadedFrames.length){call(gui,'ReleaseImages',{Ids:loadedFrames});loadedFrames=[];}}
+function prepareFrames(current){
+ const ids=current==='eat'?FRAME_IDS.slice(3,6):current==='sleep'?FRAME_IDS.slice(6):FRAME_IDS.slice(0,3);
+ if(loadedFrames.length&&loadedFrames[0]===ids[0])return;
+ stopMotion();
+ // Bound views retain their own image references until the first new pose.
+ // Drop the previous manual group before loading the next, never all eight.
+ releaseFrames();call(gui,'PreloadImages',{Ids:ids});loadedFrames=ids;delete cache.src;
+}
 function call(h,n,a){const r=JSON.parse(brookesia.call_function(h,n,JSON.stringify(a||{})));if(!r.success)throw new Error(r.error||r.error_message||n);return r.data;}
 function validMinute(v){return Number.isInteger(v)&&v>=0&&v<1440;}
 function validate(c){
@@ -28,7 +37,7 @@ function scheduled(now){
 function text(path,value){const key='text:'+path;if(cache[key]===value)return;call(gui,'SetText',{Path:'/main/'+path,Text:value});cache[key]=value;}
 function bind(path,key,value){value=String(value);const id=path+':'+key;if(cache[id]===value)return;call(gui,'SetBinding',{Path:'/main/'+path,Key:key,Value:value});cache[id]=value;}
 function report(now){
- try{call(storage,'FSWriteText',{Path:ROOT+'state.json',Data:JSON.stringify({schema:1,version:'0.1.2',mode,frames,paused:hidden||background,panel,clock_synced:!!clock(now),time:now,temporary:!!override,config_fallback:configError,native_motion:true})});lastReport=now;}catch(_){}
+ try{call(storage,'FSWriteText',{Path:ROOT+'state.json',Data:JSON.stringify({schema:1,version:'0.1.3',mode,frames,paused:hidden||background,panel,clock_synced:!!clock(now),time:now,temporary:!!override,config_fallback:configError,native_motion:true})});lastReport=now;}catch(_){}
 }
 function stopTimer(){if(timerId){try{call(timer,'Stop',{TimerId:timerId});}catch(_){}timerId=0;}}
 function startTimer(interval){if(!timerId)timerId=call(timer,'StartPeriodic',{Name:'pet',IntervalMs:interval||50});}
@@ -64,8 +73,8 @@ function foreground(){
  const away=!active||!active.manifest||active.manifest.id!=='local.virtualpet';
  if(away===background)return;
  background=away;override=null;stopTimer();
- if(away){stopMotion();try{call(gui,'ReleaseImages',{Ids:FRAME_IDS});}catch(_){}startTimer(1000);}
- else{call(gui,'PreloadImages',{Ids:FRAME_IDS});cache={};mode='';startTimer();}
+ if(away){stopMotion();try{releaseFrames();}catch(_){}startTimer(1000);}
+ else{cache={};mode='';startTimer();}
  report(now);
 }
 function pose(current,elapsed){
@@ -84,7 +93,7 @@ function tick(){
  if(override&&now>=override.until)override=null;
  if(override&&!override.preview&&base.mode==='sleep')override=null;
  const current=override?override.mode:base.mode;
- if(mode!==current){mode=current;phaseStart=now;report(now);}
+ if(mode!==current){prepareFrames(current);mode=current;phaseStart=now;report(now);}
  text('clock',base.time);
  text('status',override?(override.preview?'睡觉预览':current==='eat'?'好吃好吃':'好开心呀'):base.label);
  text('hint',configError?'已使用默认作息':!clock(now)?'联网后自动校时':override&&override.preview?'稍后自动回到当前作息':'');
@@ -110,14 +119,14 @@ globalThis.brookesia_app={
  on_start(){
   gui=brookesia.start_service('SystemGui');timer=brookesia.start_service('SystemTimer');storage=brookesia.start_service('Storage');system=brookesia.start_service('SystemCore');brookesia.start_service('SNTP');
   configError=false;try{const raw=call(storage,'FSReadText',{Path:ROOT+'schedule.json'});if(typeof raw!=='string'||raw.length>4096)throw new Error('Invalid schedule');config=validate(JSON.parse(raw));}catch(_){config=DEFAULTS;configError=true;}
-  hidden=false;background=false;panel=false;override=null;mode='';cache={};frames=0;lastNow=0;lastReport=0;lastFocus=Date.now();
+  hidden=false;background=false;panel=false;override=null;mode='';cache={};loadedFrames=[];frames=0;lastNow=0;lastReport=0;lastFocus=Date.now();
   for(const action of ['feed','pet','petTap','schedule','back','sleepPreview'])call(gui,'SubscribeAction',{Action:action});
   tick();startTimer();report(Date.now());return true;
  },
  on_timer(){if(!hidden){foreground();tick();}return true;},
  on_action(name){interact(name);return true;},
- on_pause(){hidden=true;override=null;stopTimer();stopMotion();report(Date.now());try{call(gui,'ReleaseImages',{Ids:FRAME_IDS});}catch(_){}return true;},
- on_resume(){call(gui,'PreloadImages',{Ids:FRAME_IDS});hidden=false;background=false;panel=false;override=null;mode='';cache={};lastNow=0;lastFocus=Date.now();showPanel(false);startTimer();report(Date.now());return true;},
- on_stop(){hidden=true;override=null;stopTimer();stopMotion();report(Date.now());return true;}
+ on_pause(){hidden=true;override=null;stopTimer();stopMotion();report(Date.now());try{releaseFrames();}catch(_){}return true;},
+ on_resume(){hidden=false;background=false;panel=false;override=null;mode='';cache={};lastNow=0;lastFocus=Date.now();showPanel(false);startTimer();report(Date.now());return true;},
+ on_stop(){hidden=true;override=null;stopTimer();stopMotion();report(Date.now());try{releaseFrames();}catch(_){}return true;}
 };
 })();

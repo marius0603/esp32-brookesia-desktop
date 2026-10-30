@@ -4,7 +4,7 @@
 
 ## 安装与连接
 
-设备端需要配套固件 **0.8.3-s3.35** 和s3.34独立蓝牙设置资源；安卓端安装 [xiaoma-remote-0.1.0.apk](../packages/android/xiaoma-remote-0.1.0.apk)，支持Android 8及以上。
+设备端需要配套固件 **0.8.3-s3.36** 和s3.34独立蓝牙设置资源；安卓端安装 [xiaoma-remote-0.1.0.apk](../packages/android/xiaoma-remote-0.1.0.apk)，支持Android 8及以上。
 
 1. 设备进入 **设置 → 蓝牙 → 开启蓝牙遥控**。先停止正在进行的播放或录音，再开启入口；开启后可从手机播放故事。
 2. 屏幕会显示 `CTRL_XXXXXX` 和8位临时配对码。原来的“开始配网”仍用于乐鑫ESP BLE Prov，设备名为 `PROV_XXXXXX`。
@@ -21,7 +21,7 @@
 
 ```powershell
 python codex-quota-monitor/tools/backup_current_firmware.py --port COM3 --label before-ble-remote
-python codex-quota-monitor/tools/update_brookesia_app_only.py --port COM3 --build <s3.34构建目录> --backup <本次校验备份目录>
+python codex-quota-monitor/tools/update_brookesia_app_only.py --port COM3 --build <s3.36构建目录> --backup <本次校验备份目录>
 python phone-remote/tools/deploy_bluetooth_settings.py --port COM3
 # 安装后重启设备，以清除Settings预载界面缓存
 ```
@@ -31,6 +31,10 @@ python phone-remote/tools/deploy_bluetooth_settings.py --port COM3
 s3.34的部署器另外备份首页、屏幕注册和导航等五份设置文档。必须在资源安装后重启，停止再打开设置不会清除预载界面。回退旧固件时也需还原本次对应的设置文档备份，保证菜单与固件导航能力一致。
 
 从s3.34升级到s3.35只需更新应用分区，沿用现有设置资源和安卓0.1.0安装包。s3.35将“桌面”请求接入系统首页流程；已经运行的原生设置页重新打开时重新挂载到前台，避免启动请求返回成功却不显示页面。
+
+s3.36针对连续打开多个应用后的失败，切换时先关闭上一应用页面，退出脚本应用时释放运行环境；原生设置等应用保留界面缓存，加快再次进入。在线助手的断开请求是异步的；开始下一应用前等待音频所有权释放，确保网络回调停止、大录音缓冲已回收，最多等待20秒，超时则提示稍后重试。后台服务按各应用原有关闭逻辑处理；听书页面关闭仍会停止听书。遥控指令由独立协调循环执行，避免打开应用时的嵌套服务调用占满共享线程。屏幕SPI最大传输块设为4092字节、队列深度设为1，避免两笔较大的内部DMA临时缓冲与蓝牙争抢内存。保留整屏PSRAM绘制及现有壁纸。同步系统任务即使抛出异常也会完成等待结果，返回原始错误，避免调度器捕获异常后调用方永久等待。需同时安装电子宠物0.1.3，按当前动作缓存两到三张帧，避免一次预载八张帧的内存峰值。应用商店的存储、网络及界面异步回调转由应用定时任务统一处理，关闭时丢弃旧回调并取消迟到的HTTP请求，避免后台回调访问已经释放的页面上下文。USB状态另提供当前生命周期阶段，便于区分卡在加载、关闭或挂载。安卓端仍用0.1.0，独立蓝牙菜单资源沿用s3.34。
+
+已有s3.34/35设备升级时只更新应用分区，并运行 `python codex-quota-monitor/tools/deploy_virtual_pet.py --port COM3` 安装宠物0.1.3；已有SD动画帧与自定义作息继续使用。
 
 ## 构建手机安装包
 
@@ -59,5 +63,7 @@ python phone-remote/tests/verify_android_protocol.py --tools D:/codex/android-re
 s3.34独立蓝牙菜单已由用户确认可以进入，并显示设备名和配对码。
 
 s3.35已通过保持BLE连接的两轮“时钟→设置→桌面”、重复打开设置、电子宠物退出后再次打开检查；测试核对实际前台应用，设备直接启动宠物也成功。对应测试增加 `--navigation-only` 运行选项。手机端的本轮复测尚待现场确认。
+
+s3.36已通过实机Wi-Fi与BLE同时开启的三轮全应用切换（每轮11个，共33次），逐次核对实际前台、单前台状态及无异常重启；三轮回桌面PSRAM剩余分别为2,532,092、2,528,184、2,524,792字节。音量、亮度、列表及非法命令拒绝检查通过。宠物0.1.3在Wi-Fi与BLE开启时通过全部八帧、喂食/陪伴/睡觉预览、时钟同步和退出重开检查，正式BPK已恢复。测试保留10篇故事、听书偏好、作息和经典Q版主题；用户新连接的Wi-Fi继续使用。`--sweep --require-wifi` 可复现联网压力测试；手机界面操作仍需用户现场复核。
 
 参考：[ESP-IDF protocomm](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-reference/provisioning/protocomm.html)、[Android BLE](https://developer.android.com/develop/connectivity/bluetooth/ble/ble-overview)。

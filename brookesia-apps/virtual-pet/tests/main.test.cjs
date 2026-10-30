@@ -6,6 +6,8 @@ const doc=JSON.parse(fs.readFileSync(path.join(root,'src/res/screens/main.json')
 (function visit(n,p=''){p+='/'+n.id;views.set(p,n);for(const e of n.events||[]){assert(!actions.has(e.action),'Duplicate action '+e.action);actions.add(e.action);}for(const c of n.children||[])visit(c,p);})(doc);
 const images=JSON.parse(fs.readFileSync(path.join(root,'src/res/images/index.json'),'utf8')).images;
 const ids=new Set(images.map(i=>i.id));
+assert(images.filter(i=>i.id.startsWith('pet_')).every(i=>!i.preload),'Frames must not all preload with the document');
+const pinned=new Set();
 const config=JSON.parse(fs.readFileSync(path.join(root,'content/schedule.json'),'utf8'));
 const at=s=>Date.parse('2026-10-29T'+s+':00+08:00');
 let now=at('10:00'),writes=[],calls=[],texts={},timers=new Set(),next=0,active='local.virtualpet';
@@ -26,7 +28,12 @@ function create(bad=false){
   if(n==='Stop')timers.delete(a.TimerId);
   if(n==='StartViewAnimation'){assert(['y','opacity'].includes(a.Animation.property));data=++next;}
   if(n==='ExecuteBatch')data={Success:true,Results:a.Commands.map(command=>{const reply=JSON.parse(this.call_function(h,command.Name,JSON.stringify(command.Params)));return {Name:command.Name,Success:reply.success,Data:command.Name==='StartViewAnimation'?{AnimationId:reply.data}:reply.data};})};
-  if(n==='PreloadImages'||n==='ReleaseImages')for(const id of a.Ids)assert(ids.has(id));
+  if(n==='PreloadImages'||n==='ReleaseImages')for(const id of a.Ids){
+   assert(ids.has(id));
+   if(n==='PreloadImages'){assert(!pinned.has(id),'Duplicate preload reference');pinned.add(id);}
+   else{assert(pinned.delete(id),'Unbalanced release');}
+  }
+  assert(pinned.size<=3,'At most three animation frames pinned');
   return JSON.stringify({success:true,data});
  }}});
  vm.runInContext(source,ctx);return ctx;
@@ -40,11 +47,14 @@ assert.equal(c.__test.scheduled(NaN).mode,'idle');
 assert.equal(c.__test.clock(at('12:34')).time,'12:34');
 for(const mode of ['idle','happy','eat','sleep'])for(let n=0;n<100;n++)assert(ids.has(c.__test.pose(mode,n*125)));
 const writesBefore=writes.length;
+const preloadsBefore=calls.filter(c=>c.n==='PreloadImages').length;
 for(let n=0;n<200;n++){now+=50;c.brookesia_app.on_timer();}
 assert(c.__test.read().frames>=4,'Animation advances');assert.equal(writes.length,writesBefore,'No per-frame storage writes');
+assert.equal(calls.filter(c=>c.n==='PreloadImages').length,preloadsBefore,'No per-frame SD reads or preloads');
 assert(calls.some(c=>c.n==='StartViewAnimation'&&c.a.Animation.property==='opacity'),'Native pose tween');
 assert(calls.some(c=>c.n==='StartViewAnimation'&&c.a.Animation.property==='y'&&c.a.Animation.playback),'Native breathing loop');
 c.brookesia_app.on_action('feed');assert.equal(c.__test.read().mode,'eat');
+assert.deepEqual([...pinned],['pet_eat_0','pet_eat_1','pet_eat_2']);
 const eatCommands=calls.filter(c=>c.n==='ExecuteBatch').at(-1).a.Commands;
 assert(!eatCommands.some(c=>c.Name==='StartViewAnimation'),'No overlapping eating poses');
 assert(eatCommands.some(c=>c.Name==='SetBindings'&&c.Params.Updates.some(u=>u.Key==='opacity'&&u.Value==='0')),'Only one eating layer is visible');
@@ -54,15 +64,17 @@ now=at('22:01');c.brookesia_app.on_timer();assert.equal(c.__test.read().mode,'sl
 c.brookesia_app.on_action('feed');assert.equal(c.__test.read().mode,'sleep');
 now=at('14:00');c.brookesia_app.on_timer();c.brookesia_app.on_action('schedule');assert(c.__test.read().panel);
 c.brookesia_app.on_action('sleepPreview');assert.equal(c.__test.read().mode,'sleep');assert(!c.__test.read().panel);
+assert.deepEqual([...pinned],['pet_sleep_0','pet_sleep_1']);
 now+=12000;c.brookesia_app.on_timer();assert.equal(c.__test.read().mode,'idle','Preview expires');
 c.brookesia_app.on_action('feed');now-=1000;c.brookesia_app.on_timer();assert.equal(c.__test.read().mode,'idle','Clock correction clears transient state');
 active='local.flipclock';now+=1000;c.brookesia_app.on_timer();assert(writes.at(-1).paused,'Foreground loss suspends pet even without lifecycle callback');
 const awayFrames=c.__test.read().frames;now+=2000;c.brookesia_app.on_timer();assert.equal(c.__test.read().frames,awayFrames);
 active='local.virtualpet';now+=1000;c.brookesia_app.on_timer();assert(!writes.at(-1).paused);assert.equal(timers.size,1);
-c.brookesia_app.on_pause();assert.equal(timers.size,0);const before=calls.length;c.brookesia_app.on_timer();assert.equal(calls.length,before);
+c.brookesia_app.on_pause();assert.equal(timers.size,0);assert.equal(pinned.size,0);const before=calls.length;c.brookesia_app.on_timer();assert.equal(calls.length,before);
 now=at('07:35');c.brookesia_app.on_resume();assert.equal(c.__test.read().mode,'eat');assert.equal(timers.size,1);assert.equal(c.__test.read().override,null);
-c.brookesia_app.on_stop();assert.equal(timers.size,0);
+c.brookesia_app.on_stop();assert.equal(timers.size,0);assert.equal(pinned.size,0);
 const malformed=JSON.parse(JSON.stringify(config));malformed.sleep.end=1440;assert.throws(()=>c.__test.validate(malformed));
 malformed.sleep.end=420;malformed.meals[0].duration=100;assert.throws(()=>c.__test.validate(malformed));
 const fallback=create(true);fallback.brookesia_app.on_start();assert(fallback.__test.read().configError);fallback.brookesia_app.on_stop();
-console.log('Pet passed: real-time meals, overnight sleep, frame playback, preview expiry, clock corrections, pause/resume and invalid schedule fallback.');
+assert.equal(pinned.size,0);
+console.log('Pet passed: schedules, animation groups limited to three frames, balanced image ownership, no per-frame preloads, interactions and lifecycle.');

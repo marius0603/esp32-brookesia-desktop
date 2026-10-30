@@ -13,56 +13,56 @@
       "src": "/sdcard/pets/xiaoli/frames/idle-0.bin",
       "width": 320,
       "height": 320,
-      "preload": true
+      "preload": false
     },
     {
       "id": "pet_idle_1",
       "src": "/sdcard/pets/xiaoli/frames/idle-1.bin",
       "width": 320,
       "height": 320,
-      "preload": true
+      "preload": false
     },
     {
       "id": "pet_idle_2",
       "src": "/sdcard/pets/xiaoli/frames/idle-2.bin",
       "width": 320,
       "height": 320,
-      "preload": true
+      "preload": false
     },
     {
       "id": "pet_eat_0",
       "src": "/sdcard/pets/xiaoli/frames/eat-0.bin",
       "width": 320,
       "height": 320,
-      "preload": true
+      "preload": false
     },
     {
       "id": "pet_eat_1",
       "src": "/sdcard/pets/xiaoli/frames/eat-1.bin",
       "width": 320,
       "height": 320,
-      "preload": true
+      "preload": false
     },
     {
       "id": "pet_eat_2",
       "src": "/sdcard/pets/xiaoli/frames/eat-2.bin",
       "width": 320,
       "height": 320,
-      "preload": true
+      "preload": false
     },
     {
       "id": "pet_sleep_0",
       "src": "/sdcard/pets/xiaoli/frames/sleep-0.bin",
       "width": 320,
       "height": 320,
-      "preload": true
+      "preload": false
     },
     {
       "id": "pet_sleep_1",
       "src": "/sdcard/pets/xiaoli/frames/sleep-1.bin",
       "width": 320,
       "height": 320,
-      "preload": true
+      "preload": false
     }
   ]
 }
