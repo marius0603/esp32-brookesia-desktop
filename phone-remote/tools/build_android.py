@@ -19,7 +19,7 @@ def main():
   for file in sorted((ROOT/'phone-remote/licenses').glob('*.txt')):z.write(file,'assets/licenses/'+file.name)
  key=w/'development-signing.jks'
  if not key.exists():run(t['keytool'],'-genkeypair','-keystore',key,'-storepass','android','-keypass','android','-alias','xiaoma','-keyalg','RSA','-keysize','3072','-validity','3650','-dname','CN=XiaoMa Remote Development')
- output=ROOT/'packages/android/xiaoma-remote-0.1.0.apk';output.parent.mkdir(parents=True,exist_ok=True)
+ output=ROOT/'packages/android/xiaoma-remote-0.2.0.apk';output.parent.mkdir(parents=True,exist_ok=True)
  run(t['java'],'-jar',t['signer'],'sign','--v4-signing-enabled','false','--ks',key,'--ks-pass','pass:android','--out',output,unsigned)
  run(t['java'],'-jar',t['signer'],'verify','--verbose',output)
  hashes=ROOT/'packages/SHA256.json';doc=json.loads(hashes.read_text());doc[output.relative_to(ROOT).as_posix()]=hashlib.sha256(output.read_bytes()).hexdigest();hashes.write_text(json.dumps(doc,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

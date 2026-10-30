@@ -162,7 +162,12 @@ bool begin() {
     }
     if(!remote_mode && !action("Start")){set_status("请先打开 Wi-Fi");return false;}
     uint8_t mac[6]{};esp_read_mac(mac,ESP_MAC_WIFI_STA);char name[24];std::snprintf(name,sizeof(name),"%s_%02X%02X%02X",remote_mode?"CTRL":"PROV",mac[3],mac[4],mac[5]);
-    char code[9];std::snprintf(code,sizeof(code),"%08lX",static_cast<unsigned long>(esp_random()));
+    char code[9];
+    if(remote_mode){
+        // Reject the incomplete tail so all 10,000 four-digit codes are equally likely.
+        uint32_t random;do{random=esp_random();}while(random>=4294960000UL);
+        std::snprintf(code,sizeof(code),"%04lu",static_cast<unsigned long>(random%10000));
+    }else std::snprintf(code,sizeof(code),"%08lX",static_cast<unsigned long>(esp_random()));
     {std::lock_guard<std::mutex> lock(mutex);device_name=name;pop=code;attempted=connected=status_reported=false;applied_at=close_at=0;scan_finished=true;scans.clear();wipe(password);ssid.clear();
      security.data=reinterpret_cast<const uint8_t *>(pop.data());security.len=static_cast<uint16_t>(pop.size());}
     mbedtls_platform_zeroize(code,sizeof(code));

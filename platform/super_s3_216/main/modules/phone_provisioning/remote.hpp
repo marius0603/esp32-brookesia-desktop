@@ -20,7 +20,24 @@ inline boost::json::object execute(const boost::json::object &request) {
  const auto command=c->as_string();auto modes=data(call("DeviceModes","GetState"));
  if(!modes.is_object())return fail("设备尚未就绪");
  const bool locked=modes.as_object().at("screen_locked").as_bool();
- if(command=="status")return {{"ok",true},{"locked",locked},{"volume",data(call("AudioPlayback","GetVolume"))},{"brightness",modes.as_object().at("brightness_percent")}};
+ auto play_mode=[&]()->std::string {
+  auto saved=data(call("Storage","FSReadText",{{"Path","/littlefs/audiobook-play-mode.json"}}));
+  if(saved.is_string() && saved.as_string().size()<128){
+   boost::system::error_code ec;auto parsed=boost::json::parse(saved.as_string(),ec);
+   if(!ec && parsed.is_object()){auto *mode=parsed.as_object().if_contains("mode");if(mode && mode->is_string()){
+    const auto value=mode->as_string();if(value=="sequence" || value=="random" || value=="repeat_one")return std::string(value);
+   }}
+  }
+  return "sequence";
+ };
+ if(command=="status") {
+  boost::json::object answer{{"ok",true},{"locked",locked},{"volume",data(call("AudioPlayback","GetVolume"))},{"brightness",modes.as_object().at("brightness_percent")},{"play_mode",play_mode()}};
+  auto book=data(call("Audiobook","GetState"));if(book.is_object()){
+   for(const auto &[source,target]:{std::pair{"title","story_title"},{"state","story_state"},{"active","story_active"},{"position","story_position"}})
+    if(auto *v=book.as_object().if_contains(source))answer[target]=*v;
+  }
+  return answer;
+ }
  if(locked && command!="lock")return fail("设备已锁屏，请双按音量＋解锁");
  FunctionResult result{.success=false,.error_message="不支持的指令"};
  auto integer=[&](const char *key,int low,int high)->int {
@@ -50,19 +67,27 @@ inline boost::json::object execute(const boost::json::object &request) {
     items.push_back(boost::json::object{{"id",i},{"name",name}});
    }
   }
-  return {{"ok",true},{"items",std::move(items)},{"more",size_t(page*3+3)<array.size()}};
+  return {{"ok",true},{"items",std::move(items)},{"more",size_t(page*3+3)<array.size()},{"total",array.size()}};
  } else if(command=="open") {
   auto policy=data(call("ChildMode","GetState"));
   if(!policy.is_object() || policy.as_object().at("enabled").as_bool())return fail("儿童模式下请在设备上打开应用");
   int id=integer("id",1,10000);if(id<0)return fail("应用编号无效");result=open_app(id);
  }
- else if(command=="play") {
+ else if(command=="mode") {
+  if(!child_mode_audiobook_allowed())return fail("听书已被家长限制");
+  const auto *mode=request.if_contains("value");if(!mode || !mode->is_string() ||
+   (mode->as_string()!="sequence" && mode->as_string()!="random" && mode->as_string()!="repeat_one"))return fail("播放模式无效");
+  result=call("Storage","FSWriteText",{{"Path","/littlefs/audiobook-play-mode.json"},{"Data",boost::json::serialize(boost::json::object{{"mode",*mode}})}});
+  if(result.success)result=open_audiobook();
+ } else if(command=="play") {
   if(!child_mode_audiobook_allowed())return fail("听书已被家长限制");
   int index=integer("id",0,511);auto list=data(call("Audiobook","List"));
   if(index<0 || !list.is_object() || size_t(index)>=list.as_object().at("tracks").as_array().size())return fail("故事编号无效");
+  result=open_audiobook();if(!result.success)return {{"ok",false},{"error",result.error_message}};
   auto path=list.as_object().at("tracks").as_array()[index].as_object().at("path");result=call("Audiobook","Play",{{"Path",path},{"Position",0}});
  } else if(command=="pause" || command=="resume" || command=="stop") {
   if(command=="resume" && !child_mode_audiobook_allowed())return fail("听书已被家长限制");
+  if(child_mode_audiobook_allowed()){result=open_audiobook();if(!result.success)return {{"ok",false},{"error",result.error_message}};}
   result=call("Audiobook",command=="pause"?"Pause":command=="resume"?"Resume":"Stop");
  } else if(command=="lock" || command=="sleep" || command=="wake")result=call("DeviceModes",command=="lock"?"LockScreen":command=="sleep"?"SleepNow":"Wake");
  return {{"ok",result.success},{"error",result.success?"":result.error_message}};

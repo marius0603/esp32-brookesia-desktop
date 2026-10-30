@@ -4,10 +4,10 @@
 
 | 内容 | 版本与当前行为 |
 | --- | --- |
-| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.36；手机BLE加密配网与独立蓝牙遥控；可切换经典Q版与赛博朋克桌面，壁纸和10个图标同步更换并记住选择；图标原生预载、手机式跟手分页，每页6个应用及页码圆点；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转 |
+| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.38；手机BLE加密配网与独立蓝牙遥控；可切换经典Q版与赛博朋克桌面，壁纸和10个图标同步更换并记住选择；图标原生预载、手机式跟手分页，每页6个应用及页码圆点；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转 |
 | 额度显示 | 0.2.3，黑底双圆角卡片、34号“5小时/每周”标题、48号真实剩余百分比、吃豆人动画、30号倒计时和同步胶囊；随包保留Q版图标 |
 | 天气 | 0.2.6，默认上海、开发板直接联网、各天气动态背景、云形图片、24 小时预报 |
-| 听书 | 0.3.3，图标切换顺序播放、随机播放与单故事循环，自动保存模式；音量与锁屏置顶、Q版图标、中文书名、大号播放按钮、睡眠选择框、语音控制、章节与书签；连按两次音量＋解锁，最后2分钟声音/亮度渐弱，到时离线“晚安”并停播 |
+| 听书 | 0.3.4，手机与设备同步播放模式；10篇故事统一高响度，修复双声道抵消；图标切换顺序播放、随机播放与单故事循环，自动保存模式；音量与锁屏置顶、Q版图标、中文书名、大号播放按钮、睡眠选择框、语音控制、章节与书签；连按两次音量＋解锁，最后2分钟声音/亮度渐弱，到时离线“晚安”并停播 |
 | 翻页时钟 | 0.1.1，只显示大号北京时间 HH:MM，分钟变化时翻页 |
 | 电子宠物 | 0.1.3，按当前动作预载最多三张帧，原创小马“小栗”的眨眼、吃饭与睡觉动画，原生呼吸，吃饭单层显示避免重影；按北京时间三餐和跨夜睡觉，支持喂食、陪伴、作息查看和临时睡觉预览；本地运行，资源存SD卡 |
 | 小马助手 | 0.2.2，简洁对话卡片与说话/发送大按钮，移除音量加减、断开、停止及录音测试按键；电脑 Qwen3-ASR → DS → Qwen3-TTS，可切换小智，保留实体音量与勿扰 |
@@ -18,7 +18,7 @@
 本仓库不含 Codex 登录凭据、Wi-Fi 密码、设备完整 Flash 备份、运行额度数据或下载的书籍。
 自动息屏和定时勿扰见 [DEVICE_MODES.md](codex-quota-monitor/DEVICE_MODES.md)。
 安卓手机安装官方ESP BLE Prov后，在“设置 → Wi-Fi → 手机配网”开启入口；配对码和使用步骤见 [手机配网](codex-quota-monitor/PHONE_PROVISIONING.md)。
-手机直接蓝牙遥控见 [小马遥控](phone-remote/README.md)，提供独立安卓安装包；遥控入口位于“设置 → 蓝牙”，配网仍在“设置 → Wi-Fi → 手机配网”。
+手机直接蓝牙遥控见 [小马遥控](phone-remote/README.md)，提供0.2.0安卓安装包，含遥控/听书/应用三页、中文故事名和播放模式；遥控入口位于“设置 → 蓝牙”，配网仍在“设置 → Wi-Fi → 手机配网”。
 壁纸微移的行为与已有设备更新步骤见 [WALLPAPER_SHIFT.md](codex-quota-monitor/WALLPAPER_SHIFT.md)。
 重力感应开关、校准与已有设备安装步骤见 [AUTO_ROTATION.md](codex-quota-monitor/AUTO_ROTATION.md)。
 儿童模式设置与验证见 [CHILD_MODE.md](codex-quota-monitor/CHILD_MODE.md)，主题资源迁移见 [SD_RESOURCES.md](codex-quota-monitor/SD_RESOURCES.md)。
@@ -99,7 +99,7 @@ npm --prefix tools/brookesia-toolkit install
 
 ## 固件文件与备份
 
-`packages/apps` 保存可安装 BPK，当前听书为 [0.3.3](packages/apps/local.audiobook.debug.0.3.3.bpk)，小马助手为 [0.2.2](packages/apps/local.voiceassistant.debug.0.2.2.bpk)；`packages/firmware` 包含 [s3.25 应用分区更新包](packages/firmware/brookesia-0.8.3-s3.25-app-only.zip) 及历史版本。更新包附带只用于核对的分区表，使用 [听书更新步骤](codex-quota-monitor/AUDIOBOOK.md) 安装；校验值见 `packages/SHA256.json`。
+`packages/apps` 保存可安装 BPK，当前听书为 [0.3.4](packages/apps/local.audiobook.debug.0.3.4.bpk)，小马助手为 [0.2.2](packages/apps/local.voiceassistant.debug.0.2.2.bpk)；`packages/firmware` 包含 [s3.25 应用分区更新包](packages/firmware/brookesia-0.8.3-s3.25-app-only.zip) 及历史版本。更新包附带只用于核对的分区表，使用 [听书更新步骤](codex-quota-monitor/AUDIOBOOK.md) 安装；校验值见 `packages/SHA256.json`。
 它们不包含用户 NVS、Wi-Fi 数据或设备系统资源分区，不能当成任意新设备的完整恢复镜像。
 
 原电脑的恢复工具会检查完整备份和设备身份，新电脑没有备份时会拒绝直接烧录。这是已有防误刷机制。

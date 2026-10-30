@@ -158,4 +158,9 @@ setup('invalid');assert.equal(calls.filter(c=>c.n==='SetViewSrc').at(-1).a.Src,'
 const savedBookmark=stored['/littlefs/audiobook-bookmark.json'];
 state={...state,path:'/sdcard/audiobooks/removed.wav',state:'SleepEnded',active:false};ctx.brookesia_app.on_timer();
 assert.equal(stored['/littlefs/audiobook-bookmark.json'],savedBookmark,'Stale sleep completion for an absent track must not overwrite the bookmark');
+setup('sequence');
+stored['/littlefs/audiobook-play-mode.json']=JSON.stringify({mode:'repeat_one'});
+ctx.brookesia_app.on_timer();
+assert.equal(calls.filter(c=>c.n==='SetViewSrc').at(-1).a.Src,'mode_repeat_one','Phone changes update the open device page');
+finish();assert.equal(state.path,tracks[0].path,'Phone-selected repeat mode applies at EOF without reopening');
 console.log('Playback modes passed: EOF ordering, shuffle exclusion, repeat-one, empty/single libraries, bookmarks, sleep/stop safeguards and persistence.');

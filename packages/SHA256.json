@@ -68,7 +68,7 @@
   "packages/resources/phone-remote-wifi-s3.33.json": "ec66b850d53d93ef688dd366bbae6e88b60a5b768157cae977c7b291eccfc58b",
   "packages/resources/phone-remote-s3.33.zip": "de8cc02d946a4adf0fb6bcda5b6933a229a5ce647b885611e847d45c8e72fafc",
   "packages/firmware/brookesia-0.8.3-s3.34-app-only.zip": "a0c61f6b2b7f0571d6abc82c14c048bbcc8b82e5ee6f07909e1a5a41a94c5226",
-  "packages/resources/bluetooth-settings-s3.34.zip": "ad53242259ecbbe85ef8cfd6e337afebda8f352adbb9fedffd88b23e82d7da38",
+  "packages/resources/bluetooth-settings-s3.34.zip": "37778785437052aae6ef2073ced7f5bac771ba2b6bc7983a86e2eaa32989683d",
   "packages/resources/bluetooth-settings-s3.34/root.json": "d7ce5b170c6d3af25748b1a52ef1dc62f014e1992c1a9996f88a3f7d5a2af00c",
   "packages/resources/bluetooth-settings-s3.34/flows/content.json": "ea61084f9e985b12cd4c72ff66dc51d88300868ff30164f0e36d4af7d9758c8a",
   "packages/resources/bluetooth-settings-s3.34/screens/bluetooth.json": "2393a67dbbf5088f722a6b1815e2b72f00870031043dadf894743d445375256b",
@@ -76,5 +76,8 @@
   "packages/resources/bluetooth-settings-s3.34/screens/wifi.json": "87aa3359f92b4cec78f23eb66111ab9f54d3f262390b3dcd3fb6d1ddfd3c0769",
   "packages/firmware/brookesia-0.8.3-s3.35-app-only.zip": "d12b63638b65ca4b73839b05e3a3054110d2a3c652ca278e3bf8a1f448089be6",
   "packages/apps/local.virtualpet.debug.0.1.3.bpk": "1489938cc59db11b140e5fb0be7291690b4fbd99d006e9c42fd97a0d952670a9",
-  "packages/firmware/brookesia-0.8.3-s3.36-app-only.zip": "ffa2675802ff43f4f25d1ad2d59998719a5036069e5b4edf2179287277e78e5e"
+  "packages/firmware/brookesia-0.8.3-s3.36-app-only.zip": "ffa2675802ff43f4f25d1ad2d59998719a5036069e5b4edf2179287277e78e5e",
+  "packages/apps/local.audiobook.debug.0.3.4.bpk": "a71977149b946c5fe9f6dc59fe2a2677e453bf1b278f5df9c72a45112efd37a6",
+  "packages/android/xiaoma-remote-0.2.0.apk": "eb1eff0ebc212e75ce43dc9d3d471096ebbafcc9c6f8d1895c9a810747ce43d1",
+  "packages/firmware/brookesia-0.8.3-s3.38-app-only.zip": "16d746aec965467cf4896a540336469ca4f909dda5946698f730803f93664682"
 }

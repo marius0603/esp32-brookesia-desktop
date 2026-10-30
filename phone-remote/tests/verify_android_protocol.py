@@ -14,7 +14,7 @@ def main():
   child.stdin.write(cmd+(' '+base64.b64encode(data).decode() if data is not None else '')+'\n');child.stdin.flush();line=child.stdout.readline().strip();assert line,'Java protocol exited';return line if line in ('OK','FAIL','REJECTED') else base64.b64decode(line)
  try:
   request=session_pb2.SessionData();request.ParseFromString(exchange('hello'));assert request.sec_ver==1;client=request.sec1.sc0.client_pubkey
-  secret=X25519PrivateKey.generate();public=secret.public_key().public_bytes(Encoding.Raw,PublicFormat.Raw);shared=secret.exchange(X25519PublicKey.from_public_bytes(client));digest=hashlib.sha256(b'AB12CD34').digest();key=bytes(x^y for x,y in zip(shared,digest));iv=bytes(range(16));cipher=Cipher(algorithms.AES(key),modes.CTR(iv)).encryptor()
+  secret=X25519PrivateKey.generate();public=secret.public_key().public_bytes(Encoding.Raw,PublicFormat.Raw);shared=secret.exchange(X25519PublicKey.from_public_bytes(client));digest=hashlib.sha256(b'0042').digest();key=bytes(x^y for x,y in zip(shared,digest));iv=bytes(range(16));cipher=Cipher(algorithms.AES(key),modes.CTR(iv)).encryptor()
   response=session_pb2.SessionData();response.sec_ver=1;response.sec1.msg=1;response.sec1.sr0.device_pubkey=public;response.sec1.sr0.device_random=iv
   request.ParseFromString(exchange('prove',response.SerializeToString()));assert request.sec1.msg==2 and cipher.update(request.sec1.sc1.client_verify_data)==public
   response=session_pb2.SessionData();response.sec_ver=1;response.sec1.msg=3;response.sec1.sr1.device_verify_data=cipher.update(client);assert exchange('verify',response.SerializeToString())=='OK'

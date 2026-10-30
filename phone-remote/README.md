@@ -1,19 +1,31 @@
-# 小马蓝牙遥控 0.1.0
+# 小马蓝牙遥控 0.2.0
 
 安卓手机直接通过BLE控制ESP32-S3设备，不需要同一Wi-Fi，也不需要电脑中转。手机需要在设备的蓝牙覆盖范围内。本轮优先实现蓝牙，跨网络遥控暂缓。
 
+## 新版界面
+
+- 遥控：音量与亮度滑条，息屏、唤醒和锁屏。
+- 听书：中文故事名、播放进度与状态、暂停/继续/停止；顺序播放、随机播放和单故事循环三个图标选项；书架分页选择故事。
+- 应用：分页显示并打开设备应用。
+
+连接后配对区域自动收起，前台每三秒读取设备状态，离开手机应用即暂停刷新。播放模式与设备共用同一份偏好；切换模式保留当前故事，播完后按新模式处理。顺序模式在最后一篇结束时停止，随机模式选择另一篇，单故事循环从头播放当前篇。锁屏和家长控制保持生效。
+
+手机0.2.0沿用0.1.0的签名，可以覆盖安装。需要配套固件s3.38和听书0.3.4；原独立蓝牙设置资源继续使用。全部故事的响度调整见 [逐篇测量记录](../codex-quota-monitor/STORY_LOUDNESS.md)。
+
 ## 安装与连接
 
-设备端需要配套固件 **0.8.3-s3.36** 和s3.34独立蓝牙设置资源；安卓端安装 [xiaoma-remote-0.1.0.apk](../packages/android/xiaoma-remote-0.1.0.apk)，支持Android 8及以上。
+设备端需要配套固件 **0.8.3-s3.38** 和s3.34独立蓝牙设置资源；安卓端安装 [xiaoma-remote-0.2.0.apk](../packages/android/xiaoma-remote-0.2.0.apk)，支持Android 8及以上。
 
 1. 设备进入 **设置 → 蓝牙 → 开启蓝牙遥控**。先停止正在进行的播放或录音，再开启入口；开启后可从手机播放故事。
-2. 屏幕会显示 `CTRL_XXXXXX` 和8位临时配对码。原来的“开始配网”仍用于乐鑫ESP BLE Prov，设备名为 `PROV_XXXXXX`。
+2. 屏幕会显示 `CTRL_XXXXXX` 和4位数字临时配对码（例如 `0042`，需输入开头的0）。原来的“开始配网”仍用于乐鑫ESP BLE Prov，设备名为 `PROV_XXXXXX`。
 3. 手机打开“小马遥控”，允许“附近设备”权限，点击“扫描设备”；旧版Android还需要允许定位并打开系统定位开关。
 4. 输入设备显示的配对码，点击扫描出的设备。连接成功后可调整音量和亮度，分页查看应用、故事并点击打开或播放。
 
-支持暂停、继续、停止听书、息屏、唤醒和锁屏。亮度可调10%至100%，音量0至100%仍经过设备原有音量上限和勿扰逻辑。锁屏后仅能读取状态，需在设备上快速连按两次音量＋解锁。儿童模式下不能从手机直接打开应用，听书仍受原家长授权限制。
+从手机选择故事或进行听书控制时，设备先切到听书页面，再执行播放、暂停、继续或停止。支持息屏、唤醒和锁屏。亮度可调10%至100%，音量0至100%仍经过设备原有音量上限和勿扰逻辑。锁屏后仅能读取状态，需在设备上快速连按两次音量＋解锁。儿童模式下不能从手机直接打开应用，听书仍受原家长授权限制。
 
 每次开启生成新配对码，窗口最多30分钟，成功连接不会延长窗口；再次点击设备上的“结束连接”即可关闭。配网与遥控共用蓝牙硬件，每次只开启一种模式。当前为前台遥控应用，没有后台常驻服务，也不保存配对码。此应用无需互联网、麦克风或云端账号。
+
+s3.38的四位配对码使用安卓0.2.0，使用原签名可直接覆盖安装，无需卸载。乐鑫ESP BLE Prov的Wi-Fi配网流程和原8位配对码保持不变。
 
 ## 设备更新
 
@@ -21,7 +33,7 @@
 
 ```powershell
 python codex-quota-monitor/tools/backup_current_firmware.py --port COM3 --label before-ble-remote
-python codex-quota-monitor/tools/update_brookesia_app_only.py --port COM3 --build <s3.36构建目录> --backup <本次校验备份目录>
+python codex-quota-monitor/tools/update_brookesia_app_only.py --port COM3 --build <s3.38构建目录> --backup <本次校验备份目录>
 python phone-remote/tools/deploy_bluetooth_settings.py --port COM3
 # 安装后重启设备，以清除Settings预载界面缓存
 ```
@@ -52,7 +64,7 @@ python phone-remote/tests/verify_android_protocol.py --tools D:/codex/android-re
 
 复用ESP-IDF protocomm Security 1：X25519、临时PoP和连续AES-CTR字节流。遥控模式只注册 `prov-session`、`proto-ver`、`remote-control`；不开放Wi-Fi配置端点。遥控特征UUID为 `1775ff55-6b43-439b-877c-060f2d9bed07`。同一会话串行交换JSON请求和回复，不并行发送，以免破坏加密流顺序。
 
-设备只接受预定义指令：`status`、`volume`、`brightness`、`apps`、`open`、`stories`、`play`、`pause`、`resume`、`stop`、`sleep`、`wake`、`lock`。列表每页三项、页码从零开始；不提供任意服务调用、文件访问、录音或家长设置接口。
+设备只接受预定义指令：`status`、`volume`、`brightness`、`apps`、`open`、`stories`、`play`、`mode`、`pause`、`resume`、`stop`、`sleep`、`wake`、`lock`。`mode.value`为`sequence`、`random`或`repeat_one`。状态回复含`play_mode`、`story_title`、`story_state`、`story_active`、`story_position`；列表增加`total`，每页三项、页码从零开始；不提供任意服务调用、文件访问、录音或家长设置接口。
 
 设备端s3.34已安装，应用分区读回校验和设置页安装核对通过。APK实际使用的Java协议代码已与独立Python实现核对官方protobuf字段、密钥协商、配对证明及连续双向加解密，也通过电脑蓝牙与实机完成连接、音量/亮度调整、列表及打开应用检查；测试设置随后恢复。安卓APK已构建并通过签名校验，手机安装和界面操作需现场确认。
 
@@ -64,6 +76,11 @@ s3.34独立蓝牙菜单已由用户确认可以进入，并显示设备名和配
 
 s3.35已通过保持BLE连接的两轮“时钟→设置→桌面”、重复打开设置、电子宠物退出后再次打开检查；测试核对实际前台应用，设备直接启动宠物也成功。对应测试增加 `--navigation-only` 运行选项。手机端的本轮复测尚待现场确认。
 
-s3.36已通过实机Wi-Fi与BLE同时开启的三轮全应用切换（每轮11个，共33次），逐次核对实际前台、单前台状态及无异常重启；三轮回桌面PSRAM剩余分别为2,532,092、2,528,184、2,524,792字节。音量、亮度、列表及非法命令拒绝检查通过。宠物0.1.3在Wi-Fi与BLE开启时通过全部八帧、喂食/陪伴/睡觉预览、时钟同步和退出重开检查，正式BPK已恢复。测试保留10篇故事、听书偏好、作息和经典Q版主题；用户新连接的Wi-Fi继续使用。`--sweep --require-wifi` 可复现联网压力测试；手机界面操作仍需用户现场复核。
+s3.36已通过实机Wi-Fi与BLE同时开启的三轮全应用切换（每轮11个，共33次），逐次核对实际前台、单前台状态及无异常重启；三轮回桌面PSRAM剩余分别为2,532,092、2,528,184、2,524,792字节。音量、亮度、列表及非法命令拒绝检查通过。宠物0.1.3在Wi-Fi与BLE开启时通过全部八帧、喂食/陪伴/睡觉预览、时钟同步和退出重开检查，正式BPK已恢复。测试保留10篇故事、听书偏好、作息和经典Q版主题；用户新连接的Wi-Fi继续使用。`--sweep --require-wifi` 可复现联网压力测试；用户已现场确认连续打开应用、桌面、设置和电子宠物全部正常。
+
+s3.37 / 安卓0.1.1已通过四位数字（含前导0）的独立加密协议核对、实机选故事及播放/暂停/继续/停止时前台切换检查，确认音频已解码输出；测试后恢复书签、播放模式和音量。桌面、设置、宠物重复打开回归通过。安卓包签名与0.1.0一致。`--stories-only --require-wifi` 可复现听书遥控检查。
 
 参考：[ESP-IDF protocomm](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-reference/provisioning/protocomm.html)、[Android BLE](https://developer.android.com/develop/connectivity/bluetooth/ble/ble-overview)。
+
+
+s3.38 / 安卓0.2.0 / 听书0.3.4已通过构建、签名校验和真实加密BLE检查：四页书架的10个中文名、三种模式在页面已打开时的真实EOF切换、10篇新音频解码输出、前台恢复和非法模式拒绝；全部偏好已恢复。模式测试使用临时4秒静音WAV，结束后移除，避免长MP3顺序解码跳转耗时。安卓新版界面需在用户手机安装后确认，未使用模拟图作为实际截图。

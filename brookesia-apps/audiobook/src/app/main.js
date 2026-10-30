@@ -44,7 +44,11 @@ function syncSleep(next){
   if(selected===sleepSelected)return;
   call(gui,'SetBinding',{Path:'/main/sleep/choice',Key:'selected',Value:String(selected)});sleepSelected=selected;
 }
+function loadMode(){
+  try{const saved=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/audiobook-play-mode.json'}));if(saved&&playModes.includes(saved.mode))playMode=saved.mode;}catch(_){}
+}
 function poll(){
+  loadMode();
   const next=call(audio,'GetState');
   syncMode();
   syncSleep(next);
@@ -74,6 +78,7 @@ function poll(){
 }
 function action(name){
   if(name==='playMode'){
+    loadMode();
     const selected=playModes[(playModes.indexOf(playMode)+1)%playModes.length];
     call(storage,'FSWriteText',{Path:'/littlefs/audiobook-play-mode.json',Data:JSON.stringify({mode:selected})});playMode=selected;syncMode();return;
   }

@@ -1,3 +1,4 @@
+#include "story_titles.hpp"
 #include "audiobook.hpp"
 #include "../child_mode/child_mode.hpp"
 #include "../audio_ownership.hpp"
@@ -227,7 +228,7 @@ private:
     }
     boost::json::object snapshot() {
         std::lock_guard<std::mutex> lock(mutex_);
-        return {{"state",state_},{"path",path_},{"error",error_},{"position",position_.load()},
+        return {{"state",state_},{"path",path_},{"title",story_titles::title(path_)},{"error",error_},{"position",position_.load()},
                 {"duration",duration_.load()},{"bytes_written",bytes_.load()},{"active",live_.load()},
                 {"sleep_minutes",sleep_minutes_},{"sleep_remaining_seconds",story_sleep::remaining(esp_timer_get_time()/1000,deadline_)},
                 {"sleep_active",deadline_!=0},{"sleep_fading",deadline_!=0 && gain_<1000},
@@ -241,7 +242,7 @@ private:
         if(mounted) scan("/sdcard/audiobooks",2,paths);
         std::sort(paths.begin(),paths.end());
         boost::json::array entries;
-        for(const auto &p:paths) entries.push_back(boost::json::object{{"path",p},{"title",p.substr(18)}});
+        for(const auto &p:paths) entries.push_back(boost::json::object{{"path",p},{"title",story_titles::title(p)}});
         return boost::json::object{{"mounted",mounted},{"tracks",std::move(entries)},{"limit",512}};
     }
     std::vector<FunctionSchema> get_function_schemas() override {
