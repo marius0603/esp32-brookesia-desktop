@@ -1,3 +1,4 @@
+#include "modules/phone_provisioning/navigation.hpp"
 /*
  * SPDX-FileCopyrightText: 2026 Espressif Systems (Shanghai) CO LTD
  *
@@ -60,6 +61,7 @@ extern "C" void app_main(void)
         auto init_result = system_instance->init(std::move(config));
         BROOKESIA_CHECK_FALSE_EXIT(init_result, "System init failed: %1%", init_result.error());
         child_mode_attach_system(system_instance.get());
+        phone_remote::attach_system(system_instance.get());
         auto start_result = system_instance->start();
         BROOKESIA_CHECK_FALSE_EXIT(start_result, "System start failed: %1%", start_result.error());
 

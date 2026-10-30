@@ -4,7 +4,7 @@
 
 ## 安装与连接
 
-设备端需要配套固件 **0.8.3-s3.34** 和设置页资源；安卓端安装 [xiaoma-remote-0.1.0.apk](../packages/android/xiaoma-remote-0.1.0.apk)，支持Android 8及以上。
+设备端需要配套固件 **0.8.3-s3.35** 和s3.34独立蓝牙设置资源；安卓端安装 [xiaoma-remote-0.1.0.apk](../packages/android/xiaoma-remote-0.1.0.apk)，支持Android 8及以上。
 
 1. 设备进入 **设置 → 蓝牙 → 开启蓝牙遥控**。先停止正在进行的播放或录音，再开启入口；开启后可从手机播放故事。
 2. 屏幕会显示 `CTRL_XXXXXX` 和8位临时配对码。原来的“开始配网”仍用于乐鑫ESP BLE Prov，设备名为 `PROV_XXXXXX`。
@@ -29,6 +29,8 @@ python phone-remote/tools/deploy_bluetooth_settings.py --port COM3
 入口资源通过合并方式安装，先备份原Wi-Fi页面，保留其余页面。更新器保留NVS、LittleFS、应用、SD故事和主题；不要写入完整构建目录中的出厂Flash参数。完成验证后恢复额度采集器。
 
 s3.34的部署器另外备份首页、屏幕注册和导航等五份设置文档。必须在资源安装后重启，停止再打开设置不会清除预载界面。回退旧固件时也需还原本次对应的设置文档备份，保证菜单与固件导航能力一致。
+
+从s3.34升级到s3.35只需更新应用分区，沿用现有设置资源和安卓0.1.0安装包。s3.35将“桌面”请求接入系统首页流程；已经运行的原生设置页重新打开时重新挂载到前台，避免启动请求返回成功却不显示页面。
 
 ## 构建手机安装包
 
@@ -55,5 +57,7 @@ python phone-remote/tests/verify_android_protocol.py --tools D:/codex/android-re
 `tests/check_settings_navigation.py --upstream <上游源码目录>` 检查事件订阅与导航判定两份名单一致，并核对蓝牙页面的跳转目标、根资源与屏幕流注册。
 
 s3.34独立蓝牙菜单已由用户确认可以进入，并显示设备名和配对码。
+
+s3.35已通过保持BLE连接的两轮“时钟→设置→桌面”、重复打开设置、电子宠物退出后再次打开检查；测试核对实际前台应用，设备直接启动宠物也成功。对应测试增加 `--navigation-only` 运行选项。手机端的本轮复测尚待现场确认。
 
 参考：[ESP-IDF protocomm](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-reference/provisioning/protocomm.html)、[Android BLE](https://developer.android.com/develop/connectivity/bluetooth/ble/ble-overview)。

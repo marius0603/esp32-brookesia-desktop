@@ -1,0 +1,12 @@
+--- a/system/brookesia_system_super/include/brookesia/system_super/system.hpp
++++ b/system/brookesia_system_super/include/brookesia/system_super/system.hpp
+@@ -42,6 +42,9 @@
+     friend class ShellApp;
+ 
+ public:
++    /** Restore the launcher using the same lifecycle as the native Home action. */
++    std::expected<void, std::string> navigate_home() { return go_home(); }
++
+     /**
+      * @brief Configuration used to initialize the Super system.
+      */

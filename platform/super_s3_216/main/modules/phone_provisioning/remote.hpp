@@ -2,6 +2,7 @@
 #include "brookesia/service_manager/service/manager.hpp"
 #include "brookesia/hal_interface.hpp"
 #include "../child_mode/child_mode.hpp"
+#include "navigation.hpp"
 #include <cmath>
 namespace phone_remote {
 using namespace esp_brookesia::service;
@@ -53,7 +54,7 @@ inline boost::json::object execute(const boost::json::object &request) {
  } else if(command=="open") {
   auto policy=data(call("ChildMode","GetState"));
   if(!policy.is_object() || policy.as_object().at("enabled").as_bool())return fail("儿童模式下请在设备上打开应用");
-  int id=integer("id",1,10000);if(id<0)return fail("应用编号无效");result=call("SystemCore","StartApp",{{"AppId",id}});
+  int id=integer("id",1,10000);if(id<0)return fail("应用编号无效");result=open_app(id);
  }
  else if(command=="play") {
   if(!child_mode_audiobook_allowed())return fail("听书已被家长限制");

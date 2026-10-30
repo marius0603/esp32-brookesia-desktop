@@ -20,7 +20,7 @@ if not (REPO/'.git').exists():
     git('checkout','--detach','FETCH_HEAD')
 head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=REPO,text=True).strip()
 if head!=VERSIONS['commit']:raise SystemExit('Upstream revision differs; refusing to alter your checkout')
-for name in ('brookesia-s3.patch','phone-launcher.patch','desktop-themes.patch','phone-provisioning.patch','phone-remote.patch','bluetooth-settings.patch'):
+for name in ('brookesia-s3.patch','phone-launcher.patch','desktop-themes.patch','phone-provisioning.patch','phone-remote.patch','bluetooth-settings.patch','remote-navigation.patch'):
     patch=ROOT/'patches'/name
     if git('apply','--check',str(patch),check=False).returncode==0:
         git('apply',str(patch))

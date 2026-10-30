@@ -68,10 +68,11 @@
   "packages/resources/phone-remote-wifi-s3.33.json": "ec66b850d53d93ef688dd366bbae6e88b60a5b768157cae977c7b291eccfc58b",
   "packages/resources/phone-remote-s3.33.zip": "de8cc02d946a4adf0fb6bcda5b6933a229a5ce647b885611e847d45c8e72fafc",
   "packages/firmware/brookesia-0.8.3-s3.34-app-only.zip": "a0c61f6b2b7f0571d6abc82c14c048bbcc8b82e5ee6f07909e1a5a41a94c5226",
-  "packages/resources/bluetooth-settings-s3.34.zip": "aa0e3510ab2ac46356cc642fcdf970e437ec691d470536858f0f4264a840ce72",
+  "packages/resources/bluetooth-settings-s3.34.zip": "b3db1fd2f3e8f4396b0151df67e40efcd02b9df17258b5aa328d86a25861c380",
   "packages/resources/bluetooth-settings-s3.34/root.json": "d7ce5b170c6d3af25748b1a52ef1dc62f014e1992c1a9996f88a3f7d5a2af00c",
   "packages/resources/bluetooth-settings-s3.34/flows/content.json": "ea61084f9e985b12cd4c72ff66dc51d88300868ff30164f0e36d4af7d9758c8a",
   "packages/resources/bluetooth-settings-s3.34/screens/bluetooth.json": "2393a67dbbf5088f722a6b1815e2b72f00870031043dadf894743d445375256b",
   "packages/resources/bluetooth-settings-s3.34/screens/settings_home.json": "5e98191b94096bfd8fe675c17f00b70509f8bdcb53bed9b33d02d7625a0633cb",
-  "packages/resources/bluetooth-settings-s3.34/screens/wifi.json": "87aa3359f92b4cec78f23eb66111ab9f54d3f262390b3dcd3fb6d1ddfd3c0769"
+  "packages/resources/bluetooth-settings-s3.34/screens/wifi.json": "87aa3359f92b4cec78f23eb66111ab9f54d3f262390b3dcd3fb6d1ddfd3c0769",
+  "packages/firmware/brookesia-0.8.3-s3.35-app-only.zip": "d12b63638b65ca4b73839b05e3a3054110d2a3c652ca278e3bf8a1f448089be6"
 }

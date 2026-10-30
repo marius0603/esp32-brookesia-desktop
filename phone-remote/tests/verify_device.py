@@ -6,7 +6,7 @@ ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'codex-quota-monitor/tools'))
 from deploy_audiobook_sleep import StoryClient
 def main():
- p=argparse.ArgumentParser();p.add_argument('--port',required=True);p.add_argument('--tools',type=Path,required=True);p.add_argument('--classes',type=Path,required=True);p.add_argument('--lock-only',action='store_true');a=p.parse_args();tools=json.loads(a.tools.read_text());before=json.loads((ROOT/'codex-quota-monitor/runtime/phone-remote-preservation.json').read_text(encoding='utf-8'))
+ p=argparse.ArgumentParser();p.add_argument('--port',required=True);p.add_argument('--tools',type=Path,required=True);p.add_argument('--classes',type=Path,required=True);p.add_argument('--lock-only',action='store_true');p.add_argument('--navigation-only',action='store_true');a=p.parse_args();tools=json.loads(a.tools.read_text());before=json.loads((ROOT/'codex-quota-monitor/runtime/phone-remote-preservation.json').read_text(encoding='utf-8'))
  with StoryClient(a.port,timeout=30) as c:
   c.hello()
   def f(s,n,args=None):return c.call(s,n,args or {})['result']
@@ -33,6 +33,23 @@ def main():
    response=await exchange(session,protocol('hello'));response=await exchange(session,protocol('prove',response));assert protocol('verify',response)=='OK';report['android_java_authenticated']=True
    async def cmd(**request):return json.loads(protocol('crypt',await exchange(remote,protocol('crypt',json.dumps(request).encode()))))
    original=await cmd(cmd='status');assert original['ok'] and not original['locked']
+   if a.navigation_only:
+    def app_states():
+     with StoryClient(a.port,timeout=25) as usb:
+      usb.hello();return [],usb.call('SystemCore','GetActiveApp',{})['result']
+    with StoryClient(a.port,timeout=25) as usb:
+     usb.hello();all_apps=usb.call('SystemCore','ListApps',{})['result']
+    ids={x['manifest']['id']:x['app_id'] for x in all_apps};settings=ids['brookesia.general.settings'];shell=ids['brookesia.system.super.shell'];clock=ids['local.flipclock']
+    for cycle in range(2):
+     assert (await cmd(cmd='open',id=clock))['ok'];await asyncio.sleep(.4);assert app_states()[1]['app_id']==clock
+     for repeat in range(2):
+      assert (await cmd(cmd='open',id=settings))['ok'];await asyncio.sleep(.4);current=app_states()[1];assert current['app_id']==settings and current['state']=='Running'
+     assert (await cmd(cmd='open',id=shell))['ok'];await asyncio.sleep(.4);records,current=app_states();assert not current or current['app_id']==shell
+    pet=ids['local.virtualpet']
+    for repeat in range(2):
+     response=await cmd(cmd='open',id=pet);assert response['ok'],response;await asyncio.sleep(.4);records,current=app_states();assert current['app_id']==pet and current['state']=='Running'
+     assert (await cmd(cmd='open',id=shell))['ok'];await asyncio.sleep(.2)
+    assert (await cmd(cmd='open',id=settings))['ok'];report['pet_foreground_and_reopen']=True;report['native_settings_foreground_and_repeat_open']=True;report['shell_home_and_repeat_cycles']=True;return
    if a.lock_only:
     assert (await cmd(cmd='lock'))['ok'];assert (await cmd(cmd='status'))['locked']
     assert not (await cmd(cmd='wake'))['ok'];assert not (await cmd(cmd='volume',value=40))['ok'];report['locked_controls_rejected']=True;return
@@ -50,5 +67,5 @@ def main():
  finally:
   java.stdin.close();java.wait(timeout=10)
   with StoryClient(a.port,timeout=25) as c:c.hello();c.call('PhoneProvisioning','Stop',{})
- report['passed']=True;(ROOT/'codex-quota-monitor/runtime/phone-remote-device-verification.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))
+ report['passed']=True;(ROOT/('codex-quota-monitor/runtime/phone-remote-navigation-verification.json' if a.navigation_only else 'codex-quota-monitor/runtime/phone-remote-device-verification.json')).write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))
 if __name__=='__main__':main()
