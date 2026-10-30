@@ -1,0 +1,101 @@
+--- a/app/brookesia_app_settings/src/app/lifecycle.ipp
++++ b/app/brookesia_app_settings/src/app/lifecycle.ipp
+@@ -313,7 +313,8 @@
+         if(context_){if(current_page_==PAGE_SOUND)(void)refresh_sound_state(context);if(current_page_==PAGE_WIFI && brookesia_board_phone_provisioning_text){
+             const auto text=brookesia_board_phone_provisioning_text();
+             (void)context.gui().set_binding_value("/wifi/page/phone_provisioning/status","text",text?text:"");
+-            (void)context.gui().set_binding_value("/wifi/page/phone_provisioning/start/label","text",brookesia_board_phone_provisioning_active && brookesia_board_phone_provisioning_active()?"结束配网":"开始配网");
++            (void)context.gui().set_binding_value("/wifi/page/phone_provisioning/start/label","text",brookesia_board_phone_provisioning_active && brookesia_board_phone_provisioning_active()?"结束连接":"开始配网");
++            (void)context.gui().set_binding_value("/wifi/page/phone_provisioning/remote/label","text",brookesia_board_phone_provisioning_active && brookesia_board_phone_provisioning_active()?"结束连接":"蓝牙遥控");
+         }(void)context.timer().start_delayed("quiet_hours_refresh",1000);}
+         return {};
+     }
+@@ -660,6 +661,11 @@
+             system::core::MessageDialogIcon::Question,0,{
+                 {.text="进入睡眠",.role=system::core::MessageDialogButtonRole::Accept},
+                 {.text="取消",.role=system::core::MessageDialogButtonRole::Reject}});
++    }});
++    subscriptions.push_back({.action="settings.wifi.phone_remote",.handler=[this](const gui::Event &){
++        if(brookesia_board_phone_provisioning_active && brookesia_board_phone_provisioning_active()){
++            if(brookesia_board_phone_provisioning_stop)brookesia_board_phone_provisioning_stop();
++        }else if(brookesia_board_phone_remote_start)brookesia_board_phone_remote_start();
+     }});
+     subscriptions.push_back({.action="settings.wifi.phone_provisioning",.handler=[this](const gui::Event &){
+         if(brookesia_board_phone_provisioning_active && brookesia_board_phone_provisioning_active()){
+--- a/app/brookesia_app_settings/src/private/settings_app_internal.hpp
++++ b/app/brookesia_app_settings/src/private/settings_app_internal.hpp
+@@ -630,3 +630,5 @@
+ extern "C" void brookesia_board_phone_provisioning_stop() __attribute__((weak));
+ extern "C" bool brookesia_board_phone_provisioning_active() __attribute__((weak));
+ extern "C" const char *brookesia_board_phone_provisioning_text() __attribute__((weak));
++
++extern "C" bool brookesia_board_phone_remote_start() __attribute__((weak));
+--- a/app/brookesia_app_settings/package/res/screens/wifi.json
++++ b/app/brookesia_app_settings/package/res/screens/wifi.json
+@@ -48,7 +48,7 @@
+                     "placement": {
+                         "mode": "flow",
+                         "width": "match",
+-                        "height": 222,
++                        "height": 278,
+                         "alignSelf": "stretch"
+                     },
+                     "children": [
+@@ -61,7 +61,7 @@
+                                 "textColor": "#edf5ff"
+                             },
+                             "labelProps": {
+-                                "text": "手机配网"
++                                "text": "手机蓝牙"
+                             },
+                             "placement": {
+                                 "mode": "flow",
+@@ -127,6 +127,48 @@
+                                     },
+                                     "labelProps": {
+                                         "text": "开始配网"
++                                    }
++                                }
++                            ]
++                        },
++                        {
++                            "type": "button",
++                            "id": "remote",
++                            "placement": {
++                                "mode": "flow",
++                                "width": "match",
++                                "height": 44
++                            },
++                            "style": {
++                                "radius": 12,
++                                "padding": 0,
++                                "bgColor": "#24516b"
++                            },
++                            "layout": {
++                                "type": "flex",
++                                "mainAlign": "center",
++                                "crossAlign": "center"
++                            },
++                            "events": [
++                                {
++                                    "type": "clicked",
++                                    "action": "settings.wifi.phone_remote"
++                                }
++                            ],
++                            "children": [
++                                {
++                                    "type": "label",
++                                    "id": "label",
++                                    "bindings": {
++                                        "labelProps.text": "text"
++                                    },
++                                    "style": {
++                                        "font": "${font.zh_CN}",
++                                        "fontSize": 22,
++                                        "textColor": "#ffffff"
++                                    },
++                                    "labelProps": {
++                                        "text": "蓝牙遥控"
+                                     }
+                                 }
+                             ]

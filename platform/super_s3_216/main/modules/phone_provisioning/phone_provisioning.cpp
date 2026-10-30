@@ -1,5 +1,6 @@
 #include "phone_provisioning.hpp"
 #include "rules.hpp"
+#include "remote.hpp"
 #include "../audio_ownership.hpp"
 #include "../device_modes/deep_sleep.hpp"
 #include <algorithm>
@@ -40,6 +41,7 @@ std::mutex mutex;
 std::condition_variable scan_ready;
 std::atomic<bool> live{false},active{false},cancel{false},ble_connected{false},apply_pending{false},scan_pending{false};
 std::atomic<bool> worker_exit{false};
+std::atomic<bool> remote_mode{false};
 TaskHandle_t worker_task=nullptr;
 std::atomic<int> disconnect_reason{0};
 std::atomic<unsigned> stack_free{STACK},starts{0},successes{0},ip_events{0};
@@ -110,12 +112,23 @@ esp_err_t scan_result(uint16_t index,network_prov_scan_wifi_result_t *out,networ
 network_prov_config_handlers_t config_handlers{.wifi_get_status_handler=get_status,.wifi_set_config_handler=set_config,.wifi_apply_config_handler=apply_config,.ctx=nullptr};
 network_prov_scan_handlers_t scan_handlers{.wifi_scan_start=scan_start,.wifi_scan_status=scan_status,.wifi_scan_result=scan_result,.ctx=nullptr};
 esp_err_t config_endpoint(uint32_t session,const uint8_t *in,ssize_t size,uint8_t **out,ssize_t *out_size,void *) {
-    if(!active || size<=0 || size>2048)return ESP_ERR_INVALID_ARG;
+    if(!active || remote_mode || size<=0 || size>2048)return ESP_ERR_INVALID_ARG;
     return network_prov_config_data_handler(session,in,size,out,out_size,&config_handlers);
 }
 esp_err_t scan_endpoint(uint32_t session,const uint8_t *in,ssize_t size,uint8_t **out,ssize_t *out_size,void *) {
-    if(!active || size<=0 || size>512)return ESP_ERR_INVALID_ARG;
+    if(!active || remote_mode || size<=0 || size>512)return ESP_ERR_INVALID_ARG;
     return network_prov_scan_handler(session,in,size,out,out_size,&scan_handlers);
+}
+esp_err_t remote_endpoint(uint32_t,const uint8_t *in,ssize_t size,uint8_t **out,ssize_t *out_size,void *) {
+    if(!active || !remote_mode || size<=0 || size>256)return ESP_ERR_INVALID_ARG;
+    boost::system::error_code error;auto request=boost::json::parse(std::string_view(reinterpret_cast<const char *>(in),size),error);
+    if(error || !request.is_object())return ESP_ERR_INVALID_ARG;
+    std::promise<boost::json::object> pending;auto future=pending.get_future();
+    if(!transport_scheduler->post([request=std::move(request),&pending]{pending.set_value(phone_remote::execute(request.as_object()));}))return ESP_ERR_NO_MEM;
+    auto response=boost::json::serialize(future.get());
+    if(response.size()>480)response=R"({"ok":false,"error":"列表名称过长"})";
+    *out=static_cast<uint8_t *>(malloc(response.size()));if(!*out)return ESP_ERR_NO_MEM;
+    memcpy(*out,response.data(),response.size());*out_size=response.size();return ESP_OK;
 }
 bool begin() {
     // S3's ROM controller needs a contiguous 0x7800-byte DMA block. Failing
@@ -124,13 +137,13 @@ bool begin() {
        heap_caps_get_free_size(MALLOC_CAP_INTERNAL|MALLOC_CAP_DMA)<40*1024){
         set_status("内存不足，请先关闭其他应用再重试");return false;
     }
-    if(!action("Start")){set_status("请先打开 Wi-Fi");return false;}
-    uint8_t mac[6]{};esp_read_mac(mac,ESP_MAC_WIFI_STA);char name[24];std::snprintf(name,sizeof(name),"PROV_%02X%02X%02X",mac[3],mac[4],mac[5]);
+    if(!remote_mode && !action("Start")){set_status("请先打开 Wi-Fi");return false;}
+    uint8_t mac[6]{};esp_read_mac(mac,ESP_MAC_WIFI_STA);char name[24];std::snprintf(name,sizeof(name),"%s_%02X%02X%02X",remote_mode?"CTRL":"PROV",mac[3],mac[4],mac[5]);
     char code[9];std::snprintf(code,sizeof(code),"%08lX",static_cast<unsigned long>(esp_random()));
     {std::lock_guard<std::mutex> lock(mutex);device_name=name;pop=code;attempted=connected=status_reported=false;applied_at=close_at=0;scan_finished=true;scans.clear();wipe(password);ssid.clear();
      security.data=reinterpret_cast<const uint8_t *>(pop.data());security.len=static_cast<uint16_t>(pop.size());}
     mbedtls_platform_zeroize(code,sizeof(code));
-    auto previous=invoke("GetConnectAp");
+    auto previous=remote_mode?FunctionResult{.success=false}:invoke("GetConnectAp");
     if(previous.success && previous.data && std::holds_alternative<boost::json::object>(*previous.data)){
         const auto &value=std::get<boost::json::object>(*previous.data);std::lock_guard<std::mutex> lock(mutex);
         if(const auto *v=value.if_contains("ssid");v && v->is_string())old_ssid=v->as_string().c_str();
@@ -138,18 +151,19 @@ bool begin() {
     }
     pc=protocomm_new();if(!pc){set_status("配网内存不足");return false;}
     static protocomm_ble_name_uuid_t endpoints[]={{"prov-session",0xff51},{"prov-config",0xff52},{"proto-ver",0xff53},{"prov-scan",0xff54}};
+    static protocomm_ble_name_uuid_t controls[]={{"prov-session",0xff51},{"proto-ver",0xff53},{"remote-control",0xff55}};
     protocomm_ble_config_t cfg{};std::memcpy(cfg.device_name,name,strlen(name)+1);
     const uint8_t uuid[16]={0x07,0xed,0x9b,0x2d,0x0f,0x06,0x7c,0x87,0x9b,0x43,0x43,0x6b,0x4d,0x24,0x75,0x17};
-    std::memcpy(cfg.service_uuid,uuid,16);cfg.nu_lookup=endpoints;cfg.nu_lookup_count=4;
+    std::memcpy(cfg.service_uuid,uuid,16);cfg.nu_lookup=remote_mode?controls:endpoints;cfg.nu_lookup_count=remote_mode?3:4;
     if(esp_event_handler_instance_register(PROTOCOMM_TRANSPORT_BLE_EVENT,ESP_EVENT_ANY_ID,events,nullptr,&ble_events)!=ESP_OK ||
        esp_event_handler_instance_register(WIFI_EVENT,WIFI_EVENT_STA_DISCONNECTED,events,nullptr,&wifi_events)!=ESP_OK ||
        esp_event_handler_instance_register(IP_EVENT,IP_EVENT_STA_GOT_IP,events,nullptr,&ip_handler)!=ESP_OK){set_status("无法监听配网状态");return false;}
     const auto err=protocomm_ble_start(pc,&cfg);if(err!=ESP_OK){set_status(std::string("蓝牙启动失败：")+esp_err_to_name(err));return false;}
     if(protocomm_set_version(pc,"proto-ver",R"({"prov":{"ver":"v1.1","sec_ver":1,"sec_patch_ver":0,"cap":["wifi_scan"]}})")!=ESP_OK ||
        protocomm_set_security(pc,"prov-session",&protocomm_security1,&security)!=ESP_OK ||
-       protocomm_add_endpoint(pc,"prov-config",config_endpoint,nullptr)!=ESP_OK ||
-       protocomm_add_endpoint(pc,"prov-scan",scan_endpoint,nullptr)!=ESP_OK){set_status("配网协议启动失败");return false;}
-    opened_at=esp_timer_get_time();active=true;set_status("请在 ESP BLE Prov 中添加设备");++starts;return true;
+       (remote_mode?protocomm_add_endpoint(pc,"remote-control",remote_endpoint,nullptr):protocomm_add_endpoint(pc,"prov-config",config_endpoint,nullptr))!=ESP_OK ||
+       (!remote_mode && protocomm_add_endpoint(pc,"prov-scan",scan_endpoint,nullptr)!=ESP_OK)){set_status("蓝牙协议启动失败");return false;}
+    opened_at=esp_timer_get_time();active=true;set_status(remote_mode?"请在小马遥控中连接设备":"请在 ESP BLE Prov 中添加设备");++starts;return true;
 }
 void finish() {
     active=false;ble_connected=false;
@@ -159,7 +173,7 @@ void finish() {
     if(wifi_events){esp_event_handler_instance_unregister(WIFI_EVENT,WIFI_EVENT_STA_DISCONNECTED,wifi_events);wifi_events=nullptr;}
     if(ip_handler){esp_event_handler_instance_unregister(IP_EVENT,IP_EVENT_STA_GOT_IP,ip_handler);ip_handler=nullptr;}
     std::string restore_ssid,restore_password;
-    {std::lock_guard<std::mutex> lock(mutex);if(attempted && !connected){restore_ssid=old_ssid;restore_password=old_password;}if(cancel && !connected)status="手机配网已关闭";
+    {std::lock_guard<std::mutex> lock(mutex);if(attempted && !connected){restore_ssid=old_ssid;restore_password=old_password;}if(cancel && !connected)status=remote_mode?"蓝牙遥控已关闭":"手机配网已关闭";
      wipe(pop);wipe(password);wipe(old_password);old_ssid.clear();security={};applied_at=0;apply_pending=false;scan_pending=false;scan_finished=true;scans.clear();}
     if(!restore_ssid.empty() && phone_provisioning::valid_credentials(restore_ssid,restore_password)){
         invoke("SetConnectAp",{{"SSID",restore_ssid},{"Password",restore_password}});action("Connect");
@@ -189,7 +203,7 @@ void run() {
     const bool started=transport(true);int64_t scan_at=0;
     while(started && active && !cancel) {
         const auto now=esp_timer_get_time();
-        if(phone_provisioning::expired(now,opened_at,phone_provisioning::WINDOW_SECONDS)){set_status("配网已超时，请重新开始");break;}
+        if(phone_provisioning::expired(now,opened_at,remote_mode?1800:phone_provisioning::WINDOW_SECONDS)){set_status("蓝牙连接已超时，请重新开始");break;}
         if(scan_pending.exchange(false)){scan_at=now;if(!invoke("TriggerScanStart").success){std::lock_guard<std::mutex> lock(mutex);scan_finished=true;scan_ready.notify_all();}}
         if(apply_pending.exchange(false)) {
             std::string target,pass;{std::lock_guard<std::mutex> lock(mutex);target=ssid;pass=password;wipe(password);attempted=true;connected=false;disconnect_reason=0;ip_before=ip_events;applied_at=now;}
@@ -209,10 +223,11 @@ void run() {
     }
     scan_connection.disconnect();transport(false);live=false;
 }
-bool request_start() {
+bool request_start(bool remote=false) {
     if(brookesia_board_deep_sleep_pending() || local_audio::busy()){set_status("请先停止播放或录音");return false;}
-    bool expected=false;if(!live.compare_exchange_strong(expected,true))return true;
-    cancel=false;set_status("正在开启手机配网");
+    bool expected=false;if(!live.compare_exchange_strong(expected,true))return remote_mode==remote;
+    remote_mode=remote;
+    cancel=false;set_status(remote?"正在开启蓝牙遥控":"正在开启手机配网");
     if(!worker_task){live=false;set_status("手机配网服务尚未就绪");return false;}
     xTaskNotifyGive(worker_task);return true;
 }
@@ -220,7 +235,8 @@ boost::json::object snapshot(bool setup=false) {
     std::lock_guard<std::mutex> lock(mutex);
     boost::json::object result{{"active",active.load()},{"starting",live.load()&&!active.load()},{"ble_connected",ble_connected.load()},{"status",status},{"device_name",device_name},{"security",1},{"starts",starts.load()},{"successes",successes.load()},{"connected",connected},{"stack_free_min_bytes",stack_free.load()},{"internal_free_bytes",heap_caps_get_free_size(MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT)},{"largest_dma_block",heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL|MALLOC_CAP_DMA)},{"psram_free_bytes",heap_caps_get_free_size(MALLOC_CAP_SPIRAM)}};
     result["dma_free_bytes"]=heap_caps_get_free_size(MALLOC_CAP_INTERNAL|MALLOC_CAP_DMA);
-    if(active)result["remaining_seconds"]=std::max<int64_t>(0,phone_provisioning::WINDOW_SECONDS-(esp_timer_get_time()-opened_at)/1000000);
+    result["mode"]=remote_mode?"remote":"provisioning";
+    if(active)result["remaining_seconds"]=std::max<int64_t>(0,(remote_mode?1800:phone_provisioning::WINDOW_SECONDS)-(esp_timer_get_time()-opened_at)/1000000);
     if(setup && active)result["pop"]=pop;
     return result;
 }
@@ -239,7 +255,7 @@ private:
         return created;
     }
     void on_stop()override{cancel=true;worker_exit=true;scan_ready.notify_all();if(worker_task)xTaskNotifyGive(worker_task);while(worker_task)vTaskDelay(pdMS_TO_TICKS(20));}
-    std::vector<FunctionSchema> get_function_schemas()override{return {{"GetState","Read provisioning status without credentials",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Status"}},{"GetSetup","Read temporary local pairing code while open",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Setup"}},{"GetWifiScreen","Read the Wi-Fi Settings JSON in compact form for resource migration",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Wi-Fi screen"}},{"Start","Open a five-minute phone provisioning window",{}},{"Stop","Close the provisioning window",{}}};}
+    std::vector<FunctionSchema> get_function_schemas()override{return {{"GetState","Read provisioning status without credentials",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Status"}},{"GetSetup","Read temporary local pairing code while open",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Setup"}},{"GetWifiScreen","Read the Wi-Fi Settings JSON in compact form for resource migration",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Wi-Fi screen"}},{"StartRemote","Open encrypted Bluetooth remote control",{}},{"Start","Open a five-minute phone provisioning window",{}},{"Stop","Close the provisioning window",{}}};}
     FunctionHandlerList get_function_handlers()override{return {{"GetState",[](FunctionParameterMap&&)->FunctionResult{return {.success=true,.data=FunctionValue(snapshot())};}},{"GetSetup",[](FunctionParameterMap&&)->FunctionResult{return {.success=true,.data=FunctionValue(snapshot(true))};}},{"GetWifiScreen",[](FunctionParameterMap&&)->FunctionResult{
         auto storage=ServiceManager::get_instance().get_service("Storage");
         if(!storage || !storage->is_running())return {.success=false,.error_message="Storage unavailable"};
@@ -248,11 +264,12 @@ private:
         boost::system::error_code error;auto value=boost::json::parse(std::get<std::string>(*result.data),error);
         if(error || !value.is_object())return {.success=false,.error_message="Invalid Wi-Fi screen"};
         return {.success=true,.data=FunctionValue(std::move(value.as_object()))};
-    }},{"Start",[](FunctionParameterMap&&)->FunctionResult{const bool ok=request_start();return {.success=ok,.error_message=ok?"":"Please stop audio or close other apps"};}},{"Stop",[](FunctionParameterMap&&)->FunctionResult{cancel=true;return {.success=true};}}};}
+    }},{"StartRemote",[](FunctionParameterMap&&)->FunctionResult{return {.success=request_start(true)};}},{"Start",[](FunctionParameterMap&&)->FunctionResult{const bool ok=request_start();return {.success=ok,.error_message=ok?"":"Please stop audio or close other apps"};}},{"Stop",[](FunctionParameterMap&&)->FunctionResult{cancel=true;return {.success=true};}}};}
 };
 }
 std::shared_ptr<ServiceBase> make_phone_provisioning_service(){return std::make_shared<PhoneProvisioning>();}
 extern "C" bool brookesia_board_phone_provisioning_start(){return request_start();}
+extern "C" bool brookesia_board_phone_remote_start(){return request_start(true);}
 extern "C" void brookesia_board_phone_provisioning_stop(){cancel=true;}
 extern "C" bool brookesia_board_phone_provisioning_active(){return live;}
 extern "C" const char *brookesia_board_phone_provisioning_text(){thread_local std::string text;std::lock_guard<std::mutex> lock(mutex);text=status;if(active)text+="\n设备："+device_name+"\n配对码："+pop;return text.c_str();}

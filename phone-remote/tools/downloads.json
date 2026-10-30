@@ -1,0 +1,22 @@
+[
+  {
+    "file": "jdk.zip",
+    "url": "https://aka.ms/download-jdk/microsoft-jdk-21.0.9-windows-x64.zip",
+    "sha256": "96cda27c4d2171b94125e2c7dedad3d22c8e02f99babfe3369ac52af06b4397a"
+  },
+  {
+    "file": "platform.zip",
+    "url": "https://dl.google.com/android/repository/platform-35-ext15_r01.zip",
+    "sha256": "a93712aedd4f851d9cf1f7281f7c4fe5581ce03a9df37ffc8c53a487eadf311f"
+  },
+  {
+    "file": "tools.zip",
+    "url": "https://dl.google.com/android/repository/build-tools_r35_windows.zip",
+    "sha256": "5753c679a1b90bcf6fbc9945a2ce39dfb9e74f1df0831a1e1866ae5b594326f0"
+  },
+  {
+    "file": "bcprov.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk15to18/1.80/bcprov-jdk15to18-1.80.jar",
+    "sha256": "380e17ed748c07487e6764e95618abb43cf0cf39bf364cd5dfaff75724e7da11"
+  }
+]

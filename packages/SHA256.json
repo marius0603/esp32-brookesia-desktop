@@ -62,5 +62,9 @@
   "packages/apps/local.virtualpet.debug.0.1.2.bpk": "ff8b7d7c8ba19fe1ab6dea9a377c0e7190c1272f07cd82aae7b3d2add5cd280a",
   "packages/resources/phone-provisioning-s3.32.zip": "cdfa9d7f81ce0d86d04b39dc4e96a6cf6600d079d5c13e8ec6afd15118d75f6b",
   "packages/firmware/brookesia-0.8.3-s3.32-app-only.zip": "740fcb8eed87b1e923cafc155207f4de84aa8026e9543accfb13a7c70774e15a",
-  "packages/resources/phone-provisioning-wifi-s3.32.json": "87aa3359f92b4cec78f23eb66111ab9f54d3f262390b3dcd3fb6d1ddfd3c0769"
+  "packages/resources/phone-provisioning-wifi-s3.32.json": "87aa3359f92b4cec78f23eb66111ab9f54d3f262390b3dcd3fb6d1ddfd3c0769",
+  "packages/android/xiaoma-remote-0.1.0.apk": "3f5ec3071d0c3e6e0efdb36feebf7ea6ea78aca8bbcbda3ee8fdae4929fe0d5d",
+  "packages/firmware/brookesia-0.8.3-s3.33-app-only.zip": "629c6f76a707d46c7f9b4a0b18e98a5528dced85aca8ad53bb2d9adfe2b239a5",
+  "packages/resources/phone-remote-wifi-s3.33.json": "ec66b850d53d93ef688dd366bbae6e88b60a5b768157cae977c7b291eccfc58b",
+  "packages/resources/phone-remote-s3.33.zip": "de8cc02d946a4adf0fb6bcda5b6933a229a5ce647b885611e847d45c8e72fafc"
 }

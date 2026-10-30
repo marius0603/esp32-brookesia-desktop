@@ -6,9 +6,9 @@ from deploy_audiobook_sleep import StoryClient
 ROOT=Path(__file__).resolve().parents[2]
 TARGET='/littlefs/apps/brookesia.general.settings/res/screens/wifi.json'
 def main():
- p=argparse.ArgumentParser();p.add_argument('--port',required=True);a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--port',required=True);p.add_argument('--resource',type=Path,default=ROOT/'packages/resources/phone-provisioning-wifi-s3.32.json');a=p.parse_args()
  folder=ROOT/'codex-quota-monitor/runtime'/('phone-provisioning-install-'+datetime.now().strftime('%Y%m%d-%H%M%S'));folder.mkdir()
- source=json.loads((ROOT/'packages/resources/phone-provisioning-wifi-s3.32.json').read_text(encoding='utf-8'))
+ source=json.loads(a.resource.read_text(encoding='utf-8'))
  card=source['children'][0]['children'][0];assert card['id']=='phone_provisioning'
  with StoryClient(a.port,timeout=35) as c:
   c.hello()
