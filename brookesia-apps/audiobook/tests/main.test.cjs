@@ -103,6 +103,10 @@ const storyCases=[
  ['09-xuehaizi.mp3','雪孩子'],['10-wangyangbulao.mp3','亡羊补牢'],
  ['另一篇故事.MP3','另一篇故事'],['new-story.wav','new-story']
 ];
+const library=JSON.parse(fs.readFileSync(path.join(__dirname,'../../../samples/stories/library-20261101.json'),'utf8'));
+assert.equal(library.stories.length,11);
+assert.equal(new Set(library.stories.map(s=>s.filename)).size,11);
+storyCases.push(...library.stories.map(s=>[s.filename,s.title]));
 tracks=storyCases.map(([file])=>({path:'/sdcard/audiobooks/bedtime/'+file,title:'/bedtime/'+file}));
 stored={};vm.runInContext(code,ctx);ctx.brookesia_app.on_start();
 assert.equal(texts['/main/player/chapter'],storyCases[0][1]);
@@ -117,7 +121,7 @@ ctx.brookesia_app.on_timer();assert.equal(texts['/main/player/chapter'],'小蝌�
 ctx.brookesia_app.on_pause();ctx.brookesia_app.on_resume();
 assert.equal(texts['/main/player/chapter'],'小蝌蚪找妈妈');
 assert.equal(JSON.parse(stored['/littlefs/audiobook-bookmark.json']).path,tracks[2].path);
-console.log('Story titles passed: all 10 Chinese names, filename fallback, chapter changes and bookmark resume');
+console.log('Story titles passed: legacy titles and 11 new Chinese filenames, chapter changes and bookmark resume');
 
 // Real EOF transitions: sequence stops at the end, shuffle excludes the current
 // chapter, and repeat-one restarts at zero without defeating sleep completion.

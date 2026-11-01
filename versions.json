@@ -22,5 +22,11 @@
     "wake_word": "你好小智",
     "wakenet": "wn9_nihaoxiaozhi_tts",
     "multinet": "mn5q8_cn"
+  },
+  "audiobook_library": {
+    "date": "2026-11-01",
+    "stories": 20,
+    "target_lufs": -14,
+    "manifest": "samples/stories/library-20261101.json"
   }
 }
