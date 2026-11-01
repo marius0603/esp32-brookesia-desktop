@@ -83,4 +83,4 @@ s3.37 / 安卓0.1.1已通过四位数字（含前导0）的独立加密协议核
 参考：[ESP-IDF protocomm](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-reference/provisioning/protocomm.html)、[Android BLE](https://developer.android.com/develop/connectivity/bluetooth/ble/ble-overview)。
 
 
-s3.38 / 安卓0.2.0 / 听书0.3.4已通过构建、签名校验和真实加密BLE检查：四页书架的10个中文名、三种模式在页面已打开时的真实EOF切换、10篇新音频解码输出、前台恢复和非法模式拒绝；全部偏好已恢复。模式测试使用临时4秒静音WAV，结束后移除，避免长MP3顺序解码跳转耗时。安卓新版界面需在用户手机安装后确认，未使用模拟图作为实际截图。
+s3.38 / 安卓0.2.0 / 听书0.3.4已通过构建、签名校验和真实加密BLE检查：四页书架的10个中文名、三种模式在页面已打开时的真实EOF切换、10篇新音频解码输出、前台恢复和非法模式拒绝；全部偏好已恢复。模式测试使用临时4秒静音WAV，结束后移除，避免长MP3顺序解码跳转耗时。2026-11-01，用户已在手机安装安卓0.2.0，并现场确认新版界面及功能正常；此项验证由用户完成。
