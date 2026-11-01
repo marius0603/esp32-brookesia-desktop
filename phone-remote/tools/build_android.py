@@ -1,9 +1,10 @@
 """Build the small Java BLE app with an external JDK and Android build-tools."""
-import argparse,json,subprocess,zipfile,hashlib,os
+import argparse,json,subprocess,zipfile,hashlib,os,re,shutil
+import xml.etree.ElementTree as ET
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 def main():
- p=argparse.ArgumentParser();p.add_argument('--tools',type=Path,required=True);p.add_argument('--work',type=Path,required=True);p.add_argument('--keystore',type=Path);p.add_argument('--output',type=Path);p.add_argument('--generate-development-key',action='store_true');a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--tools',type=Path,required=True);p.add_argument('--work',type=Path,required=True);p.add_argument('--keystore','--signing-key',dest='keystore',type=Path);p.add_argument('--output',type=Path);p.add_argument('--generate-development-key',action='store_true');a=p.parse_args()
  t=json.loads(a.tools.read_text());w=a.work.resolve()
  if w.is_relative_to(ROOT):raise SystemExit('Keep generated classes and the signing key outside the source repository')
  key=(a.keystore or w/'development-signing.jks').resolve()
@@ -16,17 +17,29 @@ def main():
  run(t['javac'],'-encoding','UTF-8','-source','8','-target','8','-classpath',t['android']+os.pathsep+t['bc'],'-d',classes,*sources)
  jar=w/'app.jar';run(t['jar'],'cf',jar,'-C',classes,'.')
  run(t['java'],'-Xmx3g','-cp',t['d8'],'com.android.tools.r8.D8','--lib',t['android'],'--min-api','26','--output',dex,jar,t['bc'])
- unsigned=w/'unsigned.apk';run(t['aapt2'],'link','-I',t['android'],'--manifest',ROOT/'phone-remote/android/AndroidManifest.xml','-o',unsigned)
+ resources=w/'launcher-resources.zip'
+ run(t['aapt2'],'compile','--dir',ROOT/'phone-remote/android/res','-o',resources)
+ unsigned=w/'unsigned.apk';run(t['aapt2'],'link','-I',t['android'],'--manifest',ROOT/'phone-remote/android/AndroidManifest.xml','-R',resources,'--auto-add-overlay','-o',unsigned)
  with zipfile.ZipFile(unsigned,'a',compression=zipfile.ZIP_DEFLATED) as z:
   for file in sorted(dex.glob('*.dex')):z.write(file,file.name)
   for file in sorted((ROOT/'phone-remote/licenses').glob('*.txt')):z.write(file,'assets/licenses/'+file.name)
  if not key.exists():
   key.parent.mkdir(parents=True,exist_ok=True)
   run(t['keytool'],'-genkeypair','-keystore',key,'-storepass','android','-keypass','android','-alias','xiaoma','-keyalg','RSA','-keysize','3072','-validity','3650','-dname','CN=XiaoMa Remote Development')
- output=(a.output or ROOT/'packages/android/xiaoma-remote-0.2.0.apk').resolve();output.parent.mkdir(parents=True,exist_ok=True)
- run(t['java'],'-jar',t['signer'],'sign','--v4-signing-enabled','false','--ks',key,'--ks-pass','pass:android','--out',output,unsigned)
- run(t['java'],'-jar',t['signer'],'verify','--verbose',output)
- if output != ROOT/'packages/android/xiaoma-remote-0.2.0.apk':
+ version=ET.parse(ROOT/'phone-remote/android/AndroidManifest.xml').getroot().attrib['{http://schemas.android.com/apk/res/android}versionName']
+ release=ROOT/('packages/android/xiaoma-remote-'+version+'.apk')
+ output=(a.output or release).resolve();output.parent.mkdir(parents=True,exist_ok=True)
+ if a.generate_development_key and output.is_relative_to(ROOT):raise SystemExit('A separate test identity requires --output outside the repository')
+ candidate=w/'signed-candidate.apk'
+ run(t['java'],'-jar',t['signer'],'sign','--v4-signing-enabled','false','--ks',key,'--ks-pass','pass:android','--out',candidate,unsigned)
+ run(t['java'],'-jar',t['signer'],'verify','--verbose',candidate)
+ if not a.generate_development_key:
+  proof=subprocess.check_output([str(t['java']),'-jar',str(t['signer']),'verify','--print-certs',str(candidate)],text=True,encoding='utf-8')
+  certificate=re.search(r'Signer #1 certificate SHA-256 digest: ([0-9a-fA-F]+)',proof).group(1).lower()
+  expected=json.loads((ROOT/'phone-remote/signing/manifest.json').read_text())['apk_signer_certificate_sha256']
+  assert certificate==expected,'Signing certificate differs; incompatible candidate remains private'
+ shutil.copy2(candidate,output)
+ if output != release:
   print('Android verification APK:',output);return
  hashes=ROOT/'packages/SHA256.json';doc=json.loads(hashes.read_text());doc[output.relative_to(ROOT).as_posix()]=hashlib.sha256(output.read_bytes()).hexdigest();hashes.write_text(json.dumps(doc,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
  print('Android remote APK:',output)

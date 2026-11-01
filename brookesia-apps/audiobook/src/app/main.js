@@ -44,12 +44,9 @@ function syncSleep(next){
   if(selected===sleepSelected)return;
   call(gui,'SetBinding',{Path:'/main/sleep/choice',Key:'selected',Value:String(selected)});sleepSelected=selected;
 }
-function loadMode(){
-  try{const saved=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/audiobook-play-mode.json'}));if(saved&&playModes.includes(saved.mode))playMode=saved.mode;}catch(_){}
-}
 function poll(){
-  loadMode();
   const next=call(audio,'GetState');
+  if(playModes.includes(next.play_mode))playMode=next.play_mode;
   syncMode();
   syncSleep(next);
   const actual=tracks.findIndex(t=>t.path===next.path);
@@ -78,9 +75,9 @@ function poll(){
 }
 function action(name){
   if(name==='playMode'){
-    loadMode();
+    const shared=call(audio,'GetState');if(playModes.includes(shared.play_mode))playMode=shared.play_mode;
     const selected=playModes[(playModes.indexOf(playMode)+1)%playModes.length];
-    call(storage,'FSWriteText',{Path:'/littlefs/audiobook-play-mode.json',Data:JSON.stringify({mode:selected})});playMode=selected;syncMode();return;
+    call(audio,'SetPlayMode',{Mode:selected});playMode=selected;syncMode();return;
   }
   if(name==='offlineSpeak'){call(localVoice,'ListenNow');text('status','正在听');return;}
   if(name==='lockScreen'){save();call(modes,'LockScreen');return;}
@@ -101,6 +98,7 @@ globalThis.brookesia_app={
   on_start(){gui=brookesia.start_service('SystemGui');audio=brookesia.start_service('Audiobook');modes=brookesia.start_service('DeviceModes');storage=brookesia.start_service('Storage');timer=brookesia.start_service('SystemTimer');playback=brookesia.start_service('AudioPlayback');localVoice=brookesia.start_service('OfflineVoice');
     for(const name of ['previous','next','toggle','sleepChoice','offlineSpeak','lockScreen','playMode'])call(gui,'SubscribeAction',{Action:name});
     try{const saved=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/audiobook-play-mode.json'}));if(saved&&playModes.includes(saved.mode))playMode=saved.mode;}catch(_){}
+    call(audio,'SetPlayMode',{Mode:playMode});
     try{bookmark=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/audiobook-bookmark.json'}));}catch(_){}
     try{volume=call(playback,'GetVolume');}catch(_){}
     hidden=false;sleepSelected=-1;text('volume','音量 '+volume+'%');refresh();poll();call(timer,'StartPeriodic',{Name:'audiobook',IntervalMs:1000});return true;},

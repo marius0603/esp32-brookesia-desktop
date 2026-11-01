@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import re
 
 ROOT=Path(__file__).resolve().parents[1]
 VERSIONS=json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))
@@ -10,16 +11,28 @@ REPO=ROOT/'esp-brookesia-v08'
 def git(*args,check=True):
     return subprocess.run(['git','-c','core.longpaths=true',*args],cwd=REPO,check=check)
 
-if not (REPO/'.git').exists():
+fresh=not (REPO/'.git').exists()
+if fresh:
     if REPO.exists() and any(REPO.iterdir()):raise SystemExit('Upstream folder is not an empty Git checkout')
     REPO.mkdir(exist_ok=True)
     git('init')
     git('config','core.autocrlf','false')
+    git('config','core.eol','lf')
     git('remote','add','origin',VERSIONS['upstream'])
     git('fetch','--depth=1','origin',VERSIONS['commit'])
     git('checkout','--detach','FETCH_HEAD')
 head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=REPO,text=True).strip()
 if head!=VERSIONS['commit']:raise SystemExit('Upstream revision differs; refusing to alter your checkout')
+# Only normalize a checkout created by this invocation. Existing developer
+# checkouts (including their unrelated edits) retain their exact file bytes.
+if fresh:
+    paths=set()
+    for patch in (ROOT/'patches').glob('*.patch'):
+        paths.update(re.findall(r'^\+\+\+ b/(.+)$',patch.read_text(encoding='utf-8'),re.M))
+    paths.update(str(p.relative_to(REPO)).replace('\\','/') for p in (REPO/'hal/brookesia_hal_adaptor/tools').glob('*.patch'))
+    for relative in paths:
+        file=REPO/relative
+        if file.is_file():file.write_bytes(file.read_bytes().replace(b'\r\n',b'\n'))
 for name in ('brookesia-s3.patch','phone-launcher.patch','desktop-themes.patch','phone-provisioning.patch','phone-remote.patch','bluetooth-settings.patch','remote-navigation.patch','single-foreground.patch'):
     patch=ROOT/'patches'/name
     if git('apply','--check',str(patch),check=False).returncode==0:

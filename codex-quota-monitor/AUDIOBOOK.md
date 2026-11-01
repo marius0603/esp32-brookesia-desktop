@@ -1,6 +1,6 @@
-# 听书 0.3.4（锁屏需要固件 s3.23及以上）
+# 听书 0.3.5（配套固件 s3.39）
 
-0.3.4支持手机直接选择播放模式，已打开的播放器每秒读取共用偏好，无需重开；需配合固件s3.38和小马遥控0.2.0。原来的设备图标切换方式继续使用。当前书库20篇：保留9篇原有故事，新增11篇中文朗读，月亮灯已移出；使用相同−14 LUFS目标。见 [最新书库](STORY_LIBRARY.md) 及 [响度测量与恢复](STORY_LOUDNESS.md)。
+0.3.5配合s3.39修复故事周期性卡顿：64KiB PSRAM音频队列将解码与输出分开；手机和设备通过原生服务共享播放模式，移除每秒读取Flash模式文件。模式变化无需重开，原来的设备图标切换继续使用。更新方法与实机验证见[播放缓冲](AUDIOBOOK_BUFFER.md)。当前书库20篇：保留9篇原有故事，新增11篇中文朗读，月亮灯已移出；使用相同−14 LUFS目标。见 [最新书库](STORY_LIBRARY.md) 及 [响度测量与恢复](STORY_LOUDNESS.md)。
 
 设备LittleFS剩余空间可能不足以暂存第二套应用；本次先把旧应用备份到SD，再将正式BPK中的`app/main.js`、`res/root.json`和`manifest.json`经SD暂存复制覆盖，核对安装文件尺寸和小文件内容，重启后重新识别版本。书单、书签及音量保留。
 
@@ -25,16 +25,16 @@
 ![简洁听书界面，演示播放状态](../brookesia-apps/audiobook/assets/player-layout-preview.png)
 
 预览由应用资源和脚本渲染，不是设备截图；进度和定时数值为演示。
-现有s3.25设备无需重刷固件，暂停电脑端额度采集器后，在仓库根目录执行：
+当前0.3.5需先更新s3.39，按[播放缓冲更新步骤](AUDIOBOOK_BUFFER.md)完成备份和应用分区更新，随后在仓库根目录执行：
 
 ```powershell
-codex-quota-monitor/.venv/Scripts/python.exe codex-quota-monitor/tools/deploy_audiobook_layout.py --port COM3
+codex-quota-monitor/.venv/Scripts/python.exe codex-quota-monitor/tools/deploy_audiobook_buffer.py --port COM3
 ```
 
-安装器将旧应用备份到SD卡，保留书单、书签和音量，并恢复更新前的正常播放/暂停状态；合并新资源时保留设备已有的优化桌面图标索引。
+此增量安装器备份并核对更新脚本和版本清单，保留书单、书签、音量和已有桌面图标；最后重新启动开发板。旧版界面安装器保留用于历史版本恢复。
 若正在运行睡眠定时，先等待定时结束或在设备取消，安装器会拒绝重置正在运行的定时。
 更新完成、USB验证连接关闭后，可通过 `codex-quota-monitor/start.ps1` 恢复额度同步。
-安装包为 `packages/apps/local.audiobook.debug.0.3.4.bpk`，校验值见 `packages/SHA256.json`。
+安装包为 `packages/apps/local.audiobook.debug.0.3.5.bpk`，校验值见 `packages/SHA256.json`。
 在仓库根目录用 `codex-quota-monitor/.venv/Scripts/python.exe codex-quota-monitor/tools/package_audiobook.py` 运行回归并生成可安装包。图标SVG原稿随源码保留，用 `brookesia-apps/audiobook/tools/build_mode_icons.cjs` 和sharp重建PNG（可通过SHARP_MODULE指定模块路径）。
 
 `tools/verify_audiobook_modes.py --port COM3` 向SD临时加入一个唯一命名的4秒静音WAV，使用已安装应用和原生播放器验证顺序续播、随机换篇、单故事重播及睡眠定时优先停止，检查后移除临时文件并恢复书签、模式和音量。短WAV避开部分MP3没有时长头、跳转到结尾耗时较长的情况。先暂停额度采集，完成后恢复。书单末尾停止、空/单篇书单、模式保存、手动换篇及错误状态由JS回归覆盖。

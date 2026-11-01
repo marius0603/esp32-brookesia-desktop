@@ -12,6 +12,7 @@ const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>{bindings.pus
  if(n==='FSReadText'){if(!stored[a.Path])return JSON.stringify({success:false,error:'missing'});data=stored[a.Path];}
  if(n==='FSWriteText')stored[a.Path]=a.Data;
  if(n==='SetVolume')volume=Math.min(volumeCap,a.Volume);
+ if(n==='SetPlayMode'){state={...state,play_mode:a.Mode};stored['/littlefs/audiobook-play-mode.json']=JSON.stringify({mode:a.Mode});}
  if(n==='GetVolume')data=volume;
  if(n==='List')data={mounted,tracks};
  if(n==='GetState')data=h==='DeviceModes'?{do_not_disturb:quiet,resume_volume:30}:h==='OfflineVoice'?{listening:offlineListening}:state;
@@ -90,8 +91,10 @@ for(const row of screen.children.filter(n=>['transport','tools'].includes(n.id))
 console.log('Audiobook regression passed: automatic scan, playback/bookmarks, sleep presets/fade/completion, hardware-volume refresh and larger controls');
 
 const bindingCount=bindings.length;
+const modeReads=calls.filter(c=>c.n==='FSReadText'&&c.a.Path==='/littlefs/audiobook-play-mode.json').length;
 for(let i=0;i<120;i++){now+=1000;ctx.brookesia_app.on_timer();}
 assert.equal(bindings.length,bindingCount,'Polling must reuse bindings instead of accumulating live service records');
+assert.equal(calls.filter(c=>c.n==='FSReadText'&&c.a.Path==='/littlefs/audiobook-play-mode.json').length,modeReads,'Steady playback polling must never reread the mode file');
 
 // Exercise the visible chapter label with the SD service's actual path-shaped titles.
 ctx.brookesia_app.on_stop();
@@ -163,7 +166,7 @@ const savedBookmark=stored['/littlefs/audiobook-bookmark.json'];
 state={...state,path:'/sdcard/audiobooks/removed.wav',state:'SleepEnded',active:false};ctx.brookesia_app.on_timer();
 assert.equal(stored['/littlefs/audiobook-bookmark.json'],savedBookmark,'Stale sleep completion for an absent track must not overwrite the bookmark');
 setup('sequence');
-stored['/littlefs/audiobook-play-mode.json']=JSON.stringify({mode:'repeat_one'});
+ctx.brookesia.call_function('Audiobook','SetPlayMode',JSON.stringify({Mode:'repeat_one'}));
 ctx.brookesia_app.on_timer();
 assert.equal(calls.filter(c=>c.n==='SetViewSrc').at(-1).a.Src,'mode_repeat_one','Phone changes update the open device page');
 finish();assert.equal(state.path,tracks[0].path,'Phone-selected repeat mode applies at EOF without reopening');

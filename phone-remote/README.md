@@ -1,6 +1,12 @@
-# 小马蓝牙遥控 0.2.0
+# 小马蓝牙遥控 0.2.1
 
 安卓手机直接通过BLE控制ESP32-S3设备，不需要同一Wi-Fi，也不需要电脑中转。手机需要在设备的蓝牙覆盖范围内。本轮优先实现蓝牙，跨网络遥控暂缓。
+
+## 暖橙小马图标（0.2.1）
+
+2026-11-01用户选定第一款暖橙小马。原始插画保存在`assets/warm-pony-source.png`，Android五档密度图标及自适应资源位于`android/res/`，可用`tools/build_launcher_icons.py`重新导出。0.2.1 APK已使用恢复的原签名构建并核对证书，可覆盖安装0.2.0；新图标在手机上的实际显示仍待安装确认。
+
+构建器支持`--keystore <原development-signing.jks路径>`（也可用`--signing-key`），先生成资源和未签名候选，签名后必须与加密备份清单记录的原证书一致才发布。签名恢复方法见[说明](signing/README.md)，明文私钥保存在仓库外。
 
 ## 新版界面
 
@@ -10,11 +16,11 @@
 
 连接后配对区域自动收起，前台每三秒读取设备状态，离开手机应用即暂停刷新。播放模式与设备共用同一份偏好；切换模式保留当前故事，播完后按新模式处理。顺序模式在最后一篇结束时停止，随机模式选择另一篇，单故事循环从头播放当前篇。锁屏和家长控制保持生效。
 
-手机0.2.0沿用0.1.0的签名，可以覆盖安装。需要配套固件s3.38和听书0.3.4；原独立蓝牙设置资源继续使用。全部故事的响度调整见 [逐篇测量记录](../codex-quota-monitor/STORY_LOUDNESS.md)。
+手机0.2.1沿用原签名，可以覆盖安装。推荐配套固件s3.39和听书0.3.5，修复故事周期性卡顿并以原生内存同步播放模式；原独立蓝牙设置资源继续使用。全部故事的响度调整见 [逐篇测量记录](../codex-quota-monitor/STORY_LOUDNESS.md)。
 
 ## 安装与连接
 
-设备端需要配套固件 **0.8.3-s3.38** 和s3.34独立蓝牙设置资源；安卓端安装 [xiaoma-remote-0.2.0.apk](../packages/android/xiaoma-remote-0.2.0.apk)，支持Android 8及以上。
+当前设备端使用固件 **0.8.3-s3.39**、听书0.3.5和s3.34独立蓝牙设置资源；安卓端安装 [xiaoma-remote-0.2.1.apk](../packages/android/xiaoma-remote-0.2.1.apk)，支持Android 8及以上。
 
 1. 设备进入 **设置 → 蓝牙 → 开启蓝牙遥控**。先停止正在进行的播放或录音，再开启入口；开启后可从手机播放故事。
 2. 屏幕会显示 `CTRL_XXXXXX` 和4位数字临时配对码（例如 `0042`，需输入开头的0）。原来的“开始配网”仍用于乐鑫ESP BLE Prov，设备名为 `PROV_XXXXXX`。
@@ -54,7 +60,7 @@ s3.36针对连续打开多个应用后的失败，切换时先关闭上一应用
 
 ```powershell
 python phone-remote/tools/bootstrap_android.py --cache D:/codex/android-remote-build
-python phone-remote/tools/build_android.py --tools D:/codex/android-remote-build/tools.json --work D:/codex/android-remote-build/app
+python phone-remote/tools/build_android.py --tools D:/codex/android-remote-build/tools.json --work D:/codex/android-remote-build/app --keystore <仓库外的原JKS路径>
 python phone-remote/tests/verify_android_protocol.py --tools D:/codex/android-remote-build/tools.json --idf <ESP-IDF目录> --work D:/codex/android-remote-build/protocol-tests
 ```
 

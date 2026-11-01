@@ -4,6 +4,8 @@
 #include "../audio_ownership.hpp"
 #include "../device_modes/device_modes.hpp"
 #include "story_sleep.hpp"
+#include "buffered_pcm.hpp"
+#include <memory>
 #include "esp_timer.h"
 #include <algorithm>
 #include <atomic>
@@ -20,6 +22,7 @@
 #include "brookesia/hal_interface/interfaces/audio/codec_player.hpp"
 #include "dr_mp3.h"
 #include "dr_wav.h"
+#include "brookesia/service_manager/service/manager.hpp"
 
 using namespace esp_brookesia;
 using namespace esp_brookesia::service;
@@ -95,7 +98,38 @@ private:
     bool sleep_completed_=false,goodnight_played_=false;
     std::atomic<bool> announce_{false};
     std::atomic<unsigned> announcement_count_{0},last_announcement_{0};
+    static constexpr const char *mode_names_[3]={"sequence","random","repeat_one"};
+    std::atomic<unsigned> play_mode_{0};
+    std::atomic<bool> mode_loaded_{false};
+    std::mutex mode_mutex_;
+    FunctionResult mode_storage(const char *function,const boost::json::object &args){
+        auto storage=ServiceManager::get_instance().get_service("Storage");
+        return storage&&storage->is_running()?storage->call_function_sync(function,args,8000):FunctionResult{.success=false,.error_message="Storage unavailable"};
+    }
     bool on_start() override {started_=true;return true;}
+    void load_mode_once(){
+        if(mode_loaded_)return;
+        std::lock_guard lock(mode_mutex_);if(mode_loaded_)return;
+        // Lifecycle can run on the setup task's PSRAM stack. Defer this until
+        // the first command, and delegate Flash I/O to the storage service.
+        auto result=mode_storage("FSReadText",{{"Path","/littlefs/audiobook-play-mode.json"}});
+        if(result.success&&result.data&&std::holds_alternative<std::string>(*result.data)){
+            boost::system::error_code ec;auto saved=boost::json::parse(std::get<std::string>(*result.data),ec);
+            if(!ec && saved.is_object())if(auto *mode=saved.as_object().if_contains("mode");mode&&mode->is_string())
+                for(unsigned i=0;i<3;++i)if(mode->as_string()==mode_names_[i])play_mode_=i;
+        }
+        mode_loaded_=true;
+    }
+    std::expected<void,std::string> set_play_mode(const std::string &mode){
+        unsigned selected=3;for(unsigned i=0;i<3;++i)if(mode==mode_names_[i])selected=i;
+        if(selected==3)return std::unexpected("Invalid playback mode");
+        load_mode_once();
+        std::lock_guard lock(mode_mutex_);if(play_mode_==selected)return {};
+        const auto text=boost::json::serialize(boost::json::object{{"mode",mode}});
+        auto result=mode_storage("FSWriteText",{{"Path","/littlefs/audiobook-play-mode.json"},{"Data",text}});
+        if(!result.success)return std::unexpected(result.error_message);
+        play_mode_=selected;return {};
+    }
     void reset_sleep() {
         std::lock_guard lock(mutex_);
         ++sleep_id_;deadline_=0;sleep_minutes_=0;sleep_completed_=false;
@@ -190,6 +224,9 @@ private:
     std::atomic<bool> live_{false}, cancel_{false}, paused_{false};
     std::atomic<int32_t> seek_{-1};
     std::atomic<uint32_t> position_{0}, duration_{0}, bytes_{0};
+    std::atomic<uint32_t> pcm_epoch_{0},starvations_{0},write_gap_us_{0},decode_max_us_{0};
+    std::atomic<uint32_t> pcm_stack_free_{8192};
+    std::atomic<uint32_t> test_decode_delay_ms_{0};
     void state(const char *s, const char *error="") {
         local_audio::audiobook_busy=std::string_view(s)=="Loading" || std::string_view(s)=="Playing" || std::string_view(s)=="Goodnight";
         std::lock_guard<std::mutex> lock(mutex_); state_=s; error_=error;
@@ -218,7 +255,7 @@ private:
         if(!local_audio::claim(local_audio::Audiobook))return std::unexpected("Voice assistant is using audio; close it first");
         local_audio::audiobook_busy=true;
         {std::lock_guard<std::mutex> lock(mutex_);path_=path;state_="Loading";error_.clear();sleep_completed_=false;}
-        position_=0;duration_=0;bytes_=0;cancel_=false;paused_=false;seek_=static_cast<int32_t>(start);live_=true;
+        position_=0;duration_=0;bytes_=0;starvations_=0;write_gap_us_=0;decode_max_us_=0;++pcm_epoch_;cancel_=false;paused_=false;seek_=static_cast<int32_t>(start);live_=true;
         TaskHandle_t task=nullptr;
         if (xTaskCreatePinnedToCore([](void *ctx){static_cast<Audiobook *>(ctx)->run();vTaskDelete(nullptr);},
               "audiobook",12288,this,4,&task,0)!=pdPASS) {
@@ -227,9 +264,12 @@ private:
         return {};
     }
     boost::json::object snapshot() {
+        load_mode_once();
         std::lock_guard<std::mutex> lock(mutex_);
         return {{"state",state_},{"path",path_},{"title",story_titles::title(path_)},{"error",error_},{"position",position_.load()},
+                {"play_mode",mode_names_[play_mode_.load()]},
                 {"duration",duration_.load()},{"bytes_written",bytes_.load()},{"active",live_.load()},
+                {"pcm_buffer_bytes",StoryPcmBuffer::capacity},{"pcm_starvations",starvations_.load()},{"write_gap_max_us",write_gap_us_.load()},{"decode_max_us",decode_max_us_.load()},{"pcm_stack_free_min_bytes",pcm_stack_free_.load()},{"test_decode_delay_ms",test_decode_delay_ms_.load()},
                 {"sleep_minutes",sleep_minutes_},{"sleep_remaining_seconds",story_sleep::remaining(esp_timer_get_time()/1000,deadline_)},
                 {"sleep_active",deadline_!=0},{"sleep_fading",deadline_!=0 && gain_<1000},
                 {"sleep_finishing",sleep_due_.load()},{"sleep_completed",sleep_completed_},
@@ -255,7 +295,9 @@ private:
             {"TestTone","Play a two second quiet test tone",{}},
             {"SetSleepTimer","Set a wall-clock story timer; 0 cancels",{{"Minutes","0,15,30,45",FunctionValueType::Number}}},
             {"TestSleepTimer","Ten second diagnostic with eight second fade",{}},
-            {"VoiceAction","Local story command routing",{{"Command","1..8",FunctionValueType::Number}}}
+            {"VoiceAction","Local story command routing",{{"Command","1..8",FunctionValueType::Number}}},
+            {"TestDecodeDelay","Temporary decoder stall every 32 chunks; 0 disables",{{"Milliseconds","0..200",FunctionValueType::Number}}},
+            {"SetPlayMode","Set and persist a shared playback mode",{{"Mode","sequence/random/repeat_one",FunctionValueType::String}}}
         };
     }
     FunctionHandlerList get_function_handlers() override {
@@ -273,7 +315,12 @@ private:
             BROOKESIA_SERVICE_FUNC_HANDLER_0("TestTone",play("@tone",0)),
             BROOKESIA_SERVICE_FUNC_HANDLER_1("SetSleepTimer","Minutes",double,set_sleep(PARAM)),
             BROOKESIA_SERVICE_FUNC_HANDLER_0("TestSleepTimer",set_sleep(1,true)),
-            BROOKESIA_SERVICE_FUNC_HANDLER_1("VoiceAction","Command",double,voice_action(PARAM))
+            BROOKESIA_SERVICE_FUNC_HANDLER_1("VoiceAction","Command",double,voice_action(PARAM)),
+            {"TestDecodeDelay",[this](FunctionParameterMap &&args)->FunctionResult{
+                const double ms=std::get<double>(args.at("Milliseconds"));
+                if(!std::isfinite(ms)||ms<0||ms>200||std::floor(ms)!=ms)return {.success=false,.error_message="Use an integer from 0 to 200"};
+                test_decode_delay_ms_=uint32_t(ms);return {.success=true};}},
+            BROOKESIA_SERVICE_FUNC_HANDLER_1("SetPlayMode","Mode",std::string,set_play_mode(PARAM))
         };
     }
     void run(bool goodnight_only=false,bool feedback_only=false) {
@@ -284,6 +331,16 @@ private:
         auto *pcm=static_cast<int16_t *>(audio_malloc(1024*2*sizeof(int16_t),nullptr));
         auto *output=static_cast<int16_t *>(audio_malloc(4096*sizeof(int16_t),nullptr));
         bool mp3open=false,wavopen=false,opened=false,failed=false,eof=false;
+        std::unique_ptr<StoryPcmBuffer> buffered;
+        auto start_buffer=[&](){
+            buffered=std::make_unique<StoryPcmBuffer>([&](const uint8_t *data,size_t size,uint32_t position,uint32_t epoch){
+                if(!codec->write_data(data,size))return false;
+                pcm_stack_free_=std::min(pcm_stack_free_.load(),uint32_t(uxTaskGetStackHighWaterMark(nullptr)));
+                bytes_+=size;if(position!=UINT32_MAX && epoch==pcm_epoch_)position_=position;
+                return true;
+            },paused_,pcm_epoch_,starvations_,write_gap_us_,[&](){return cancel_ || sleep_due_;});
+            return buffered->start();
+        };
         bool finish_sleep=goodnight_only;uint32_t finish_id=0;
         {std::lock_guard lock(mutex_);finish_id=sleep_id_;}
         std::string path;{std::lock_guard<std::mutex> lock(mutex_);path=path_;}
@@ -315,14 +372,26 @@ private:
             if(!codec->open({.bits=16,.channels=2,.sample_rate=16000})) {fail("Failed to open speaker codec");break;}
             opened=true;
             if(codec->is_pa_on_off_supported())codec->set_pa_on_off(true);
+            if(!start_buffer()){fail("PCM buffer/task unavailable");break;}
             state("Playing");
             uint64_t resample_phase=0;
+            unsigned decode_chunks=0;
             while(!cancel_) {
                 if(sleep_due_){finish_sleep=true;{std::lock_guard lock(mutex_);finish_id=sleep_id_;}break;}
-                if(announce_.exchange(false))say_remaining(codec,pcm);
+                if(announce_.exchange(false)){
+                    const bool was_paused=paused_.load();
+                    buffered->finish(!was_paused);buffered.reset();
+                    // A paused prompt must not drain audible story data. Resume
+                    // its decoder at the last submitted (whole-second) position.
+                    if(was_paused)seek_=position_.load();
+                    else vTaskDelay(pdMS_TO_TICKS(60));
+                    say_remaining(codec,pcm);
+                    if(!start_buffer()){fail("PCM buffer/task unavailable");break;}
+                }
                 if(!child_mode_audiobook_allowed())break;
                 int32_t requested=seek_.exchange(-1);
                 if(requested>=0){
+                    ++pcm_epoch_;
                     uint64_t target=static_cast<uint64_t>(requested)*rate;
                     if(total)target=std::min(target,total);
                     bool ok=tone || (mp3open?drmp3_seek_to_pcm_frame(mp3,target):drwav_seek_to_pcm_frame(wav,target));
@@ -333,7 +402,12 @@ private:
                 if(tone){
                     count=static_cast<size_t>(std::min<uint64_t>(1024,total-frames));
                     for(size_t i=0;i<count;++i)pcm[i]=static_cast<int16_t>(1000*std::sin(2*3.14159265*440*(frames+i)/rate));
-                }else count=mp3open?drmp3_read_pcm_frames_s16(mp3,1024,pcm):drwav_read_pcm_frames_s16(wav,1024,pcm);
+                }else {
+                    const auto began=esp_timer_get_time();
+                    if(++decode_chunks%32==0 && test_decode_delay_ms_)vTaskDelay(pdMS_TO_TICKS(test_decode_delay_ms_.load()));
+                    count=mp3open?drmp3_read_pcm_frames_s16(mp3,1024,pcm):drwav_read_pcm_frames_s16(wav,1024,pcm);
+                    decode_max_us_=std::max(decode_max_us_.load(),uint32_t(esp_timer_get_time()-began));
+                }
                 if(!count){eof=true;break;}
                 // Duplicated stereo keeps 32-bit RX slots compatible with the shared 16 kHz TX clock.
                 size_t written=0;const int gain=gain_.load()*(local_audio::offline_duck?250:1000)/1000;
@@ -344,11 +418,14 @@ private:
                     output[2*written]=output[2*written+1]=int32_t(sample)*gain/1000;++written;
                 }
                 resample_phase-=count*16000;
-                if(!codec->write_data(reinterpret_cast<uint8_t *>(output),written*4)){fail("Speaker write failed");break;}
-                frames+=count;position_=frames/rate;bytes_+=written*4;
-                vTaskDelay(1);
+                frames+=count;
+                if(!buffered->send(output,written*4,frames/rate,[&](){return cancel_ || sleep_due_ || seek_.load()>=0;})){
+                    if(buffered->failed()){fail("Speaker write failed");break;}
+                    if(cancel_ || sleep_due_)break;
+                }
             }
         }while(false);
+        if(buffered){buffered->finish(eof && !cancel_ && !sleep_due_ && !failed);if(buffered->failed()&&!failed)fail("Speaker write failed");buffered.reset();if(eof&&!cancel_&&!sleep_due_)vTaskDelay(pdMS_TO_TICKS(60));}
         if(finish_sleep && codec && pcm && !failed) {say_goodnight(codec,pcm,finish_id);opened=true;}
         if(opened){
             if(codec->is_pa_on_off_supported())codec->set_pa_on_off(false);

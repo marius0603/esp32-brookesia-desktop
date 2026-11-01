@@ -21,13 +21,8 @@ inline boost::json::object execute(const boost::json::object &request) {
  if(!modes.is_object())return fail("设备尚未就绪");
  const bool locked=modes.as_object().at("screen_locked").as_bool();
  auto play_mode=[&]()->std::string {
-  auto saved=data(call("Storage","FSReadText",{{"Path","/littlefs/audiobook-play-mode.json"}}));
-  if(saved.is_string() && saved.as_string().size()<128){
-   boost::system::error_code ec;auto parsed=boost::json::parse(saved.as_string(),ec);
-   if(!ec && parsed.is_object()){auto *mode=parsed.as_object().if_contains("mode");if(mode && mode->is_string()){
-    const auto value=mode->as_string();if(value=="sequence" || value=="random" || value=="repeat_one")return std::string(value);
-   }}
-  }
+  auto book=data(call("Audiobook","GetState"));
+  if(book.is_object())if(auto *mode=book.as_object().if_contains("play_mode");mode&&mode->is_string())return std::string(mode->as_string());
   return "sequence";
  };
  if(command=="status") {
@@ -77,7 +72,7 @@ inline boost::json::object execute(const boost::json::object &request) {
   if(!child_mode_audiobook_allowed())return fail("听书已被家长限制");
   const auto *mode=request.if_contains("value");if(!mode || !mode->is_string() ||
    (mode->as_string()!="sequence" && mode->as_string()!="random" && mode->as_string()!="repeat_one"))return fail("播放模式无效");
-  result=call("Storage","FSWriteText",{{"Path","/littlefs/audiobook-play-mode.json"},{"Data",boost::json::serialize(boost::json::object{{"mode",*mode}})}});
+  result=call("Audiobook","SetPlayMode",{{"Mode",*mode}});
   if(result.success)result=open_audiobook();
  } else if(command=="play") {
   if(!child_mode_audiobook_allowed())return fail("听书已被家长限制");

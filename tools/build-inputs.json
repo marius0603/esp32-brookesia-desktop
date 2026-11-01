@@ -11,7 +11,7 @@
     "patches/single-foreground.patch"
   ],
   "sha256": {
-    "patches/brookesia-s3.patch": "d771f2bebe3e6db7df9fbc6ed483c69436bd1fdc9a88fdcdac875c4ffd297532",
+    "patches/brookesia-s3.patch": "ac8d39dc7975f893b984b299fb223c87dd7c53eb0b25141fdebbc016a1d6a617",
     "patches/phone-launcher.patch": "9ca625bc3ab963adf5226cc80adc9704efee9f5de4c96c165d8200f7f3472468",
     "patches/desktop-themes.patch": "de0b36ada43f4c0d4e1eb7da728f85ea13dfdd97ef5c223df97c9135b8c5c46e",
     "patches/phone-provisioning.patch": "e735f604fb6465a84eae4a058c95ce192c769cd5e4ff2c6650fcf9502af34fb9",
@@ -20,8 +20,8 @@
     "patches/remote-navigation.patch": "63205152d846fc01d625a8a8660e3a10a864eacd3ea62fadf3d09c656a00e433",
     "patches/single-foreground.patch": "5ee1e684633dab70adcb46b4207edb3a8fe2bc5144367cfc4d4ee9aaa98eaa19",
     "phone-remote/tools/downloads.json": "f4dca27ac3cb2d5b30d308eafae0ae106e9108809f3d0d0f595664f98f0e8e1d",
-    "phone-remote/tools/requirements-signing.txt": "66d91a7f67ba42b379b8646431bf4fec571fae734e2cd170a19fed532a728c61",
-    "platform/super_s3_216/sdkconfig.reproducible": "2e62ac6aaeaba6b47d5d49f117d129c2e90339f597d6defcd0fb5b4f9550d734",
-    "versions.json": "70889bbd292a0c25d4913c544b63ecf40998d9940b7182486f2f59b247738e1b"
+    "phone-remote/tools/requirements-signing.txt": "8b5c18678b29b5e8e0fb586a35ac1dce3ccd9da321e8f12ace0e118350b4e568",
+    "platform/super_s3_216/sdkconfig.reproducible": "b634bdd1ab2b9d8f22d36cb124436db85abd299e3ba9034428db00d65ef90a79",
+    "versions.json": "944bb85f234d6f779ad3e4394eab499b71ccf4b86c39f14090aa1f58e7aa3c24"
   }
 }
