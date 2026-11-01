@@ -69,6 +69,8 @@ npm --prefix tools/brookesia-toolkit install
 小马助手 0.2.2 需要 s3.25 原生服务。默认电脑模式，点击“电脑模式/小智模式”按钮可切换；小智首次使用仍需在平台添加设备。点击说话，等待按钮显示“发送”后开始说话，再次点击发送；最长30秒，录音先完整缓存在设备内存中，再上传电脑。
 电脑端 Node.js 从 PATH 查找，也可通过 `QUOTA_NODE` 指定。
 
+任务接续见 [TASK_STATUS.md](TASK_STATUS.md)，依赖、八份补丁和换电脑恢复见 [BUILD_DEPENDENCIES.md](BUILD_DEPENDENCIES.md)，安卓原签名见 [加密备份说明](phone-remote/signing/README.md)。
+
 ## 恢复电脑端额度同步
 
 在新电脑安装并登录 Codex，编辑 `codex-quota-monitor/config.json`：将 `serial_port` 设置为开发板实际端口，

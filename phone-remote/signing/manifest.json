@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "file": "development-signing.jks.enc",
+  "sha256": "3727f0c0074f05124a2d0610cdb7db551d51930b561ad94a22730288f371a51e",
+  "encryption": "AES-256-GCM",
+  "kdf": {
+    "name": "scrypt",
+    "n": 32768,
+    "r": 8,
+    "p": 1,
+    "length": 32
+  },
+  "apk_signer_certificate_sha256": "ce4fe90703f98096a697c60976f96a07349c7795156cbdb44392bce2fdafd839"
+}

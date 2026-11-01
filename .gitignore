@@ -29,3 +29,11 @@ auth.json
 *.key
 *full-16MB.bin
 
+
+# Android signing private keys and local encryption passwords (encrypted .jks.enc is tracked).
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.passphrase
+signing-password.txt

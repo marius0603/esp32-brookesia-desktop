@@ -3,9 +3,12 @@ import argparse,json,subprocess,zipfile,hashlib,os
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 def main():
- p=argparse.ArgumentParser();p.add_argument('--tools',type=Path,required=True);p.add_argument('--work',type=Path,required=True);a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--tools',type=Path,required=True);p.add_argument('--work',type=Path,required=True);p.add_argument('--keystore',type=Path);p.add_argument('--output',type=Path);p.add_argument('--generate-development-key',action='store_true');a=p.parse_args()
  t=json.loads(a.tools.read_text());w=a.work.resolve()
  if w.is_relative_to(ROOT):raise SystemExit('Keep generated classes and the signing key outside the source repository')
+ key=(a.keystore or w/'development-signing.jks').resolve()
+ if key.is_relative_to(ROOT):raise SystemExit('Keep the plaintext signing key outside the repository')
+ if not key.exists() and not a.generate_development_key:raise SystemExit('Original signing key missing. Restore signing/development-signing.jks.enc first; use --generate-development-key only for a new, incompatible test identity.')
  w.mkdir(parents=True,exist_ok=True)
  def run(*cmd):subprocess.run([str(x) for x in cmd],check=True)
  classes=w/'classes';classes.mkdir(exist_ok=True);dex=w/'dex';dex.mkdir(exist_ok=True)
@@ -17,11 +20,14 @@ def main():
  with zipfile.ZipFile(unsigned,'a',compression=zipfile.ZIP_DEFLATED) as z:
   for file in sorted(dex.glob('*.dex')):z.write(file,file.name)
   for file in sorted((ROOT/'phone-remote/licenses').glob('*.txt')):z.write(file,'assets/licenses/'+file.name)
- key=w/'development-signing.jks'
- if not key.exists():run(t['keytool'],'-genkeypair','-keystore',key,'-storepass','android','-keypass','android','-alias','xiaoma','-keyalg','RSA','-keysize','3072','-validity','3650','-dname','CN=XiaoMa Remote Development')
- output=ROOT/'packages/android/xiaoma-remote-0.2.0.apk';output.parent.mkdir(parents=True,exist_ok=True)
+ if not key.exists():
+  key.parent.mkdir(parents=True,exist_ok=True)
+  run(t['keytool'],'-genkeypair','-keystore',key,'-storepass','android','-keypass','android','-alias','xiaoma','-keyalg','RSA','-keysize','3072','-validity','3650','-dname','CN=XiaoMa Remote Development')
+ output=(a.output or ROOT/'packages/android/xiaoma-remote-0.2.0.apk').resolve();output.parent.mkdir(parents=True,exist_ok=True)
  run(t['java'],'-jar',t['signer'],'sign','--v4-signing-enabled','false','--ks',key,'--ks-pass','pass:android','--out',output,unsigned)
  run(t['java'],'-jar',t['signer'],'verify','--verbose',output)
+ if output != ROOT/'packages/android/xiaoma-remote-0.2.0.apk':
+  print('Android verification APK:',output);return
  hashes=ROOT/'packages/SHA256.json';doc=json.loads(hashes.read_text());doc[output.relative_to(ROOT).as_posix()]=hashlib.sha256(output.read_bytes()).hexdigest();hashes.write_text(json.dumps(doc,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
  print('Android remote APK:',output)
 if __name__=='__main__':main()

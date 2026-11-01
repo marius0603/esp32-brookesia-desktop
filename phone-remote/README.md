@@ -50,7 +50,7 @@ s3.36针对连续打开多个应用后的失败，切换时先关闭上一应用
 
 ## 构建手机安装包
 
-电脑需要Python。工具下载到源码仓库外，首次约330MB；下载地址与SHA256固定在 `tools/downloads.json`，工具和签名私钥不入Git。
+电脑需要Python。工具下载到源码仓库外，首次约330MB；下载地址与SHA256固定在 `tools/downloads.json`，工具和明文签名私钥不入Git。原签名的加密备份及换电脑恢复步骤见 [签名恢复说明](signing/README.md)。
 
 ```powershell
 python phone-remote/tools/bootstrap_android.py --cache D:/codex/android-remote-build
@@ -58,7 +58,7 @@ python phone-remote/tools/build_android.py --tools D:/codex/android-remote-build
 python phone-remote/tests/verify_android_protocol.py --tools D:/codex/android-remote-build/tools.json --idf <ESP-IDF目录> --work D:/codex/android-remote-build/protocol-tests
 ```
 
-安装包使用本地开发签名；继续发布更新时需保留同一外部构建目录内的签名文件。更换签名需要先卸载手机上的旧版本。Bouncy Castle 1.80用于X25519运算，许可随源码及APK的 `assets/licenses` 提供。
+安装包使用本地开发签名；继续发布更新时需保留同一外部构建目录内的签名文件，或先从加密备份恢复原签名。缺少原签名时构建脚本会退出，不再自动生成替代签名。更换签名需要先卸载手机上的旧版本。Bouncy Castle 1.80用于X25519运算，许可随源码及APK的 `assets/licenses` 提供。
 
 ## 协议与验证
 
