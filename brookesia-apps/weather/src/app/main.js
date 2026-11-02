@@ -9,6 +9,7 @@ let screenAsleep=false, fxProbe=null;
 let mode = 'shanghai', location = SHANGHAI, data = null, receivedAt = 0;
 let connected = false, paused = false, pending = null, nextFetch = 0, failures = 0;
 let lastRequest = 0, error = '', status = '等待联网', rendered = {};
+let fxDay=1;
 let fxScene='', fxTimer=0, tickTimer=0, fxLastTick=0, fxElapsed=0, fxInterval=250, fxFrames=0, fxError='', fxValues={};
 
 function call(handle, name, args) {
@@ -36,12 +37,37 @@ function condition(code, day) {
 function forecastUrl(place) {
   return 'https://api.open-meteo.com/v1/forecast?latitude='+place.latitude+'&longitude='+place.longitude+
     '&current=temperature_2m,relative_humidity_2m,is_day,weather_code'+
-    '&hourly=temperature_2m,weather_code,is_day&forecast_hours=25&timezone=auto';
+    '&hourly=temperature_2m,weather_code,is_day&daily=sunrise,sunset,daylight_duration&forecast_days=3&forecast_hours=25&timezone=auto';
 }
+// API ISO times use the returned fixed city offset, never the device TZ.
+function cityTime(value) {
+  const offset=value.utc_offset_seconds,now=Date.now();
+  if(Number.isFinite(offset) && Math.abs(offset)<=86400 && now>=1704067200000)
+    return new Date(now+offset*1000).toISOString().slice(0,19);
+  return value.current.time;
+}
+function daylightAt(value,localTime,fallback) {
+  const daily=value.daily;
+  if(daily && Array.isArray(daily.time)){
+    const i=daily.time.indexOf(localTime.slice(0,10));
+    if(i>=0){
+      const rise=daily.sunrise && daily.sunrise[i],set=daily.sunset && daily.sunset[i];
+      const valid=t=>typeof t==='string' && /^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d)?$/.test(t) && t.slice(0,10)===localTime.slice(0,10);
+      if(valid(rise)&&valid(set)&&rise<set){
+        const seconds=t=>t.length===16?t+':00':t;
+        return {day:seconds(localTime)>=seconds(rise)&&seconds(localTime)<seconds(set)?1:0,source:'sunrise_sunset',sunrise:rise,sunset:set};
+      }
+      const duration=daily.daylight_duration && daily.daylight_duration[i];
+      if(duration===0 || duration>=86399)return {day:duration===0?0:1,source:'polar',sunrise:null,sunset:null};
+    }
+  }
+  return {day:fallback===0?0:1,source:'weather_flag',sunrise:null,sunset:null};
+}
+function daylightNow(){return data?daylightAt(data,cityTime(data),data.current.is_day):{day:1,source:'unavailable',sunrise:null,sunset:null};}
 function hours24(value) {
   const h=value.hourly, out=[];
   for (let i=0;i<h.time.length && out.length<24;i++) {
-    if (h.time[i]>=value.current.time) out.push({time:h.time[i],temperature:h.temperature_2m[i],code:h.weather_code[i],day:h.is_day[i]});
+    if (h.time[i]>=value.current.time) out.push({time:h.time[i],temperature:h.temperature_2m[i],code:h.weather_code[i],day:daylightAt(value,h.time[i],h.is_day[i]).day});
   }
   return out;
 }
@@ -82,22 +108,31 @@ function startTick() {
 function applyScene() {
   if (paused) return;
   if(screenAsleep){stopFx();return;}
-  const scene=data?sceneFor(data.current.weather_code,data.current.is_day):'idle';
-  if (scene===fxScene && (scene==='idle' || fxTimer)) return;
+  const solar=daylightNow(),day=solar.day,code=data?data.current.weather_code:0;
+  const scene=data?sceneFor(code,day):'idle';
+  if (scene===fxScene && day===fxDay && (scene==='idle' || fxTimer)) return;
   stopFx();
   const colors={idle:['#081421','#142b43'],clear_day:['#143953','#071925'],clear_night:['#080e24','#122b43'],
     cloudy_day:['#263c4e','#102130'],cloudy_night:['#122030','#060e1c'],rain:['#122d40','#081421'],
     storm:['#171f38','#08111e'],snow:['#2a435a','#122239'],fog:['#344651','#15242e']};
-  const c=colors[scene] || colors.idle, rain=scene==='rain'||scene==='storm';
+  const weatherPalettes={
+    rain:day?['#23495b','#102a3b']:['#101f34','#050c18'],
+    storm:day?['#24364c','#152238']:['#10182a','#050a13'],
+    snow:day?['#42617d','#203a53']:['#162d44','#081629'],
+    fog:day?['#435d6d','#263c4e']:['#202e3b','#0d1723']};
+  const c=weatherPalettes[scene] || colors[scene] || colors.idle, rain=scene==='rain'||scene==='storm';
+  const clouds=scene.indexOf('cloudy')===0 || rain || scene==='snow';
+  const celestial=scene!=='idle' && scene!=='fog' && scene!=='storm' && code!==3;
+  const stars=!day && (scene==='clear_night' || (scene==='cloudy_night' && code!==3));
   const updates=[binding('/main','sky',c[0]),binding('/main','sky_bottom',c[1]),
-    binding('/main/backdrop/rain','hidden',!rain),binding('/main/backdrop/sun','hidden',scene!=='clear_day'),
-    binding('/main/backdrop/moon','hidden',scene!=='clear_night'),
-    binding('/main/backdrop/stars','hidden',scene!=='clear_night' && scene!=='cloudy_night'),
-    binding('/main/backdrop/clouds','hidden',scene.indexOf('cloudy')!==0),
+    binding('/main/backdrop/rain','hidden',!rain),binding('/main/backdrop/sun','hidden',!(day && celestial)),
+    binding('/main/backdrop/moon','hidden',!(!day && celestial)),
+    binding('/main/backdrop/stars','hidden',!stars),
+    binding('/main/backdrop/clouds','hidden',!clouds),
     binding('/main/backdrop/fog','hidden',scene!=='fog'),binding('/main/backdrop/snow','hidden',scene!=='snow')];
   for (let i=0;i<4;i++) updates.push(binding('/main/backdrop/drop'+i,'hidden',!rain));
   try {
-    updateBindings(updates); fxScene=scene; fxLastTick=Date.now(); fxElapsed=0; fxFrames=0; fxError='';fxValues={};fxProbe=null;
+    updateBindings(updates); fxScene=scene;fxDay=day; fxLastTick=Date.now(); fxElapsed=0; fxFrames=0; fxError='';fxValues={};fxProbe=null;
     fxInterval=rain?125:250;
     if (scene!=='idle') fxTimer=call(timer,'StartPeriodic',{Name:'weather_fx',IntervalMs:fxInterval});
   } catch(e) { fxError=String(e); }
@@ -114,14 +149,17 @@ function animateFx() {
   if (fxScene==='rain'||fxScene==='storm') {
     const speeds=[12,18,10,16];
     for(let i=0;i<4;i++)add('drop'+i,'y',Math.floor((i*110+80+elapsed*speeds[i])%576)-48);
-  } else if (fxScene.indexOf('cloudy')===0) {
+  }
+  if (fxScene.indexOf('cloudy')===0 || fxScene==='rain' || fxScene==='storm' || fxScene==='snow') {
     add('clouds/c0','x',310+42*Math.sin(elapsed/2.5));add('clouds/c0','y',74+9*Math.sin(elapsed/3));
     add('clouds/c1','x',282+34*Math.sin(elapsed/3+1.8));add('clouds/c1','y',119+7*Math.sin(elapsed/4+1));
-  } else if (fxScene==='clear_day') {
+  }
+  if (fxDay===1 && fxScene!=='idle' && fxScene!=='fog' && fxScene!=='storm') {
     add('sun','opacity',205+50*Math.sin(elapsed/1.8));add('sun','y',64+10*Math.sin(elapsed/2.5));
-  } else if (fxScene==='clear_night') {
+  } else if (fxDay===0 && fxScene!=='idle' && fxScene!=='fog' && fxScene!=='storm') {
     add('moon','opacity',210+45*Math.sin(elapsed/2));add('moon','y',70+10*Math.sin(elapsed/2.5));
-  } else if (fxScene==='fog') {
+  }
+  if (fxScene==='fog') {
     for(let i=0;i<4;i++){
       add('fog/f'+i,'x',-20+12*Math.sin(elapsed/7+i));add('fog/f'+i,'opacity',220+30*Math.sin(elapsed/5+i));
     }
@@ -146,7 +184,7 @@ function animateFx() {
   catch(e) { fxError=String(e);stopFx();persistState(); }
 }
 function persistState() {
-  write(STATE,{version:3,background:fxScene,screen_asleep:screenAsleep,fx_probe:fxProbe,fx_frames:fxFrames,fx_error:fxError,fx_active:!!fxTimer,fx_interval_ms:fxInterval,paused:paused,hourly_count:data?hours24(data).length:0,status:status,error:error,connected:connected,mode:mode,location:location,
+  write(STATE,{version:4,background:fxScene,day_phase:fxDay?'day':'night',solar:daylightNow(),screen_asleep:screenAsleep,fx_probe:fxProbe,fx_frames:fxFrames,fx_error:fxError,fx_active:!!fxTimer,fx_interval_ms:fxInterval,paused:paused,hourly_count:data?hours24(data).length:0,status:status,error:error,connected:connected,mode:mode,location:location,
     pending:pending?pending.kind:null,last_weather_request_id:lastRequest,
     received_at:receivedAt,source_time:data?data.current.time:null,
     temperature:data?data.current.temperature_2m:null,ui_updated:!paused && !!data});
@@ -157,7 +195,7 @@ function render() {
   const c=data.current, stale=Date.now()-receivedAt>STALE_MS;
   text('temperature',num(c.temperature_2m,1)+'°C');
   text('humidity','湿度 '+num(c.relative_humidity_2m)+'%');
-  text('condition',(!connected || error || stale?'缓存 · ':'')+condition(c.weather_code,c.is_day));
+  text('condition',(!connected || error || stale?'缓存 · ':'')+condition(c.weather_code,daylightNow().day));
   const hours=hours24(data);
   for (let i=0;i<hours.length;i++) {
     const h=hours[i], path='hourly/h'+i;
@@ -228,7 +266,7 @@ function tick() {
     if (!online) {
       const offlineStatus=data?'网络断开，显示缓存':'等待 Wi-Fi 连接';
       if (connected || status!==offlineStatus) { connected=false; cancelPending(); setStatus(offlineStatus); }
-      return;
+      render();return;
     }
     if (!connected) { connected=true; nextFetch=0; }
     if (pending && Date.now()-pending.started>25000) { cancelPending(); failed('请求超时'); }

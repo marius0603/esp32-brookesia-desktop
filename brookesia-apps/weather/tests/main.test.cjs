@@ -15,7 +15,8 @@ const fixture = {current:{time:'2026-10-18T20:00',temperature_2m:23.6,relative_h
 function harness(online=true, files={}) {
   let now=1792324800000, nextId=1;
   const calls=[], texts={};
-  const ctx=vm.createContext({console,Date:{now:()=>now},brookesia:{
+  class Clock extends Date {static now(){return now;}}
+  const ctx=vm.createContext({console,Date:Clock,brookesia:{
     start_service:name=>name, subscribe_event:()=>1,
     call_function(handle,name,json) {
       const p=JSON.parse(json); calls.push({handle,name,p}); let data=null;
@@ -34,7 +35,7 @@ function harness(online=true, files={}) {
   }});
   vm.runInContext(code.replace(/\n\}\)\(\);\s*$/, '\nglobalThis.__test = expression => eval(expression);\n})();'),ctx);
   return {app:ctx.brookesia_app,calls,texts,files,
-    value:s=>ctx.__test(s), advance:n=>{now+=n;}, online:b=>{online=b;},
+    value:s=>ctx.__test(s), advance:n=>{now+=n;},setTime:n=>{now=n;}, online:b=>{online=b;},
     requests:()=>calls.filter(c=>c.name==='RequestAsync'),
     complete:(id,body=fixture,status=200)=>ctx.brookesia_app.on_event('Http','RequestCompleted',
       JSON.stringify({RequestId:id,Response:{status_code:status,error:'Ok',body:JSON.stringify(body)}}))};
@@ -105,7 +106,7 @@ test('all actual weather scenes animate using declared, bounded GUI updates',()=
     const start=h.calls.length;
     for(let i=0;i<8;i++){h.advance(250);h.app.on_timer(99,'weather_fx');}
     const batches=h.calls.slice(start).filter(c=>c.name==='SetBindings');
-    assert.ok(batches.length>0,scene);assert.ok(batches.every(c=>c.p.Updates.length<=21));
+    assert.ok(batches.length>0,scene);assert.ok(batches.every(c=>c.p.Updates.length<=32));
     assert.equal(h.files['/littlefs/weather-state.json'].fx_frames,8);
     h.app.on_pause();assert.equal(h.value('fxTimer'),0);assert.equal(h.value('tickTimer'),0);
     h.app.on_resume();assert.ok(h.value('fxTimer'));assert.ok(h.value('tickTimer'));
@@ -151,4 +152,44 @@ test('cloud layers use filled transparent cloud artwork rather than oval contain
   }
 });
 test('re-evaluating app in retained JavaScript context does not redeclare globals',()=>{const c=vm.createContext({});vm.runInContext(code,c);vm.runInContext(code,c);assert.equal(typeof c.brookesia_app.on_start,'function');});
+function solarFixture(code=61){
+ const v=JSON.parse(JSON.stringify(fixture));v.current.weather_code=code;v.current.is_day=1;v.utc_offset_seconds=28800;
+ v.daily={time:['2026-10-18','2026-10-19'],sunrise:['2026-10-18T06:10','2026-10-19T06:11'],sunset:['2026-10-18T17:20','2026-10-19T17:19'],daylight_duration:[40200,40080]};return v;
+}
+test('city sunrise inclusive and sunset exclusive override stale current is_day',()=>{
+ const h=harness();h.setTime(Date.parse('2026-10-18T06:09:59+08:00'));h.app.on_start();h.complete(1,solarFixture(0));
+ assert.match(h.requests()[0].p.Request.url,/daily=sunrise,sunset,daylight_duration/);
+ assert.equal(h.value('fxDay'),0);assert.equal(h.value('fxScene'),'clear_night');
+ h.advance(1000);h.app.on_timer();assert.equal(h.value('fxDay'),1);assert.equal(h.value('fxScene'),'clear_day');
+ h.setTime(Date.parse('2026-10-18T17:20:00+08:00'));h.app.on_timer();assert.equal(h.value('fxDay'),0);assert.equal(h.value('fxScene'),'clear_night');
+ assert.match(h.texts['/main/content/condition'],/晴夜$/);
+});
+test('each precipitation layer has distinct day/night sky and keeps its animation',()=>{
+ for(const [code,scene] of [[61,'rain'],[95,'storm'],[75,'snow'],[45,'fog'],[2,'cloudy_day']]){
+  const h=harness();h.setTime(Date.parse('2026-10-18T12:00:00+08:00'));h.app.on_start();h.complete(1,solarFixture(code));
+  assert.equal(h.value('fxScene'),scene);const daySky=h.calls.filter(c=>c.name==='SetBindings').at(-1).p.Updates.find(u=>u.Key==='sky').Value;
+  h.online(false);h.setTime(Date.parse('2026-10-18T17:20:00+08:00'));h.app.on_timer();
+  assert.equal(h.value('fxDay'),0,'offline sunset must still switch');
+  const nightSky=h.calls.filter(c=>c.name==='SetBindings').at(-1).p.Updates.find(u=>u.Key==='sky').Value;
+  assert.notEqual(daySky,nightSky);assert.ok(h.value('fxTimer'));
+  h.advance(250);h.app.on_timer(99,'weather_fx');assert.ok(h.value('fxFrames')>0);
+ }
+});
+test('city offset, midnight next-day solar data, hourly icons and missing/polar fallback',()=>{
+ const h=harness();h.setTime(Date.parse('2026-10-18T22:15:00Z'));h.app.on_start();h.complete(1,solarFixture());
+ assert.equal(h.value('cityTime(data)'), '2026-10-19T06:15:00');assert.equal(h.value('daylightNow().day'),1);
+ h.setTime(Date.parse('2026-10-18T21:00:00Z'));h.app.on_timer();assert.equal(h.value('fxDay'),0);
+ assert.equal(h.value("daylightAt(data,'2026-10-19T06:00',1).day"),0);
+ assert.equal(h.value("daylightAt(data,'2026-10-19T07:00',0).day"),1);
+ assert.equal(h.value("daylightAt(data,'2026-10-20T12:00',0).source"),'weather_flag');
+ h.value('data.daily.sunrise[1]=null;data.daily.sunset[1]=null;data.daily.daylight_duration[1]=0');assert.equal(h.value('daylightNow().source'),'polar');assert.equal(h.value('daylightNow().day'),0);
+ h.value('data.daily.daylight_duration[1]=86400');assert.equal(h.value('daylightNow().day'),1);
+ h.value('data.daily.daylight_duration[1]=123;data.current.is_day=0');assert.equal(h.value('daylightNow().source'),'weather_flag');
+});
+test('sunset while screen sleeps applies on wake without drawing or growing timers asleep',()=>{
+ const h=harness();h.setTime(Date.parse('2026-10-18T17:19:00+08:00'));h.app.on_start();h.complete(1,solarFixture());
+ h.value('screenAsleep=true;applyScene()');assert.equal(h.value('fxTimer'),0);
+ h.advance(120000);h.app.on_timer(99,'weather_fx');assert.equal(h.value('fxTimer'),0);
+ h.value('screenAsleep=false;applyScene()');assert.equal(h.value('fxDay'),0);assert.ok(h.value('fxTimer'));
+});
 console.log(count+' weather tests passed');
