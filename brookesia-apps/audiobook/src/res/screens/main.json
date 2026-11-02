@@ -451,7 +451,7 @@
           "type": "button",
           "id": "voice",
           "placement": {
-            "width": 312,
+            "width": 204,
             "height": 48
           },
           "style": {
@@ -483,6 +483,46 @@
               },
               "labelProps": {
                 "text": "语音控制"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "speed",
+          "placement": {
+            "width": 100,
+            "height": 48
+          },
+          "style": {
+            "bgColor": "#182235",
+            "radius": 16,
+            "padding": 0,
+            "borderColor": "#2c3c55",
+            "borderWidth": 1
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "speed"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 24,
+                "textColor": "#f7e7bd"
+              },
+              "labelProps": {
+                "text": "1x"
               }
             }
           ]

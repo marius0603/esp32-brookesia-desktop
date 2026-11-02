@@ -5,6 +5,7 @@
 #include "../device_modes/device_modes.hpp"
 #include "story_sleep.hpp"
 #include "buffered_pcm.hpp"
+#include "sonic/sonic.h"
 #include <memory>
 #include "esp_timer.h"
 #include <algorithm>
@@ -100,6 +101,7 @@ private:
     std::atomic<unsigned> announcement_count_{0},last_announcement_{0};
     static constexpr const char *mode_names_[3]={"sequence","random","repeat_one"};
     std::atomic<unsigned> play_mode_{0};
+    std::atomic<unsigned> speed_percent_{100};
     std::atomic<bool> mode_loaded_{false};
     std::mutex mode_mutex_;
     FunctionResult mode_storage(const char *function,const boost::json::object &args){
@@ -267,7 +269,7 @@ private:
         load_mode_once();
         std::lock_guard<std::mutex> lock(mutex_);
         return {{"state",state_},{"path",path_},{"title",story_titles::title(path_)},{"error",error_},{"position",position_.load()},
-                {"play_mode",mode_names_[play_mode_.load()]},
+                {"play_mode",mode_names_[play_mode_.load()]},{"speed",speed_percent_.load()/100.0},
                 {"duration",duration_.load()},{"bytes_written",bytes_.load()},{"active",live_.load()},
                 {"pcm_buffer_bytes",StoryPcmBuffer::capacity},{"pcm_starvations",starvations_.load()},{"write_gap_max_us",write_gap_us_.load()},{"decode_max_us",decode_max_us_.load()},{"pcm_stack_free_min_bytes",pcm_stack_free_.load()},{"test_decode_delay_ms",test_decode_delay_ms_.load()},
                 {"sleep_minutes",sleep_minutes_},{"sleep_remaining_seconds",story_sleep::remaining(esp_timer_get_time()/1000,deadline_)},
@@ -297,6 +299,7 @@ private:
             {"TestSleepTimer","Ten second diagnostic with eight second fade",{}},
             {"VoiceAction","Local story command routing",{{"Command","1..8",FunctionValueType::Number}}},
             {"TestDecodeDelay","Temporary decoder stall every 32 chunks; 0 disables",{{"Milliseconds","0..200",FunctionValueType::Number}}},
+            {"SetSpeed","Set speech speed (0.5,0.75,1,1.25,1.5,2)",{{"Speed","Playback multiplier",FunctionValueType::Number}}},
             {"SetPlayMode","Set and persist a shared playback mode",{{"Mode","sequence/random/repeat_one",FunctionValueType::String}}}
         };
     }
@@ -320,6 +323,10 @@ private:
                 const double ms=std::get<double>(args.at("Milliseconds"));
                 if(!std::isfinite(ms)||ms<0||ms>200||std::floor(ms)!=ms)return {.success=false,.error_message="Use an integer from 0 to 200"};
                 test_decode_delay_ms_=uint32_t(ms);return {.success=true};}},
+            {"SetSpeed",[this](FunctionParameterMap &&args)->FunctionResult{
+                const double speed=std::get<double>(args.at("Speed"));
+                if(!std::isfinite(speed)||(speed!=.5&&speed!=.75&&speed!=1&&speed!=1.25&&speed!=1.5&&speed!=2))return {.success=false,.error_message="Unsupported playback speed"};
+                speed_percent_=unsigned(speed*100);return {.success=true};}},
             BROOKESIA_SERVICE_FUNC_HANDLER_1("SetPlayMode","Mode",std::string,set_play_mode(PARAM))
         };
     }
@@ -332,6 +339,7 @@ private:
         auto *output=static_cast<int16_t *>(audio_malloc(4096*sizeof(int16_t),nullptr));
         bool mp3open=false,wavopen=false,opened=false,failed=false,eof=false;
         std::unique_ptr<StoryPcmBuffer> buffered;
+        std::unique_ptr<sonicStreamStruct,decltype(&sonicDestroyStream)> stretch(nullptr,&sonicDestroyStream);
         auto start_buffer=[&](){
             buffered=std::make_unique<StoryPcmBuffer>([&](const uint8_t *data,size_t size,uint32_t position,uint32_t epoch){
                 if(!codec->write_data(data,size))return false;
@@ -373,7 +381,15 @@ private:
             opened=true;
             if(codec->is_pa_on_off_supported())codec->set_pa_on_off(true);
             if(!start_buffer()){fail("PCM buffer/task unavailable");break;}
+            stretch.reset(sonicCreateStream(16000,1));
+            if(!stretch){fail("Speech speed buffer unavailable");break;}
             state("Playing");
+            auto emit=[&](){
+                int n;while((n=sonicReadShortFromStream(stretch.get(),pcm,1024))>0){
+                    for(int i=0;i<n;++i)output[2*i]=output[2*i+1]=pcm[i];
+                    if(!buffered->send(output,n*4,frames/rate,[&](){return cancel_ || sleep_due_ || seek_.load()>=0;}))return false;
+                }return true;
+            };
             uint64_t resample_phase=0;
             unsigned decode_chunks=0;
             while(!cancel_) {
@@ -392,6 +408,8 @@ private:
                 int32_t requested=seek_.exchange(-1);
                 if(requested>=0){
                     ++pcm_epoch_;
+                    stretch.reset(sonicCreateStream(16000,1));
+                    if(!stretch){fail("Speech speed buffer unavailable");break;}
                     uint64_t target=static_cast<uint64_t>(requested)*rate;
                     if(total)target=std::min(target,total);
                     bool ok=tone || (mp3open?drmp3_seek_to_pcm_frame(mp3,target):drwav_seek_to_pcm_frame(wav,target));
@@ -408,19 +426,25 @@ private:
                     count=mp3open?drmp3_read_pcm_frames_s16(mp3,1024,pcm):drwav_read_pcm_frames_s16(wav,1024,pcm);
                     decode_max_us_=std::max(decode_max_us_.load(),uint32_t(esp_timer_get_time()-began));
                 }
-                if(!count){eof=true;break;}
+                if(!count){
+                    if(!sonicFlushStream(stretch.get()) || !emit()){if(!cancel_&&!sleep_due_&&seek_.load()<0)fail("Speech output failed");}
+                    else eof=true;
+                    if(seek_.load()>=0)continue;
+                    break;
+                }
                 // Duplicated stereo keeps 32-bit RX slots compatible with the shared 16 kHz TX clock.
                 size_t written=0;const int gain=gain_.load()*(local_audio::offline_duck?250:1000)/1000;
                 for(;resample_phase<count*16000;resample_phase+=rate){
                     const size_t at=resample_phase/16000,next=std::min<size_t>(at+1,count-1);const int fraction=resample_phase%16000;
                     int a=0,b=0;for(unsigned ch=0;ch<channels;++ch){a+=pcm[at*channels+ch];b+=pcm[next*channels+ch];}
                     const int sample=(int64_t(a)*(16000-fraction)+int64_t(b)*fraction)/(16000*channels);
-                    output[2*written]=output[2*written+1]=int32_t(sample)*gain/1000;++written;
+                    output[written++]=int32_t(sample)*gain/1000;
                 }
                 resample_phase-=count*16000;
                 frames+=count;
-                if(!buffered->send(output,written*4,frames/rate,[&](){return cancel_ || sleep_due_ || seek_.load()>=0;})){
-                    if(buffered->failed()){fail("Speaker write failed");break;}
+                sonicSetSpeed(stretch.get(),tone?1.0f:speed_percent_.load()/100.0f);
+                if(!sonicWriteShortToStream(stretch.get(),output,written) || !emit()){
+                    if(seek_.load()<0 && !cancel_ && !sleep_due_){fail("Speech output failed");break;}
                     if(cancel_ || sleep_due_)break;
                 }
             }

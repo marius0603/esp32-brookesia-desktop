@@ -13,6 +13,7 @@ const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>{bindings.pus
  if(n==='FSWriteText')stored[a.Path]=a.Data;
  if(n==='SetVolume')volume=Math.min(volumeCap,a.Volume);
  if(n==='SetPlayMode'){state={...state,play_mode:a.Mode};stored['/littlefs/audiobook-play-mode.json']=JSON.stringify({mode:a.Mode});}
+ if(n==='SetSpeed')state={...state,speed:a.Speed};
  if(n==='GetVolume')data=volume;
  if(n==='List')data={mounted,tracks};
  if(n==='GetState')data=h==='DeviceModes'?{do_not_disturb:quiet,resume_volume:30}:h==='OfflineVoice'?{listening:offlineListening}:state;
@@ -171,3 +172,12 @@ ctx.brookesia_app.on_timer();
 assert.equal(calls.filter(c=>c.n==='SetViewSrc').at(-1).a.Src,'mode_repeat_one','Phone changes update the open device page');
 finish();assert.equal(state.path,tracks[0].path,'Phone-selected repeat mode applies at EOF without reopening');
 console.log('Playback modes passed: EOF ordering, shuffle exclusion, repeat-one, empty/single libraries, bookmarks, sleep/stop safeguards and persistence.');
+state={...state,speed:1};ctx.brookesia_app.on_timer();
+assert.equal(texts['/main/tools/speed/label'],'1x');
+const playsBeforeSpeed=calls.filter(c=>c.n==='Play').length;
+for(const speed of [1.25,1.5,2,0.5,0.75,1]){
+ ctx.brookesia_app.on_action('speed');assert.equal(state.speed,speed);assert.equal(texts['/main/tools/speed/label'],speed+'x');
+}
+assert.equal(calls.filter(c=>c.n==='Play').length,playsBeforeSpeed,'Speed changes must not restart the story');
+state={...state,speed:0.75};ctx.brookesia_app.on_timer();assert.equal(texts['/main/tools/speed/label'],'0.75x','Phone speed changes must reach the open device UI');
+console.log('Playback speed passed: default 1x, all six rates, cycling without restart and remote synchronization.');

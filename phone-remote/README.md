@@ -1,4 +1,6 @@
-# 小马蓝牙遥控 0.2.1
+# 小马蓝牙遥控 0.2.2
+
+0.2.2在听书页增加六档倍速选择：0.5 / 0.75 / 1 / 1.25 / 1.5 / 2，开机默认1倍，配合固件s3.40、听书0.3.6。倍速与设备同步，原签名覆盖安装。见[倍速说明](../codex-quota-monitor/AUDIOBOOK_SPEED.md)。
 
 安卓手机直接通过BLE控制ESP32-S3设备，不需要同一Wi-Fi，也不需要电脑中转。手机需要在设备的蓝牙覆盖范围内。本轮优先实现蓝牙，跨网络遥控暂缓。
 
@@ -20,7 +22,7 @@
 
 ## 安装与连接
 
-当前设备端使用固件 **0.8.3-s3.39**、听书0.3.5和s3.34独立蓝牙设置资源；安卓端安装 [xiaoma-remote-0.2.1.apk](../packages/android/xiaoma-remote-0.2.1.apk)，支持Android 8及以上。
+当前设备端使用固件 **0.8.3-s3.40**、听书0.3.6和s3.34独立蓝牙设置资源；安卓端安装 [xiaoma-remote-0.2.2.apk](../packages/android/xiaoma-remote-0.2.2.apk)，支持Android 8及以上。
 
 1. 设备进入 **设置 → 蓝牙 → 开启蓝牙遥控**。先停止正在进行的播放或录音，再开启入口；开启后可从手机播放故事。
 2. 屏幕会显示 `CTRL_XXXXXX` 和4位数字临时配对码（例如 `0042`，需输入开头的0）。原来的“开始配网”仍用于乐鑫ESP BLE Prov，设备名为 `PROV_XXXXXX`。
@@ -70,7 +72,7 @@ python phone-remote/tests/verify_android_protocol.py --tools D:/codex/android-re
 
 复用ESP-IDF protocomm Security 1：X25519、临时PoP和连续AES-CTR字节流。遥控模式只注册 `prov-session`、`proto-ver`、`remote-control`；不开放Wi-Fi配置端点。遥控特征UUID为 `1775ff55-6b43-439b-877c-060f2d9bed07`。同一会话串行交换JSON请求和回复，不并行发送，以免破坏加密流顺序。
 
-设备只接受预定义指令：`status`、`volume`、`brightness`、`apps`、`open`、`stories`、`play`、`mode`、`pause`、`resume`、`stop`、`sleep`、`wake`、`lock`。`mode.value`为`sequence`、`random`或`repeat_one`。状态回复含`play_mode`、`story_title`、`story_state`、`story_active`、`story_position`；列表增加`total`，每页三项、页码从零开始；不提供任意服务调用、文件访问、录音或家长设置接口。
+设备只接受预定义指令：`status`、`volume`、`brightness`、`apps`、`open`、`stories`、`play`、`mode`、`speed`、`pause`、`resume`、`stop`、`sleep`、`wake`、`lock`。`mode.value`为`sequence`、`random`或`repeat_one`。状态回复含`play_mode`、`story_title`、`story_state`、`story_active`、`story_position`；列表增加`total`，每页三项、页码从零开始；不提供任意服务调用、文件访问、录音或家长设置接口。
 
 设备端s3.34已安装，应用分区读回校验和设置页安装核对通过。APK实际使用的Java协议代码已与独立Python实现核对官方protobuf字段、密钥协商、配对证明及连续双向加解密，也通过电脑蓝牙与实机完成连接、音量/亮度调整、列表及打开应用检查；测试设置随后恢复。安卓APK已构建并通过签名校验，手机安装和界面操作需现场确认。
 

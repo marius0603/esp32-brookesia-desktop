@@ -28,7 +28,7 @@ inline boost::json::object execute(const boost::json::object &request) {
  if(command=="status") {
   boost::json::object answer{{"ok",true},{"locked",locked},{"volume",data(call("AudioPlayback","GetVolume"))},{"brightness",modes.as_object().at("brightness_percent")},{"play_mode",play_mode()}};
   auto book=data(call("Audiobook","GetState"));if(book.is_object()){
-   for(const auto &[source,target]:{std::pair{"title","story_title"},{"state","story_state"},{"active","story_active"},{"position","story_position"}})
+   for(const auto &[source,target]:{std::pair{"speed","story_speed"},std::pair{"title","story_title"},{"state","story_state"},{"active","story_active"},{"position","story_position"}})
     if(auto *v=book.as_object().if_contains(source))answer[target]=*v;
   }
   return answer;
@@ -40,7 +40,12 @@ inline boost::json::object execute(const boost::json::object &request) {
   const double n=v->is_double()?v->as_double():v->is_int64()?double(v->as_int64()):double(v->as_uint64());
   return std::isfinite(n) && std::floor(n)==n && n>=low && n<=high?int(n):-1;
  };
- if(command=="volume") {int n=integer("value",0,100);if(n<0)return fail("音量范围为0至100");result=call("AudioPlayback","SetVolume",{{"Volume",n}});}
+ if(command=="speed") {
+  if(!child_mode_audiobook_allowed())return fail("听书已被家长限制");
+  const auto *v=request.if_contains("value");if(!v||!v->is_number())return fail("倍速无效");
+  const double speed=v->is_double()?v->as_double():v->is_int64()?double(v->as_int64()):double(v->as_uint64());
+  result=call("Audiobook","SetSpeed",{{"Speed",speed}});
+ } else if(command=="volume") {int n=integer("value",0,100);if(n<0)return fail("音量范围为0至100");result=call("AudioPlayback","SetVolume",{{"Volume",n}});}
  else if(command=="brightness") {
   int n=integer("value",10,100);if(n<0)return fail("亮度范围为10至100");
   auto backlight=esp_brookesia::hal::acquire_first_interface<esp_brookesia::hal::display::BacklightIface>();

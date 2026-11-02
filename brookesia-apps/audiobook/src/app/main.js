@@ -13,6 +13,8 @@ const storyTitles={
   '10-wangyangbulao.mp3':'亡羊补牢'
 };
 const sleepMinutes=[0,15,30,45];
+const speeds=[0.5,0.75,1,1.25,1.5,2];
+let speed=1;
 const playModes=['sequence','random','repeat_one'];
 let playMode='sequence';
 let gui, audio, storage, modes, timer, playback, localVoice, tracks=[], index=0, current=null, playing=null, hidden=false, cache={}, volume=20, bookmark=null, lastSaved=0,sleepSelected=-1;
@@ -48,6 +50,7 @@ function poll(){
   const next=call(audio,'GetState');
   if(playModes.includes(next.play_mode))playMode=next.play_mode;
   syncMode();
+  speed=speeds.includes(next.speed)?next.speed:1;text('tools/speed/label',speed+'x');
   syncSleep(next);
   const actual=tracks.findIndex(t=>t.path===next.path);
   if(actual>=0&&(!current||current.path!==next.path)){index=actual;current=tracks[index];text('chapter',title(current));}
@@ -74,6 +77,7 @@ function poll(){
   if(next.active&&next.path!=='@tone'&&Date.now()-lastSaved>15000)save();
 }
 function action(name){
+  if(name==='speed'){call(audio,'SetSpeed',{Speed:speeds[(speeds.indexOf(speed)+1)%speeds.length]});poll();return;}
   if(name==='playMode'){
     const shared=call(audio,'GetState');if(playModes.includes(shared.play_mode))playMode=shared.play_mode;
     const selected=playModes[(playModes.indexOf(playMode)+1)%playModes.length];
@@ -96,7 +100,7 @@ function action(name){
 }
 globalThis.brookesia_app={
   on_start(){gui=brookesia.start_service('SystemGui');audio=brookesia.start_service('Audiobook');modes=brookesia.start_service('DeviceModes');storage=brookesia.start_service('Storage');timer=brookesia.start_service('SystemTimer');playback=brookesia.start_service('AudioPlayback');localVoice=brookesia.start_service('OfflineVoice');
-    for(const name of ['previous','next','toggle','sleepChoice','offlineSpeak','lockScreen','playMode'])call(gui,'SubscribeAction',{Action:name});
+    for(const name of ['previous','next','toggle','sleepChoice','offlineSpeak','lockScreen','playMode','speed'])call(gui,'SubscribeAction',{Action:name});
     try{const saved=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/audiobook-play-mode.json'}));if(saved&&playModes.includes(saved.mode))playMode=saved.mode;}catch(_){}
     call(audio,'SetPlayMode',{Mode:playMode});
     try{bookmark=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/audiobook-bookmark.json'}));}catch(_){}
