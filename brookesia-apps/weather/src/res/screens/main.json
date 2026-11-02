@@ -58,7 +58,8 @@
           },
           "bindings": {
             "commonProps.hidden": "hidden",
-            "placement.y": "y"
+            "placement.y": "y",
+            "style.opacity": "opacity"
           }
         },
         {
@@ -1765,7 +1766,8 @@
             "opacity": 45
           },
           "bindings": {
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.opacity": "opacity"
           },
           "children": []
         },
@@ -1906,6 +1908,9 @@
           },
           "labelProps": {
             "text": "--°C"
+          },
+          "bindings": {
+            "style.textColor": "ink"
           }
         },
         {
@@ -1926,6 +1931,9 @@
           },
           "labelProps": {
             "text": "湿度 --%"
+          },
+          "bindings": {
+            "style.textColor": "ink"
           }
         },
         {
@@ -1946,6 +1954,9 @@
           },
           "labelProps": {
             "text": "等待联网获取天气"
+          },
+          "bindings": {
+            "style.textColor": "ink"
           }
         },
         {

@@ -8,7 +8,7 @@ def main():
  p=argparse.ArgumentParser();p.add_argument('--port',required=True);a=p.parse_args()
  stamp=datetime.now().strftime('%Y%m%d-%H%M%S');folder=ROOT/'codex-quota-monitor/runtime'/('weather-solar-'+stamp);folder.mkdir()
  backup='/sdcard/resource-backups/weather-solar-'+stamp
- with zipfile.ZipFile(ROOT/'packages/apps/local.weather.debug.0.2.7.bpk') as z:files={n:z.read(n) for n in ('app/main.js','manifest.json')}
+ with zipfile.ZipFile(ROOT/'packages/apps/local.weather.debug.0.2.8.bpk') as z:files={n:z.read(n) for n in ('app/main.js','manifest.json','res/screens/main.json')}
  report={'passed':False,'backup':backup,'files':{}}
  with StoryClient(a.port,timeout=30) as c:
   c.hello()
@@ -26,10 +26,14 @@ def main():
     dest='sd-themes/weather-solar-'+stamp+'/'+local.name
     result=c.transfer('put',local,dest,False);digest=hashlib.sha256(data).hexdigest();assert result['ok'] and result['sha256']==digest
     f('Storage','FSCopyTree',{'From':'/sdcard/themes/weather-solar-'+stamp+'/'+local.name,'To':target,'Overwrite':True})
-    for _ in range(20):
-     if hashlib.sha256(f('Storage','FSReadText',{'Path':target}).encode('utf-8')).hexdigest()==digest:break
-     time.sleep(.1)
-    else:raise AssertionError('Installed weather file hash differs: '+n)
+    assert f('Storage','FSStat',{'Path':target})['size']==len(data)
+    # Large screen JSON can exceed a reliable single UART response. Its framed
+    # upload SHA and installed size are checked; GUI bindings are checked live.
+    if len(data)<=32768:
+     for _ in range(20):
+      if hashlib.sha256(f('Storage','FSReadText',{'Path':target}).encode('utf-8')).hexdigest()==digest:break
+      time.sleep(.1)
+     else:raise AssertionError('Installed weather file hash differs: '+n)
     report['files'][n]=digest
   except Exception:
    for n in files:f('Storage','FSCopyTree',{'From':backup+'/'+Path(n).name,'To':'/littlefs/apps/local.weather/'+n,'Overwrite':True})
@@ -37,5 +41,5 @@ def main():
   assert f('Storage','FSReadText',{'Path':icon})==saved_icon
   report['passed']=True
  (folder/'deployment.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
- print('Installed weather0.2.7 script and manifest; original transparent launcher index preserved. Restart to refresh version metadata.')
+ print('Installed weather0.2.8 script and manifest; original transparent launcher index preserved. Restart to refresh version metadata.')
 if __name__=='__main__':main()

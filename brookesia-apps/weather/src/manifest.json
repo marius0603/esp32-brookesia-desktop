@@ -5,7 +5,7 @@
       "en": "Weather",
       "zh_CN": "天气"
     },
-    "version": "0.2.7",
+    "version": "0.2.8",
     "visible": true,
     "systems": [
       "super"

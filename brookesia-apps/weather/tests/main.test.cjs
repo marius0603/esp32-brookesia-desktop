@@ -5,7 +5,7 @@ const path = require('node:path');
 const code = fs.readFileSync(path.join(__dirname,'../src/app/main.js'),'utf8');
 const nodes={};
 // Binding fields supported by the target Brookesia GUI ABI for these effects.
-const supportedFxFields=new Set(['commonProps.hidden','style.bgColor','style.bgGradientColor','style.opacity','placement.x','placement.y']);
+const supportedFxFields=new Set(['commonProps.hidden','style.bgColor','style.bgGradientColor','style.opacity','style.textColor','placement.x','placement.y']);
 (function walk(node,parent=''){const p=parent+'/'+node.id;nodes[p]=node;for(const c of node.children||[])walk(c,p);})(JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/screens/main.json'),'utf8')));
 const fixture = {current:{time:'2026-10-18T20:00',temperature_2m:23.6,relative_humidity_2m:82,
   apparent_temperature:26.1,is_day:0,precipitation:0.1,weather_code:51,wind_speed_10m:3.06},
@@ -191,5 +191,17 @@ test('sunset while screen sleeps applies on wake without drawing or growing time
  h.value('screenAsleep=true;applyScene()');assert.equal(h.value('fxTimer'),0);
  h.advance(120000);h.app.on_timer(99,'weather_fx');assert.equal(h.value('fxTimer'),0);
  h.value('screenAsleep=false;applyScene()');assert.equal(h.value('fxDay'),0);assert.ok(h.value('fxTimer'));
+});
+test('day skies stay visibly light with readable dark text; night restores original ink and shade',()=>{
+ const luminance=hex=>{const c=hex.slice(1).match(/../g).map(v=>parseInt(v,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return c[0]*.2126+c[1]*.7152+c[2]*.0722;};
+ for(const code of [0,2,61,95,75,45]){
+  const h=harness();h.setTime(Date.parse('2026-10-18T12:00:00+08:00'));h.app.on_start();h.complete(1,solarFixture(code));
+  const get=(path,key)=>h.calls.filter(c=>c.name==='SetBindings').flatMap(c=>c.p.Updates).filter(u=>u.Path===path&&u.Key===key).at(-1).Value;
+  const sky=get('/main','sky'),ink=get('/main/content/temperature','ink');assert.ok(luminance(sky)>.25,'day sky must not look like night');
+  assert.ok((luminance(sky)+.05)/(luminance(ink)+.05)>4.5,'large temperature contrast');
+  assert.equal(get('/main/backdrop/shade','opacity'),'12');assert.equal(get('/main/backdrop/rain','opacity'),'140');
+  h.setTime(Date.parse('2026-10-18T19:00:00+08:00'));h.app.on_timer();
+  assert.ok(luminance(get('/main','sky'))<.08);assert.equal(get('/main/content/temperature','ink'),'#ffffff');assert.equal(get('/main/backdrop/shade','opacity'),'45');
+ }
 });
 console.log(count+' weather tests passed');

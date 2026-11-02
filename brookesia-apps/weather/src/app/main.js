@@ -112,19 +112,25 @@ function applyScene() {
   const scene=data?sceneFor(code,day):'idle';
   if (scene===fxScene && day===fxDay && (scene==='idle' || fxTimer)) return;
   stopFx();
-  const colors={idle:['#081421','#142b43'],clear_day:['#143953','#071925'],clear_night:['#080e24','#122b43'],
-    cloudy_day:['#263c4e','#102130'],cloudy_night:['#122030','#060e1c'],rain:['#122d40','#081421'],
+  const colors={idle:['#081421','#142b43'],clear_day:['#70b8ec','#d1ebfa'],clear_night:['#080e24','#122b43'],
+    cloudy_day:['#91afc6','#d7e3eb'],cloudy_night:['#122030','#060e1c'],rain:['#122d40','#081421'],
     storm:['#171f38','#08111e'],snow:['#2a435a','#122239'],fog:['#344651','#15242e']};
   const weatherPalettes={
-    rain:day?['#23495b','#102a3b']:['#101f34','#050c18'],
-    storm:day?['#24364c','#152238']:['#10182a','#050a13'],
-    snow:day?['#42617d','#203a53']:['#162d44','#081629'],
-    fog:day?['#435d6d','#263c4e']:['#202e3b','#0d1723']};
+    rain:day?['#749bb5','#b7ccd9']:['#101f34','#050c18'],
+    storm:day?['#8199ad','#b0c3d2']:['#10182a','#050a13'],
+    snow:day?['#a5cbe7','#e3f1fa']:['#162d44','#081629'],
+    fog:day?['#a5b9c5','#d8e3e8']:['#202e3b','#0d1723']};
   const c=weatherPalettes[scene] || colors[scene] || colors.idle, rain=scene==='rain'||scene==='storm';
   const clouds=scene.indexOf('cloudy')===0 || rain || scene==='snow';
   const celestial=scene!=='idle' && scene!=='fog' && scene!=='storm' && code!==3;
   const stars=!day && (scene==='clear_night' || (scene==='cloudy_night' && code!==3));
+  const light=day && scene!=='idle';
   const updates=[binding('/main','sky',c[0]),binding('/main','sky_bottom',c[1]),
+    binding('/main/backdrop/shade','opacity',light?12:45),
+    binding('/main/backdrop/rain','opacity',light?140:255),
+    binding('/main/content/temperature','ink',light?'#102f4d':'#ffffff'),
+    binding('/main/content/humidity','ink',light?'#183c55':'#c6e5ef'),
+    binding('/main/content/condition','ink',light?'#183c55':'#ffda83'),
     binding('/main/backdrop/rain','hidden',!rain),binding('/main/backdrop/sun','hidden',!(day && celestial)),
     binding('/main/backdrop/moon','hidden',!(!day && celestial)),
     binding('/main/backdrop/stars','hidden',!stars),
