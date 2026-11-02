@@ -1,0 +1,211 @@
+{
+  "schema": 1,
+  "scope": "general_internet_radio",
+  "region_switch": false,
+  "categories": [
+    "儿童",
+    "音乐",
+    "资讯",
+    "收藏"
+  ],
+  "stations": [
+    {
+      "id": "suzhou-qtfm",
+      "name": "苏州儿童广播",
+      "display_name": "苏州儿童广播",
+      "group": "儿童",
+      "sub": "中文 · 亲子广播，按节目表播出",
+      "symbol": "童",
+      "language": "zh-CN",
+      "content": "亲子综合广播，含新闻、音乐等非故事节目；不是全天儿童故事或纯儿歌频道。",
+      "broadcaster": "苏州市广播电视总台",
+      "identity_source": "https://m.qtfm.cn/channels/2807/",
+      "stream_source": "https://m.qtfm.cn/channels/2807/",
+      "stream_url": "https://lhttp.qtfm.cn/live/2807/64k.mp3",
+      "verification": {
+        "date": "2026-11-02",
+        "scope": "computer_short_segment_decode",
+        "network_route": "configured_proxy",
+        "http_status": 200,
+        "sample_bytes": 131072,
+        "decoded_seconds": 2,
+        "audio": "mp3 (mp3float), 48000 Hz, stereo, fltp, 64 kb/s",
+        "device_playback_verified": false
+      }
+    },
+    {
+      "id": "junior-0",
+      "name": "Fun Kids Junior",
+      "display_name": "Fun Kids Junior",
+      "group": "儿童",
+      "sub": "英语 · 低龄儿歌与陪伴",
+      "symbol": "歌",
+      "language": "en-GB",
+      "content": "面向低龄儿童的歌曲与陪伴；夜间故事、摇篮曲按英国当地节目时间安排。",
+      "broadcaster": "Children's Radio UK Ltd",
+      "identity_source": "https://www.funkidslive.com/news/whats-fun-kids-junior-and-how-do-i-listen/",
+      "stream_source": "https://www.funkidslive.com/player/junior/",
+      "stream_url": "https://listen-funkids.sharp-stream.com/funkidsjunior.aac?platform=website",
+      "verification": {
+        "date": "2026-11-02",
+        "scope": "computer_short_segment_decode",
+        "network_route": "configured_proxy",
+        "http_status": 200,
+        "sample_bytes": 131072,
+        "decoded_seconds": 2,
+        "audio": "aac (HE-AAC), 44100 Hz, stereo, fltp, 64 kb/s",
+        "device_playback_verified": false
+      }
+    },
+    {
+      "id": "story-quest-0",
+      "name": "Fun Kids Story Quest Radio",
+      "display_name": "Story Quest",
+      "group": "儿童",
+      "sub": "英语 · Fun Kids 原创故事",
+      "symbol": "书",
+      "language": "en-GB",
+      "content": "连续播出的原创故事频道；不是中文故事，未承诺全部内容适合1至3岁。",
+      "broadcaster": "Children's Radio UK Ltd",
+      "identity_source": "https://www.funkidslive.com/stations/what-is-fun-kids-story-quest-radio-and-how-do-i-listen/",
+      "stream_source": "https://www.funkidslive.com/player/story-quest/",
+      "stream_url": "https://stream.rcs.revma.com/d3xb3hq3tm0uv",
+      "verification": {
+        "date": "2026-11-02",
+        "scope": "computer_short_segment_decode",
+        "network_route": "configured_proxy",
+        "http_status": 200,
+        "sample_bytes": 131072,
+        "decoded_seconds": 2,
+        "audio": "aac (HE-AAC), 44100 Hz, stereo, fltp, 47 kb/s",
+        "device_playback_verified": false
+      }
+    },
+    {
+      "id": "cnr-classic",
+      "name": "经典音乐广播",
+      "group": "音乐",
+      "sub": "中文 · 央广经典音乐",
+      "symbol": "典",
+      "broadcaster": "中央广播电视总台",
+      "identity_source": "https://ent.cnr.cn/ylzt/goldenradio/",
+      "stream_url": "https://ngcdn001.cnr.cn/live/dszs/index.m3u8",
+      "verification": {
+        "date": "2026-11-02",
+        "scope": "computer_short_segment_decode",
+        "playlist_http_status": 200,
+        "segment_http_status": 200,
+        "segment_bytes": 252296,
+        "decoded_seconds": 2,
+        "audio": "aac (LC) ([15][0][0][0] / 0x000F), 48000 Hz, stereo, fltp, 192 kb/s",
+        "device_playback_verified": false,
+        "network_route": "configured_proxy"
+      },
+      "display_name": "经典音乐广播",
+      "language": "zh-CN",
+      "content": "按电台节目表播出；不是全天轻音乐或儿童专属频道。"
+    },
+    {
+      "id": "naps-0",
+      "name": "Fun Kids Naps",
+      "display_name": "Fun Kids Naps",
+      "group": "音乐",
+      "sub": "英语 · 摇篮曲与睡眠音乐",
+      "symbol": "眠",
+      "language": "en-GB",
+      "content": "以摇篮曲、舒缓睡眠音乐为主，含英语歌曲。",
+      "broadcaster": "Children's Radio UK Ltd",
+      "identity_source": "https://www.funkidslive.com/stations/fun-kids-naps/what-is-fun-kids-naps/",
+      "stream_source": "https://www.funkidslive.com/player/naps/",
+      "stream_url": "https://stream.rcs.revma.com/pp2cg1z3tm0uv",
+      "verification": {
+        "date": "2026-11-02",
+        "scope": "computer_short_segment_decode",
+        "network_route": "configured_proxy",
+        "http_status": 200,
+        "sample_bytes": 131072,
+        "decoded_seconds": 2,
+        "audio": "mp3 (mp3float), 44100 Hz, stereo, fltp, 128 kb/s",
+        "device_playback_verified": false
+      }
+    },
+    {
+      "id": "sleep-sounds-0",
+      "name": "Fun Kids Sleep Sounds",
+      "display_name": "Sleep Sounds",
+      "group": "音乐",
+      "sub": "自然声音 · 海浪、雨声与溪流",
+      "symbol": "雨",
+      "language": "nature",
+      "content": "自然环境声，包括海浪、风、雨与炉火、鸟鸣、溪流和林间声；不是中文朗读。",
+      "broadcaster": "Children's Radio UK Ltd",
+      "identity_source": "https://www.funkidslive.com/stations/what-is-fun-kids-sleep-sounds-and-how-do-i-listen/",
+      "stream_source": "https://www.funkidslive.com/player/sleep-sounds/",
+      "stream_url": "https://stream.rcs.revma.com/5skkr2gtuy8uv",
+      "verification": {
+        "date": "2026-11-02",
+        "scope": "computer_short_segment_decode",
+        "network_route": "configured_proxy",
+        "http_status": 200,
+        "sample_bytes": 131072,
+        "decoded_seconds": 2,
+        "audio": "aac (HE-AAC), 44100 Hz, stereo, fltp, 47 kb/s",
+        "device_playback_verified": false
+      }
+    },
+    {
+      "id": "cnr-news",
+      "name": "中国之声",
+      "group": "资讯",
+      "sub": "中文 · 新闻资讯",
+      "symbol": "新",
+      "broadcaster": "中央广播电视总台",
+      "identity_source": "https://news.cnr.cn/dj/20260216/t20260216_527529018.shtml",
+      "stream_url": "https://ngcdn001.cnr.cn/live/zgzs/index.m3u8",
+      "verification": {
+        "date": "2026-11-02",
+        "scope": "computer_short_segment_decode",
+        "playlist_http_status": 200,
+        "segment_http_status": 200,
+        "segment_bytes": 252484,
+        "decoded_seconds": 2,
+        "audio": "aac (LC) ([15][0][0][0] / 0x000F), 48000 Hz, stereo, fltp, 192 kb/s",
+        "device_playback_verified": false,
+        "network_route": "configured_proxy"
+      },
+      "display_name": "中国之声",
+      "language": "zh-CN",
+      "content": "综合新闻或财经资讯，面向普通听众。"
+    },
+    {
+      "id": "cnr-economy",
+      "name": "经济之声",
+      "group": "资讯",
+      "sub": "中文 · 财经资讯",
+      "symbol": "经",
+      "broadcaster": "中央广播电视总台",
+      "identity_source": "https://news.cnr.cn/dj/20260216/t20260216_527529018.shtml",
+      "stream_url": "https://ngcdn002.cnr.cn/live/jjzs/index.m3u8",
+      "verification": {
+        "date": "2026-11-02",
+        "scope": "computer_short_segment_decode",
+        "playlist_http_status": 200,
+        "segment_http_status": 200,
+        "segment_bytes": 253612,
+        "decoded_seconds": 2,
+        "audio": "aac (LC) ([15][0][0][0] / 0x000F), 48000 Hz, stereo, fltp, 192 kb/s",
+        "device_playback_verified": false,
+        "network_route": "configured_proxy"
+      },
+      "display_name": "经济之声",
+      "language": "zh-CN",
+      "content": "综合新闻或财经资讯，面向普通听众。"
+    }
+  ],
+  "limitations": [
+    "Official/provider identity and a short computer decode verified on 2026-11-02 through the configured proxy. Direct device connectivity and long-term stability remain unverified.",
+    "The interface remains a silent prototype; selecting a station makes no network request.",
+    "Children category is a content grouping, not a guarantee of every programme being suitable for ages 1 to 3. Chinese family radio is not an all-day story channel.",
+    "Public stream availability may change. Provider sites/apps remain the fallback."
+  ]
+}
