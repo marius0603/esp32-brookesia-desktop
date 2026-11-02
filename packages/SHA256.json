@@ -84,5 +84,6 @@
   "packages/android/xiaoma-remote-0.2.1.apk": "35ced0c83fa7072c15b29de0799e414e76e76bf675a2157d51c6ed45e6cbf356",
   "packages/android/xiaoma-remote-0.2.2.apk": "1c9a00a9a2ed14b6140f327f140b3ebb71aace781f6c1ac5f297ea0819a6e15c",
   "packages/apps/local.audiobook.debug.0.3.6.bpk": "8cff31315efad0a606674f499e76c9b9adf9afa6d2ee1cc8d2b286bad4d86068",
-  "packages/firmware/brookesia-0.8.3-s3.40-app-only.zip": "90313f7e195702f18ebf0d05bad1654ffbece6e279ee9084291f6607c77dea53"
+  "packages/firmware/brookesia-0.8.3-s3.40-app-only.zip": "90313f7e195702f18ebf0d05bad1654ffbece6e279ee9084291f6607c77dea53",
+  "packages/android/xiaoma-remote-0.2.3.apk": "888401dd777a6b8a08acb43e91a5f359765369a152b4debc2488170b7d4f1966"
 }

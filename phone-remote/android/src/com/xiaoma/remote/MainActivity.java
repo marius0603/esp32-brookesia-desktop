@@ -49,7 +49,7 @@ public class MainActivity extends Activity {
   LinearLayout sound=card(content[0]);sound.addView(label("声音与屏幕",20));volume=slider(sound,"音量",0,"volume");brightness=slider(sound,"亮度",10,"brightness");
   LinearLayout screen=card(content[0]);screen.addView(label("屏幕控制",20));LinearLayout screenActions=row();screen.addView(screenActions);cell(screenActions,"息屏",()->simple("sleep"));cell(screenActions,"唤醒",()->simple("wake"));cell(screenActions,"锁屏",()->new AlertDialog.Builder(this).setTitle("锁定设备屏幕？").setMessage("解锁时，在设备上快速连按两次音量＋。").setPositiveButton("锁屏",(d,w)->simple("lock")).setNegativeButton("取消",null).show());button(screen,"刷新状态",()->refreshStatus());
   LinearLayout now=card(content[1]);now.setBackground(shape(Color.rgb(19,57,56),22));TextView playing=label("听书",14);playing.setTextColor(accent);now.addView(playing);storyTitle=label("选择一篇故事",25);storyTitle.setTypeface(null,1);now.addView(storyTitle);storyState=label("等待播放",15);storyState.setTextColor(muted);now.addView(storyState);storyTime=label("00:00",18);now.addView(storyTime);
-  LinearLayout transport=row();now.addView(transport);cell(transport,"暂停",()->simple("pause"));cell(transport,"继续",()->simple("resume"));cell(transport,"停止",()->simple("stop"));
+  LinearLayout transport=row();now.addView(transport);cell(transport,"暂停",()->simple("pause"));cell(transport,"继续",()->simple("resume"));cell(transport,"下一篇",()->nextStory());
   LinearLayout mode=card(content[1]);mode.addView(label("播放方式",18));LinearLayout choices=row();mode.addView(choices);String[] names={"顺序播放","随机播放","单故事循环"};for(int i=0;i<3;i++){final int index=i;modeButtons[i]=cell(choices,names[i],()->command(json("cmd","mode","value",modes[index]),r->{selectMode(modes[index]);laterRefresh();}));modeButtons[i].setTextSize(13);modeButtons[i].setCompoundDrawablesWithIntrinsicBounds(null,new ModeIcon(this,i,accent),null,null);modeButtons[i].getLayoutParams().height=dp(80);}
   speedButton=button(mode,"播放速度  1x",()->new AlertDialog.Builder(this).setTitle("播放速度").setItems(new String[]{"0.5x","0.75x","1x","1.25x","1.5x","2x"},(d,which)->{double[] speeds={0.5,0.75,1,1.25,1.5,2};command(json("cmd","speed","value",speeds[which]),r->laterRefresh());}).show());
   LinearLayout library=card(content[1]);library.addView(label("故事书架",20));stories=column();library.addView(stories);storyPages=label("连接设备后查看故事",14);storyPages.setTextColor(muted);library.addView(storyPages);LinearLayout storyNav=row();library.addView(storyNav);cell(storyNav,"上一页",()->loadStoriesPage(Math.max(0,storyPage-1)));cell(storyNav,"下一页",()->loadStoriesPage(Math.min(Math.max(0,(storyTotal-1)/3),Math.max(0,storyPage+1))));
@@ -63,8 +63,28 @@ public class MainActivity extends Activity {
  interface Result{void accept(JSONObject response)throws Exception;}
  void simple(String cmd){command(json("cmd",cmd),r->laterRefresh());}
  void laterRefresh(){ui.postDelayed(()->{if(connected&&!busy)refreshStatus();},250);}
- void command(JSONObject request,Result action){if(!connected){text("请先输入配对码并连接设备");return;}if(busy){text("正在处理，请稍候");return;}busy=true;BluetoothGatt owner=gatt;
-  jobs.execute(()->{workerGatt=owner;try{byte[] raw=exchange(0x55,protocol.crypt(request.toString().getBytes("UTF-8")));JSONObject response=new JSONObject(new String(protocol.crypt(raw),"UTF-8"));if(!response.optBoolean("ok")){text(response.optString("error","操作未完成"));return;}ui.post(()->{if(gatt!=owner)return;try{status.setText("已连接");action.accept(response);}catch(Exception e){text("设备回复格式异常");}});}catch(Exception e){if(gatt==owner){disconnect();text("连接中断，请重新扫描并输入配对码");}}finally{busy=false;}});
+ interface RemoteWork{JSONObject run()throws Exception;}
+ JSONObject sendRequest(JSONObject request)throws Exception{
+  byte[] raw=exchange(0x55,protocol.crypt(request.toString().getBytes("UTF-8")));
+  JSONObject response=new JSONObject(new String(protocol.crypt(raw),"UTF-8"));
+  if(!response.optBoolean("ok"))throw new IllegalArgumentException(response.optString("error","操作未完成"));
+  return response;
+ }
+ void nextStory(){runCommand(()->{
+  ArrayList<String> names=new ArrayList<>();ArrayList<Integer> ids=new ArrayList<>();
+  for(int page=0;;page++){
+   JSONObject list=sendRequest(json("cmd","stories","page",page));JSONArray items=list.getJSONArray("items");
+   for(int i=0;i<items.length();i++){JSONObject item=items.getJSONObject(i);names.add(item.getString("name"));ids.add(item.getInt("id"));}
+   if(!list.optBoolean("more"))break;
+   if(page>=127)throw new IllegalArgumentException("书架过大，请从书架选择故事");
+  }
+  JSONObject state=sendRequest(json("cmd","status"));
+  int at=StoryNavigation.next(names,state.optString("story_title",""),state.optString("play_mode","sequence"),new Random());
+  return sendRequest(json("cmd","play","id",ids.get(at)));
+ },r->laterRefresh());}
+ void command(JSONObject request,Result action){runCommand(()->sendRequest(request),action);}
+ void runCommand(RemoteWork work,Result action){if(!connected){text("请先输入配对码并连接设备");return;}if(busy){text("正在处理，请稍候");return;}busy=true;BluetoothGatt owner=gatt;
+  jobs.execute(()->{workerGatt=owner;try{JSONObject response=work.run();ui.post(()->{if(gatt!=owner)return;try{status.setText("已连接");action.accept(response);}catch(Exception e){text("设备回复格式异常");}});}catch(IllegalArgumentException e){text(e.getMessage());}catch(Exception e){if(gatt==owner){disconnect();text("连接中断，请重新扫描并输入配对码");}}finally{busy=false;}});
  }
  void refreshStatus(){command(json("cmd","status"),r->{update(r);ui.post(()->{if(selectedTab==1&&storyPage<0)loadStoriesPage(0);else if(selectedTab==2&&appPage<0)loadAppsPage(0);});});}
  void selectMode(String value){for(int i=0;i<3;i++){boolean chosen=modes[i].equals(value);modeButtons[i].setTextColor(chosen?accent:muted);modeButtons[i].setBackground(shape(chosen?Color.rgb(25,66,62):Color.rgb(30,46,65),13));}}
