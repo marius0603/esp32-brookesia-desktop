@@ -4,7 +4,7 @@
 
 | 内容 | 版本与当前行为 |
 | --- | --- |
-| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.40；手机BLE加密配网与独立蓝牙遥控；可切换经典Q版与赛博朋克桌面，壁纸和10个图标同步更换并记住选择；图标原生预载、手机式跟手分页，每页6个应用及页码圆点；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转 |
+| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.41；手机BLE加密配网与独立蓝牙遥控；可切换经典Q版与赛博朋克桌面，壁纸和10个图标同步更换并记住选择；图标原生预载、手机式跟手分页，每页6个应用及页码圆点；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转 |
 | 额度显示 | 0.2.3，黑底双圆角卡片、34号“5小时/每周”标题、48号真实剩余百分比、吃豆人动画、30号倒计时和同步胶囊；随包保留Q版图标 |
 | 天气 | 0.2.6，默认上海、开发板直接联网、各天气动态背景、云形图片、24 小时预报 |
 | 听书 | 0.3.6，六档保持音高倍速、开机默认1倍；64KiB PCM缓冲修复周期性卡顿，手机与设备通过内存同步播放模式；20篇故事使用统一响度目标，移出月亮灯并新增11篇中文朗读，保留双声道抵消修正；图标切换顺序播放、随机播放与单故事循环，自动保存模式；音量与锁屏置顶、Q版图标、中文书名、大号播放按钮、睡眠选择框、语音控制、章节与书签；连按两次音量＋解锁，最后2分钟声音/亮度渐弱，到时离线“晚安”并停播 |
@@ -22,7 +22,7 @@
 壁纸微移的行为与已有设备更新步骤见 [WALLPAPER_SHIFT.md](codex-quota-monitor/WALLPAPER_SHIFT.md)。
 重力感应开关、校准与已有设备安装步骤见 [AUTO_ROTATION.md](codex-quota-monitor/AUTO_ROTATION.md)。
 儿童模式设置与验证见 [CHILD_MODE.md](codex-quota-monitor/CHILD_MODE.md)，主题资源迁移见 [SD_RESOURCES.md](codex-quota-monitor/SD_RESOURCES.md)。
-听书定时、中文样例及离线语音合成见 [AUDIOBOOK.md](codex-quota-monitor/AUDIOBOOK.md)。最新20篇书库和逐篇来源见 [故事书库](codex-quota-monitor/STORY_LIBRARY.md)。当前 Q 版图标和壁纸见 [主题说明](themes/cartoon-q-v1/README.md)。
+听书定时、中文样例及离线语音合成见 [AUDIOBOOK.md](codex-quota-monitor/AUDIOBOOK.md)。最新20篇书库和逐篇来源见 [故事书库](codex-quota-monitor/STORY_LIBRARY.md)。Q版透明图标缓存及内存说明见[去除外层底色](codex-quota-monitor/TRANSPARENT_ICONS.md)。当前 Q 版图标和壁纸见 [主题说明](themes/cartoon-q-v1/README.md)。
 赛博朋克主题、设置中的切换入口、安装及回退见 [赛博朋克桌面](themes/cyberpunk-v1/README.md)。原Q版资源继续保留。
 助手实体音量键及界面同步修复见 [ASSISTANT_VOLUME.md](codex-quota-monitor/ASSISTANT_VOLUME.md)。
 电脑模型、跨网络连接、设备安装与验证见 [电脑语音助手](pc-voice-bridge/README.md)。当前公网入口为临时隧道，重建后需更新设备地址；长期使用需固定入口。
@@ -47,7 +47,7 @@ python -m venv .venv
 npm --prefix tools/brookesia-toolkit install
 ```
 
-准备脚本会下载 `versions.json` 固定的 Brookesia 提交，依次应用S3适配、分页桌面、桌面主题、手机配网、蓝牙遥控、独立蓝牙设置、前台导航及单前台资源释放八个补丁，再装入 `platform/super_s3_216` 工程。
+准备脚本会下载 `versions.json` 固定的 Brookesia 提交，依次应用S3适配、分页桌面、桌面主题、手机配网、蓝牙遥控、独立蓝牙设置、前台导航、单前台资源释放及透明图标九个补丁，再装入 `platform/super_s3_216` 工程。
 整个上游代码无需重复保存在此仓库；首次准备需要网络。脚本拒绝覆盖已有不同内容的源码。
 目录关系必须保留：`codex-quota-monitor`、`brookesia-apps` 与生成的 `esp-brookesia-v08` 同级。
 
@@ -69,7 +69,7 @@ npm --prefix tools/brookesia-toolkit install
 小马助手 0.2.2 需要 s3.25 原生服务。默认电脑模式，点击“电脑模式/小智模式”按钮可切换；小智首次使用仍需在平台添加设备。点击说话，等待按钮显示“发送”后开始说话，再次点击发送；最长30秒，录音先完整缓存在设备内存中，再上传电脑。
 电脑端 Node.js 从 PATH 查找，也可通过 `QUOTA_NODE` 指定。
 
-任务接续见 [TASK_STATUS.md](TASK_STATUS.md)，依赖、八份补丁和换电脑恢复见 [BUILD_DEPENDENCIES.md](BUILD_DEPENDENCIES.md)，安卓原签名见 [加密备份说明](phone-remote/signing/README.md)。
+任务接续见 [TASK_STATUS.md](TASK_STATUS.md)，依赖、九份补丁和换电脑恢复见 [BUILD_DEPENDENCIES.md](BUILD_DEPENDENCIES.md)，安卓原签名见 [加密备份说明](phone-remote/signing/README.md)。
 
 ## 恢复电脑端额度同步
 
@@ -101,7 +101,7 @@ npm --prefix tools/brookesia-toolkit install
 
 ## 固件文件与备份
 
-`packages/apps` 保存可安装 BPK，当前听书为 [0.3.6](packages/apps/local.audiobook.debug.0.3.6.bpk)，小马助手为 [0.2.2](packages/apps/local.voiceassistant.debug.0.2.2.bpk)；`packages/firmware` 包含 [s3.40 应用分区更新包](packages/firmware/brookesia-0.8.3-s3.40-app-only.zip) 及历史版本。更新包附带只用于核对的分区表，使用 [听书缓冲更新步骤](codex-quota-monitor/AUDIOBOOK_BUFFER.md) 安装；校验值见 `packages/SHA256.json`。
+`packages/apps` 保存可安装 BPK，当前听书为 [0.3.6](packages/apps/local.audiobook.debug.0.3.6.bpk)，小马助手为 [0.2.2](packages/apps/local.voiceassistant.debug.0.2.2.bpk)；`packages/firmware` 包含 [s3.41 应用分区更新包](packages/firmware/brookesia-0.8.3-s3.41-app-only.zip) 及历史版本。更新包附带只用于核对的分区表，使用 [听书缓冲更新步骤](codex-quota-monitor/AUDIOBOOK_BUFFER.md) 安装；校验值见 `packages/SHA256.json`。
 它们不包含用户 NVS、Wi-Fi 数据或设备系统资源分区，不能当成任意新设备的完整恢复镜像。
 
 原电脑的恢复工具会检查完整备份和设备身份，新电脑没有备份时会拒绝直接烧录。这是已有防误刷机制。

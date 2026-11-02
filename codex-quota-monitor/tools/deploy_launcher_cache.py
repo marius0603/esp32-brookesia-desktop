@@ -6,6 +6,8 @@ from deploy_audiobook_sleep import StoryClient
 ROOT=Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser();p.add_argument('--port',required=True);p.add_argument('--restore',type=Path);p.add_argument('--solid-background',action='store_true',help='Optionally replace the wallpaper with the icon background color');a=p.parse_args()
 source=ROOT.parent/'themes/cartoon-q-v1/launcher-optimized'
+if not a.restore and json.loads((source/'manifest.json').read_text(encoding='utf-8')).get('transparent'):
+ raise SystemExit('Transparent cache 1.1 requires s3.41 and tools/deploy_transparent_icons.py; this legacy installer only handles opaque caches.')
 with StoryClient(a.port,timeout=40) as c:
  c.hello()
  def call(s,f,args=None):return c.call(s,f,args or {})['result']

@@ -1,0 +1,16 @@
+--- a/gui/brookesia_gui_lvgl/src/props_image.cpp
++++ b/gui/brookesia_gui_lvgl/src/props_image.cpp
+@@ -244,10 +244,11 @@
+             (uint32_t(source->data[at+1])<<8) | (uint32_t(source->data[at+2])<<16) |
+             (uint32_t(source->data[at+3])<<24);};
+         const auto &header=source->descriptor.header;
+-        if(source->data.size()<24 || header.cf!=LV_COLOR_FORMAT_RGB565 ||
++        const bool with_alpha=header.cf==LV_COLOR_FORMAT_RGB565A8;
++        if(source->data.size()<24 || (header.cf!=LV_COLOR_FORMAT_RGB565 && !with_alpha) ||
+                 header.w==0 || header.h==0 || header.w>1024 || header.h>1024 ||
+                 header.stride!=header.w*2 || le32(12)!=1 ||
+-                le32(16)!=source->data.size()-24 || le32(20)!=uint32_t(header.stride)*header.h) {
++                le32(16)!=source->data.size()-24 || le32(20)!=uint32_t(header.stride)*header.h+(with_alpha?uint32_t(header.w)*header.h:0)) {
+             return std::unexpected("Invalid RLE RGB565 image: " + path);
+         }
+         std::vector<uint8_t> pixels(le32(20));
