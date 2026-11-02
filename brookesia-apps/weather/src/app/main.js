@@ -195,6 +195,25 @@ function persistState() {
     received_at:receivedAt,source_time:data?data.current.time:null,
     temperature:data?data.current.temperature_2m:null,ui_updated:!paused && !!data});
 }
+function hourlyTheme(day) {
+  return day===0?{background:'#102b42',edge:'#55728b',ink:'#e6effa',muted:'#abc8de'}:
+    {background:'#fff5e5',edge:'#7693aa',ink:'#183c55',muted:'#35566e'};
+}
+function syncHourlyThemes(hours) {
+  if(paused)return;
+  const updates=[],changed=[];
+  for(let i=0;i<hours.length;i++){
+    const day=hours[i].day===0?0:1,key='hourTheme'+i;
+    if(rendered[key]===day)continue;
+    const t=hourlyTheme(day),path='/main/content/hourly/h'+i;
+    updates.push(binding(path,'card_bg',t.background),binding(path,'card_edge',t.edge),
+      binding(path+'/time','ink',t.ink),binding(path+'/temperature','ink',t.ink),binding(path+'/condition','muted_ink',t.muted));
+    changed.push([key,day]);
+  }
+  // Keep each request bounded, and repaint only cards whose daylight changes.
+  for(let i=0;i<updates.length;i+=20)updateBindings(updates.slice(i,i+20));
+  for(const item of changed)rendered[item[0]]=item[1];
+}
 function render() {
   applyScene();
   if (!data) { text('condition',status); return; }
@@ -213,6 +232,7 @@ function render() {
       call(gui,'SetViewSrc',{Path:'/main/content/'+path+'/icon',Src:icon});rendered[key]=icon;
     }
   }
+  syncHourlyThemes(hours);
 }
 function setStatus(value) { status=value; render(); persistState(); }
 function cancelPending() {

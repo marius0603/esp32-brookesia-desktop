@@ -5,7 +5,7 @@ const path = require('node:path');
 const code = fs.readFileSync(path.join(__dirname,'../src/app/main.js'),'utf8');
 const nodes={};
 // Binding fields supported by the target Brookesia GUI ABI for these effects.
-const supportedFxFields=new Set(['commonProps.hidden','style.bgColor','style.bgGradientColor','style.opacity','style.textColor','placement.x','placement.y']);
+const supportedFxFields=new Set(['commonProps.hidden','style.bgColor','style.bgGradientColor','style.opacity','style.textColor','style.borderColor','placement.x','placement.y']);
 (function walk(node,parent=''){const p=parent+'/'+node.id;nodes[p]=node;for(const c of node.children||[])walk(c,p);})(JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/screens/main.json'),'utf8')));
 const fixture = {current:{time:'2026-10-18T20:00',temperature_2m:23.6,relative_humidity_2m:82,
   apparent_temperature:26.1,is_day:0,precipitation:0.1,weather_code:51,wind_speed_10m:3.06},
@@ -167,10 +167,10 @@ test('city sunrise inclusive and sunset exclusive override stale current is_day'
 test('each precipitation layer has distinct day/night sky and keeps its animation',()=>{
  for(const [code,scene] of [[61,'rain'],[95,'storm'],[75,'snow'],[45,'fog'],[2,'cloudy_day']]){
   const h=harness();h.setTime(Date.parse('2026-10-18T12:00:00+08:00'));h.app.on_start();h.complete(1,solarFixture(code));
-  assert.equal(h.value('fxScene'),scene);const daySky=h.calls.filter(c=>c.name==='SetBindings').at(-1).p.Updates.find(u=>u.Key==='sky').Value;
+  assert.equal(h.value('fxScene'),scene);const daySky=h.calls.filter(c=>c.name==='SetBindings').flatMap(c=>c.p.Updates).filter(u=>u.Key==='sky').at(-1).Value;
   h.online(false);h.setTime(Date.parse('2026-10-18T17:20:00+08:00'));h.app.on_timer();
   assert.equal(h.value('fxDay'),0,'offline sunset must still switch');
-  const nightSky=h.calls.filter(c=>c.name==='SetBindings').at(-1).p.Updates.find(u=>u.Key==='sky').Value;
+  const nightSky=h.calls.filter(c=>c.name==='SetBindings').flatMap(c=>c.p.Updates).filter(u=>u.Key==='sky').at(-1).Value;
   assert.notEqual(daySky,nightSky);assert.ok(h.value('fxTimer'));
   h.advance(250);h.app.on_timer(99,'weather_fx');assert.ok(h.value('fxFrames')>0);
  }
@@ -203,5 +203,24 @@ test('day skies stay visibly light with readable dark text; night restores origi
   h.setTime(Date.parse('2026-10-18T19:00:00+08:00'));h.app.on_timer();
   assert.ok(luminance(get('/main','sky'))<.08);assert.equal(get('/main/content/temperature','ink'),'#ffffff');assert.equal(get('/main/backdrop/shade','opacity'),'45');
  }
+});
+test('hour cards use their forecast daylight, keep edge separation and avoid repainting unchanged themes',()=>{
+ const h=harness();h.setTime(Date.parse('2026-10-18T12:00:00+08:00'));h.app.on_start();h.complete(1,solarFixture(2));
+ const get=(path,key)=>h.calls.filter(c=>c.name==='SetBindings').flatMap(c=>c.p.Updates).filter(u=>u.Path===path&&u.Key===key).at(-1).Value;
+ assert.equal(h.value('fxDay'),1); // Current sky is daytime, first forecast is 20:00.
+ assert.equal(get('/main/content/hourly/h0','card_bg'),'#102b42');
+ assert.equal(get('/main/content/hourly/h11','card_bg'),'#fff5e5'); // Next day 07:00.
+ assert.notEqual(get('/main/content/hourly/h11','card_bg'),get('/main','sky_bottom'));
+ assert.equal(get('/main/content/hourly/h11/time','ink'),'#183c55');
+ assert.equal(get('/main/content/hourly/h0/time','ink'),'#e6effa');
+ for(let i=0;i<24;i++){
+  const node=nodes['/main/content/hourly/h'+i];assert.equal(node.style.borderWidth,1);assert.equal(node.style.radius,16);
+  assert.equal(node.bindings['style.borderColor'],'card_edge');
+ }
+ const paints=()=>h.calls.filter(c=>c.name==='SetBindings').flatMap(c=>c.p.Updates).filter(u=>u.Key==='card_bg').length;
+ const before=paints();h.advance(5000);h.app.on_timer();assert.equal(paints(),before);
+ h.app.on_pause();h.app.on_resume();assert.equal(paints(),before+24,'resume must restore card styling');
+ const themeBatches=h.calls.filter(c=>c.name==='SetBindings'&&c.p.Updates.some(u=>u.Key==='card_bg'));
+ assert.ok(themeBatches.every(c=>c.p.Updates.length<=20));
 });
 console.log(count+' weather tests passed');

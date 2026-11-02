@@ -8,7 +8,7 @@ def main():
  p=argparse.ArgumentParser();p.add_argument('--port',required=True);a=p.parse_args()
  stamp=datetime.now().strftime('%Y%m%d-%H%M%S');folder=ROOT/'codex-quota-monitor/runtime'/('weather-solar-'+stamp);folder.mkdir()
  backup='/sdcard/resource-backups/weather-solar-'+stamp
- with zipfile.ZipFile(ROOT/'packages/apps/local.weather.debug.0.2.8.bpk') as z:files={n:z.read(n) for n in ('app/main.js','manifest.json','res/screens/main.json')}
+ with zipfile.ZipFile(ROOT/'packages/apps/local.weather.debug.0.2.9.bpk') as z:files={n:z.read(n) for n in ('app/main.js','manifest.json','res/screens/main.json')}
  report={'passed':False,'backup':backup,'files':{}}
  with StoryClient(a.port,timeout=30) as c:
   c.hello()
@@ -41,5 +41,5 @@ def main():
   assert f('Storage','FSReadText',{'Path':icon})==saved_icon
   report['passed']=True
  (folder/'deployment.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
- print('Installed weather0.2.8 script and manifest; original transparent launcher index preserved. Restart to refresh version metadata.')
+ print('Installed weather0.2.9 script and manifest; original transparent launcher index preserved. Restart to refresh version metadata.')
 if __name__=='__main__':main()
