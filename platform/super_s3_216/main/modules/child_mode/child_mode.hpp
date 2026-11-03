@@ -7,3 +7,4 @@ void child_mode_attach_system(esp_brookesia::system::core::System *system);
 bool child_mode_voice_allowed();
 bool child_mode_audiobook_allowed();
 bool child_mode_learning_allowed();
+bool child_mode_radio_allowed();

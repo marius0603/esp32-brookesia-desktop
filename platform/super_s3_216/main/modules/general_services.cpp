@@ -11,6 +11,7 @@
 #include "private/utils.hpp"
 #include "general_services.hpp"
 #include "audiobook/audiobook.hpp"
+#include "radio/radio.hpp"
 #include "offline_voice/offline_voice.hpp"
 #include "voice_assistant/voice_assistant.hpp"
 #include "voice_assistant/local_voice.hpp"
@@ -35,6 +36,7 @@ bool GeneralServices::init()
     auto &service_manager = service::ServiceManager::get_instance();
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.init(), false, "Failed to initialize service manager");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_audiobook_service()), false, "Failed to register audiobook service");
+    BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_radio_service()), false, "Failed to register radio service");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_voice_assistant_service()), false, "Failed to register voice assistant service");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_local_voice_service()), false, "Failed to register local voice service");
     BROOKESIA_CHECK_FALSE_RETURN(service_manager.add_service(make_device_modes_service()), false, "Failed to register device modes");
@@ -128,6 +130,9 @@ bool GeneralServices::start_audio_services()
     BROOKESIA_CHECK_FALSE_RETURN(assistant_binding.is_valid(), false, "Failed to bind voice assistant service");
     static auto local_voice_binding = service_manager.bind("LocalVoice");
     BROOKESIA_CHECK_FALSE_RETURN(local_voice_binding.is_valid(), false, "Failed to bind local voice service");
+    // Keep asynchronous network workers alive until Stop has joined them.
+    static auto radio_binding = service_manager.bind("Radio");
+    BROOKESIA_CHECK_FALSE_RETURN(radio_binding.is_valid(), false, "Failed to bind radio service");
 
     return true;
 }

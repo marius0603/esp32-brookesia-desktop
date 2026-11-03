@@ -1,0 +1,1814 @@
+{
+  "type": "viewScreen",
+  "id": "main",
+  "commonProps": {
+    "scrollable": false
+  },
+  "style": {
+    "bgColor": "#fff6e8",
+    "padding": 0,
+    "borderWidth": 0
+  },
+  "children": [
+    {
+      "type": "container",
+      "id": "player",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "scrollable": false,
+        "hidden": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "brand",
+          "placement": {
+            "mode": "absolute",
+            "x": 52,
+            "y": 15,
+            "width": 220,
+            "height": 40
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 27,
+            "textColor": "#573d30",
+            "textAlign": "left"
+          },
+          "labelProps": {
+            "text": "小马电台"
+          }
+        },
+        {
+          "type": "label",
+          "id": "connection",
+          "placement": {
+            "mode": "absolute",
+            "x": 310,
+            "y": 25,
+            "width": 120,
+            "height": 24
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 15,
+            "textColor": "#638074",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "Wi-Fi"
+          }
+        },
+        {
+          "type": "image",
+          "id": "art",
+          "placement": {
+            "mode": "absolute",
+            "x": 157,
+            "y": 57,
+            "width": 166,
+            "height": 166
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0
+          },
+          "imageProps": {
+            "src": "${image.radio_art}",
+            "innerAlign": "contain"
+          }
+        },
+        {
+          "type": "button",
+          "id": "favorite",
+          "placement": {
+            "mode": "absolute",
+            "x": 362,
+            "y": 143,
+            "width": 74,
+            "height": 44
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fffaf1",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "favorite"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 9,
+                "width": 74,
+                "height": 27
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 17,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "收藏"
+              }
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 42,
+            "y": 215,
+            "width": 396,
+            "height": 44
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 30,
+            "textColor": "#573d30",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "苏州儿童广播"
+          }
+        },
+        {
+          "type": "label",
+          "id": "meta",
+          "placement": {
+            "mode": "absolute",
+            "x": 42,
+            "y": 264,
+            "width": 396,
+            "height": 28
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 16,
+            "textColor": "#87715e",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "中文 · 亲子广播，按节目表播出"
+          }
+        },
+        {
+          "type": "button",
+          "id": "previous",
+          "placement": {
+            "mode": "absolute",
+            "x": 64,
+            "y": 304,
+            "width": 102,
+            "height": 64
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fffaf1",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "previous"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 17,
+                "width": 102,
+                "height": 32
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 22,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "上一台"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "toggle",
+          "placement": {
+            "mode": "absolute",
+            "x": 180,
+            "y": 294,
+            "width": 120,
+            "height": 82
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#dc9c55",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "toggle"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 23,
+                "width": 120,
+                "height": 37
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 27,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "播放"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "next",
+          "placement": {
+            "mode": "absolute",
+            "x": 314,
+            "y": 304,
+            "width": 102,
+            "height": 64
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fffaf1",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "next"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 17,
+                "width": 102,
+                "height": 32
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 22,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "下一台"
+              }
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "status",
+          "placement": {
+            "mode": "absolute",
+            "x": 42,
+            "y": 384,
+            "width": 396,
+            "height": 25
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 17,
+            "textColor": "#87715e",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "准备播放"
+          }
+        },
+        {
+          "type": "label",
+          "id": "volume",
+          "placement": {
+            "mode": "absolute",
+            "x": 80,
+            "y": 410,
+            "width": 320,
+            "height": 22
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 16,
+            "textColor": "#87715e",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "音量 --%"
+          }
+        },
+        {
+          "type": "button",
+          "id": "stations",
+          "placement": {
+            "mode": "absolute",
+            "x": 106,
+            "y": 435,
+            "width": 126,
+            "height": 31
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fff6e8",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "stations"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 1,
+                "width": 126,
+                "height": 30
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "选频道"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "timer",
+          "placement": {
+            "mode": "absolute",
+            "x": 248,
+            "y": 435,
+            "width": 126,
+            "height": 31
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fff6e8",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "timer"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 1,
+                "width": 126,
+                "height": 30
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "定时"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "stations",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "scrollable": false,
+        "hidden": true
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 140,
+            "y": 19,
+            "width": 200,
+            "height": 40
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 27,
+            "textColor": "#573d30",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "选频道"
+          }
+        },
+        {
+          "type": "button",
+          "id": "back",
+          "placement": {
+            "mode": "absolute",
+            "x": 42,
+            "y": 18,
+            "width": 82,
+            "height": 42
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fff6e8",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "back"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 7,
+                "width": 82,
+                "height": 30
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "返回"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "cat0",
+          "placement": {
+            "mode": "absolute",
+            "x": 42,
+            "y": 79,
+            "width": 94,
+            "height": 42
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#e5ad70",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "cat0"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 6,
+                "width": 94,
+                "height": 31
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 21,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "儿童"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "cat1",
+          "placement": {
+            "mode": "absolute",
+            "x": 143,
+            "y": 79,
+            "width": 94,
+            "height": 42
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#f4e7d4",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "cat1"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 6,
+                "width": 94,
+                "height": 31
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 21,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "音乐"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "cat2",
+          "placement": {
+            "mode": "absolute",
+            "x": 244,
+            "y": 79,
+            "width": 94,
+            "height": 42
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#f4e7d4",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "cat2"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 6,
+                "width": 94,
+                "height": 31
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 21,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "资讯"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "cat3",
+          "placement": {
+            "mode": "absolute",
+            "x": 345,
+            "y": 79,
+            "width": 94,
+            "height": 42
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#f4e7d4",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "cat3"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 6,
+                "width": 94,
+                "height": 31
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 21,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "收藏"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "row0",
+          "placement": {
+            "mode": "absolute",
+            "x": 42,
+            "y": 141,
+            "width": 396,
+            "height": 76
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fffaf1",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "row0"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "symbol",
+              "placement": {
+                "mode": "absolute",
+                "x": 14,
+                "y": 15,
+                "width": 48,
+                "height": 47
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 26,
+                "textColor": "#6d805f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "童"
+              }
+            },
+            {
+              "type": "label",
+              "id": "name",
+              "placement": {
+                "mode": "absolute",
+                "x": 74,
+                "y": 9,
+                "width": 302,
+                "height": 30
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 23,
+                "textColor": "#573d30",
+                "textAlign": "left"
+              },
+              "labelProps": {
+                "text": "频道"
+              }
+            },
+            {
+              "type": "label",
+              "id": "sub",
+              "placement": {
+                "mode": "absolute",
+                "x": 74,
+                "y": 43,
+                "width": 302,
+                "height": 22
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 14,
+                "textColor": "#937b65",
+                "textAlign": "left"
+              },
+              "labelProps": {
+                "text": "频道说明"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "row1",
+          "placement": {
+            "mode": "absolute",
+            "x": 42,
+            "y": 230,
+            "width": 396,
+            "height": 76
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fffaf1",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "row1"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "symbol",
+              "placement": {
+                "mode": "absolute",
+                "x": 14,
+                "y": 15,
+                "width": 48,
+                "height": 47
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 26,
+                "textColor": "#6d805f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "童"
+              }
+            },
+            {
+              "type": "label",
+              "id": "name",
+              "placement": {
+                "mode": "absolute",
+                "x": 74,
+                "y": 9,
+                "width": 302,
+                "height": 30
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 23,
+                "textColor": "#573d30",
+                "textAlign": "left"
+              },
+              "labelProps": {
+                "text": "频道"
+              }
+            },
+            {
+              "type": "label",
+              "id": "sub",
+              "placement": {
+                "mode": "absolute",
+                "x": 74,
+                "y": 43,
+                "width": 302,
+                "height": 22
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 14,
+                "textColor": "#937b65",
+                "textAlign": "left"
+              },
+              "labelProps": {
+                "text": "频道说明"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "row2",
+          "placement": {
+            "mode": "absolute",
+            "x": 42,
+            "y": 319,
+            "width": 396,
+            "height": 76
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fffaf1",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "row2"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "symbol",
+              "placement": {
+                "mode": "absolute",
+                "x": 14,
+                "y": 15,
+                "width": 48,
+                "height": 47
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 26,
+                "textColor": "#6d805f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "童"
+              }
+            },
+            {
+              "type": "label",
+              "id": "name",
+              "placement": {
+                "mode": "absolute",
+                "x": 74,
+                "y": 9,
+                "width": 302,
+                "height": 30
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 23,
+                "textColor": "#573d30",
+                "textAlign": "left"
+              },
+              "labelProps": {
+                "text": "频道"
+              }
+            },
+            {
+              "type": "label",
+              "id": "sub",
+              "placement": {
+                "mode": "absolute",
+                "x": 74,
+                "y": 43,
+                "width": 302,
+                "height": 22
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 14,
+                "textColor": "#937b65",
+                "textAlign": "left"
+              },
+              "labelProps": {
+                "text": "频道说明"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "footer",
+          "placement": {
+            "mode": "absolute",
+            "x": 62,
+            "y": 422,
+            "width": 356,
+            "height": 36
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fff6e8",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "listNext"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 6,
+                "width": 356,
+                "height": 26
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 16,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "中文优先 · 英语已标注"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "timer",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "scrollable": false,
+        "hidden": true
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 140,
+            "y": 19,
+            "width": 200,
+            "height": 40
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 27,
+            "textColor": "#573d30",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "睡眠定时"
+          }
+        },
+        {
+          "type": "button",
+          "id": "back",
+          "placement": {
+            "mode": "absolute",
+            "x": 42,
+            "y": 18,
+            "width": 82,
+            "height": 42
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fff6e8",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "timerBack"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 7,
+                "width": 82,
+                "height": 30
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 20,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "返回"
+              }
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "sub",
+          "placement": {
+            "mode": "absolute",
+            "x": 52,
+            "y": 78,
+            "width": 376,
+            "height": 30
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 19,
+            "textColor": "#87715e",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "到时停止播放，陪你安心入睡"
+          }
+        },
+        {
+          "type": "label",
+          "id": "moon",
+          "placement": {
+            "mode": "absolute",
+            "x": 100,
+            "y": 133,
+            "width": 280,
+            "height": 45
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 30,
+            "textColor": "#b47f4a",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "晚安电台"
+          }
+        },
+        {
+          "type": "button",
+          "id": "choice0",
+          "placement": {
+            "mode": "absolute",
+            "x": 65,
+            "y": 210,
+            "width": 168,
+            "height": 70
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fffaf1",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "choice0"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 17,
+                "width": 168,
+                "height": 38
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 28,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "关闭"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "choice1",
+          "placement": {
+            "mode": "absolute",
+            "x": 247,
+            "y": 210,
+            "width": 168,
+            "height": 70
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fffaf1",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "choice1"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 17,
+                "width": 168,
+                "height": 38
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 28,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "15 分钟"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "choice2",
+          "placement": {
+            "mode": "absolute",
+            "x": 65,
+            "y": 294,
+            "width": 168,
+            "height": 70
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fffaf1",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "choice2"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 17,
+                "width": 168,
+                "height": 38
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 28,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "30 分钟"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "choice3",
+          "placement": {
+            "mode": "absolute",
+            "x": 247,
+            "y": 294,
+            "width": 168,
+            "height": 70
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#fffaf1",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "choice3"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 17,
+                "width": 168,
+                "height": 38
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 28,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "45 分钟"
+              }
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "note",
+          "placement": {
+            "mode": "absolute",
+            "x": 45,
+            "y": 368,
+            "width": 390,
+            "height": 25
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 16,
+            "textColor": "#937b65",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "持续收听，不自动停止"
+          }
+        },
+        {
+          "type": "button",
+          "id": "confirm",
+          "placement": {
+            "mode": "absolute",
+            "x": 144,
+            "y": 402,
+            "width": 192,
+            "height": 46
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#dca05e",
+            "borderColor": "#e1cdb5",
+            "radius": 20
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "timerConfirm"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 6,
+                "width": 192,
+                "height": 35
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 25,
+                "textColor": "#573d30",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "确定"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

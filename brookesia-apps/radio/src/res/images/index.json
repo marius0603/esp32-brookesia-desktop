@@ -1,0 +1,19 @@
+{
+  "type": "imageSet",
+  "images": [
+    {
+      "id": "launcher_icon",
+      "src": "launcher_icon.bin",
+      "width": 92,
+      "height": 92,
+      "preload": true
+    },
+    {
+      "id": "radio_art",
+      "src": "radio_art.bin",
+      "width": 166,
+      "height": 166,
+      "preload": true
+    }
+  ]
+}

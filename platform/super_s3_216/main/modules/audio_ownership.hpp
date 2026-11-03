@@ -3,13 +3,13 @@
 
 // Raw codec users must claim the shared I2S/PA path before starting a worker.
 namespace local_audio {
-enum Owner { Free = 0, Audiobook = 1, Assistant = 2, Learning = 3 };
+enum Owner { Free = 0, Audiobook = 1, Assistant = 2, Learning = 3, Radio = 4 };
 inline std::atomic<int> owner{Free};
 inline std::atomic<bool> sleeping{false};
 inline std::atomic<bool> offline_duck{false};
 inline std::atomic<bool> audiobook_busy{false}, assistant_busy{false}, learning_busy{false};
-inline std::atomic<bool> story_timer_busy{false};
-inline bool busy(){return audiobook_busy.load() || assistant_busy.load() || learning_busy.load() || story_timer_busy.load();}
+inline std::atomic<bool> story_timer_busy{false},radio_busy{false};
+inline bool busy(){return audiobook_busy.load() || assistant_busy.load() || learning_busy.load() || story_timer_busy.load() || radio_busy.load();}
 inline bool claim(Owner value) {
     if(sleeping.load())return false;
     int expected = Free;
@@ -23,6 +23,7 @@ inline void release(Owner value) {
         if(value==Audiobook)audiobook_busy=false;
         if(value==Assistant)assistant_busy=false;
         if(value==Learning)learning_busy=false;
+        if(value==Radio)radio_busy=false;
     }
 }
 }

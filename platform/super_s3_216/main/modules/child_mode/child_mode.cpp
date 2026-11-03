@@ -304,6 +304,8 @@ void child_mode_attach_system(system::core::System *system){system_ptr=system;}
 bool child_mode_voice_allowed(){return ready && (!enabled || ((mask.load()&8) && !resting));}
 bool child_mode_audiobook_allowed(){return ready && (!enabled || ((mask.load()&1) && !resting));}
 bool child_mode_learning_allowed(){return ready && (!enabled || ((mask.load()&16) && !resting));}
+// Live programming has not been reviewed as a child-mode content pack.
+bool child_mode_radio_allowed(){return ready && !enabled;}
 extern "C" bool brookesia_child_visible(const char *id) {
     return child_policy::administrative(id) || (ready && child_policy::visible(enabled,mask,id));
 }

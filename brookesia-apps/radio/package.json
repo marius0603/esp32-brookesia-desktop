@@ -1,0 +1,12 @@
+{
+  "name": "xiaoma-radio-assets",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "node tests/main.test.cjs",
+    "art": "node tools/build_art.cjs"
+  },
+  "devDependencies": {
+    "sharp": "0.35.5"
+  }
+}

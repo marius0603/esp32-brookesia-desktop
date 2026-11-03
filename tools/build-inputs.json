@@ -21,11 +21,13 @@
     "patches/remote-navigation.patch": "63205152d846fc01d625a8a8660e3a10a864eacd3ea62fadf3d09c656a00e433",
     "patches/single-foreground.patch": "5ee1e684633dab70adcb46b4207edb3a8fe2bc5144367cfc4d4ee9aaa98eaa19",
     "phone-remote/tools/downloads.json": "f4dca27ac3cb2d5b30d308eafae0ae106e9108809f3d0d0f595664f98f0e8e1d",
-    "phone-remote/tools/requirements-signing.txt": "8b5c18678b29b5e8e0fb586a35ac1dce3ccd9da321e8f12ace0e118350b4e568",
-    "platform/super_s3_216/sdkconfig.reproducible": "b634bdd1ab2b9d8f22d36cb124436db85abd299e3ba9034428db00d65ef90a79",
-    "versions.json": "66102241cba18d86b54c125e5cd995fcfb4bfb200e6d086122b14a2c35a481fb",
+    "phone-remote/tools/requirements-signing.txt": "66d91a7f67ba42b379b8646431bf4fec571fae734e2cd170a19fed532a728c61",
+    "platform/super_s3_216/sdkconfig.reproducible": "6d0655be85fb7a365a735e24007cf8575b73a2b75692fc0b55ec13ddb8e42fb7",
+    "versions.json": "0e3e204bc38d506db860efb8167f6fe7e4e78d45fce46e371d9ccaa53035dfee",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.c": "52a51002bd22aac5c2105187c27cd393a34f13143c8ae97b0964ad27dec1c1ea",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.h": "a2fc087b68c25141e2fb7ab56e71b111bee79cf311fcc850d492eb574c0eeffe",
-    "patches/transparent-launcher.patch": "b9cbe446371691db2c9e4674b73293646b63ca003a24f59a5c0a2646ce871732"
+    "patches/transparent-launcher.patch": "b9cbe446371691db2c9e4674b73293646b63ca003a24f59a5c0a2646ce871732",
+    "tools/generate_radio_catalog.py": "155502aab53c1ba40362407d2ac0733e0a7c854d1a8ca3b7b835c63b3b123711",
+    "brookesia-apps/radio/stations.json": "d156ff155dbcf4381bd326b605b29fd311351736b190255685099e85233fe885"
   }
 }

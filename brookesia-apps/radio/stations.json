@@ -19,10 +19,22 @@
       "language": "zh-CN",
       "content": "亲子综合广播，含新闻、音乐等非故事节目；不是全天儿童故事或纯儿歌频道。",
       "broadcaster": "苏州市广播电视总台",
-      "identity_source": "https://m.qtfm.cn/channels/2807/",
-      "stream_source": "https://m.qtfm.cn/channels/2807/",
-      "stream_url": "https://lhttp.qtfm.cn/live/2807/64k.mp3",
+      "identity_source": "https://www.qtfm.cn/radios/20211692/",
+      "stream_source": "https://www.qtfm.cn/radios/20211692/",
+      "stream_url": "https://lhttp.qtfm.cn/live/20211692/64k.mp3",
       "verification": {
+        "date": "2026-11-03",
+        "scope": "computer_short_segment_decode",
+        "network_route": "direct_no_application_proxy",
+        "http_status": 200,
+        "sample_bytes": 131072,
+        "decoded_seconds": 2,
+        "audio": "mp3 (mp3float), 44100 Hz, stereo, fltp, 64 kb/s",
+        "device_playback_verified": false
+      },
+      "stream_format": "mp3",
+      "previous_stream_url": "https://lhttp.qtfm.cn/live/2807/64k.mp3",
+      "previous_verification": {
         "date": "2026-11-02",
         "scope": "computer_short_segment_decode",
         "network_route": "configured_proxy",
@@ -30,7 +42,33 @@
         "sample_bytes": 131072,
         "decoded_seconds": 2,
         "audio": "mp3 (mp3float), 48000 Hz, stereo, fltp, 64 kb/s",
-        "device_playback_verified": false
+        "device_playback_verified": true
+      },
+      "previous_device_verification": {
+        "date": "2026-11-02",
+        "firmware": "0.8.3-s3.42",
+        "app": "0.1.0",
+        "network_route": "device_wifi_direct",
+        "scope": "short_continuous_output",
+        "elapsed_seconds": 15.014999999984866,
+        "pcm_seconds": 15.024,
+        "pcm_starvations": 0,
+        "write_gap_max_us": 117,
+        "decode_errors": 0
+      },
+      "device_verification": {
+        "date": "2026-11-03",
+        "status": "deferred_by_user",
+        "network_route": "device_wifi_phone_hotspot",
+        "stream_id": "20211692",
+        "last_failed_test": {
+          "tcp_receive_window": 32768,
+          "elapsed_seconds": 122.78100000001723,
+          "pcm_seconds": 24.738,
+          "pcm_starvations": 24,
+          "write_gap_max_us": 31544869
+        },
+        "note": "Both old 2807 and official 20211692 streams stalled in prior tests. User requested deferring Suzhou and checking the other seven stations. Suzhou not retested with restored 5760-byte TCP window."
       }
     },
     {
@@ -54,7 +92,22 @@
         "sample_bytes": 131072,
         "decoded_seconds": 2,
         "audio": "aac (HE-AAC), 44100 Hz, stereo, fltp, 64 kb/s",
-        "device_playback_verified": false
+        "device_playback_verified": true
+      },
+      "stream_format": "aac",
+      "device_verification": {
+        "date": "2026-11-03",
+        "firmware": "0.8.3-s3.42",
+        "app": "0.1.0",
+        "network_route": "device_wifi_phone_hotspot",
+        "scope": "two_minute_continuous_output",
+        "tcp_receive_window": 5760,
+        "passed": true,
+        "elapsed_seconds": 120.03100000001723,
+        "played_seconds": 120.0471875,
+        "pcm_starvations": 0,
+        "write_gap_max_us": 120,
+        "decode_errors": 0
       }
     },
     {
@@ -78,7 +131,22 @@
         "sample_bytes": 131072,
         "decoded_seconds": 2,
         "audio": "aac (HE-AAC), 44100 Hz, stereo, fltp, 47 kb/s",
-        "device_playback_verified": false
+        "device_playback_verified": true
+      },
+      "stream_format": "aac",
+      "device_verification": {
+        "date": "2026-11-03",
+        "firmware": "0.8.3-s3.42",
+        "app": "0.1.0",
+        "network_route": "device_wifi_phone_hotspot",
+        "scope": "two_minute_continuous_output",
+        "tcp_receive_window": 5760,
+        "passed": true,
+        "elapsed_seconds": 120.01499999995576,
+        "played_seconds": 120.0471875,
+        "pcm_starvations": 0,
+        "write_gap_max_us": 237,
+        "decode_errors": 0
       }
     },
     {
@@ -98,12 +166,27 @@
         "segment_bytes": 252296,
         "decoded_seconds": 2,
         "audio": "aac (LC) ([15][0][0][0] / 0x000F), 48000 Hz, stereo, fltp, 192 kb/s",
-        "device_playback_verified": false,
+        "device_playback_verified": true,
         "network_route": "configured_proxy"
       },
       "display_name": "经典音乐广播",
       "language": "zh-CN",
-      "content": "按电台节目表播出；不是全天轻音乐或儿童专属频道。"
+      "content": "按电台节目表播出；不是全天轻音乐或儿童专属频道。",
+      "stream_format": "hls_ts",
+      "device_verification": {
+        "date": "2026-11-03",
+        "firmware": "0.8.3-s3.42",
+        "app": "0.1.0",
+        "network_route": "device_wifi_phone_hotspot",
+        "scope": "two_minute_continuous_output",
+        "tcp_receive_window": 5760,
+        "passed": true,
+        "elapsed_seconds": 120.03100000001723,
+        "played_seconds": 120.021375,
+        "pcm_starvations": 0,
+        "write_gap_max_us": 1974,
+        "decode_errors": 0
+      }
     },
     {
       "id": "naps-0",
@@ -116,8 +199,8 @@
       "content": "以摇篮曲、舒缓睡眠音乐为主，含英语歌曲。",
       "broadcaster": "Children's Radio UK Ltd",
       "identity_source": "https://www.funkidslive.com/stations/fun-kids-naps/what-is-fun-kids-naps/",
-      "stream_source": "https://www.funkidslive.com/player/naps/",
-      "stream_url": "https://stream.rcs.revma.com/pp2cg1z3tm0uv",
+      "stream_source": "https://www.funkidslive.com/player/station-state.php?channel=naps",
+      "stream_url": "https://stream.rcs.revma.com/3rpf8hr3tm0uv",
       "verification": {
         "date": "2026-11-02",
         "scope": "computer_short_segment_decode",
@@ -125,8 +208,28 @@
         "http_status": 200,
         "sample_bytes": 131072,
         "decoded_seconds": 2,
-        "audio": "mp3 (mp3float), 44100 Hz, stereo, fltp, 128 kb/s",
+        "audio": "aac (HE-AAC), 44100 Hz, stereo, fltp, 48 kb/s",
         "device_playback_verified": false
+      },
+      "previous_stream": {
+        "url": "https://stream.rcs.revma.com/pp2cg1z3tm0uv",
+        "note": "128kbps MP3 did not meet continuous device output target on this network; use official AAC alternative."
+      },
+      "stream_format": "aac",
+      "device_verification": {
+        "date": "2026-11-03",
+        "firmware": "0.8.3-s3.42",
+        "app": "0.1.0",
+        "network_route": "device_wifi_phone_hotspot",
+        "scope": "two_minute_continuous_output",
+        "tcp_receive_window": 5760,
+        "passed": false,
+        "elapsed_seconds": 120.03200000000652,
+        "played_seconds": 119.397,
+        "pcm_starvations": 3,
+        "write_gap_max_us": 655725,
+        "decode_errors": 0,
+        "error": "Playback continuity below target"
       }
     },
     {
@@ -150,7 +253,22 @@
         "sample_bytes": 131072,
         "decoded_seconds": 2,
         "audio": "aac (HE-AAC), 44100 Hz, stereo, fltp, 47 kb/s",
-        "device_playback_verified": false
+        "device_playback_verified": true
+      },
+      "stream_format": "aac",
+      "device_verification": {
+        "date": "2026-11-03",
+        "firmware": "0.8.3-s3.42",
+        "app": "0.1.0",
+        "network_route": "device_wifi_phone_hotspot",
+        "scope": "two_minute_continuous_output",
+        "tcp_receive_window": 5760,
+        "passed": true,
+        "elapsed_seconds": 120.03099999995902,
+        "played_seconds": 120.0151875,
+        "pcm_starvations": 0,
+        "write_gap_max_us": 5673,
+        "decode_errors": 0
       }
     },
     {
@@ -170,12 +288,27 @@
         "segment_bytes": 252484,
         "decoded_seconds": 2,
         "audio": "aac (LC) ([15][0][0][0] / 0x000F), 48000 Hz, stereo, fltp, 192 kb/s",
-        "device_playback_verified": false,
+        "device_playback_verified": true,
         "network_route": "configured_proxy"
       },
       "display_name": "中国之声",
       "language": "zh-CN",
-      "content": "综合新闻或财经资讯，面向普通听众。"
+      "content": "综合新闻或财经资讯，面向普通听众。",
+      "stream_format": "hls_ts",
+      "device_verification": {
+        "date": "2026-11-03",
+        "firmware": "0.8.3-s3.42",
+        "app": "0.1.0",
+        "network_route": "device_wifi_phone_hotspot",
+        "scope": "two_minute_continuous_output",
+        "tcp_receive_window": 5760,
+        "passed": true,
+        "elapsed_seconds": 120.01600000000326,
+        "played_seconds": 120.021375,
+        "pcm_starvations": 0,
+        "write_gap_max_us": 1945,
+        "decode_errors": 0
+      }
     },
     {
       "id": "cnr-economy",
@@ -194,18 +327,33 @@
         "segment_bytes": 253612,
         "decoded_seconds": 2,
         "audio": "aac (LC) ([15][0][0][0] / 0x000F), 48000 Hz, stereo, fltp, 192 kb/s",
-        "device_playback_verified": false,
+        "device_playback_verified": true,
         "network_route": "configured_proxy"
       },
       "display_name": "经济之声",
       "language": "zh-CN",
-      "content": "综合新闻或财经资讯，面向普通听众。"
+      "content": "综合新闻或财经资讯，面向普通听众。",
+      "stream_format": "hls_ts",
+      "device_verification": {
+        "date": "2026-11-03",
+        "firmware": "0.8.3-s3.42",
+        "app": "0.1.0",
+        "network_route": "device_wifi_phone_hotspot",
+        "scope": "two_minute_continuous_output",
+        "tcp_receive_window": 5760,
+        "passed": true,
+        "elapsed_seconds": 120.03200000000652,
+        "played_seconds": 120.042625,
+        "pcm_starvations": 0,
+        "write_gap_max_us": 1572,
+        "decode_errors": 0
+      }
     }
   ],
   "limitations": [
-    "Official/provider identity and a short computer decode verified on 2026-11-02 through the configured proxy. Direct device connectivity and long-term stability remain unverified.",
-    "The interface remains a silent prototype; selecting a station makes no network request.",
-    "Children category is a content grouping, not a guarantee of every programme being suitable for ages 1 to 3. Chinese family radio is not an all-day story channel.",
-    "Public stream availability may change. Provider sites/apps remain the fallback."
+    "The historical computer probe used a configured proxy. The device verification used direct Wi-Fi without a PC audio relay.",
+    "Device checks are short runs on the current network; they do not guarantee all-day stability or access through every ISP.",
+    "design/preview.html remains a silent interaction prototype. Device playback is implemented by the Radio service and src/app/main.js.",
+    "Children category groups programme types; it is not a reviewed content whitelist for ages 1 to 3. Chinese family radio is not an all-day story channel."
   ]
 }
