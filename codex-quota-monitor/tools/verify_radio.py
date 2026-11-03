@@ -35,7 +35,7 @@ def main():
    if app:break
    assert time.monotonic()<ready,'Radio app discovery timed out'
    time.sleep(1);apps=f('SystemCore','ListApps')
-  assert app['manifest']['version']=='0.1.0'
+  assert app['manifest']['version']==json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))['apps']['local.radio']
   assert not f('Audiobook','GetState')['active'],'Finish audiobook before running this diagnostic'
   assert not f('ChildMode','GetState')['enabled'],'Use normal mode for live radio validation'
   f('DeviceModes','Wake');f('DeviceModes','SetAutoDeepSleep',{'Minutes':0});f('AudioPlayback','SetVolume',{'Volume':a.listen_volume})

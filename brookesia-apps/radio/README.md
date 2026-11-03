@@ -1,4 +1,4 @@
-# 小马电台 0.1.0
+# 小马电台 0.1.1
 
 设备端Wi-Fi电台应用，配套固件 **0.8.3-s3.42及以上**。原创“小马收音机”图标采用奶油、暖橙、棕色Q版配色，带圆角正方形底框、四角透明；92×92 RGB565A8/RLE图标和166×166应用插画预载复用。
 
@@ -46,7 +46,7 @@ python brookesia-apps/radio/tools/build_layout.py
 python codex-quota-monitor/tools/package_radio.py
 ```
 
-`SHARP_MODULE`可指向本机sharp模块。`stations.json`生成固件白名单和设备精简目录；更换URL须重新编译固件，修改显示交互可只更新BPK。发布包：[电台0.1.0](../../packages/apps/local.radio.debug.0.1.0.bpk)、[s3.42应用分区](../../packages/firmware/brookesia-0.8.3-s3.42-app-only.zip)。
+`SHARP_MODULE`可指向本机sharp模块。`stations.json`生成固件白名单和设备精简目录；更换URL须重新编译固件，修改显示交互可只更新BPK。发布包：[电台0.1.1](../../packages/apps/local.radio.debug.0.1.1.bpk)、[s3.42应用分区](../../packages/firmware/brookesia-0.8.3-s3.42-app-only.zip)。
 
 已有s3.41设备须先做本地完整备份，再用主仓库更新器只写s3.42应用分区，保留分区表、NVS、LittleFS和SD。随后运行：
 
@@ -68,3 +68,5 @@ python codex-quota-monitor/tools/verify_radio.py --port COM5 --station suzhou-qt
 | ![播放](design/preview-player.png) | ![儿童](design/preview-stations.png) | ![音乐](design/preview-music.png) |
 
 2026-11-03：其余七台每台约两分钟测试中，Junior、Story Quest、经典音乐、Sleep Sounds、中国之声、经济之声零断粮；Naps记录到3次断粮、最长输出间隔约0.66秒。苏州台此前仍有停顿，按用户要求暂缓排查。没有据此宣称所有设备端因素均已排除；详见 [实机验证](VERIFICATION.md)。用户已确认圆角底框与上移后的布局正常。
+
+0.1.1：自带音量移至页头；配合s3.44，桌面全局音量/电量在App内隐藏。音频链路保持本次界面调整前的实现。

@@ -39,9 +39,9 @@
           "placement": {
             "mode": "absolute",
             "x": 52,
-            "y": 15,
+            "y": 32,
             "width": 220,
-            "height": 40
+            "height": 28
           },
           "commonProps": {
             "scrollable": false
@@ -51,7 +51,7 @@
             "borderWidth": 0,
             "bgOpacity": 0,
             "font": "${font.zh_CN}",
-            "fontSize": 27,
+            "fontSize": 24,
             "textColor": "#573d30",
             "textAlign": "left"
           },
@@ -65,7 +65,7 @@
           "placement": {
             "mode": "absolute",
             "x": 310,
-            "y": 25,
+            "y": 34,
             "width": 120,
             "height": 24
           },
@@ -431,10 +431,10 @@
           "id": "volume",
           "placement": {
             "mode": "absolute",
-            "x": 80,
-            "y": 410,
-            "width": 320,
-            "height": 22
+            "x": 100,
+            "y": 5,
+            "width": 280,
+            "height": 24
           },
           "commonProps": {
             "scrollable": false

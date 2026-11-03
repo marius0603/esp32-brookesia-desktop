@@ -42,12 +42,12 @@
             "mode": "absolute",
             "x": 0,
             "y": 0,
-            "width": 280,
+            "width": 140,
             "height": 44
           },
           "style": {
             "font": "${font.zh_CN}",
-            "fontSize": 30,
+            "fontSize": 28,
             "textColor": "#e7eef5",
             "textAlign": "left"
           },
@@ -124,6 +124,26 @@
               }
             }
           ]
+        },
+        {
+          "type": "label",
+          "id": "volume",
+          "placement": {
+            "mode": "absolute",
+            "x": 140,
+            "y": 8,
+            "width": 150,
+            "height": 28
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 18,
+            "textColor": "#9fafc0",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "音量 --%"
+          }
         }
       ]
     },
@@ -440,29 +460,12 @@
               "action": "backend"
             }
           ]
-        },
-        {
-          "type": "label",
-          "id": "volume",
-          "placement": {
-            "width": 212,
-            "height": 32
-          },
-          "style": {
-            "font": "${font.zh_CN}",
-            "fontSize": 20,
-            "textColor": "#9fafc0",
-            "textAlign": "right"
-          },
-          "labelProps": {
-            "text": "音量 --%"
-          }
         }
       ],
       "layout": {
         "type": "flex",
         "flexFlow": "row",
-        "mainAlign": "spaceBetween",
+        "mainAlign": "center",
         "crossAlign": "center"
       }
     }

@@ -28,19 +28,19 @@ def main():
         'app_only': True, 'files': {}}
     sdkconfig = json.loads((build / 'config/sdkconfig.json').read_text(encoding='utf-8'))
     manifest['features'] = {'separate_websocket_tx_lock': bool(sdkconfig.get('ESP_WS_CLIENT_SEPARATE_TX_LOCK'))}
-    if desc['project_version'] in ('0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43'):
+    if desc['project_version'] in ('0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44'):
         manifest['features'].update(buffered_story_pcm=True,pitch_preserving_story_speed=True,default_story_speed=1.0)
-    if desc['project_version'] in ('0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43'):
+    if desc['project_version'] in ('0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44'):
         manifest['features']['transparent_launcher_icons']=True
-    if desc['project_version'] in ('0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43'):
+    if desc['project_version'] in ('0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44'):
         manifest['features'].update(single_foreground_apps=True,independent_ble_command_worker=True,
             display_bounded_dma=True,serialized_app_store_callbacks=True,synchronous_task_exception_completion=True,
             wait_for_assistant_release=True)
-    if desc['project_version'] in ('0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43'):
+    if desc['project_version'] in ('0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44'):
         manifest['features'].update(four_digit_remote_pop=True,remote_audiobook_foreground=True)
-    if desc['project_version'] in ('0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43'):
+    if desc['project_version'] in ('0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44'):
         manifest['features'].update(remote_story_modes=True,chinese_story_titles=True)
-    if desc['project_version'] in ('0.8.3-s3.42','0.8.3-s3.43'):
+    if desc['project_version'] in ('0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44'):
         manifest['features'].update(buffered_wifi_radio=True,radio_mp3_aac_hls=True)
         manifest['features'].update(radio_mp3_push=True,
             tcp_receive_window=sdkconfig.get('LWIP_TCP_WND_DEFAULT'),
@@ -48,27 +48,29 @@ def main():
             wifi_static_rx_buffers=sdkconfig.get('ESP_WIFI_STATIC_RX_BUFFER_NUM'),
             wifi_rx_aggregation_window=sdkconfig.get('ESP_WIFI_RX_BA_WIN'),
             radio_disables_modem_sleep=True,radio_preserves_mp3_tail=True)
-    if desc['project_version']=='0.8.3-s3.43':
+    if desc['project_version'] in ('0.8.3-s3.43','0.8.3-s3.44'):
         manifest['features'].update(global_volume_badge=True,global_battery_badge=True)
+    if desc['project_version']=='0.8.3-s3.44':
+        manifest['features'].update(status_badge_scope='desktop',hide_status_inside_apps=True)
     temporary = output.with_suffix('.zip.tmp')
     with zipfile.ZipFile(temporary, 'w', zipfile.ZIP_DEFLATED) as archive:
-        native_scroll=desc['project_version'] in ('0.8.3-s3.30','0.8.3-s3.31','0.8.3-s3.32','0.8.3-s3.33','0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43')
-        launcher=ROOT/('packages/resources/desktop-themes-launcher-s3.31.json' if desc['project_version'] in ('0.8.3-s3.31','0.8.3-s3.32','0.8.3-s3.33','0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43') else 'packages/resources/phone-launcher-s3.30.json' if native_scroll else 'packages/resources/phone-launcher-s3.28.json')
-        if desc['project_version'] in ('0.8.3-s3.28','0.8.3-s3.29','0.8.3-s3.30','0.8.3-s3.31','0.8.3-s3.32','0.8.3-s3.33','0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43'):
+        native_scroll=desc['project_version'] in ('0.8.3-s3.30','0.8.3-s3.31','0.8.3-s3.32','0.8.3-s3.33','0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44')
+        launcher=ROOT/('packages/resources/desktop-themes-launcher-s3.31.json' if desc['project_version'] in ('0.8.3-s3.31','0.8.3-s3.32','0.8.3-s3.33','0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44') else 'packages/resources/phone-launcher-s3.30.json' if native_scroll else 'packages/resources/phone-launcher-s3.28.json')
+        if desc['project_version'] in ('0.8.3-s3.28','0.8.3-s3.29','0.8.3-s3.30','0.8.3-s3.31','0.8.3-s3.32','0.8.3-s3.33','0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44'):
             data=launcher.read_bytes()
             archive.writestr('launcher/app_launcher.json',data)
             manifest['files']['launcher/app_launcher.json']={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
             manifest['features']['phone_launcher']=True
             manifest['features']['native_launcher_scroll']=native_scroll
-            manifest['features']['desktop_theme_switch']=desc['project_version'] in ('0.8.3-s3.31','0.8.3-s3.32','0.8.3-s3.33','0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43')
-            if desc['project_version'] in ('0.8.3-s3.32','0.8.3-s3.33','0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43'):
+            manifest['features']['desktop_theme_switch']=desc['project_version'] in ('0.8.3-s3.31','0.8.3-s3.32','0.8.3-s3.33','0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44')
+            if desc['project_version'] in ('0.8.3-s3.32','0.8.3-s3.33','0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44'):
                 manifest['features']['phone_ble_provisioning']=bool(sdkconfig.get('BT_NIMBLE_ENABLED') and sdkconfig.get('ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_1'))
                 assert manifest['features']['phone_ble_provisioning'] and not sdkconfig.get('ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_0')
                 manifest['features']['ble_controller_flash_code']=bool(sdkconfig.get('BT_CTRL_RUN_IN_FLASH_ONLY'))
                 assert manifest['features']['ble_controller_flash_code'],'Phone provisioning needs controller RAM savings with Settings open'
-                manifest['features']['phone_ble_remote']=desc['project_version'] in ('0.8.3-s3.33','0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43')
-                data=(ROOT/('packages/resources/bluetooth-settings-s3.34/screens/wifi.json' if desc['project_version'] in ('0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43') else 'packages/resources/phone-remote-wifi-s3.33.json' if manifest['features']['phone_ble_remote'] else 'packages/resources/phone-provisioning-wifi-s3.32.json')).read_bytes()
-                if desc['project_version'] in ('0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43'):
+                manifest['features']['phone_ble_remote']=desc['project_version'] in ('0.8.3-s3.33','0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44')
+                data=(ROOT/('packages/resources/bluetooth-settings-s3.34/screens/wifi.json' if desc['project_version'] in ('0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44') else 'packages/resources/phone-remote-wifi-s3.33.json' if manifest['features']['phone_ble_remote'] else 'packages/resources/phone-provisioning-wifi-s3.32.json')).read_bytes()
+                if desc['project_version'] in ('0.8.3-s3.34','0.8.3-s3.35','0.8.3-s3.36','0.8.3-s3.37','0.8.3-s3.38','0.8.3-s3.39','0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44'):
                     for path in (ROOT/'packages/resources/bluetooth-settings-s3.34').rglob('*.json'):
                         name='settings/'+path.relative_to(ROOT/'packages/resources/bluetooth-settings-s3.34').as_posix();payload=path.read_bytes();archive.writestr(name,payload);manifest['files'][name]={'bytes':len(payload),'sha256':hashlib.sha256(payload).hexdigest()}
                 archive.writestr('settings/wifi.json',data)

@@ -27,6 +27,7 @@
 extern "C" int brookesia_board_user_volume();
 extern "C" bool brookesia_board_volume_muted();
 extern "C" int brookesia_board_battery_status();
+extern "C" bool brookesia_board_desktop_visible();
 
 using namespace esp_brookesia;
 using DisplayHelper = service::helper::Display;
@@ -42,6 +43,10 @@ void update_volume_badge(lv_timer_t *)
 {
     static lv_obj_t *badge=nullptr;
     static int previous=-1;
+    if(!brookesia_board_desktop_visible()){
+        if(badge)lv_obj_add_flag(badge,LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
     const int requested=brookesia_board_user_volume();
     if(requested<0)return;
     const int volume=brookesia_board_volume_muted()?0:requested;
@@ -68,6 +73,7 @@ void update_volume_badge(lv_timer_t *)
         lv_obj_align(badge,LV_ALIGN_TOP_MID,0,11);
         previous=key;
     }
+    lv_obj_remove_flag(badge,LV_OBJ_FLAG_HIDDEN);
 }
 
 // Count actual render cycles, excluding idle LVGL refresh timer wakeups.

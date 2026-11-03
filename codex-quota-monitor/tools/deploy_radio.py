@@ -5,7 +5,8 @@ from deploy_audiobook_sleep import StoryClient
 ROOT=Path(__file__).resolve().parents[2]
 def main():
  p=argparse.ArgumentParser();p.add_argument('--port',default='COM5');a=p.parse_args()
- package=ROOT/'packages/apps/local.radio.debug.0.1.0.bpk'
+ version=json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))['apps']['local.radio']
+ package=ROOT/('packages/apps/local.radio.debug.'+version+'.bpk')
  with zipfile.ZipFile(package) as z:
   assert z.testzip() is None
   assert json.loads(z.read('manifest.json'))['package']['id']=='local.radio'

@@ -29,11 +29,11 @@ def main():
  for id,name,size in [('launcher_icon','launcher_icon.png',92),('radio_art','radio_art.png',166)]:images.append(dict(id=id,src=native(name,size),width=size,height=size,preload=True))
  write(Path('images/index.json'),dict(type='imageSet',images=images))
  player=panel('player');c=player['children']
- c.extend([label('brand','小马电台',52,31,220,40,27,align='left'),label('connection','Wi-Fi',310,41,120,24,15,color='#638074')])
+ c.extend([label('brand','小马电台',52,48,220,28,24,align='left'),label('connection','Wi-Fi',310,50,120,24,15,color='#638074')])
  art=base('image','art',157,73,166,166);art['imageProps']={'src':'${image.radio_art}','innerAlign':'contain'};c.append(art)
  c.extend([button('favorite','收藏',362,159,74,44,'favorite',17),label('title','苏州儿童广播',42,231,396,44,30),label('meta','中文 · 亲子广播，按节目表播出',42,280,396,28,16,color='#87715e'),
   button('previous','上一台',64,320,102,64,'previous',22),button('toggle','播放',180,310,120,82,'toggle',27,'#dc9c55'),button('next','下一台',314,320,102,64,'next',22),
-  label('status','准备播放',42,400,396,25,17,color='#87715e'),label('volume','音量 --%',80,426,320,22,16,color='#87715e'),
+  label('status','准备播放',42,400,396,25,17,color='#87715e'),label('volume','音量 --%',100,21,280,24,16,color='#87715e'),
   button('stations','选频道',106,451,126,31,'stations',20,'#fff6e8'),button('timer','定时',248,451,126,31,'timer',20,'#fff6e8')])
  station=panel('stations',True);c=station['children'];c.extend([label('title','选频道',140,35,200,40,27),button('back','返回',42,34,82,42,'back',20,'#fff6e8')])
  for i,name in enumerate(['儿童','音乐','资讯','收藏']):c.append(button('cat'+str(i),name,42+i*101,95,94,42,'cat'+str(i),21,'#e5ad70' if i==0 else '#f4e7d4'))

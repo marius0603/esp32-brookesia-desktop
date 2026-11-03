@@ -2,7 +2,7 @@
 'use strict';
 let gui, assistant, pcAssistant, cloudAssistant, storage, backend='pc', audio, modes, timer, timerId=0, hidden=false, cache={}, state={}, volume=20;
 function call(h,name,args){const r=JSON.parse(brookesia.call_function(h,name,JSON.stringify(args||{})));if(!r.success)throw new Error(r.error||r.error_message||name);return r.data;}
-const paths={status:'header/state/status',user:'conversation/user',answer:'conversation/answer',welcome:'conversation/welcome',volume:'footer/volume','backend/label':'footer/backend/label'};
+const paths={status:'header/state/status',user:'conversation/user',answer:'conversation/answer',welcome:'conversation/welcome',volume:'header/volume','backend/label':'footer/backend/label'};
 function text(id,value){value=String(value||'');if(hidden||cache[id]===value)return;call(gui,'SetText',{Path:'/main/'+(paths[id]||id),Text:value});cache[id]=value;}
 function bind(path,key,value){const id=path+':'+key;value=String(value);if(hidden||cache[id]===value)return;call(gui,'SetBinding',{Path:'/main/'+path,Key:key,Value:value});cache[id]=value;}
 function truncate(s,n){s=String(s||'');return s.length>n?s.slice(0,n-1)+'…':s;}
