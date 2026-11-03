@@ -26,6 +26,7 @@
 #include "esp_attr.h"
 #include "brookesia/hal_interface/interfaces/display/backlight.hpp"
 #include "brookesia/service_helper/media/audio.hpp"
+#include "brookesia/hal_interface/interfaces/power/battery.hpp"
 
 extern "C" int brookesia_child_cap_volume(int);
 
@@ -37,6 +38,9 @@ std::atomic<bool> ready{false}, automatic{true}, dnd{true}, asleep{false};
 std::atomic<bool> wake_requested{false}, sleep_requested{false}, consume_touch{false};
 std::atomic<bool> dirty{false}, audio_dirty{false};
 std::atomic<int> desired_volume{75};
+// Low byte: 0..100 percent, 101 unknown level, 102 absent, 103 unavailable.
+// Flags: 256 charging, 512 external power. Cached outside the LVGL thread.
+std::atomic<int> battery_status{103};
 std::atomic<uint32_t> key_applied{0};std::atomic<int> key_last_gpio{-1},key_last_target{-1};
 std::atomic<bool> manual_dnd{false},quiet_enabled{false};
 std::atomic<int> quiet_start{1320},quiet_end{420};
@@ -85,6 +89,7 @@ private:
                 {"wake_touch_consumed",swallowed.load()},{"sleep_count",sleeps.load()},
                 {"wake_count",wakes.load()},{"panel_errors",panel_errors.load()},
                 {"pending_save",dirty.load()},{"audio_pending",audio_dirty.load()},
+                {"battery_status",battery_status.load()},
                 {"resume_volume",desired_volume.load()}};
     }
     FunctionResult speaker_volume(){
@@ -119,6 +124,11 @@ private:
                     {"pixel_format",image?int(image->header.cf):0},{"source_width",image?int(image->header.w):0},
                     {"source_height",image?int(image->header.h):0},{"scale_x",lv_image_get_scale_x(object)},
                     {"scale_y",lv_image_get_scale_y(object)}});
+            }
+            if(lv_obj_check_type(object,&lv_label_class) && lv_obj_get_parent(object)==lv_layer_sys() && color==0x3b2b29){
+                layers.push_back(boost::json::object{{"kind","top_status"},{"text",lv_label_get_text(object)},
+                    {"x",area.x1},{"y",area.y1},{"width",w},{"height",h},
+                    {"clickable",lv_obj_has_flag(object,LV_OBJ_FLAG_CLICKABLE)}});
             }
             if(layers.size()<32 && lv_obj_check_type(object,&lv_dropdown_class)){
                 const auto count=lv_dropdown_get_option_count(object);
@@ -227,6 +237,8 @@ extern "C" void brookesia_board_set_quiet_hours(bool on,int start,int end){
 extern "C" bool brookesia_board_offline_voice_enabled(){return preferences_loaded && offline_enabled;}
 extern "C" void brookesia_board_set_offline_voice(bool value){offline_enabled=value;dirty=true;}
 extern "C" int brookesia_board_user_volume(){return preferences_loaded?desired_volume.load():-1;}
+extern "C" bool brookesia_board_volume_muted(){return dnd.load();}
+extern "C" int brookesia_board_battery_status(){return battery_status.load();}
 extern "C" int brookesia_board_desktop_theme(){return desktop_theme==1 && brookesia_board_cyber_available()?1:0;}
 extern "C" bool brookesia_board_set_desktop_theme(int index){if(!preferences_loaded || (index!=0 && index!=1) || (index==1 && !brookesia_board_cyber_available()))return false;desktop_theme=index;dirty=true;return true;}
 extern "C" void brookesia_board_desktop_theme_applied(int index){desktop_theme_applied=index;}
@@ -345,6 +357,19 @@ uint8_t theme=0;nvs_get_u8(h,"desktop_theme",&theme);desktop_theme=theme==1?1:0;
     }
     update_quiet();
     volume_keys_poll();audiobook_sleep_poll();
+    static int64_t battery_polled=-30000000;
+    const auto battery_now=esp_timer_get_time();
+    if(battery_now-battery_polled>=30000000){
+        battery_polled=battery_now;
+        using Battery=hal::power::BatteryIface;
+        auto battery=hal::acquire_first_interface<Battery>();Battery::State value;
+        if(battery && battery->get_state(value)){
+            int code=value.is_present?(value.percentage?std::clamp(int(*value.percentage),0,100):101):102;
+            if(value.is_present && value.charge_state>=Battery::ChargeState::Charging && value.charge_state<=Battery::ChargeState::ConstantVoltage)code|=256;
+            if(value.power_source==Battery::PowerSource::External)code|=512;
+            battery_status=code;
+        }else battery_status=103;
+    }
     const bool waking=wake_requested.exchange(false) && !screen_locked.load();
     const bool sleeping=sleep_requested.exchange(false);
     const bool target=screen_locked || (waking?false:(asleep || sleeping || (automatic && now_ms()-last_touch_ms.load()>=IDLE_MS)));

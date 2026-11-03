@@ -24,6 +24,10 @@
 #include "brookesia/service_manager/service/manager.hpp"
 #include "display.hpp"
 
+extern "C" int brookesia_board_user_volume();
+extern "C" bool brookesia_board_volume_muted();
+extern "C" int brookesia_board_battery_status();
+
 using namespace esp_brookesia;
 using DisplayHelper = service::helper::Display;
 using LvglDisplaySource = gui::lvgl::DisplaySource;
@@ -31,6 +35,40 @@ using LvglDisplaySource = gui::lvgl::DisplaySource;
 namespace {
 
 constexpr uint32_t DISPLAY_SERVICE_TIMEOUT_MS = 1000;
+
+// The system layer survives application changes and full-screen app layouts.
+// Read only the shared settings: querying the codec here could block the GUI.
+void update_volume_badge(lv_timer_t *)
+{
+    static lv_obj_t *badge=nullptr;
+    static int previous=-1;
+    const int requested=brookesia_board_user_volume();
+    if(requested<0)return;
+    const int volume=brookesia_board_volume_muted()?0:requested;
+    const int battery=brookesia_board_battery_status();
+    const int level=battery&255;
+    const int key=volume+(brookesia_board_volume_muted()?101:0)+battery*256;
+    if(!badge){
+        badge=lv_label_create(lv_layer_sys());
+        lv_obj_remove_flag(badge,LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_set_style_text_font(badge,&lv_font_montserrat_16,0);
+        lv_obj_set_style_text_color(badge,lv_color_hex(0xfff6e8),0);
+        lv_obj_set_style_bg_color(badge,lv_color_hex(0x3b2b29),0);
+        lv_obj_set_style_bg_opa(badge,LV_OPA_80,0);
+        lv_obj_set_style_radius(badge,10,0);
+        lv_obj_set_style_pad_hor(badge,4,0);
+        lv_obj_set_style_pad_ver(badge,2,0);
+    }
+    if(previous!=key){
+        char percent[12];
+        if(level<=100)lv_snprintf(percent,sizeof(percent),"%d%%",level);
+        else lv_snprintf(percent,sizeof(percent),"%s",level==102 && (battery&512)?"USB":"--");
+        const char *icon=battery&256?LV_SYMBOL_CHARGE:level>100 || level<=10?LV_SYMBOL_BATTERY_EMPTY:level<=35?LV_SYMBOL_BATTERY_1:level<=65?LV_SYMBOL_BATTERY_2:level<=90?LV_SYMBOL_BATTERY_3:LV_SYMBOL_BATTERY_FULL;
+        lv_label_set_text_fmt(badge,"%s %d%%  %s %s",volume==0?LV_SYMBOL_MUTE:LV_SYMBOL_VOLUME_MID,volume,icon,percent);
+        lv_obj_align(badge,LV_ALIGN_TOP_MID,0,11);
+        previous=key;
+    }
+}
 
 // Count actual render cycles, excluding idle LVGL refresh timer wakeups.
 // These logs are suppressed by the normal USB session log redirection.
@@ -195,6 +233,7 @@ bool Display::start_lvgl_display_source(int core_id)
         lv_display_add_event_cb(source.display(), render_event, code, nullptr);
     }
     lv_timer_create(log_render_stats, 5000, nullptr);
+    lv_timer_create(update_volume_badge,200,nullptr);
     esp_lv_adapter_unlock();
 
     return true;
