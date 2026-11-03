@@ -6,7 +6,7 @@ samples/stories/library-20261101.json. No firmware or app replacement is needed.
 import argparse,hashlib,json,time
 from datetime import datetime
 from pathlib import Path
-from deploy_audiobook_sleep import StoryClient
+from maintenance_client import MaintenanceClient
 
 ROOT=Path(__file__).resolve().parents[2]
 
@@ -14,10 +14,11 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--port',required=True)
     parser.add_argument('--audio-dir',type=Path,required=True)
+    parser.add_argument('--manifest',type=Path,default=ROOT/'samples/stories/library-20261101.json')
     args=parser.parse_args()
-    manifest=json.loads((ROOT/'samples/stories/library-20261101.json').read_text(encoding='utf-8'))
-    assert manifest['remove_from_library']==['/sdcard/audiobooks/bedtime/01-xiaoma-yueliang.mp3']
-    rows=manifest['stories'];assert len(rows)==11 and len({r['filename'] for r in rows})==11
+    manifest=json.loads(args.manifest.read_text(encoding='utf-8'))
+    assert all(p=='/sdcard/audiobooks/bedtime/'+Path(p).name and Path(p).name not in ('','..') for p in manifest['remove_from_library'])
+    rows=manifest['stories'];assert 1<=len(rows)<=100 and len({r['filename'] for r in rows})==len(rows)
     for row in rows:
         assert Path(row['filename']).name==row['filename'] and row['filename'].endswith('.mp3')
         row['local']=args.audio_dir/('normalized-'+row['title']+'.mp3')
@@ -29,7 +30,7 @@ def main():
     output=ROOT/'codex-quota-monitor/runtime/story-library-deployment.json'
     output.parent.mkdir(parents=True,exist_ok=True)
     def save():output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    with StoryClient(args.port,timeout=35) as c:
+    with MaintenanceClient(args.port,timeout=35) as c:
         c.hello()
         def f(s,n,p=None):return c.call(s,n,p or {})['result']
         before=report['playback_before']=f('Audiobook','GetState')
@@ -74,6 +75,7 @@ def main():
             for row in rows:
                 assert next(t['title'] for t in tracks if t['path'].endswith('/'+row['filename']))==row['title']
             report['tracks_after']=tracks
+            if 'expected_total' in manifest:assert len(tracks)==manifest['expected_total']
             f('AudioPlayback','SetVolume',{'Volume':0})
             f('SystemCore','StartApp',{'AppId':app['app_id']})
             for track in tracks:
@@ -86,9 +88,22 @@ def main():
                     time.sleep(.2)
                 report['playback_checks'].append({'path':track['path'],'title':state['title'],'bytes_written':state['bytes_written']})
                 f('Audiobook','Stop');save();print('Decoded '+track['title'],flush=True)
+            if manifest.get('title_font'):
+                font=manifest['title_font'];local=ROOT/font['asset']
+                assert hashlib.sha256(local.read_bytes()).hexdigest()==font['sha256']
+                target='/littlefs/system/fonts/audiobook-title-extra.ttf'
+                f('Storage','FSCopyTree',{'From':target,'To':report['backup']+'/font-before.ttf','Overwrite':False})
+                stage='sd-themes/story-title-'+str(time.time_ns())+'.bin'
+                result=c.transfer('put',local,stage,False);assert result['ok'] and result['sha256']==font['sha256']
+                staged='/sdcard/themes/'+Path(stage).name
+                f('Storage','FSCopyTree',{'From':staged,'To':target,'Overwrite':True})
+                assert f('Storage','FSStat',{'Path':target})['size']==local.stat().st_size
+                f('Storage','FSRemove',{'Path':staged})
+                report['title_font_updated']=True;report['font_reload_requires_restart']=True
             report['content_verified']=True
         finally:
             f('Audiobook','Stop')
+            f('SystemCore','StopApp',{'AppId':app['app_id']})
             for path,data in saved.items():
                 # A bookmark for the explicitly removed story must not survive.
                 if data is not None and not (path.endswith('bookmark.json') and json.loads(data).get('path') in manifest['remove_from_library']):

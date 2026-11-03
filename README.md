@@ -7,7 +7,7 @@
 | 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.45；手机BLE加密配网与独立蓝牙遥控；可切换经典Q版与赛博朋克桌面，壁纸和10个图标同步更换并记住选择；图标原生预载、手机式跟手分页，每页6个应用及页码圆点；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转 |
 | 额度显示 | 0.2.3，黑底双圆角卡片、34号“5小时/每周”标题、48号真实剩余百分比、吃豆人动画、30号倒计时和同步胶囊；随包保留Q版图标 |
 | 天气 | 0.2.9，默认上海、开发板直接联网；按城市日出日落决定昼夜，白天亮色天空/深色文字、夜间深色天空/浅色文字，再叠加天气动画；24小时卡片按预报时刻切换暖白/深蓝配色并以细边框区分 |
-| 听书 | 0.3.6，六档保持音高倍速、开机默认1倍；64KiB PCM缓冲修复周期性卡顿，手机与设备通过内存同步播放模式；20篇故事使用统一响度目标，移出月亮灯并新增11篇中文朗读，保留双声道抵消修正；图标切换顺序播放、随机播放与单故事循环，自动保存模式；音量与锁屏置顶、Q版图标、中文书名、大号播放按钮、睡眠选择框、语音控制、章节与书签；连按两次音量＋解锁，最后2分钟声音/亮度渐弱，到时离线“晚安”并停播 |
+| 听书 | 0.3.6，六档保持音高倍速、开机默认1倍；64KiB PCM缓冲修复周期性卡顿，手机与设备通过内存同步播放模式；30篇故事使用统一响度目标，移出月亮灯并分两批新增21篇中文朗读，保留双声道抵消修正；图标切换顺序播放、随机播放与单故事循环，自动保存模式；音量与锁屏置顶、Q版图标、中文书名、大号播放按钮、睡眠选择框、语音控制、章节与书签；连按两次音量＋解锁，最后2分钟声音/亮度渐弱，到时离线“晚安”并停播 |
 | 顶部状态 | s3.44仅在桌面显示音量/电量，进入App隐藏；电池每30秒读取。听书/轻学习保留上方音量，助手0.2.3和电台0.1.1将自带音量移至页头 |
 | 电台 | 0.1.1试验版，八路真实频道、分类收藏与播放定时，原创圆角底框小马收音机图标，设备直接Wi-Fi播放；本轮7台各2分钟、6台零断粮，Naps短顿；苏州台停顿暂缓；s3.45已验证手机BLE播放控制、调音及定时。详见[电台应用](brookesia-apps/radio/README.md) |
 | 翻页时钟 | 0.1.1，只显示大号北京时间 HH:MM，分钟变化时翻页 |
@@ -24,7 +24,7 @@
 壁纸微移的行为与已有设备更新步骤见 [WALLPAPER_SHIFT.md](codex-quota-monitor/WALLPAPER_SHIFT.md)。
 重力感应开关、校准与已有设备安装步骤见 [AUTO_ROTATION.md](codex-quota-monitor/AUTO_ROTATION.md)。
 儿童模式设置与验证见 [CHILD_MODE.md](codex-quota-monitor/CHILD_MODE.md)，主题资源迁移见 [SD_RESOURCES.md](codex-quota-monitor/SD_RESOURCES.md)。
-听书定时、中文样例及离线语音合成见 [AUDIOBOOK.md](codex-quota-monitor/AUDIOBOOK.md)。最新20篇书库和逐篇来源见 [故事书库](codex-quota-monitor/STORY_LIBRARY.md)。Q版透明图标缓存及内存说明见[去除外层底色](codex-quota-monitor/TRANSPARENT_ICONS.md)。当前 Q 版图标和壁纸见 [主题说明](themes/cartoon-q-v1/README.md)。
+听书定时、中文样例及离线语音合成见 [AUDIOBOOK.md](codex-quota-monitor/AUDIOBOOK.md)。最新30篇书库和逐篇来源见 [故事书库](codex-quota-monitor/STORY_LIBRARY.md)。Q版透明图标缓存及内存说明见[去除外层底色](codex-quota-monitor/TRANSPARENT_ICONS.md)。当前 Q 版图标和壁纸见 [主题说明](themes/cartoon-q-v1/README.md)。
 赛博朋克主题、设置中的切换入口、安装及回退见 [赛博朋克桌面](themes/cyberpunk-v1/README.md)。原Q版资源继续保留。
 助手实体音量键及界面同步修复见 [ASSISTANT_VOLUME.md](codex-quota-monitor/ASSISTANT_VOLUME.md)。
 电脑模型、跨网络连接、设备安装与验证见 [电脑语音助手](pc-voice-bridge/README.md)。当前公网入口为临时隧道，重建后需更新设备地址；长期使用需固定入口。

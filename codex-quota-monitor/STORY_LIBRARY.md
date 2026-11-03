@@ -1,4 +1,31 @@
-# 儿童故事书库（2026-11-01）
+# 儿童故事书库（当前30篇）
+
+## 2026-11-03：新增10篇
+
+保留原20篇，新增以下10篇中文朗读。沿用−14 LUFS标准，最终MP3实测−14.26至−14.06 LUFS，真峰值最高−1.78 dBTP；44.1kHz、96kbps单声道，完整解码和时长差检查通过。已逐文件核对USB传输SHA256及SD尺寸，并在设备上逐篇起播检查全部30篇；测试后恢复本轮书签、播放模式和音量。未改写原20篇音频。
+
+| 新增故事 | 时长 | LUFS | dBTP |
+| --- | ---: | ---: | ---: |
+| [自己去吧](https://www.taozhi.cn/a/70874.htm) | 1:00 | -14.22 | -2.5 |
+| [一次比一次有进步](https://www.taozhi.cn/a/70877.htm) | 1:39 | -14.09 | -2.37 |
+| [借生日](https://www.taozhi.cn/a/70887.htm) | 1:04 | -14.26 | -2.08 |
+| [小熊住山洞](https://www.taozhi.cn/a/70889.htm) | 1:29 | -14.13 | -1.86 |
+| [小柳树和小枣树](https://www.taozhi.cn/a/70778.htm) | 3:18 | -14.13 | -2.13 |
+| [酸的和甜的](https://www.taozhi.cn/a/70786.htm) | 2:21 | -14.23 | -1.78 |
+| [称赞](https://www.taozhi.cn/a/70790.htm) | 2:17 | -14.2 | -2.31 |
+| [纸船和风筝](https://www.taozhi.cn/a/70806.htm) | 3:17 | -14.06 | -2.01 |
+| [小鹿的玫瑰花](https://www.taozhi.cn/a/41402.htm) | 2:25 | -14.2 | -2.65 |
+| [小蜗牛](https://www.taozhi.cn/a/128659.htm) | 1:16 | -14.18 | -2.36 |
+
+补齐标题“筝”字，基础中文回退保留；字体来源和哈希见[字体记录](../samples/stories/font-source-20261103.json)。录音只留在当前设备和私有运行目录，Git保留来源与校准清单。新清单见[library-20261103.json](../samples/stories/library-20261103.json)。手机重新连接后书架为30篇、每页3篇共10页，无需更新APK。
+
+```powershell
+python codex-quota-monitor/tools/prepare_story_library.py --manifest samples/stories/library-20261103.json --ffmpeg <固定的ffmpeg.exe> --output codex-quota-monitor/runtime/stories-20261103
+python codex-quota-monitor/tools/deploy_story_library.py --manifest samples/stories/library-20261103.json --port COM5 --audio-dir codex-quota-monitor/runtime/stories-20261103
+# 安装后重启一次，加载新增标题字形。
+```
+
+## 2026-11-01：原20篇记录
 
 从设备的听书目录移出《小马和月亮灯》，保留其余9篇，新增下列11篇中文课文故事朗读，当前书库共20篇。移出的音频保留在书库外的SD备份目录，不会被听书扫描。
 

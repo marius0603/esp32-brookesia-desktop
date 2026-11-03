@@ -25,9 +25,9 @@
     "multinet": "mn5q8_cn"
   },
   "audiobook_library": {
-    "date": "2026-11-01",
-    "stories": 20,
+    "date": "2026-11-03",
+    "stories": 30,
     "target_lufs": -14,
-    "manifest": "samples/stories/library-20261101.json"
+    "manifest": "samples/stories/library-20261103.json"
   }
 }
