@@ -3,6 +3,7 @@
 #include "brookesia/hal_interface.hpp"
 #include "../child_mode/child_mode.hpp"
 #include "navigation.hpp"
+#include "radio_catalog.hpp"
 #include <cmath>
 namespace phone_remote {
 using namespace esp_brookesia::service;
@@ -26,11 +27,21 @@ inline boost::json::object execute(const boost::json::object &request) {
   return "sequence";
  };
  if(command=="status") {
-  boost::json::object answer{{"ok",true},{"locked",locked},{"volume",data(call("AudioPlayback","GetVolume"))},{"brightness",modes.as_object().at("brightness_percent")},{"play_mode",play_mode()}};
+  boost::json::object answer{{"ok",true},{"locked",locked},{"volume",modes.as_object().at("resume_volume")},{"radio_supported",true},{"brightness",modes.as_object().at("brightness_percent")},{"play_mode",play_mode()}};
   auto book=data(call("Audiobook","GetState"));if(book.is_object()){
    for(const auto &[source,target]:{std::pair{"speed","story_speed"},std::pair{"title","story_title"},{"state","story_state"},{"active","story_active"},{"position","story_position"}})
     if(auto *v=book.as_object().if_contains(source))answer[target]=*v;
   }
+  return answer;
+ }
+ if(command=="radio_status") {
+  auto radio=data(call("Radio","GetState"));if(!radio.is_object())return fail("电台服务尚未就绪");
+  const auto &o=radio.as_object();auto network=data(call("Wifi","GetGeneralState"));
+  boost::json::object answer{{"ok",true},{"locked",locked},{"volume",modes.as_object().at("resume_volume")},
+   {"muted",modes.as_object().at("do_not_disturb")},{"wifi_connected",network.is_string()&&network.as_string()=="Connected"}};
+  for(const char *key:{"state","station","active","paused","sleep_active","sleep_remaining_seconds"})
+   if(auto *v=o.if_contains(key))answer[key]=*v;
+  if(auto *e=o.if_contains("error");e&&e->is_string()&&!e->as_string().empty())answer["error"]="播放失败，请切换频道或重试";
   return answer;
  }
  if(locked && command!="lock")return fail("设备已锁屏，请双按音量＋解锁");
@@ -40,7 +51,25 @@ inline boost::json::object execute(const boost::json::object &request) {
   const double n=v->is_double()?v->as_double():v->is_int64()?double(v->as_int64()):double(v->as_uint64());
   return std::isfinite(n) && std::floor(n)==n && n>=low && n<=high?int(n):-1;
  };
- if(command=="speed") {
+ if(command=="radio_stations" || command=="radio_play" || command=="radio_pause" || command=="radio_resume" || command=="radio_stop" || command=="radio_timer") {
+  if(command!="radio_stop"&&!child_mode_radio_allowed())return fail("网络电台暂未开放给儿童模式");
+  if(command=="radio_stations") {
+   int page=integer("page",0,127);if(page<0)return fail("页码无效");
+   constexpr size_t count=sizeof(radio_stations)/sizeof(radio_stations[0]);boost::json::array items;
+   for(size_t i=page*2;i<count&&i<size_t(page*2+2);++i){const auto &s=radio_stations[i];items.push_back(boost::json::object{{"id",s.id},{"name",s.name},{"group",s.group},{"sub",s.sub}});}
+   return {{"ok",true},{"items",std::move(items)},{"more",size_t(page*2+2)<count},{"total",count}};
+  }
+  if(command=="radio_play") {
+   const auto *id=request.if_contains("id");const RadioStation *chosen=nullptr;
+   if(id&&id->is_string())for(const auto &s:radio_stations)if(id->as_string()==s.id){chosen=&s;break;}
+   if(!chosen)return fail("频道编号无效");
+   result=open_radio();if(!result.success)return {{"ok",false},{"error",result.error_message}};
+   result=call("Radio","Play",{{"Station",chosen->id}});
+  } else if(command=="radio_timer") {
+   int n=integer("minutes",0,45);if(n!=0&&n!=15&&n!=30&&n!=45)return fail("定时选项为关闭、15、30或45分钟");
+   result=call("Radio","SetSleepTimer",{{"Minutes",n}});
+  } else result=call("Radio",command=="radio_pause"?"Pause":command=="radio_resume"?"Resume":"Stop");
+ } else if(command=="speed") {
   if(!child_mode_audiobook_allowed())return fail("听书已被家长限制");
   const auto *v=request.if_contains("value");if(!v||!v->is_number())return fail("倍速无效");
   const double speed=v->is_double()?v->as_double():v->is_int64()?double(v->as_int64()):double(v->as_uint64());

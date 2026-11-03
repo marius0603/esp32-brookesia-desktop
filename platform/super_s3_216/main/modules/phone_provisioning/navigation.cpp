@@ -10,6 +10,12 @@ esp_brookesia::service::FunctionResult open_audiobook(){
   if(app.manifest.id=="local.audiobook")return open_app(app.app_id);
  return {.success=false,.error_message="听书应用尚未安装"};
 }
+esp_brookesia::service::FunctionResult open_radio(){
+ auto *system=owner.load();if(!system)return {.success=false,.error_message="桌面尚未就绪"};
+ for(const auto &app:system->list_apps())
+  if(app.manifest.id=="local.radio")return open_app(app.app_id);
+ return {.success=false,.error_message="电台应用尚未安装"};
+}
 esp_brookesia::service::FunctionResult open_app(int id){
  using namespace esp_brookesia::system::core;
  auto *system=owner.load();if(!system)return {.success=false,.error_message="桌面尚未就绪"};

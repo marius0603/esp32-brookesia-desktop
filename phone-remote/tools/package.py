@@ -1,9 +1,10 @@
 """Verify and hash the paired firmware, Android APK and Settings document."""
 import hashlib,json,zipfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 def main():
- fw='packages/firmware/brookesia-'+json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))['firmware']+'-app-only.zip';apk='packages/android/xiaoma-remote-0.2.0.apk';ui='packages/resources/bluetooth-settings-s3.34/screens/bluetooth.json';resource='packages/resources/bluetooth-settings-s3.34.zip'
+ fw='packages/firmware/brookesia-'+json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))['firmware']+'-app-only.zip';apk='packages/android/xiaoma-remote-'+ET.parse(ROOT/'phone-remote/android/AndroidManifest.xml').getroot().attrib['{http://schemas.android.com/apk/res/android}versionName']+'.apk';ui='packages/resources/bluetooth-settings-s3.34/screens/bluetooth.json';resource='packages/resources/bluetooth-settings-s3.34.zip'
  with zipfile.ZipFile(ROOT/fw) as z:
   m=json.loads(z.read('manifest.json'));assert m['features']['phone_ble_remote'] and m['features']['ble_controller_flash_code']
   for name,meta in m['files'].items():assert hashlib.sha256(z.read(name)).hexdigest()==meta['sha256']

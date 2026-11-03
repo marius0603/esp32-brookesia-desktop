@@ -5,4 +5,5 @@ namespace phone_remote {
 void attach_system(esp_brookesia::system::super::System *system);
 esp_brookesia::service::FunctionResult open_app(int id);
 esp_brookesia::service::FunctionResult open_audiobook();
+esp_brookesia::service::FunctionResult open_radio();
 }

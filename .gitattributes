@@ -8,6 +8,8 @@
 *.hpp text eol=lf
 *.c text eol=lf
 *.h text eol=lf
+phone-remote/tools/requirements-signing.txt text eol=lf
+platform/super_s3_216/sdkconfig.reproducible text eol=lf
 *.ps1 text eol=crlf
 *.png binary
 *.ttf binary

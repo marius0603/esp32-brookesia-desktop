@@ -17,7 +17,7 @@ class StoryPcmBuffer {
 public:
     struct Header {uint32_t epoch,position,bytes;};
     using Writer=std::function<bool(const uint8_t *,size_t,uint32_t,uint32_t)>;
-    static constexpr size_t capacity=65536,max_pcm=8192,prefill=32768;
+    static constexpr size_t capacity=65536,max_pcm=8192,prefill=32768,stack_bytes=4096;
     StoryPcmBuffer(Writer writer,std::atomic<bool> &paused,std::atomic<uint32_t> &epoch,
                    std::atomic<uint32_t> &starvations,std::atomic<uint32_t> &write_gap,std::function<bool()> abort)
         :writer_(std::move(writer)),paused_(paused),epoch_(epoch),starvations_(starvations),write_gap_(write_gap),abort_(std::move(abort)){}
@@ -27,7 +27,7 @@ public:
         if(!ring_ || !staging_)return false;
         live_=true;
         if(xTaskCreatePinnedToCore([](void *p){auto *self=static_cast<StoryPcmBuffer *>(p);self->consume();vTaskDelete(nullptr);},
-            "story_pcm",8192,this,6,nullptr,1)!=pdPASS){live_=false;return false;}
+            "story_pcm",stack_bytes,this,6,nullptr,1)!=pdPASS){live_=false;return false;}
         return true;
     }
     bool send(const int16_t *pcm,size_t bytes,uint32_t position,const std::function<bool()> &cancel){
@@ -79,6 +79,10 @@ private:
                     okay=writer_(item+sizeof(h)+at,n,at+n==h.bytes?h.position:UINT32_MAX,h.epoch);
                     previous=esp_timer_get_time();
                     if(!okay)break;
+                    // The output task has higher priority than volume/control
+                    // RPCs. Yield after releasing the codec lock so a waiter
+                    // can acquire it before the next blocking I2S write.
+                    vTaskDelay(1);
                 }
             }else previous=0;
             vRingbufferReturnItem(ring_,item);starving=false;

@@ -835,38 +835,33 @@ index 2ce6a00..2f2e955 100644
              "Applied text font: node='%1%', requested_font_id='%2%', resolved_font_id='%3%', primary_src='%4%', "
              "font_size=%5%, cache_key='%6%', lv_font=%7%",
 diff --git a/hal/brookesia_hal_adaptor/src/audio/codec_player_impl.cpp b/hal/brookesia_hal_adaptor/src/audio/codec_player_impl.cpp
-index 0b9d900..7a5a6b8 100644
 --- a/hal/brookesia_hal_adaptor/src/audio/codec_player_impl.cpp
 +++ b/hal/brookesia_hal_adaptor/src/audio/codec_player_impl.cpp
 @@ -18,6 +18,11 @@
  #include "driver/gpio.h"
  #include "esp_codec_dev.h"
--
-+
+ 
 +extern "C" bool brookesia_board_do_not_disturb() __attribute__((weak));
 +extern "C" int brookesia_board_user_volume() __attribute__((weak));
 +extern "C" int brookesia_board_volume_filter(int) __attribute__((weak));
 +extern "C" int brookesia_child_cap_volume(int) __attribute__((weak));
 +
  namespace esp_brookesia::hal {
--
-+
+ 
  constexpr uint8_t VOLUME_DEFAULT = 75;
-@@ -91,5 +96,7 @@ bool AudioCodecPlayerImpl::open(const audio::CodecPlayerIface::Config &config)
+@@ -90,6 +95,8 @@
+ 
      is_codec_opened_ = true;
--
-+
+ 
 +    const int remembered=brookesia_board_user_volume?brookesia_board_user_volume():-1;
 +    if(remembered>=0)volume_=static_cast<uint8_t>(remembered);
      BROOKESIA_CHECK_FALSE_RETURN(set_volume_internal(volume_, true), false, "Failed to set volume after open");
--
-+
+ 
      return true;
-@@ -143,5 +150,18 @@ bool AudioCodecPlayerImpl::write_data(const uint8_t *data, size_t size)
+@@ -143,6 +150,25 @@
      BROOKESIA_CHECK_FALSE_RETURN(is_codec_opened_internal(), false, "Codec is not opened");
      BROOKESIA_CHECK_NULL_RETURN(data, false, "Invalid audio data");
--
-+
+ 
 +    // Apply the board's user target through the currently opened writer.
 +    // A control-only handle can otherwise defer its cached volume indefinitely.
 +    const int remembered=brookesia_board_user_volume?brookesia_board_user_volume():-1;
@@ -878,11 +873,19 @@ index 0b9d900..7a5a6b8 100644
 +        const bool force=esp_codec_dev_get_out_vol(get_codec_handle(codec_handles_),&actual)!=ESP_CODEC_DEV_OK ||
 +            actual!=effective || esp_codec_dev_get_out_mute(get_codec_handle(codec_handles_),&muted)!=ESP_CODEC_DEV_OK ||
 +            muted!=(effective==0);
-+        BROOKESIA_CHECK_FALSE_RETURN(set_volume_internal(remembered,force),false,"Failed to synchronize active writer volume");
++        // A writer synchronizes hardware; it must never publish its earlier
++        // snapshot back as a new user request and race a BLE/key adjustment.
++        if(force || volume_!=effective) {
++            BROOKESIA_CHECK_FALSE_RETURN(esp_codec_dev_set_out_vol(get_codec_handle(codec_handles_),effective)==ESP_CODEC_DEV_OK,false,"Failed to synchronize writer volume");
++            BROOKESIA_CHECK_FALSE_RETURN(esp_codec_dev_set_out_mute(get_codec_handle(codec_handles_),effective==0)==ESP_CODEC_DEV_OK,false,"Failed to synchronize writer mute");
++            volume_=static_cast<uint8_t>(effective);
++        }
 +    }
      auto ret = esp_codec_dev_write(get_codec_handle(codec_handles_), const_cast<uint8_t *>(data), size);
      BROOKESIA_CHECK_FALSE_RETURN(ret == ESP_CODEC_DEV_OK, false, "Failed to write audio data: %1%", ret);
-@@ -206,5 +226,9 @@ bool AudioCodecPlayerImpl::set_volume_internal(uint8_t volume, bool force)
+ 
+@@ -205,6 +231,10 @@
+ 
      // Clamp target volume to [VOLUME_MIN, VOLUME_MAX]
      auto volume_clamped = std::clamp<uint8_t>(volume, VOLUME_MIN, VOLUME_MAX);
 +    if (brookesia_child_cap_volume) {
@@ -892,7 +895,7 @@ index 0b9d900..7a5a6b8 100644
      if (volume_clamped != volume) {
          BROOKESIA_LOGW(
              "Target volume(%1%) is out of range [%2%, %3%], clamp to %4%", volume, VOLUME_MIN, VOLUME_MAX, volume_clamped
-@@ -219,6 +243,8 @@ bool AudioCodecPlayerImpl::set_volume_internal(uint8_t volume, bool force)
+@@ -219,6 +249,8 @@
      if (is_codec_opened_internal()) {
          auto ret = esp_codec_dev_set_out_vol(get_codec_handle(codec_handles_), volume_clamped);
          BROOKESIA_CHECK_FALSE_RETURN(ret == ESP_CODEC_DEV_OK, false, "Failed to set volume value: %1%", ret);
@@ -901,6 +904,7 @@ index 0b9d900..7a5a6b8 100644
      } else {
          BROOKESIA_LOGW("Codec is not opened, deferred target volume");
      }
+
 diff --git a/hal/brookesia_hal_adaptor/src/display/lcd_touch_impl.cpp b/hal/brookesia_hal_adaptor/src/display/lcd_touch_impl.cpp
 index 307579f..d6b4db9 100644
 --- a/hal/brookesia_hal_adaptor/src/display/lcd_touch_impl.cpp

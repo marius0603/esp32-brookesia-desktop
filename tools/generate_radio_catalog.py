@@ -21,6 +21,11 @@ def main():
  app=ROOT/'brookesia-apps/radio/src/app';app.mkdir(parents=True,exist_ok=True)
  catalog=[{k:s[k] for k in ('id','name','display_name','group','sub','symbol')} for s in stations]
  (app/'catalog.json').write_text(json.dumps(catalog,ensure_ascii=False,separators=(',',':'))+'\n',encoding='utf-8')
+ remote='#pragma once\n// Same public stations as brookesia-apps/radio/src/app/catalog.json. No arbitrary URLs over BLE.\nnamespace phone_remote {\nstruct RadioStation {const char *id,*name,*group,*sub;};\ninline constexpr RadioStation radio_stations[]={\n'
+ for s in catalog:
+  remote+=' {'+','.join(json.dumps(s[k],ensure_ascii=False) for k in ('id','display_name','group','sub'))+'},\n'
+ remote+='};\n}\n'
+ (ROOT/'platform/super_s3_216/main/modules/phone_provisioning/radio_catalog.hpp').write_bytes(remote.encode('utf-8'))
  preview=ROOT/'brookesia-apps/radio/design/preview.html'
  text=preview.read_text(encoding='utf-8')
  text=re.sub(r'(<script type="application/json" id="radio-catalog">).*?(</script>)',lambda m:m[1]+json.dumps(doc,ensure_ascii=False,separators=(',',':'))+m[2],text,flags=re.S)

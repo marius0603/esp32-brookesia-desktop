@@ -1,4 +1,9 @@
-# 小马蓝牙遥控 0.2.3
+# 小马蓝牙遥控 0.3.0
+
+0.3.0新增独立“电台”页，底部导航为遥控 / 听书 / 电台 / 应用。频道列表与设备同源，按儿童、音乐、资讯分类；显示频道名、语言/简介、Wi-Fi与播放状态，支持上一台/下一台、播放/暂停/继续、停止、音量和关闭/15/30/45分钟定时。打开页面或加载列表不会自动播放。音频由设备通过Wi-Fi播放，手机仅通过加密BLE遥控。
+
+电台控制需要 **s3.45或更新固件**；旧固件会提示升级，其余原有遥控、听书、应用功能继续可用。锁屏及儿童模式仍由设备拒绝未授权操作；频道只能选择内置八台，不接受任意网络地址。更换频道会清除当前电台定时，需要时重新设置。已有收藏仍在设备电台页管理。
+
 
 0.2.3将手机听书页的“停止”替换为“下一篇”，暂停和继续保留。点击时串行读取完整分页书架和当前播放状态，再使用已有`play`指令从头播放下一篇，无需更新s3.40固件。顺序和单篇循环模式手动前进一篇，末篇回首篇；随机模式选择其他篇目，单篇书库重新播放该篇。倍速保持当前档位。空书库、已移除的当前故事或同名导致无法唯一定位时提示从书架选择，不误播。
 
@@ -16,6 +21,7 @@
 
 - 遥控：音量与亮度滑条，息屏、唤醒和锁屏。
 - 听书：中文故事名、播放进度与状态、暂停/继续/下一篇；顺序播放、随机播放和单故事循环三个图标选项；书架分页选择故事。
+- 电台：独立播放卡片、音量滑条、三类频道列表及15/30/45分钟关闭定时。
 - 应用：分页显示并打开设备应用。
 
 连接后配对区域自动收起，前台每三秒读取设备状态，离开手机应用即暂停刷新。播放模式与设备共用同一份偏好；切换模式保留当前故事，播完后按新模式处理。顺序模式在最后一篇结束时停止，随机模式选择另一篇，单故事循环从头播放当前篇。锁屏和家长控制保持生效。
@@ -24,7 +30,7 @@
 
 ## 安装与连接
 
-当前设备端使用固件 **0.8.3-s3.40**、听书0.3.6和s3.34独立蓝牙设置资源；安卓端安装 [xiaoma-remote-0.2.3.apk](../packages/android/xiaoma-remote-0.2.3.apk)，支持Android 8及以上。
+当前设备端使用固件 **0.8.3-s3.45**、听书0.3.6和s3.34独立蓝牙设置资源；安卓端安装 [xiaoma-remote-0.3.0.apk](../packages/android/xiaoma-remote-0.3.0.apk)，支持Android 8及以上。
 
 1. 设备进入 **设置 → 蓝牙 → 开启蓝牙遥控**。先停止正在进行的播放或录音，再开启入口；开启后可从手机播放故事。
 2. 屏幕会显示 `CTRL_XXXXXX` 和4位数字临时配对码（例如 `0042`，需输入开头的0）。原来的“开始配网”仍用于乐鑫ESP BLE Prov，设备名为 `PROV_XXXXXX`。
@@ -74,7 +80,9 @@ python phone-remote/tests/verify_android_protocol.py --tools D:/codex/android-re
 
 复用ESP-IDF protocomm Security 1：X25519、临时PoP和连续AES-CTR字节流。遥控模式只注册 `prov-session`、`proto-ver`、`remote-control`；不开放Wi-Fi配置端点。遥控特征UUID为 `1775ff55-6b43-439b-877c-060f2d9bed07`。同一会话串行交换JSON请求和回复，不并行发送，以免破坏加密流顺序。
 
-设备只接受预定义指令：`status`、`volume`、`brightness`、`apps`、`open`、`stories`、`play`、`mode`、`speed`、`pause`、`resume`、`stop`、`sleep`、`wake`、`lock`。`mode.value`为`sequence`、`random`或`repeat_one`。状态回复含`play_mode`、`story_title`、`story_state`、`story_active`、`story_position`；列表增加`total`，每页三项、页码从零开始；不提供任意服务调用、文件访问、录音或家长设置接口。
+电台新增 `radio_status`、`radio_stations`（每页2台）、`radio_play`（内置频道ID）、`radio_pause`、`radio_resume`、`radio_stop`、`radio_timer`（minutes为0/15/30/45），状态单独读取以保持480字节BLE上限。电台列表和设备页面由`tools/generate_radio_catalog.py`同源生成。
+
+设备其余预定义指令：`status`、`volume`、`brightness`、`apps`、`open`、`stories`、`play`、`mode`、`speed`、`pause`、`resume`、`stop`、`sleep`、`wake`、`lock`。`mode.value`为`sequence`、`random`或`repeat_one`。状态回复含`play_mode`、`story_title`、`story_state`、`story_active`、`story_position`；列表增加`total`，每页三项、页码从零开始；不提供任意服务调用、文件访问、录音或家长设置接口。
 
 设备端s3.34已安装，应用分区读回校验和设置页安装核对通过。APK实际使用的Java协议代码已与独立Python实现核对官方protobuf字段、密钥协商、配对证明及连续双向加解密，也通过电脑蓝牙与实机完成连接、音量/亮度调整、列表及打开应用检查；测试设置随后恢复。安卓APK已构建并通过签名校验，手机安装和界面操作需现场确认。
 
@@ -94,3 +102,23 @@ s3.37 / 安卓0.1.1已通过四位数字（含前导0）的独立加密协议核
 
 
 s3.38 / 安卓0.2.0 / 听书0.3.4已通过构建、签名校验和真实加密BLE检查：四页书架的10个中文名、三种模式在页面已打开时的真实EOF切换、10篇新音频解码输出、前台恢复和非法模式拒绝；全部偏好已恢复。模式测试使用临时4秒静音WAV，结束后移除，避免长MP3顺序解码跳转耗时。2026-11-01，用户已在手机安装安卓0.2.0，并现场确认新版界面及功能正常；此项验证由用户完成。
+
+
+## 电台验证与限制（0.3.0）
+
+电台页逻辑检查包括分类前进/后退和环绕、空列表、播放状态、定时向上取整；频道与设备八台完全一致，四页BLE回复为261/247/254/223字节。APK使用原证书签名，可覆盖旧版；手机页面布局和实际点击需安装后确认。
+
+复现实机测试前先结束播放/录音、解锁设备，电脑打开蓝牙，使用已构建的Java协议测试类：
+
+```powershell
+python -m pip install -r codex-quota-monitor/requirements-ble-test.txt
+python phone-remote/tests/check_radio_catalog.py
+python phone-remote/tests/verify_android_protocol.py --tools <tools.json> --idf <ESP-IDF目录> --work <仓库外protocol-tests目录>
+python phone-remote/tests/verify_radio_device.py --port COM5 --tools <tools.json> --classes <上述protocol-tests目录>
+```
+
+测试使用临时配对码但不输出或保存，结束停止测试音频、关闭遥控入口并恢复音量/自动深睡时长；不更改家长PIN。电台既有网络源停顿问题仍按此前范围记录，不以这次遥控功能验证替代长时间流畅性验证。
+
+开发说明：s3.45的HTTP任务使用12KiB PSRAM栈且不执行Flash写入，解码任务8KiB、PCM输出任务4KiB保留内部栈，为BLE及屏幕DMA保留空间。外部栈使用范围遵循[ESP-IDF 6.0.2外部RAM限制](https://docs.espressif.com/projects/esp-idf/en/v6.0.2/esp32s3/api-guides/external-ram.html#restrictions)。
+
+2026-11-03实机：使用APK同份Java安全协议连接开发板，八台目录和三种格式（Junior AAC、中国之声HLS、苏州MP3）起播通过；暂停/继续/停止、四档定时与取消、六次连续调音通过。调音回复0.265～0.406秒，codec音量及DAC寄存器随目标变化；切回听书播放和硬件音量回归通过，20篇故事与13个应用保留，SPI DMA错误为0，测试后关闭BLE入口并恢复本轮音量/深睡选项及书签。最终PCM栈余量2488字节，听书与末台电台的PCM断粮计数均为0；这只覆盖短时功能回归，不能替代全部电台的长期网络稳定性验证。手机新页面仍待安装后现场确认。

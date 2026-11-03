@@ -227,7 +227,7 @@ private:
     std::atomic<int32_t> seek_{-1};
     std::atomic<uint32_t> position_{0}, duration_{0}, bytes_{0};
     std::atomic<uint32_t> pcm_epoch_{0},starvations_{0},write_gap_us_{0},decode_max_us_{0};
-    std::atomic<uint32_t> pcm_stack_free_{8192};
+    std::atomic<uint32_t> pcm_stack_free_{StoryPcmBuffer::stack_bytes};
     std::atomic<uint32_t> test_decode_delay_ms_{0};
     void state(const char *s, const char *error="") {
         local_audio::audiobook_busy=std::string_view(s)=="Loading" || std::string_view(s)=="Playing" || std::string_view(s)=="Goodnight";

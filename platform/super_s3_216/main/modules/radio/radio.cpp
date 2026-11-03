@@ -43,6 +43,9 @@ private:
  std::atomic<int64_t> deadline_{0};
  RingbufHandle_t net_=nullptr;
  const radio_catalog::Station *source_=nullptr;
+ // Decoder uses <4 KiB in measured MP3/AAC/HLS runs. Its 8 KiB stack
+ // stays internal. The HTTP worker does no Flash writes and uses a PSRAM
+ // stack, preserving contiguous internal RAM for BLE and codec DMA.
  bool on_start()override{return true;}
  void on_stop()override{stop();}
  bool abort(){
@@ -68,7 +71,7 @@ private:
   decode_errors_=0;decode_frames_=0;decode_max_us_=0;input_stalls_=0;
   read_result_=0;read_errno_=0;http_status_=0;read_calls_=0;read_max_us_=0;decode_total_us_=0;read_total_us_=0;
   local_audio::radio_busy=true;live_=true;
-  if(xTaskCreatePinnedToCore([](void *p){static_cast<Radio *>(p)->run();vTaskDelete(nullptr);},"radio_decode",16384,this,4,nullptr,1)!=pdPASS){
+  if(xTaskCreatePinnedToCore([](void *p){static_cast<Radio *>(p)->run();vTaskDelete(nullptr);},"radio_decode",8192,this,4,nullptr,1)!=pdPASS){
    local_audio::release(local_audio::Radio);live_=false;set_state("Error","Not enough internal RAM for radio task");return std::unexpected("Radio task allocation failed");
   }return {};
  }
@@ -217,7 +220,7 @@ private:
    },paused_,epoch_,starvations_,gap_,[&](){return abort();});
    if(!output->start()){fail("PCM output allocation failed");break;}
    reader_live_=true;
-   if(xTaskCreatePinnedToCore([](void *p){static_cast<Radio *>(p)->read_network();vTaskDelete(nullptr);},"radio_http",12288,this,4,nullptr,0)!=pdPASS){reader_live_=false;fail("Network task allocation failed");break;}
+   if(xTaskCreatePinnedToCoreWithCaps([](void *p){static_cast<Radio *>(p)->read_network();vTaskDeleteWithCaps(nullptr);},"radio_http",12288,this,4,nullptr,0,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT)!=pdPASS){reader_live_=false;fail("Network task allocation failed");break;}
    set_state("Buffering");uint64_t phase=0;unsigned bad_frames=0;size_t input_size=0;
    // Several seconds of compressed data cover TLS/server burst delivery. The
    // PCM queue alone covers only half a second before output starts.

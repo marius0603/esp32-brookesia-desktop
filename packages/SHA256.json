@@ -96,5 +96,7 @@
   "packages/firmware/brookesia-0.8.3-s3.43-app-only.zip": "1491d46d81e94690cb481f4736d15309e1f9208b5466cd06b6e0800f819769c6",
   "packages/apps/local.radio.debug.0.1.1.bpk": "4fbf0a0499e5b51af2f61563628bdf45f0061dc5eed95c420da51e012f18997f",
   "packages/apps/local.voiceassistant.debug.0.2.3.bpk": "d408636b71ae787aed4a3627e2c768ffd585a6a512e7f4c5740449ee74d440dd",
-  "packages/firmware/brookesia-0.8.3-s3.44-app-only.zip": "ed076267bcca371c002a05d4c3a434d4613e1cea3c8a1f5cbfef33876b99cacc"
+  "packages/firmware/brookesia-0.8.3-s3.44-app-only.zip": "ed076267bcca371c002a05d4c3a434d4613e1cea3c8a1f5cbfef33876b99cacc",
+  "packages/android/xiaoma-remote-0.3.0.apk": "a3168c8f8d8b651a935250143d48c151d9041debca70ad08cdb4111a7dc0597d",
+  "packages/firmware/brookesia-0.8.3-s3.45-app-only.zip": "115b40fa1ad815637bead3089291ea4357ccf4a195d5382f18d53dca4d921f51"
 }

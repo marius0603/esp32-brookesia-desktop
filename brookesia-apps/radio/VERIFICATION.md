@@ -42,3 +42,10 @@ ESP32-S3-Touch-AMOLED-2.16；固件0.8.3-s3.42，电台0.1.0。应用分区写�
 使用128KiB PSRAM压缩队列与64KiB独立PCM输出队列；MP3保留分片尾部。直播读取采用1KiB小块，HTTP轮询和TLS底层socket接收等待均设为250ms，连续12秒无数据才重连。Wi-Fi接收缓冲8个与聚合窗口8帧匹配；TCP窗口/邮箱回退原值5760/10，保留PSRAM分配及停止后恢复Wi-Fi省电。
 
 复现本轮：`python codex-quota-monitor/tools/verify_radio.py --port COM5 --exclude-station suzhou-qtfm --sample-seconds 120 --listen-volume 25`。原始运行报告、备份和日志只在忽略的runtime中保存。
+
+
+## 2026-11-03：s3.45 / 手机独立电台页
+
+安卓0.3.0新增电台页，八台目录与设备同源。真实加密BLE通过目录分页、AAC/HLS/MP3起播、切台、暂停/继续/停止、定时及六次连续调音；调音回复0.265至0.406秒，并读回codec和DAC寄存器核对。随后切回听书回归通过，SPI DMA错误为0。APK沿用原证书，手机界面安装操作待确认。
+
+为支持BLE并行，HTTP栈迁至PSRAM，解码栈8KiB、PCM输出栈4KiB留在内部RAM；压缩缓存128KiB和PCM缓存64KiB原已在PSRAM。输出每次释放codec锁后让出一tick，避免调音RPC被连续写入饿住；硬件同步也不再回写旧的用户音量快照。本次不据此宣称苏州台的既有偶发停顿已经解决。
