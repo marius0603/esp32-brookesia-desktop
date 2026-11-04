@@ -111,6 +111,9 @@ private:
     std::atomic<unsigned> speed_percent_{100};
     std::atomic<bool> mode_loaded_{false};
     std::mutex mode_mutex_;
+    std::atomic<unsigned> song_mode_{0};
+    std::atomic<bool> song_mode_loaded_{false};
+    std::mutex song_mode_mutex_;
     FunctionResult mode_storage(const char *function,const boost::json::object &args){
         auto storage=ServiceManager::get_instance().get_service("Storage");
         return storage&&storage->is_running()?storage->call_function_sync(function,args,8000):FunctionResult{.success=false,.error_message="Storage unavailable"};
@@ -138,6 +141,34 @@ private:
         auto result=mode_storage("FSWriteText",{{"Path","/littlefs/audiobook-play-mode.json"},{"Data",text}});
         if(!result.success)return std::unexpected(result.error_message);
         play_mode_=selected;return {};
+    }
+    void load_song_mode_once(){
+        if(song_mode_loaded_)return;
+        std::lock_guard lock(song_mode_mutex_);if(song_mode_loaded_)return;
+        // Prefer the shared native preference; migrate the existing JS choice
+        // without modifying its bookmark or any story preference.
+        for(const char *path:{"/sdcard/apps/local.nurserysongs/data/play-mode.json","/sdcard/apps/local.nurserysongs/data/player.json"}){
+            auto result=mode_storage("FSReadText",{{"Path",path}});
+            if(!result.success||!result.data||!std::holds_alternative<std::string>(*result.data))continue;
+            boost::system::error_code ec;auto saved=boost::json::parse(std::get<std::string>(*result.data),ec);
+            if(ec||!saved.is_object())continue;
+            if(auto *mode=saved.as_object().if_contains("mode");mode&&mode->is_string())
+                for(unsigned i=0;i<3;++i)if(mode->as_string()==mode_names_[i]){song_mode_=i;song_mode_loaded_=true;return;}
+        }
+        song_mode_loaded_=true;
+    }
+    std::expected<void,std::string> set_song_mode(const std::string &mode){
+        unsigned selected=3;for(unsigned i=0;i<3;++i)if(mode==mode_names_[i])selected=i;
+        if(selected==3)return std::unexpected("Invalid song playback mode");
+        struct stat st{};if(stat("/sdcard/apps/local.nurserysongs/manifest.json",&st)!=0)return std::unexpected("请插入安装了儿歌应用的 SD 卡");
+        load_song_mode_once();std::lock_guard lock(song_mode_mutex_);
+        if(song_mode_==selected)return {};
+        auto made=mode_storage("FSMkdir",{{"Path","/sdcard/apps/local.nurserysongs/data"}});
+        if(!made.success)return std::unexpected(made.error_message);
+        auto result=mode_storage("FSWriteText",{{"Path","/sdcard/apps/local.nurserysongs/data/play-mode.json"},
+            {"Data",boost::json::serialize(boost::json::object{{"mode",mode}})}});
+        if(!result.success)return std::unexpected(result.error_message);
+        song_mode_=selected;return {};
     }
     void reset_sleep() {
         std::lock_guard lock(mutex_);
@@ -277,9 +308,10 @@ private:
     }
     boost::json::object snapshot() {
         load_mode_once();
+        load_song_mode_once();
         std::lock_guard<std::mutex> lock(mutex_);
         return {{"state",state_},{"path",path_},{"title",story_titles::title(path_)},{"error",error_},{"position",position_.load()},
-                {"play_mode",mode_names_[play_mode_.load()]},{"speed",speed_percent_.load()/100.0},
+                {"play_mode",mode_names_[play_mode_.load()]},{"song_play_mode",mode_names_[song_mode_.load()]},{"speed",speed_percent_.load()/100.0},
                 {"duration",duration_.load()},{"bytes_written",bytes_.load()},{"active",live_.load()},
                 {"pcm_buffer_bytes",StoryPcmBuffer::capacity},{"pcm_starvations",starvations_.load()},{"write_gap_max_us",write_gap_us_.load()},{"decode_max_us",decode_max_us_.load()},{"pcm_stack_free_min_bytes",pcm_stack_free_.load()},{"test_decode_delay_ms",test_decode_delay_ms_.load()},
                 {"sleep_minutes",sleep_minutes_},{"sleep_remaining_seconds",story_sleep::remaining(esp_timer_get_time()/1000,deadline_)},
@@ -310,7 +342,8 @@ private:
             {"VoiceAction","Local story command routing",{{"Command","1..8",FunctionValueType::Number}}},
             {"TestDecodeDelay","Temporary decoder stall every 32 chunks; 0 disables",{{"Milliseconds","0..200",FunctionValueType::Number}}},
             {"SetSpeed","Set speech speed (0.5,0.75,1,1.25,1.5,2)",{{"Speed","Playback multiplier",FunctionValueType::Number}}},
-            {"SetPlayMode","Set and persist a shared playback mode",{{"Mode","sequence/random/repeat_one",FunctionValueType::String}}}
+            {"SetPlayMode","Set and persist a shared playback mode",{{"Mode","sequence/random/repeat_one",FunctionValueType::String}}},
+            {"SetSongMode","Set the independent shared nursery-song mode",{{"Mode","sequence/random/repeat_one",FunctionValueType::String}}}
         };
     }
     FunctionHandlerList get_function_handlers() override {
@@ -338,7 +371,8 @@ private:
                 const double speed=std::get<double>(args.at("Speed"));
                 if(!std::isfinite(speed)||(speed!=.5&&speed!=.75&&speed!=1&&speed!=1.25&&speed!=1.5&&speed!=2))return {.success=false,.error_message="Unsupported playback speed"};
                 speed_percent_=unsigned(speed*100);return {.success=true};}},
-            BROOKESIA_SERVICE_FUNC_HANDLER_1("SetPlayMode","Mode",std::string,set_play_mode(PARAM))
+            BROOKESIA_SERVICE_FUNC_HANDLER_1("SetPlayMode","Mode",std::string,set_play_mode(PARAM)),
+            BROOKESIA_SERVICE_FUNC_HANDLER_1("SetSongMode","Mode",std::string,set_song_mode(PARAM))
         };
     }
     void run(bool goodnight_only=false,bool feedback_only=false) {

@@ -1,12 +1,12 @@
-# 儿歌 0.1.0
+# 儿歌 0.1.1
 
-设备端独立中文儿歌播放器，要求固件 **s3.47+**。App、20首音频、播放偏好和断点都在SD卡；没有SD卡时基础桌面、设置和家长验证仍可用，儿歌不登记到桌面。
+设备端独立中文儿歌播放器，要求固件 **s3.48+**。App、20首音频、播放偏好和断点都在SD卡；没有SD卡时基础桌面、设置和家长验证仍可用，儿歌不登记到桌面。
 
 奶油色大按钮和小马音符图标；顶部音量，播放/暂停、上一首/下一首，四行分页选歌，顺序/随机/单曲循环，以及15/30/45分钟睡眠定时。打开不自动播放，正常1倍速；最后两分钟沿用听书服务的淡出/变暗/晚安。左右实体键调整系统音量。回到桌面或切换App会按系统生命周期结束播放并保存儿歌断点。
 
-儿童模式复用“听书/儿歌”授权位、每日时长、休息时间和音量上限，原PIN和设置不变。儿歌与故事分别扫描 `/sdcard/audiobooks/songs` 与其余听书目录；`Audiobook.List`和手机原有书架仍只列故事，`ListSongs`只列儿歌。当前手机App尚无独立儿歌页。离线“讲故事”选故事，已有“下一篇”在当前曲库内选下一项。
+儿童模式复用“听书/儿歌”授权位、每日时长、休息时间和音量上限，原PIN和设置不变。儿歌与故事分别扫描 `/sdcard/audiobooks/songs` 与其余听书目录；`Audiobook.List`和手机原有书架仍只列故事，`ListSongs`只列儿歌。安卓0.4.0提供独立儿歌页，读取相同的20首曲库并控制上下首、暂停/继续/停止、音量、播放模式和定时。离线“讲故事”选故事，已有“下一篇”在当前曲库内选下一项。
 
-复用已经验证的原生MP3/WAV解码、64KiB PSRAM PCM缓冲和音频互斥，不增加第二套音频缓存或常驻解码任务。当前App只有打开时运行JS；没有上传麦克风或音频内容。歌曲的顺序/随机/单曲循环偏好独立于听书模式。原生音频硬件、睡眠计时器和音量仍是同一套共享服务。
+复用已经验证的原生MP3/WAV解码、64KiB PSRAM PCM缓冲和音频互斥，不增加第二套音频缓存或常驻解码任务。当前App只有打开时运行JS；没有上传麦克风或音频内容。歌曲的顺序/随机/单曲循环偏好独立于听书模式，由原生服务与手机/设备页面共享；首次读取原JS偏好，之后保存至SD的独立play-mode.json，不改写书签。原生音频硬件、睡眠计时器和音量仍是同一套共享服务。
 
 ## 曲库和音量
 
@@ -25,7 +25,7 @@ python brookesia-apps/nursery-songs/tools/generate_resources.py
 # 使用 sharp 将 src/res/images/launcher_icon.svg 栅格化到同目录的96x96 PNG。
 python codex-quota-monitor/tools/package_nursery_songs.py
 python codex-quota-monitor/tools/prepare_song_library.py --manifest samples/songs/library-20261104.json --ffmpeg <ffmpeg.exe> --output <private-audio-dir>
-# 先按仓库通用流程构建/烧录s3.47应用分区；不要覆盖NVS、LittleFS或SD。
+# 先按仓库通用流程构建/烧录s3.48应用分区；不要覆盖NVS、LittleFS或SD。
 python codex-quota-monitor/tools/deploy_nursery_songs.py --port COM5 --audio-dir <private-audio-dir>
 # 重启加载补充的“鹂”字形后：
 python codex-quota-monitor/tools/verify_nursery_songs.py --port COM5

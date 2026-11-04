@@ -15,7 +15,8 @@ const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>n,call_functi
  if(n==='StorageWrite')stored.player=a.Data;
  if(n==='SetText')texts[a.Path]=a.Text;
  if(n==='GetState')data=h==='DeviceModes'?{resume_volume:57,do_not_disturb:false}:state;
- if(n==='Play')state={path:a.Path,position:a.Position,duration:60,state:'Playing',active:true};
+ if(n==='SetSongMode')state={...state,song_play_mode:a.Mode};
+ if(n==='Play')state={...state,path:a.Path,position:a.Position,duration:60,state:'Playing',active:true};
  if(n==='Pause')state={...state,state:'Paused'};
  if(n==='Resume')state={...state,state:'Playing'};
  if(n==='Stop')state={...state,active:false,state:'Stopped'};
@@ -34,6 +35,7 @@ app.on_action('songs');app.on_action('listNext');app.on_action('row2');assert.eq
 app.on_action('sleep');app.on_action('choice2');app.on_action('timerConfirm');assert.equal(state.sleep_minutes,30);
 app.on_action('mode');assert.equal(JSON.parse(stored.player).mode,'random');app.on_action('mode');assert.equal(JSON.parse(stored.player).mode,'repeat_one');
 state={...state,position:60,state:'Ended',active:false};app.on_timer();assert.equal(state.path,tracks[6].path,'Single song loops');
+state={...state,song_play_mode:'sequence'};app.on_timer();assert.equal(texts['/main/player/mode/label'],'顺序播放','Remote song mode refreshes the open device app');
 state={...state,position:23,state:'Paused'};app.on_timer();app.on_stop();assert.equal(JSON.parse(stored.player).bookmark.position,23);
 app.on_start();app.on_action('toggle');assert.equal(state.position,23,'Song bookmark survives restart');
 state={path:'/sdcard/audiobooks/bedtime/story.mp3',state:'Playing',active:true};app.on_timer();calls=[];app.on_stop();assert(!calls.some(x=>x.n==='Stop'),'Never stops a different owner');

@@ -45,7 +45,7 @@ def main():
         f('SystemCore','StopApp',{'AppId':app['app_id']})
         song_settings='/sdcard/apps/local.nurserysongs/data/player.json'
         saved={}
-        for path in ['/littlefs/audiobook-bookmark.json','/littlefs/audiobook-play-mode.json',song_settings]:
+        for path in ['/littlefs/audiobook-bookmark.json','/littlefs/audiobook-play-mode.json',song_settings,'/sdcard/apps/local.nurserysongs/data/play-mode.json']:
             saved[path]=f('Storage','FSReadText',{'Path':path}) if f('Storage','FSStat',{'Path':path})['exists'] else None
         def start():
             f('SystemCore','StartApp',{'AppId':app['app_id']});time.sleep(1)
@@ -72,6 +72,7 @@ def main():
             for mode in ['sequence','random','repeat_one']:
                 f('SystemCore','StopApp',{'AppId':app['app_id']})
                 f('Storage','FSWriteText',{'Path':song_settings,'Data':json.dumps({'mode':mode,'bookmark':{'path':songs[0]['path'],'position':0}})})
+                f('Audiobook','SetSongMode',{'Mode':mode})
                 start();f('Audiobook','Play',{'Path':songs[0]['path'],'Position':0})
                 s=wait(lambda s:s['state']=='Playing' and s['bytes_written']>65536);time.sleep(1.3)
                 f('Audiobook','Seek',{'Seconds':max(0,s['duration']-1)})
@@ -88,6 +89,7 @@ def main():
             report.update(passed=True,song_count=20,story_count=len(stories),app_count=len(apps))
         finally:
             f('SystemCore','StopApp',{'AppId':app['app_id']});f('Audiobook','Stop')
+            f('Audiobook','SetSongMode',{'Mode':book['song_play_mode']})
             for path,data in saved.items():
                 if data is not None:f('Storage','FSWriteText',{'Path':path,'Data':data})
                 elif f('Storage','FSStat',{'Path':path})['exists']:f('Storage','FSRemove',{'Path':path})

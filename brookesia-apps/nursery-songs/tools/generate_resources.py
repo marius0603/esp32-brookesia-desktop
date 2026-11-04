@@ -18,8 +18,8 @@ def panel(id,children):
     return dict(type='container',id=id,placement=place(0,54,400,340),commonProps=dict(scrollable=False,hidden=id!='player'),style=dict(bgOpacity=0,borderWidth=0,padding=0),bindings={'commonProps.hidden':'hidden'},children=children)
 
 def main():
-    write('manifest.json',{'package':{'id':'local.nurserysongs','name':{'en':'Nursery Songs','zh_CN':'儿歌'},'version':'0.1.0','visible':True,'systems':['super']},'runtime':{'type':'JavaScript','entry':'app/main.js','resource_dir':'res','arguments':[]},'services':[{'name':'Audiobook','version':'0.1.0'},{'name':'SystemCore','version':'0.8.3'},{'name':'DeviceModes','version':'0.1.0'}]})
-    write('res/root.json',{'version':'0.1.0','assets':['images/index.json','screens/main.json','flows/main.json']})
+    write('manifest.json',{'package':{'id':'local.nurserysongs','name':{'en':'Nursery Songs','zh_CN':'儿歌'},'version':'0.1.1','visible':True,'systems':['super']},'runtime':{'type':'JavaScript','entry':'app/main.js','resource_dir':'res','arguments':[]},'services':[{'name':'Audiobook','version':'0.1.0'},{'name':'SystemCore','version':'0.8.3'},{'name':'DeviceModes','version':'0.1.0'}]})
+    write('res/root.json',{'version':'0.1.1','assets':['images/index.json','screens/main.json','flows/main.json']})
     write('res/profile.json',{'root':'root.json','icon_id':'launcher_icon','screen_flows':[{'screen_flow':'main','layer':'AppDefault'}]})
     write('res/flows/main.json',{'type':'screenFlow','id':'main','screens':['main'],'initial':'main'})
     header=dict(type='container',id='header',placement=place(0,0,400,48),commonProps=dict(scrollable=False),style=dict(bgOpacity=0,borderWidth=0,padding=0),children=[label('volume','音量 --%',22,6,232,36,22),button('lock','锁屏',270,0,110,46,'lock',size=22)])

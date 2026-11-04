@@ -5,6 +5,7 @@
 #include "navigation.hpp"
 #include "radio_catalog.hpp"
 #include <cmath>
+#include "esp_random.h"
 namespace phone_remote {
 using namespace esp_brookesia::service;
 inline boost::json::object execute(const boost::json::object &request) {
@@ -27,10 +28,13 @@ inline boost::json::object execute(const boost::json::object &request) {
   return "sequence";
  };
  if(command=="status") {
-  boost::json::object answer{{"ok",true},{"locked",locked},{"volume",modes.as_object().at("resume_volume")},{"radio_supported",true},{"brightness",modes.as_object().at("brightness_percent")},{"play_mode",play_mode()}};
+  boost::json::object answer{{"ok",true},{"locked",locked},{"volume",modes.as_object().at("resume_volume")},{"radio_supported",true},{"songs_supported",true},{"brightness",modes.as_object().at("brightness_percent")},{"play_mode",play_mode()}};
   auto book=data(call("Audiobook","GetState"));if(book.is_object()){
    for(const auto &[source,target]:{std::pair{"speed","story_speed"},std::pair{"title","story_title"},{"state","story_state"},{"active","story_active"},{"position","story_position"}})
     if(auto *v=book.as_object().if_contains(source))answer[target]=*v;
+   if(auto *p=book.as_object().if_contains("path");p&&p->is_string()&&p->as_string().starts_with("/sdcard/audiobooks/songs/")){
+    answer["story_title"]="";answer["story_state"]="Idle";answer["story_active"]=false;answer["story_position"]=0;
+   }
   }
   return answer;
  }
@@ -44,6 +48,25 @@ inline boost::json::object execute(const boost::json::object &request) {
   if(auto *e=o.if_contains("error");e&&e->is_string()&&!e->as_string().empty())answer["error"]="播放失败，请切换频道或重试";
   return answer;
  }
+ if(command=="song_status") {
+  auto book=data(call("Audiobook","GetState"));if(!book.is_object())return fail("儿歌服务尚未就绪");
+  const auto &o=book.as_object();const auto *path=o.if_contains("path");
+  const bool owns=path&&path->is_string()&&path->as_string().starts_with("/sdcard/audiobooks/songs/");
+  int song_id=-1;std::string title=owns?std::string(o.at("title").as_string()):"";
+  if(title.size()>60){size_t end=60;while(end&&(uint8_t(title[end])&0xc0)==0x80)--end;title.resize(end);}
+  if(owns){auto list=data(call("Audiobook","ListSongs"));if(list.is_object()){
+   const auto &tracks=list.as_object().at("tracks").as_array();
+   for(size_t i=0;i<tracks.size();++i)if(tracks[i].as_object().at("path")==*path){song_id=i;break;}
+  }}
+  boost::json::object answer{{"ok",true},{"locked",locked},{"volume",modes.as_object().at("resume_volume")},
+   {"muted",modes.as_object().at("do_not_disturb")},{"play_mode",o.at("song_play_mode")},
+   {"id",song_id},{"title",title},{"state",owns?o.at("state"):boost::json::value("Idle")},
+   {"active",owns&&o.at("active").as_bool()},{"position",owns?o.at("position"):boost::json::value(0)},
+   {"duration",owns?o.at("duration"):boost::json::value(0)},
+   {"sleep_active",owns&&o.at("sleep_active").as_bool()},{"sleep_remaining_seconds",owns?o.at("sleep_remaining_seconds"):boost::json::value(0)}};
+  if(owns)if(auto *e=o.if_contains("error");e&&e->is_string()&&!e->as_string().empty())answer["error"]="播放失败，请重新选择儿歌";
+  return answer;
+ }
  if(locked && command!="lock")return fail("设备已锁屏，请双按音量＋解锁");
  FunctionResult result{.success=false,.error_message="不支持的指令"};
  auto integer=[&](const char *key,int low,int high)->int {
@@ -51,7 +74,46 @@ inline boost::json::object execute(const boost::json::object &request) {
   const double n=v->is_double()?v->as_double():v->is_int64()?double(v->as_int64()):double(v->as_uint64());
   return std::isfinite(n) && std::floor(n)==n && n>=low && n<=high?int(n):-1;
  };
- if(command=="radio_stations" || command=="radio_play" || command=="radio_pause" || command=="radio_resume" || command=="radio_stop" || command=="radio_timer") {
+ if(command=="songs" || command=="song_play" || command=="song_previous" || command=="song_next" || command=="song_pause" || command=="song_resume" || command=="song_stop" || command=="song_mode" || command=="song_timer") {
+  if(command!="song_stop"&&!child_mode_audiobook_allowed())return fail("儿歌已被家长限制，或已到休息时间");
+  if(command=="song_mode"){
+   const auto *mode=request.if_contains("value");if(!mode||!mode->is_string())return fail("播放模式无效");
+   result=call("Audiobook","SetSongMode",{{"Mode",*mode}});
+  } else if(command=="songs"||command=="song_play"||command=="song_previous"||command=="song_next"){
+   auto list=data(call("Audiobook","ListSongs"));if(!list.is_object())return fail("儿歌列表暂不可用");
+   const auto &tracks=list.as_object().at("tracks").as_array();
+   if(command=="songs"){
+    int page=integer("page",0,170);if(page<0)return fail("页码无效");boost::json::array items;
+    for(size_t i=page*3;i<tracks.size()&&i<size_t(page*3+3);++i){
+     std::string name(tracks[i].as_object().at("title").as_string());
+     if(name.size()>60){size_t end=60;while(end&&(uint8_t(name[end])&0xc0)==0x80)--end;name.resize(end);}
+     items.push_back(boost::json::object{{"id",i},{"name",name}});
+    }
+    return {{"ok",true},{"items",std::move(items)},{"more",size_t(page*3+3)<tracks.size()},{"total",tracks.size()}};
+   }
+   if(tracks.empty())return fail("SD 卡中暂无儿歌");
+   int at=integer("id",0,511);
+   if(command!="song_play"){
+    auto book=data(call("Audiobook","GetState"));if(!book.is_object())return fail("播放状态暂不可用");
+    at=-1;for(size_t i=0;i<tracks.size();++i)if(tracks[i].as_object().at("path")==book.as_object().at("path")){at=i;break;}
+    if(at<0)return fail("请先从列表选择一首儿歌");
+    if(book.as_object().at("song_play_mode")=="random"&&tracks.size()>1){const int n=esp_random()%(tracks.size()-1);at=n>=at?n+1:n;}
+    else at=(at+(command=="song_next"?1:int(tracks.size())-1))%tracks.size();
+   }
+   if(at<0||size_t(at)>=tracks.size())return fail("儿歌编号无效");
+   result=open_songs();if(!result.success)return {{"ok",false},{"error",result.error_message}};
+   result=call("Audiobook","SetSpeed",{{"Speed",1}});if(!result.success)return {{"ok",false},{"error",result.error_message}};
+   result=call("Audiobook","Play",{{"Path",tracks[at].as_object().at("path")},{"Position",0}});
+  } else {
+   auto book=data(call("Audiobook","GetState"));if(!book.is_object())return fail("播放状态暂不可用");
+   const auto *path=book.as_object().if_contains("path");
+   if(!path||!path->is_string()||!path->as_string().starts_with("/sdcard/audiobooks/songs/"))return fail("当前未播放儿歌");
+   if(command=="song_timer"){
+    int n=integer("minutes",0,45);if(n!=0&&n!=15&&n!=30&&n!=45)return fail("定时选项为关闭、15、30或45分钟");
+    result=call("Audiobook","SetSleepTimer",{{"Minutes",n}});
+   } else result=call("Audiobook",command=="song_pause"?"Pause":command=="song_resume"?"Resume":"Stop");
+  }
+ } else if(command=="radio_stations" || command=="radio_play" || command=="radio_pause" || command=="radio_resume" || command=="radio_stop" || command=="radio_timer") {
   if(command!="radio_stop"&&!child_mode_radio_allowed())return fail("网络电台暂未开放给儿童模式");
   if(command=="radio_stations") {
    int page=integer("page",0,127);if(page<0)return fail("页码无效");

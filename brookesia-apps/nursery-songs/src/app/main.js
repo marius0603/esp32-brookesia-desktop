@@ -38,6 +38,7 @@ function play(at,resume){
 }
 function poll(){
  const next=call(audio,'GetState');
+ if(modes.includes(next.song_play_mode)&&mode!==next.song_play_mode){mode=next.song_play_mode;render();}
  const at=own(next)?tracks.findIndex(t=>t.path===next.path):-1;
  const ended=at>=0&&own(state)&&state.path===next.path&&state.state!=='Ended'&&next.state==='Ended';
  state=next;if(at>=0){index=at;render();}
@@ -57,7 +58,7 @@ function poll(){
 function action(n){
  if(n==='toggle'){state=call(audio,'GetState');if(own(state)&&state.active){call(audio,state.state==='Paused'?'Resume':'Pause');poll();save();}else play(index,true);return;}
  if(n==='previous'||n==='next'){if(tracks.length){save();play(mode==='random'?random():(index+(n==='next'?1:tracks.length-1))%tracks.length,false);}return;}
- if(n==='mode'){mode=modes[(modes.indexOf(mode)+1)%modes.length];save();render();return;}
+ if(n==='mode'){const selected=modes[(modes.indexOf(mode)+1)%modes.length];call(audio,'SetSongMode',{Mode:selected});mode=selected;save();render();return;}
  if(n==='songs'){page=Math.floor(index/4);show('songs');return;}
  if(n==='back'||n==='timerBack'){show('player');return;}
  if(n==='listPrev'||n==='listNext'){page+=(n==='listNext'?1:-1);renderList();return;}

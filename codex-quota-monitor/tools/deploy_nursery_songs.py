@@ -1,6 +1,6 @@
 """Install song UI and calibrated media on SD; retain existing story preferences.
 
-Requires app-only s3.47 firmware first. Transfers verify device SHA256. Reports
+Requires the matching app-only firmware first. Transfers verify device SHA256. Reports
 remain in ignored runtime storage; interrupted uploads can resume known files.
 """
 import argparse
@@ -24,6 +24,7 @@ def main():
         local=a.audio_dir/('normalized-'+r['filename'])
         assert hashlib.sha256(local.read_bytes()).hexdigest()==r['sha256'] and local.stat().st_size==r['bytes']
         assert abs(r['loudness_lufs']-m['target_lufs'])<=.35 and r['true_peak_dbtp']<=-.8
+    versions=json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))
     output=ROOT/'codex-quota-monitor/runtime/nursery-songs-deployment.json'
     report=json.loads(output.read_text(encoding='utf-8')) if output.exists() else {'uploaded':[],'backup':'/sdcard/resource-backups/nursery-songs-'+str(int(time.time()))}
     report.update(passed=False,manifest_sha256=hashlib.sha256(a.manifest.read_bytes()).hexdigest())
@@ -32,7 +33,7 @@ def main():
         c.hello()
         def f(s,n,p=None):return c.call_timeout(s,n,p or {})['result']
         before=f('DeviceModes','GetState');book=f('Audiobook','GetState')
-        assert before['firmware_version']=='0.8.3-s3.47','Install matching firmware first'
+        assert before['firmware_version']==versions['firmware'],'Install matching firmware first'
         assert not book['active'] and not book['sleep_active'] and not f('Radio','GetState')['active']
         assert not f('VoiceAssistant','GetState').get('active',False)
         stories=f('Audiobook','List')['tracks'];apps=f('SystemCore','ListApps')
@@ -70,7 +71,7 @@ def main():
             f('Storage','FSCopyTree',{'From':'/sdcard/themes/'+stage_name,'To':target,'Overwrite':True})
             assert f('Storage','FSStat',{'Path':target})['size']==font.stat().st_size
             f('Storage','FSRemove',{'Path':'/sdcard/themes/'+stage_name})
-            for id,version in [('local.childmode','0.1.2'),('local.nurserysongs','0.1.0')]:
+            for id,version in [(id,versions['apps'][id]) for id in ['local.childmode','local.nurserysongs']]:
                 old=next((r for r in apps if r['manifest']['id']==id),None)
                 if old:
                     backup=report['backup']+'/'+id
