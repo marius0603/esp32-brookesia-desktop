@@ -1,1 +1,8 @@
-{"name":"local.childmode","version":"0.1.0","private":true,"scripts":{"build":"brookesia build"}}
+{
+  "name": "local.childmode",
+  "version": "0.1.2",
+  "private": true,
+  "scripts": {
+    "build": "brookesia build"
+  }
+}

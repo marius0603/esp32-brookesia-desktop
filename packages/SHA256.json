@@ -99,5 +99,8 @@
   "packages/firmware/brookesia-0.8.3-s3.44-app-only.zip": "ed076267bcca371c002a05d4c3a434d4613e1cea3c8a1f5cbfef33876b99cacc",
   "packages/android/xiaoma-remote-0.3.0.apk": "a3168c8f8d8b651a935250143d48c151d9041debca70ad08cdb4111a7dc0597d",
   "packages/firmware/brookesia-0.8.3-s3.45-app-only.zip": "115b40fa1ad815637bead3089291ea4357ccf4a195d5382f18d53dca4d921f51",
-  "packages/firmware/brookesia-0.8.3-s3.46-app-only.zip": "7c392ec33de6c964424825def3a6fc668aa6acf2d13759c2cd4bfdef9f4251ef"
+  "packages/firmware/brookesia-0.8.3-s3.46-app-only.zip": "7c392ec33de6c964424825def3a6fc668aa6acf2d13759c2cd4bfdef9f4251ef",
+  "packages/apps/local.nurserysongs.debug.0.1.0.bpk": "12c4bc90203111b78209edc720e8605fc99fc71405e8339d589345f1760bf558",
+  "packages/apps/local.childmode.debug.0.1.2.bpk": "e4d6136d1f944968ed2f7298b8d7e2b8412c277c1d88f7af8324f2623b555ae4",
+  "packages/firmware/brookesia-0.8.3-s3.47-app-only.zip": "b621140fdc9546608975b6d4d7cb4df3248b4a240455e6c07950863110f7380e"
 }

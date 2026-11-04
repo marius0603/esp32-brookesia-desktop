@@ -5,7 +5,7 @@
       "en": "Child Mode",
       "zh_CN": "儿童模式"
     },
-    "version": "0.1.1",
+    "version": "0.1.2",
     "visible": true,
     "systems": [
       "super"

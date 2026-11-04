@@ -60,6 +60,13 @@ void scan(const std::string &path, unsigned depth, std::vector<std::string> &fil
     }
     closedir(dir);
 }
+constexpr const char *songs_root="/sdcard/audiobooks/songs";
+bool is_song(const std::string &path) {return path.starts_with(std::string(songs_root)+"/");}
+void scan_library(bool songs,std::vector<std::string> &files) {
+    scan(songs?songs_root:"/sdcard/audiobooks",2,files);
+    if(!songs)std::erase_if(files,[](const auto &path){return is_song(path);});
+    std::sort(files.begin(),files.end());
+}
 const int16_t goodnight_pcm[]={
 #include "assets/goodnight_pcm.inc"
 };
@@ -212,10 +219,13 @@ private:
             return {};
         }
         if(id==1||id==3||id==4){
-            if(live_ && id!=4){paused_=false;state("Playing");return {};}
             std::string current;bool ended=false;{std::lock_guard lock(mutex_);current=path_;ended=state_=="Ended";}
-            if(id!=4 && permitted(current))return play(current,ended?0:position_.load());
-            std::vector<std::string> files;scan("/sdcard/audiobooks",2,files);std::sort(files.begin(),files.end());
+            if(live_ && id!=4 && !(id==1 && is_song(current))){paused_=false;state("Playing");return {};}
+            if(id!=4 && permitted(current) && !(id==1 && is_song(current)))return play(current,ended?0:position_.load());
+            // "Tell a story" always selects the story library. "Next" keeps
+            // the active library, so offline next never crosses into stories.
+            if(id==1 && is_song(current)) {current.clear();}
+            std::vector<std::string> files;scan_library(id!=1 && is_song(current),files);
             if(files.empty())return std::unexpected("SD 卡中没有故事");
             auto next=std::find(files.begin(),files.end(),current);if(id==4 && next!=files.end() && ++next!=files.end())return play(*next,0);
             return play(files.front(),0);
@@ -277,12 +287,11 @@ private:
                 {"sleep_finishing",sleep_due_.load()},{"sleep_completed",sleep_completed_},
                 {"sleep_gain_per_mille",gain_.load()},{"goodnight_played",goodnight_played_},{"goodnight_count",goodnight_count_},{"announcement_count",announcement_count_.load()},{"last_announcement",last_announcement_.load()}};
     }
-    std::expected<boost::json::object,std::string> list() {
+    std::expected<boost::json::object,std::string> list(bool songs=false) {
         struct stat st{};
         const bool mounted=stat("/sdcard",&st)==0 && S_ISDIR(st.st_mode);
         std::vector<std::string> paths;
-        if(mounted) scan("/sdcard/audiobooks",2,paths);
-        std::sort(paths.begin(),paths.end());
+        if(mounted) scan_library(songs,paths);
         boost::json::array entries;
         for(const auto &p:paths) entries.push_back(boost::json::object{{"path",p},{"title",story_titles::title(p)}});
         return boost::json::object{{"mounted",mounted},{"tracks",std::move(entries)},{"limit",512}};
@@ -290,6 +299,7 @@ private:
     std::vector<FunctionSchema> get_function_schemas() override {
         return {
             {"List","List local chapters",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Card and tracks"}},
+            {"ListSongs","List the separate nursery song library",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Card and tracks"}},
             {"Play","Play local chapter",{{"Path","Local file",FunctionValueType::String},{"Position","Seconds",FunctionValueType::Number,0.0}}},
             {"Pause","Pause",{}},{"Resume","Resume",{}},{"Stop","Stop",{}},
             {"Seek","Seek in current chapter",{{"Seconds","Seconds",FunctionValueType::Number}}},
@@ -306,6 +316,7 @@ private:
     FunctionHandlerList get_function_handlers() override {
         return {
             BROOKESIA_SERVICE_FUNC_HANDLER_0("List",list()),
+            BROOKESIA_SERVICE_FUNC_HANDLER_0("ListSongs",list(true)),
             BROOKESIA_SERVICE_FUNC_HANDLER_2("Play","Path",std::string,"Position",double,play(PARAM1,PARAM2)),
             {"Pause",[this](FunctionParameterMap &&)->FunctionResult{if(!live_)return {.success=false,.error_message="Nothing is playing"};paused_=true;state("Paused");return {.success=true};}},
             {"Resume",[this](FunctionParameterMap &&)->FunctionResult{if(!live_)return {.success=false,.error_message="Nothing to resume"};paused_=false;state("Playing");return {.success=true};}},

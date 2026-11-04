@@ -29,7 +29,9 @@ def main():
   assert FOUNDATION<=set(apps)
   if not a.with_sd:assert set(apps)==FOUNDATION,apps
   else:
-   assert len(apps)==13
+   current=f('DeviceModes','GetState')['firmware_version']
+   assert len(apps)==(14 if current=='0.8.3-s3.47' else 13)
+   if current=='0.8.3-s3.47':assert len(f('Audiobook','ListSongs')['tracks'])==20
    for app in apps.values():
     if app['runtime'] and app['requires_sd']:assert app['path'].startswith('/sdcard/apps/')
    assert len(f('Audiobook','List')['tracks'])==30

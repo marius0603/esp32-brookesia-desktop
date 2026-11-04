@@ -2,6 +2,7 @@
 using namespace child_policy;
 static_assert(visible(false,0,"brookesia.general.settings"));
 static_assert(visible(true,7,"local.audiobook") && visible(true,7,"local.weather") && visible(true,7,"local.flipclock"));
+static_assert(visible(true,1,"local.nurserysongs") && !visible(true,0,"local.nurserysongs"));
 static_assert(!visible(true,7,"local.voiceassistant") && visible(true,15,"local.voiceassistant"));
 static_assert(!visible(true,15,"brookesia.general.settings") && !visible(true,15,"brookesia.general.files"));
 static_assert(!visible(true,15,"brookesia.general.app_store") && !visible(true,15,"local.future_app"));

@@ -1,0 +1,1410 @@
+{
+  "type": "viewScreen",
+  "id": "main",
+  "commonProps": {
+    "scrollable": false
+  },
+  "style": {
+    "bgColor": "#e8f2e4",
+    "borderWidth": 0,
+    "padding": 0
+  },
+  "children": [
+    {
+      "type": "container",
+      "id": "header",
+      "placement": {
+        "mode": "absolute",
+        "x": 73,
+        "y": 48,
+        "width": 340,
+        "height": 48
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "borderWidth": 0,
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "volume",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 6,
+            "width": 220,
+            "height": 36
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 22,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "音量 --%"
+          }
+        },
+        {
+          "type": "button",
+          "id": "lock",
+          "placement": {
+            "mode": "absolute",
+            "x": 226,
+            "y": 0,
+            "width": 100,
+            "height": 46
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "lock"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 98,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 22,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "锁屏"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "player",
+      "placement": {
+        "mode": "absolute",
+        "x": 43,
+        "y": 94,
+        "width": 400,
+        "height": 340
+      },
+      "commonProps": {
+        "scrollable": false,
+        "hidden": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "borderWidth": 0,
+        "padding": 0
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 12,
+            "y": 4,
+            "width": 376,
+            "height": 50
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 34,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "儿歌"
+          }
+        },
+        {
+          "type": "label",
+          "id": "count",
+          "placement": {
+            "mode": "absolute",
+            "x": 10,
+            "y": 58,
+            "width": 380,
+            "height": 30
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 20,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "暂无歌曲"
+          }
+        },
+        {
+          "type": "label",
+          "id": "progress",
+          "placement": {
+            "mode": "absolute",
+            "x": 10,
+            "y": 91,
+            "width": 380,
+            "height": 32
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 24,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "0:00 / 0:00"
+          }
+        },
+        {
+          "type": "label",
+          "id": "status",
+          "placement": {
+            "mode": "absolute",
+            "x": 10,
+            "y": 128,
+            "width": 380,
+            "height": 30
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 22,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "准备播放"
+          }
+        },
+        {
+          "type": "button",
+          "id": "previous",
+          "placement": {
+            "mode": "absolute",
+            "x": 8,
+            "y": 170,
+            "width": 112,
+            "height": 58
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "previous"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 100,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 26,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "上一首"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "toggle",
+          "placement": {
+            "mode": "absolute",
+            "x": 126,
+            "y": 164,
+            "width": 148,
+            "height": 70
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#e8c477",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "toggle"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 136,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 30,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "播放"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "next",
+          "placement": {
+            "mode": "absolute",
+            "x": 280,
+            "y": 170,
+            "width": 112,
+            "height": 58
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "next"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 100,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 26,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "下一首"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "songs",
+          "placement": {
+            "mode": "absolute",
+            "x": 8,
+            "y": 248,
+            "width": 112,
+            "height": 58
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "songs"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 100,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 26,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "选歌"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "mode",
+          "placement": {
+            "mode": "absolute",
+            "x": 126,
+            "y": 248,
+            "width": 148,
+            "height": 58
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "mode"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 136,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 22,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "顺序播放"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "sleepButton",
+          "placement": {
+            "mode": "absolute",
+            "x": 280,
+            "y": 248,
+            "width": 112,
+            "height": 58
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "sleep"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 100,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 26,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "定时"
+              }
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "sleep",
+          "placement": {
+            "mode": "absolute",
+            "x": 10,
+            "y": 312,
+            "width": 380,
+            "height": 26
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 20,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": ""
+          }
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "songs",
+      "placement": {
+        "mode": "absolute",
+        "x": 43,
+        "y": 94,
+        "width": 400,
+        "height": 372
+      },
+      "commonProps": {
+        "scrollable": false,
+        "hidden": true
+      },
+      "style": {
+        "bgOpacity": 0,
+        "borderWidth": 0,
+        "padding": 0
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "heading",
+          "placement": {
+            "mode": "absolute",
+            "x": 50,
+            "y": 0,
+            "width": 300,
+            "height": 38
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 28,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "儿歌列表"
+          }
+        },
+        {
+          "type": "button",
+          "id": "row0",
+          "placement": {
+            "mode": "absolute",
+            "x": 18,
+            "y": 44,
+            "width": 364,
+            "height": 48
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "row0"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 352,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 24,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": ""
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "row1",
+          "placement": {
+            "mode": "absolute",
+            "x": 18,
+            "y": 98,
+            "width": 364,
+            "height": 48
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "row1"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 352,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 24,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": ""
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "row2",
+          "placement": {
+            "mode": "absolute",
+            "x": 18,
+            "y": 152,
+            "width": 364,
+            "height": 48
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "row2"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 352,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 24,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": ""
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "row3",
+          "placement": {
+            "mode": "absolute",
+            "x": 18,
+            "y": 206,
+            "width": 364,
+            "height": 48
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "row3"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 352,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 24,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": ""
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "prevPage",
+          "placement": {
+            "mode": "absolute",
+            "x": 18,
+            "y": 272,
+            "width": 112,
+            "height": 48
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "listPrev"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 100,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 22,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "上一页"
+              }
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "page",
+          "placement": {
+            "mode": "absolute",
+            "x": 138,
+            "y": 279,
+            "width": 124,
+            "height": 36
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 22,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "1 / 5"
+          }
+        },
+        {
+          "type": "button",
+          "id": "nextPage",
+          "placement": {
+            "mode": "absolute",
+            "x": 270,
+            "y": 272,
+            "width": 112,
+            "height": 48
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "listNext"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 100,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 22,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "下一页"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "back",
+          "placement": {
+            "mode": "absolute",
+            "x": 145,
+            "y": 326,
+            "width": 110,
+            "height": 42
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "back"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 98,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 22,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "返回"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "timer",
+      "placement": {
+        "mode": "absolute",
+        "x": 43,
+        "y": 94,
+        "width": 400,
+        "height": 340
+      },
+      "commonProps": {
+        "scrollable": false,
+        "hidden": true
+      },
+      "style": {
+        "bgOpacity": 0,
+        "borderWidth": 0,
+        "padding": 0
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "heading",
+          "placement": {
+            "mode": "absolute",
+            "x": 40,
+            "y": 10,
+            "width": 320,
+            "height": 42
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 30,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "睡眠定时"
+          }
+        },
+        {
+          "type": "button",
+          "id": "choice0",
+          "placement": {
+            "mode": "absolute",
+            "x": 34,
+            "y": 76,
+            "width": 160,
+            "height": 60
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "choice0"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 148,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 26,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "关闭"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "choice1",
+          "placement": {
+            "mode": "absolute",
+            "x": 204,
+            "y": 76,
+            "width": 160,
+            "height": 60
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "choice1"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 148,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 26,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "15分钟"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "choice2",
+          "placement": {
+            "mode": "absolute",
+            "x": 34,
+            "y": 148,
+            "width": 160,
+            "height": 60
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "choice2"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 148,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 26,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "30分钟"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "choice3",
+          "placement": {
+            "mode": "absolute",
+            "x": 204,
+            "y": 148,
+            "width": 160,
+            "height": 60
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "choice3"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 148,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 26,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "45分钟"
+              }
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "note",
+          "placement": {
+            "mode": "absolute",
+            "x": 20,
+            "y": 228,
+            "width": 360,
+            "height": 36
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 22,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "最后两分钟渐弱"
+          }
+        },
+        {
+          "type": "button",
+          "id": "back",
+          "placement": {
+            "mode": "absolute",
+            "x": 36,
+            "y": 278,
+            "width": 150,
+            "height": 56
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "timerBack"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 138,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 26,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "返回"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "confirm",
+          "placement": {
+            "mode": "absolute",
+            "x": 214,
+            "y": 278,
+            "width": 150,
+            "height": 56
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#e8c477",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "timerConfirm"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 138,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 26,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "确定"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

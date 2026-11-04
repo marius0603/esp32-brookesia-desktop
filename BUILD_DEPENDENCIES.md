@@ -4,7 +4,7 @@
 
 | 内容 | 仓库位置 / 恢复入口 |
 | --- | --- |
-| 上游提交、固件、应用及30篇书库版本 | `versions.json` |
+| 上游提交、固件、应用、30篇书库及20首儿歌版本 | `versions.json` |
 | ESP-Brookesia十份适配补丁 | `patches/`，按`tools/build-inputs.json`顺序应用 |
 | 固件源码覆盖层与完整配置 | `platform/super_s3_216/`、`sdkconfig.reproducible` |
 | 上游重建及补丁验证 | `tools/prepare_workspace.py`、`tools/check_patch_chain.py` |
@@ -14,6 +14,8 @@
 | USB通信依赖 | `codex-quota-monitor/requirements.txt`及仓库自带`vendor-source/brookesia-usb`源码 |
 | 已发布安装包校验 | `packages/SHA256.json` |
 | 故事来源及音频重建 | `samples/stories/library-20261101.json`、`samples/stories/library-20261103.json`、[书库说明](codex-quota-monitor/STORY_LIBRARY.md)；录音不入Git |
+
+| 儿歌曲库与播放器 | `brookesia-apps/nursery-songs/README.md`；20首曲目及来源、原始/成品哈希、响度为`samples/songs/library-20261104.json`；准备/部署/验证工具在`codex-quota-monitor/tools`，录音不入Git |
 
 ## 在新电脑继续
 
