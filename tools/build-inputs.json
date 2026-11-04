@@ -9,7 +9,8 @@
     "patches/bluetooth-settings.patch",
     "patches/remote-navigation.patch",
     "patches/single-foreground.patch",
-    "patches/transparent-launcher.patch"
+    "patches/transparent-launcher.patch",
+    "patches/sd-app-storage.patch"
   ],
   "sha256": {
     "patches/brookesia-s3.patch": "75e0bb3f720b9bd442955f1b04ab4d6f1437c2cbdfa4359646f1176044bc0346",
@@ -23,11 +24,13 @@
     "phone-remote/tools/downloads.json": "f4dca27ac3cb2d5b30d308eafae0ae106e9108809f3d0d0f595664f98f0e8e1d",
     "phone-remote/tools/requirements-signing.txt": "8b5c18678b29b5e8e0fb586a35ac1dce3ccd9da321e8f12ace0e118350b4e568",
     "platform/super_s3_216/sdkconfig.reproducible": "87574921293b156221663e71d6d26127bd0e11569386546a7390491f91acf064",
-    "versions.json": "67b7da5f3f07eab4685830c4157e9c9f16547ecd59a11006ea1101b2bc506fec",
+    "versions.json": "5f58f03060833034169b5909a854401e14f442f2e8d0cea88dfb26403f7fff1b",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.c": "52a51002bd22aac5c2105187c27cd393a34f13143c8ae97b0964ad27dec1c1ea",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.h": "a2fc087b68c25141e2fb7ab56e71b111bee79cf311fcc850d492eb574c0eeffe",
     "patches/transparent-launcher.patch": "b9cbe446371691db2c9e4674b73293646b63ca003a24f59a5c0a2646ce871732",
     "tools/generate_radio_catalog.py": "84f7bb3d73fec08241e0e30a8b38ffed3cd5363cfb64a43ae25e946c0ddec5e8",
-    "brookesia-apps/radio/stations.json": "24df2b5cd17c140cafb6395f56a00df776d150321647f7665ff18a2dc6ed3639"
+    "brookesia-apps/radio/stations.json": "24df2b5cd17c140cafb6395f56a00df776d150321647f7665ff18a2dc6ed3639",
+    "patches/sd-app-storage.patch": "671f0b331c65e99389742b5c11f4c250966b6b8f4fd265c5ae705f3ae7849f2e",
+    "platform/super_s3_216/main/modules/sd_resources/sd_resources.cpp": "4e109c8de1b6bf511cb09815b8b1d7319682b7870e1cddef0024dd2c8c601799"
   }
 }

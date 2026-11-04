@@ -1,0 +1,682 @@
+diff --git a/system/brookesia_system_core/src/app/app.cpp b/system/brookesia_system_core/src/app/app.cpp
+--- a/system/brookesia_system_core/src/app/app.cpp
++++ b/system/brookesia_system_core/src/app/app.cpp
+@@ -20,6 +20,8 @@
+ #include "brookesia/service_manager/service/manager.hpp"
+ #include "private/app/service_requirement.hpp"
+ #include "private/filesystem.hpp"
++#include "private/system/impl.hpp"
++#include "private/app/storage_transaction.hpp"
+ 
+ namespace esp_brookesia::system::core {
+ namespace {
+@@ -225,6 +227,47 @@
+     return std::unexpected("No storage volume is available for app installation");
+ }
+ 
++std::expected<std::filesystem::path,std::string> sd_app_root(const StorageLayout &layout)
++{
++ for(const auto &v:layout.external)if(v.available && v.id==layout.preferred_external_id)return std::filesystem::path(v.root_path)/"apps";
++ for(const auto &v:layout.external)if(v.available)return std::filesystem::path(v.root_path)/"apps";
++ return std::unexpected("Please insert an SD card before installing or migrating this app");
++}
++std::expected<void,std::string> install_space(const StorageLayout &layout,const std::filesystem::path &root,uint64_t bytes)
++{
++ std::string mount;bool external=false;
++ if(root==std::filesystem::path(layout.internal.root_path)/"apps")mount=layout.internal.mount_point;
++ for(const auto &v:layout.external)if(root==std::filesystem::path(v.root_path)/"apps"){mount=v.mount_point;external=true;}
++ if(mount.empty())return std::unexpected("Cannot resolve install volume");
++ return install_storage::check_space(mount,bytes+(external?8*1024*1024:256*1024));
++}
++std::expected<AppId,std::string> commit_prepared_app(System &owner,AppManifest next,const std::optional<AppInfo> &previous,const install_storage::Transaction &tx)
++{
++ using namespace install_storage;
++ auto pending=present(tx.marker());if(!pending)return std::unexpected(pending.error());if(*pending)return std::unexpected("Restart to recover the previous unfinished installation");
++ if((!previous || tx.old!=tx.final)){auto e=present(tx.final);if(!e)return std::unexpected(e.error());if(*e)return std::unexpected("Destination already exists; preserve and reconcile it before migration");}
++ auto removed=erase_tree(tx.backup);if(!removed)return std::unexpected(removed.error());
++ auto ready=mkdir(tx.backup.parent_path());if(!ready)return std::unexpected(ready.error());
++ auto started=tx.begin();if(!started)return std::unexpected(started.error());
++ bool detached=false;std::optional<AppId> new_id;
++ auto fail=[&](std::string message)->std::expected<AppId,std::string>{
++  if(new_id){auto detached_new=owner.uninstall_app(*new_id,false);if(!detached_new)return std::unexpected(message+"; recovery marker retained: "+detached_new.error());}
++  auto rolled=tx.rollback();if(!rolled)return std::unexpected(message+"; restart for recovery: "+rolled.error());
++  if(previous && detached){auto restored=owner.install_runtime_app(previous->manifest);if(!restored)return std::unexpected(message+"; old files restored, restart to reload: "+restored.error());}
++  (void)erase_tree(tx.stage);(void)tx.clear();return std::unexpected(message);
++ };
++ if(previous && tx.old!=tx.final){auto backed=copy_tree(tx.old,tx.backup);if(!backed)return fail("Cannot preserve previous app: "+backed.error());if(requires_sd(tx.id)){auto check=verify_copy(tx.old,tx.backup);if(!check)return fail(check.error());}}
++ if(previous){auto d=owner.uninstall_app(previous->app_id,false);if(!d)return fail(d.error());detached=true;
++  if(tx.old==tx.final){auto moved=move_tree(tx.old,tx.backup);if(!moved)return fail(moved.error());}}
++ auto moved=move_tree(tx.stage/next.id,tx.final);if(!moved)return fail(moved.error());
++ next.app_path=tx.final.generic_string();auto installed=owner.install_runtime_app(next);if(!installed)return fail(installed.error());new_id=*installed;
++ auto committed=tx.commit();if(!committed)return fail("Cannot commit install journal: "+committed.error());
++ auto clean=previous && tx.old!=tx.final?erase_tree(tx.old):std::expected<void,std::string>{};
++ if(clean){(void)erase_tree(tx.stage);(void)tx.clear();}
++ else BROOKESIA_LOGW("New app committed; old-file cleanup will resume on restart: %1%",clean.error());
++ return *installed;
++}
++
+ } // namespace
+ 
+ AppTimerRuntime::AppTimerRuntime(System &system, AppId app_id)
+@@ -1143,152 +1186,56 @@
+     return system_->install_runtime_app_package(package_path, replace_existing);
+ }
+ 
+-std::expected<AppId, std::string> System::install_runtime_app_package(
+-    std::string_view package_path,
+-    bool replace_existing
+-)
+-{
+-    BROOKESIA_LOG_TRACE_GUARD_WITH_THIS();
+-
+-    auto package_manifest = read_app_package_manifest(package_path, get_system_type());
+-    if (!package_manifest) {
+-        return std::unexpected("Failed to read runtime app package manifest: " + package_manifest.error());
+-    }
+-    if (!is_safe_app_directory_name(package_manifest->id)) {
+-        return std::unexpected("Runtime app manifest id is not a safe directory name: " + package_manifest->id);
+-    }
+-
+-    auto installed = find_app_by_manifest_id(*this, package_manifest->id);
+-    if (installed && !replace_existing) {
+-        return std::unexpected("Runtime app package is already installed: " + package_manifest->id);
+-    }
+-
+-    auto service_requirement_result = check_runtime_app_service_requirements(*package_manifest, "install");
+-    if (!service_requirement_result) {
+-        return std::unexpected(service_requirement_result.error());
+-    }
+-
+-    std::filesystem::path app_root;
+-    std::filesystem::path old_app_dir;
+-    if (installed) {
+-        old_app_dir = std::filesystem::path(installed->manifest.app_path).lexically_normal();
+-        if (old_app_dir.empty()) {
+-            return std::unexpected("Installed runtime app path is empty: " + package_manifest->id);
+-        }
+-        if (old_app_dir.filename().generic_string() != package_manifest->id) {
+-            return std::unexpected(
+-                       "Installed runtime app path does not match manifest id: " + old_app_dir.generic_string()
+-                   );
+-        }
+-        app_root = old_app_dir.parent_path().lexically_normal();
+-        if (app_root.empty()) {
+-            return std::unexpected("Installed runtime app root is empty: " + package_manifest->id);
+-        }
+-    } else {
+-        auto app_root_result = get_default_install_app_root(get_storage_layout());
+-        if (!app_root_result) {
+-            return std::unexpected(app_root_result.error());
+-        }
+-        app_root = app_root_result->lexically_normal();
+-    }
+-
+-    if (!installed && brookesia_child_requires_internal &&
+-            brookesia_child_requires_internal(package_manifest->id.c_str())) {
+-        const auto layout = get_storage_layout();
+-        if (!layout.internal.available || layout.internal.root_path.empty()) {
+-            return std::unexpected("Parent controls require internal storage");
+-        }
+-        app_root = std::filesystem::path(layout.internal.root_path) / "apps";
+-    }
+-    auto app_root_result = service::helper::Storage::fs_mkdir(app_root.generic_string(), STORAGE_FS_TIMEOUT_MS);
+-    if (!app_root_result) {
+-        return std::unexpected(
+-                   "Failed to create app root '" + app_root.generic_string() + "': " + app_root_result.error()
+-               );
+-    }
+-
+-    const auto staging_parent = app_root / ".installing" / make_unique_install_directory_name(package_manifest->id);
+-    const auto staged_app_dir = staging_parent / package_manifest->id;
+-    const auto install_dir = app_root / package_manifest->id;
+-
+-    auto cleanup_staging = [&staging_parent]() {
+-        (void)remove_path_tree_if_exists(staging_parent, "runtime app staging directory");
+-    };
+-
+-    auto unpacked_manifest = unpack_app_package_to(
+-                                 package_path,
+-                                 staging_parent.generic_string(),
+-                                 get_system_type()
+-                             );
+-    if (!unpacked_manifest) {
+-        cleanup_staging();
+-        return std::unexpected("Failed to unpack runtime app package: " + unpacked_manifest.error());
+-    }
+-    if (unpacked_manifest->id != package_manifest->id) {
+-        cleanup_staging();
+-        return std::unexpected(
+-                   "Runtime app package manifest changed while unpacking: " + package_manifest->id +
+-                   " -> " + unpacked_manifest->id
+-               );
+-    }
+-    service_requirement_result = check_runtime_app_service_requirements(*unpacked_manifest, "install");
+-    if (!service_requirement_result) {
+-        cleanup_staging();
+-        return std::unexpected(service_requirement_result.error());
+-    }
+-    auto descriptor_result = read_runtime_app_resource_descriptor(*unpacked_manifest);
+-    if (!descriptor_result) {
+-        cleanup_staging();
+-        return std::unexpected("Failed to validate staged runtime app package: " + descriptor_result.error());
+-    }
+-
+-    if (installed) {
+-        auto preserve_result = preserve_runtime_app_private_data(old_app_dir, staged_app_dir);
+-        if (!preserve_result) {
+-            cleanup_staging();
+-            return std::unexpected("Failed to preserve existing app data: " + preserve_result.error());
+-        }
+-    } else {
+-        auto remove_stale_result = remove_path_tree_if_exists(install_dir, "stale runtime app directory");
+-        if (!remove_stale_result) {
+-            cleanup_staging();
+-            return std::unexpected(remove_stale_result.error());
+-        }
+-    }
+-
+-    if (installed) {
+-        auto uninstall_result = uninstall_app(installed->app_id);
+-        if (!uninstall_result) {
+-            cleanup_staging();
+-            return std::unexpected("Failed to uninstall existing app: " + uninstall_result.error());
+-        }
+-    }
+-
+-    auto rename_result = service::helper::Storage::fs_rename(
+-                             staged_app_dir.generic_string(), install_dir.generic_string(), STORAGE_FS_TIMEOUT_MS
+-                         );
+-    if (!rename_result) {
+-        cleanup_staging();
+-        return std::unexpected(
+-                   "Failed to move staged runtime app to final directory '" + install_dir.generic_string() +
+-                   "': " + rename_result.error()
+-               );
+-    }
+-    cleanup_staging();
+-    unpacked_manifest->app_path = install_dir.generic_string();
+-
+-    auto install_result = install_runtime_app(*unpacked_manifest);
+-    if (!install_result) {
+-        auto cleanup_result = remove_path_tree(install_dir, "runtime app directory");
+-        if (!cleanup_result) {
+-            return std::unexpected(
+-                       "Failed to install runtime app package: " + install_result.error() +
+-                       "; additionally failed to remove runtime app directory: " + cleanup_result.error()
+-                   );
+-        }
+-        return std::unexpected("Failed to install runtime app package: " + install_result.error());
+-    }
+-    return *install_result;
++std::expected<AppId, std::string> System::install_runtime_app_package(std::string_view package_path,bool replace_existing)
++{
++ if(impl_->should_schedule_app_task())return impl_->run_task_sync<std::expected<AppId,std::string>>(SYSTEM_APP_TASK_GROUP,[this,path=std::string(package_path),replace_existing](){return install_runtime_app_package(path,replace_existing);},std::unexpected("Cannot schedule app installation"));
++ auto manifest=read_app_package_manifest(package_path,get_system_type());if(!manifest)return std::unexpected(manifest.error());
++ if(!is_safe_app_directory_name(manifest->id))return std::unexpected("Unsafe app ID");
++ auto previous=find_app_by_manifest_id(*this,manifest->id);if(previous&&!replace_existing)return std::unexpected("App already installed");
++ auto requirements=check_runtime_app_service_requirements(*manifest,"install");if(!requirements)return std::unexpected(requirements.error());
++ auto layout=get_storage_layout();std::filesystem::path root;
++ const bool internal=brookesia_child_requires_internal&&brookesia_child_requires_internal(manifest->id.c_str());
++ if(internal){if(!layout.internal.available)return std::unexpected("Parent controls require internal storage");root=std::filesystem::path(layout.internal.root_path)/"apps";}
++ else if(install_storage::requires_sd(manifest->id)){auto sd=sd_app_root(layout);if(!sd)return std::unexpected(sd.error());root=*sd;}
++ else if(previous)root=std::filesystem::path(previous->manifest.app_path).parent_path();
++ else {auto chosen=get_default_install_app_root(layout);if(!chosen)return std::unexpected(chosen.error());root=*chosen;}
++ auto old=previous?std::filesystem::path(previous->manifest.app_path):std::filesystem::path{};
++ if(previous&&(old.empty()||old.filename().generic_string()!=manifest->id))return std::unexpected("Invalid installed app path");
++ if(previous){auto stopped=stop_app(previous->app_id);if(!stopped)return std::unexpected(stopped.error());}
++ // FAT clusters can be larger than a Flash block; budget conservatively.
++ const uint32_t allocation_unit=root==std::filesystem::path(layout.internal.root_path)/"apps"?4096:524288;
++ auto estimate=estimate_app_package_install_bytes(package_path,allocation_unit);if(!estimate)return std::unexpected(estimate.error());uint64_t required=*estimate;
++ if(previous){for(const char *name:{"cache","data","files"}){auto n=install_storage::allocated_tree(old/name,allocation_unit);if(!n)return std::unexpected(n.error());required+=*n;}
++  if(old.parent_path()!=root){auto n=install_storage::allocated_tree(old,allocation_unit);if(!n)return std::unexpected(n.error());required+=*n;}}
++ auto capacity=install_space(layout,root,required);if(!capacity)return std::unexpected(capacity.error());
++ auto created=install_storage::mkdir(root);if(!created)return std::unexpected(created.error());
++ const auto nonce=make_unique_install_directory_name(manifest->id);const auto stage=root/".installing"/nonce;
++ auto unpacked=unpack_app_package_to(package_path,stage.generic_string(),get_system_type());
++ if(!unpacked){(void)install_storage::erase_tree(stage);return std::unexpected(unpacked.error());}
++ auto descriptor=read_runtime_app_resource_descriptor(*unpacked);if(!descriptor){(void)install_storage::erase_tree(stage);return std::unexpected(descriptor.error());}
++ if(previous){auto preserved=preserve_runtime_app_private_data(old,stage/manifest->id);if(!preserved){(void)install_storage::erase_tree(stage);return std::unexpected(preserved.error());}}
++ install_storage::Transaction tx{manifest->id,nonce,root,old,root/manifest->id,root/".rollback"/manifest->id,stage};
++ auto result=commit_prepared_app(*this,*unpacked,previous,tx);if(!result){auto pending=install_storage::present(tx.marker());if(pending&&!*pending)(void)install_storage::erase_tree(stage);}return result;
++}
++
++std::expected<AppId,std::string> System::migrate_runtime_app_to_external(AppId app_id)
++{
++ if(impl_->should_schedule_app_task())return impl_->run_task_sync<std::expected<AppId,std::string>>(SYSTEM_APP_TASK_GROUP,[this,app_id](){return migrate_runtime_app_to_external(app_id);},std::unexpected("Cannot schedule app migration"));
++ auto previous=get_app(app_id);if(!previous)return std::unexpected("Application not found");
++ if(previous->manifest.kind!=AppKind::Runtime||!install_storage::requires_sd(previous->manifest.id))return std::unexpected("Foundation applications must remain in internal storage");
++ auto layout=get_storage_layout();auto root=sd_app_root(layout);if(!root)return std::unexpected(root.error());
++ const auto old=std::filesystem::path(previous->manifest.app_path);if(old.parent_path()==*root)return app_id;
++ auto stopped=stop_app(app_id);if(!stopped)return std::unexpected(stopped.error());
++ auto bytes=install_storage::allocated_tree(old,524288);if(!bytes)return std::unexpected(bytes.error());
++ auto capacity=install_space(layout,*root,*bytes*2);if(!capacity)return std::unexpected(capacity.error());
++ const auto nonce=make_unique_install_directory_name(previous->manifest.id);const auto stage=*root/".installing"/nonce;
++ auto copied=install_storage::copy_tree(old,stage/previous->manifest.id);if(!copied){(void)install_storage::erase_tree(stage);return std::unexpected(copied.error());}
++ auto verified=install_storage::verify_copy(old,stage/previous->manifest.id);if(!verified){(void)install_storage::erase_tree(stage);return std::unexpected(verified.error());}
++ auto next=read_unpacked_app_manifest((stage/previous->manifest.id).generic_string(),get_system_type());
++ if(!next){(void)install_storage::erase_tree(stage);return std::unexpected(next.error());}
++ auto descriptor=read_runtime_app_resource_descriptor(*next);if(!descriptor){(void)install_storage::erase_tree(stage);return std::unexpected(descriptor.error());}
++ install_storage::Transaction tx{next->id,nonce,*root,old,*root/next->id,*root/".rollback"/next->id,stage};
++ auto result=commit_prepared_app(*this,*next,previous,tx);if(!result){auto pending=install_storage::present(tx.marker());if(pending&&!*pending)(void)install_storage::erase_tree(stage);}return result;
+ }
+ 
+ std::expected<void, std::string> SystemApi::show_loading() const
+diff --git a/system/brookesia_system_core/src/app/manager.cpp b/system/brookesia_system_core/src/app/manager.cpp
+--- a/system/brookesia_system_core/src/app/manager.cpp
++++ b/system/brookesia_system_core/src/app/manager.cpp
+@@ -513,14 +513,14 @@
+     return {};
+ }
+ 
+-std::expected<void, std::string> System::uninstall_app(AppId app_id)
++std::expected<void, std::string> System::uninstall_app(AppId app_id, bool remove_files)
+ {
+     BROOKESIA_LOG_TRACE_GUARD_WITH_THIS();
+     if (impl_->should_schedule_app_task()) {
+         return impl_->run_task_sync<std::expected<void, std::string>>(
+                    SYSTEM_APP_TASK_GROUP,
+-        [this, app_id]() {
+-            return uninstall_app(app_id);
++        [this, app_id, remove_files]() {
++            return uninstall_app(app_id, remove_files);
+         },
+         std::unexpected("Failed to post app uninstall task")
+                );
+@@ -538,9 +538,9 @@
+     }
+     const auto uninstalled_app = record.info;
+     release_runtime_dataflow_operations(record.runtime_app_id);
+-    if (record.native_app && record.context) {
++    if (remove_files && record.native_app && record.context) {
+         record.native_app->on_uninstall(*record.context);
+-    } else if (record.info.manifest.kind == AppKind::Runtime) {
++    } else if (remove_files && record.info.manifest.kind == AppKind::Runtime) {
+         auto lifecycle_result = impl_->call_runtime_lifecycle(record, LIFECYCLE_ON_UNINSTALL);
+         if (!lifecycle_result) {
+             BROOKESIA_LOGW("Runtime app uninstall hook failed: %1%", lifecycle_result.error());
+@@ -560,7 +560,7 @@
+     if (!cleanup_result) {
+         BROOKESIA_LOGW("Failed to cleanup app GUI while uninstalling app: %1%", cleanup_result.error());
+     }
+-    if (record.info.manifest.kind == AppKind::Runtime) {
++    if (remove_files && record.info.manifest.kind == AppKind::Runtime) {
+         if (record.info.manifest.app_path.empty()) {
+             return std::unexpected("Runtime app manifest app_path is empty");
+         }
+diff --git a/system/brookesia_system_core/src/app/package.cpp b/system/brookesia_system_core/src/app/package.cpp
+--- a/system/brookesia_system_core/src/app/package.cpp
++++ b/system/brookesia_system_core/src/app/package.cpp
+@@ -840,6 +840,20 @@
+ 
+ } // namespace
+ 
++std::expected<uint64_t, std::string> estimate_app_package_install_bytes(std::string_view package_path, uint32_t allocation_unit)
++{
++    auto zip=read_binary_file(fs::path(std::string(package_path)));if(!zip)return std::unexpected(zip.error());
++    auto entries=parse_central_directory(*zip);if(!entries)return std::unexpected(entries.error());
++    if(allocation_unit<4096 || allocation_unit>524288 || (allocation_unit & (allocation_unit-1)))return std::unexpected("Invalid storage allocation unit");
++    uint64_t total=65536;std::set<std::string> directories;
++    for(const auto &entry:*entries){
++        if(!is_safe_relative_path(entry.name))return std::unexpected("Unsafe path in package: "+entry.name);
++        auto parent=fs::path(entry.name).parent_path();while(!parent.empty()){directories.insert(parent.generic_string());parent=parent.parent_path();}
++        if(!entry.is_directory)total+=((uint64_t(entry.uncompressed_size)+allocation_unit-1)/allocation_unit)*allocation_unit;
++    }
++    return total+(directories.size()+1)*allocation_unit;
++}
++
+ std::expected<AppManifest, std::string> unpack_app_package_to(
+     std::string_view package_path,
+     std::string_view install_dir,
+diff --git a/system/brookesia_system_core/src/app/package_scan.cpp b/system/brookesia_system_core/src/app/package_scan.cpp
+--- a/system/brookesia_system_core/src/app/package_scan.cpp
++++ b/system/brookesia_system_core/src/app/package_scan.cpp
+@@ -13,6 +13,7 @@
+ #include <algorithm>
+ #include "brookesia/service_helper/system/storage.hpp"
+ #include "brookesia/system_core/app/package.hpp"
++#include "private/app/storage_transaction.hpp"
+ 
+ namespace esp_brookesia::system::core {
+ namespace {
+@@ -55,6 +56,8 @@
+             return {};
+         }
+ 
++        bool external_root=false;
++        for(const auto &v:owner_.get_storage_layout().external)external_root=external_root||app_path==std::filesystem::path(v.root_path)/"apps";
+         std::vector<std::filesystem::path> package_dirs;
+         auto entries = service::helper::Storage::fs_list(app_path.generic_string(), STORAGE_FS_TIMEOUT_MS);
+         if (!entries)
+@@ -103,6 +106,7 @@
+             }
+             auto install_result = owner_.install_runtime_app(*manifest);
+             if (!install_result) {
++                if(external_root){BROOKESIA_LOGW("Skip unavailable SD app; foundation boot continues: %1%",install_result.error());continue;}
+                 return std::unexpected(install_result.error());
+             }
+         }
+@@ -110,6 +114,7 @@
+     };
+ 
+     const auto app_roots = get_app_scan_roots();
++    for(const auto &root:app_roots){auto recovered=install_storage::recover_root(root,app_roots,system_type_);if(!recovered)BROOKESIA_LOGW("Storage recovery remains pending: %1%",recovered.error());}
+     for (size_t index = 0; index < app_roots.size(); ++index) {
+         auto install_result = scan_app_root(app_roots[index].generic_string(), "storage_app_" + std::to_string(index));
+         if (!install_result) {
+diff --git a/system/brookesia_system_core/include/brookesia/system_core/system/system.hpp b/system/brookesia_system_core/include/brookesia/system_core/system/system.hpp
+--- a/system/brookesia_system_core/include/brookesia/system_core/system/system.hpp
++++ b/system/brookesia_system_core/include/brookesia/system_core/system/system.hpp
+@@ -172,7 +172,8 @@
+         bool replace_existing = true
+     );
+     std::expected<void, std::string> install_registered_apps();
+-    std::expected<void, std::string> uninstall_app(AppId app_id);
++    std::expected<AppId, std::string> migrate_runtime_app_to_external(AppId app_id);
++    std::expected<void, std::string> uninstall_app(AppId app_id, bool remove_files = true);
+ 
+     struct AppStartOptions {
+         std::optional<gui::ViewFrame> launch_origin_frame;
+diff --git a/system/brookesia_system_core/include/brookesia/system_core/app/package.hpp b/system/brookesia_system_core/include/brookesia/system_core/app/package.hpp
+--- a/system/brookesia_system_core/include/brookesia/system_core/app/package.hpp
++++ b/system/brookesia_system_core/include/brookesia/system_core/app/package.hpp
+@@ -6,6 +6,7 @@
+ #pragma once
+ 
+ #include <expected>
++#include <cstdint>
+ #include <string>
+ #include <string_view>
+ 
+@@ -25,6 +26,9 @@
+  * The app package manifest is owned by system_core because it describes system-level app metadata
+  * and runtime configuration.
+  */
++// Conservative allocation estimate for unpacking, including directories.
++std::expected<uint64_t, std::string> estimate_app_package_install_bytes(std::string_view package_path, uint32_t allocation_unit = 4096);
++
+ std::expected<AppManifest, std::string> unpack_app_package_to(
+     std::string_view package_path,
+     std::string_view install_dir,
+diff --git a/service/system/brookesia_service_usb/src/service_usb.cpp b/service/system/brookesia_service_usb/src/service_usb.cpp
+--- a/service/system/brookesia_service_usb/src/service_usb.cpp
++++ b/service/system/brookesia_service_usb/src/service_usb.cpp
+@@ -38,6 +38,7 @@
+ #include "brookesia/service_usb/service_usb.hpp"
+ #include "private/utils.hpp"
+ #include "protocol.hpp"
++extern "C" bool brookesia_board_runtime_requires_sd(const char *) __attribute__((weak));
+ 
+ namespace esp_brookesia::service {
+ 
+@@ -782,7 +783,12 @@
+         const bool sd_audio = transfer->destination.starts_with("/sdcard/audiobooks/");
+         const bool sd_theme = transfer->destination.starts_with("/sdcard/themes/");
+         const bool sd_voice = transfer->destination.starts_with("/sdcard/offline-voice/"); const bool sd_learning = transfer->destination.starts_with("/sdcard/learning/");
+-        const std::filesystem::path root(sd_audio ? "/sdcard/audiobooks" : sd_voice ? "/sdcard/offline-voice" : sd_learning ? "/sdcard/learning" : sd_theme ? "/sdcard/themes" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
++        std::error_code card_error;
++        const bool sd_package=command==Helper::HostCommand::InstallBpk && std::filesystem::is_directory("/sdcard",card_error);
++        if(command==Helper::HostCommand::InstallBpk && brookesia_board_runtime_requires_sd && !sd_package){
++            send_error(request_id,"sd_required","Insert an SD card for package installation; USB firmware recovery remains available");return;
++        }
++        const std::filesystem::path root(sd_package ? "/sdcard/packages" : sd_audio ? "/sdcard/audiobooks" : sd_voice ? "/sdcard/offline-voice" : sd_learning ? "/sdcard/learning" : sd_theme ? "/sdcard/themes" : BROOKESIA_SERVICE_USB_UPLOAD_ROOT);
+         const std::filesystem::path temp_directory = root / ".brookesia_usb";
+         std::error_code error_code;
+         std::filesystem::create_directories(temp_directory, error_code);
+diff --git a/app/brookesia_app_store/src/storage/storage.ipp b/app/brookesia_app_store/src/storage/storage.ipp
+--- a/app/brookesia_app_store/src/storage/storage.ipp
++++ b/app/brookesia_app_store/src/storage/storage.ipp
+@@ -1,3 +1,4 @@
++extern "C" bool brookesia_board_runtime_requires_sd(const char *) __attribute__((weak));
+ /*
+  * SPDX-FileCopyrightText: 2026 Espressif Systems (Shanghai) CO LTD
+  *
+@@ -281,7 +282,11 @@
+     const std::filesystem::path &relative_path
+ ) const
+ {
++    const auto name=relative_path.filename().generic_string();
++    const bool package_only_sd=brookesia_board_runtime_requires_sd && (name.ends_with(".bpk")||name.ends_with(".bpk.part"));
++    const auto layout=context.system_service().get_storage_layout();
+     for (const auto &path : cache_file_candidates(context, relative_path)) {
++        if(package_only_sd){bool external=false;for(const auto &v:layout.external){const auto root=std::filesystem::path(v.root_path).lexically_normal().generic_string()+"/";external=external||(v.available&&path.generic_string().starts_with(root));}if(!external)continue;}
+         auto directory = path;
+         if (!relative_path.empty() && relative_path.has_filename()) {
+             directory = path.parent_path();
+diff --git a/system/brookesia_system_core/src/service/system.cpp b/system/brookesia_system_core/src/service/system.cpp
+--- a/system/brookesia_system_core/src/service/system.cpp
++++ b/system/brookesia_system_core/src/service/system.cpp
+@@ -17,6 +17,7 @@
+ #include <array>
+ #include <utility>
+ #include <vector>
++extern "C" bool brookesia_board_runtime_requires_sd(const char *) __attribute__((weak));
+ 
+ namespace esp_brookesia::system::core {
+ 
+@@ -721,7 +722,15 @@
+ 
+ std::vector<service::FunctionSchema> SystemService::get_function_schemas()
+ {
+-    return static_schema::materialize_function_schemas(SYSTEM_FUNCTION_SPECS);
++    auto schemas=static_schema::materialize_function_schemas(SYSTEM_FUNCTION_SPECS);
++    if(brookesia_board_runtime_requires_sd){
++        auto extra=static_schema::materialize_function_schemas(std::array<FunctionSpec,2>{{
++            {"AppStorageInfo","Inspect installed app locations",{},false,&SYSTEM_INFO_RETURN},
++            {"MigrateToSd","Move a non-foundation app with verified backup",APP_ID_PARAMETERS,false,&SYSTEM_INFO_RETURN}
++        }});
++        schemas.insert(schemas.end(),extra.begin(),extra.end());
++    }
++    return schemas;
+ }
+ 
+ std::vector<service::EventSchema> SystemService::get_event_schemas()
+@@ -732,7 +741,7 @@
+ 
+ service::ServiceBase::FunctionHandlerMap SystemService::get_function_handlers()
+ {
+-    return {
++    FunctionHandlerMap handlers{
+         [this](FunctionParameterMap &&)
+         {
+             return get_system_type();
+@@ -838,6 +847,21 @@
+             return storage_rename(std::move(params));
+         },
+     };
++    if(brookesia_board_runtime_requires_sd){
++        handlers.push_back([this](FunctionParameterMap &&)->FunctionResult{
++            boost::json::array apps;
++            for(const auto &app:system_.list_apps())apps.push_back(boost::json::object{{"app_id",app.app_id},{"id",app.manifest.id},{"version",app.manifest.version},{"path",app.manifest.app_path},{"runtime",app.manifest.kind==AppKind::Runtime},{"requires_sd",brookesia_board_runtime_requires_sd(app.manifest.id.c_str())}});
++            return make_success(boost::json::object{{"apps",std::move(apps)}});
++        });
++        handlers.push_back([this](FunctionParameterMap &&params)->FunctionResult{
++            auto caller=get_runtime_caller(system_);if(!caller)return make_error(caller.error());
++            if(caller->has_value()&&!is_native_system_app(caller->value()))return make_error("Only USB maintenance or native system apps may migrate apps");
++            auto id=get_number_param(params,"AppId");if(!id)return make_error(id.error());
++            auto moved=system_.migrate_runtime_app_to_external(to_app_id(*id));if(!moved)return make_error(moved.error());
++            auto app=system_.get_app(*moved);return make_success(boost::json::object{{"app_id",*moved},{"path",app?app->manifest.app_path:std::string()}});
++        });
++    }
++    return handlers;
+ }
+ 
+ FunctionResult SystemService::get_system_type()
+diff --git a/system/brookesia_system_core/src/system/storage.cpp b/system/brookesia_system_core/src/system/storage.cpp
+--- a/system/brookesia_system_core/src/system/storage.cpp
++++ b/system/brookesia_system_core/src/system/storage.cpp
+@@ -20,6 +20,8 @@
+ #include <string_view>
+ 
+ #include "brookesia/service_helper/system/storage.hpp"
++
++extern "C" bool brookesia_board_runtime_requires_sd(const char *) __attribute__((weak));
+ 
+ namespace esp_brookesia::system::core {
+ namespace {
+@@ -698,6 +700,7 @@
+ 
+     AppStoragePaths paths;
+     paths.internal = make_app_dirs(storage_layout_.internal, manifest_id);
++    if(brookesia_board_runtime_requires_sd && brookesia_board_runtime_requires_sd(manifest_key.c_str()))paths.internal.available=false;
+     if (paths.internal.available) {
+         for (const auto &dir : {
+                     paths.internal.cache, paths.internal.data, paths.internal.files
+@@ -900,6 +903,14 @@
+         return std::unexpected("Storage relative path is invalid or escapes storage root");
+     }
+     std::string volume_id = location.volume_id;
++    const bool private_path=location.kind==StoragePathKind::AppCache || location.kind==StoragePathKind::AppData || location.kind==StoragePathKind::AppFiles;
++    if(private_path && brookesia_board_runtime_requires_sd && brookesia_board_runtime_requires_sd(record.value()->info.manifest.id.c_str())){
++        if(volume_id.empty()){
++            for(const auto &v:storage_layout_.external)if(v.available && (volume_id.empty() || v.id==storage_layout_.preferred_external_id))volume_id=v.id;
++        }
++        auto selected=find_volume(storage_layout_,volume_id);
++        if(volume_id.empty() || !selected || !selected->available || selected->partition!=StoragePartition::External)return std::unexpected("Optional app private storage requires an SD card");
++    }
+     if (volume_id.empty() && location.kind == StoragePathKind::AppFiles) {
+         auto install_volume = find_app_install_volume(storage_layout_, record.value()->info.manifest);
+         if (!install_volume || !install_volume->available) {
+diff --git a/gui/brookesia_gui_interface/src/parser_assets.cpp b/gui/brookesia_gui_interface/src/parser_assets.cpp
+--- a/gui/brookesia_gui_interface/src/parser_assets.cpp
++++ b/gui/brookesia_gui_interface/src/parser_assets.cpp
+@@ -5,6 +5,8 @@
+  */
+ #include "private/parser_impl.hpp"
+ #include "private/gui_json_storage.hpp"
++
++extern "C" const char *brookesia_board_image_path(const char *) __attribute__((weak));
+ 
+ namespace esp_brookesia::gui::parser_detail {
+ 
+@@ -245,6 +247,9 @@
+         return std::unexpected(src.error());
+     }
+     image.src = resolve_path(asset_dir, *src).string();
++    // Preloading can precede backend metadata resolution. Resolve removable
++    // storage fallbacks before any consumer sees the image descriptor.
++    if(brookesia_board_image_path){const char *selected=brookesia_board_image_path(image.src.c_str());if(selected && image.src!=selected)image.src=selected;}
+ 
+     auto width = parse_int_field(object, "width");
+     if (!width) {
+diff --git a/system/brookesia_system_core/src/private/app/storage_transaction.hpp b/system/brookesia_system_core/src/private/app/storage_transaction.hpp
+new file mode 100644
+--- /dev/null
++++ b/system/brookesia_system_core/src/private/app/storage_transaction.hpp
+@@ -0,0 +1,117 @@
++#pragma once
++#include <filesystem>
++#include <expected>
++#include <string>
++#include <vector>
++#include "boost/json.hpp"
++#include "brookesia/service_helper/system/storage.hpp"
++#include "brookesia/system_core/app/package.hpp"
++#include "brookesia/service_manager/service/manager.hpp"
++
++extern "C" bool brookesia_board_runtime_requires_sd(const char *) __attribute__((weak));
++extern "C" bool brookesia_child_requires_internal(const char *) __attribute__((weak));
++namespace esp_brookesia::system::core::install_storage {
++namespace fs=std::filesystem;
++using Storage=esp_brookesia::service::helper::Storage;
++inline constexpr uint32_t timeout=15000;
++inline bool requires_sd(const std::string &id){return brookesia_board_runtime_requires_sd && brookesia_board_runtime_requires_sd(id.c_str());}
++inline std::expected<bool,std::string> present(const fs::path &p){auto v=Storage::fs_stat(p.generic_string(),timeout);if(!v)return std::unexpected(v.error());return v->exists;}
++inline std::expected<void,std::string> erase_tree(const fs::path &p){auto e=present(p);if(!e)return std::unexpected(e.error());if(!*e)return {};return Storage::fs_remove(p.generic_string(),timeout);}
++inline std::expected<void,std::string> mkdir(const fs::path &p){return Storage::fs_mkdir(p.generic_string(),timeout);}
++inline std::expected<void,std::string> move_tree(const fs::path &a,const fs::path &b){return Storage::fs_rename(a.generic_string(),b.generic_string(),timeout);}
++inline std::expected<void,std::string> copy_tree(const fs::path &a,const fs::path &b){return Storage::fs_copy_tree(a.generic_string(),b.generic_string(),true,timeout);}
++inline std::expected<uint64_t,std::string> allocated_tree(const fs::path &p,uint32_t unit=4096){
++ auto stat=Storage::fs_stat(p.generic_string(),timeout);if(!stat)return std::unexpected(stat.error());if(!stat->exists)return uint64_t(0);
++ if(stat->type==Storage::FileType::File)return ((uint64_t(stat->size)+unit-1)/unit)*unit;
++ if(stat->type!=Storage::FileType::Directory)return std::unexpected("Unsupported storage entry");
++ auto entries=Storage::fs_list(p.generic_string(),timeout);if(!entries)return std::unexpected(entries.error());uint64_t total=unit;
++ for(const auto &e:*entries){auto n=allocated_tree(p/e.name,unit);if(!n)return std::unexpected(n.error());total+=*n;}return total;
++}
++inline std::expected<void,std::string> check_space(const std::string &mount,uint64_t required){
++ auto cap=Storage::call_function_sync<boost::json::object>(Storage::FunctionId::GetFileSystemCapacity,mount);
++ if(!cap)return std::unexpected("Cannot inspect installation volume: "+cap.error());
++ auto *v=cap->if_contains("free_bytes");if(!v||!v->is_number())return std::unexpected("Missing free-space information");
++ uint64_t free=boost::json::value_to<uint64_t>(*v);
++ if(free<required)return std::unexpected("Insufficient install space: need "+std::to_string(required)+" bytes including unpacked files, private data and reserve; free "+std::to_string(free));
++ return {};
++}
++inline std::expected<std::string,std::string> tree_digest(const fs::path &path){
++ auto binding=esp_brookesia::service::ServiceManager::get_instance().bind("SdResources");
++ auto service=binding.get_service();
++ if(!binding.is_valid()||!service)return std::unexpected("App integrity service is unavailable");
++ auto value=service->call_function_sync("InspectTree",boost::json::object{{"Path",path.generic_string()}},30000);
++ if(!value.success||!value.data)return std::unexpected("Cannot inspect copied app: "+value.error_message);
++ auto object=std::get_if<boost::json::object>(&*value.data);if(!object)return std::unexpected("Invalid tree checksum response");
++ auto *hash=object->if_contains("sha256");if(!hash||!hash->is_string())return std::unexpected("Missing tree checksum");return std::string(hash->as_string());
++}
++inline std::expected<void,std::string> verify_copy(const fs::path &a,const fs::path &b){
++ auto left=tree_digest(a);if(!left)return std::unexpected(left.error());auto right=tree_digest(b);if(!right)return std::unexpected(right.error());
++ if(*left!=*right)return std::unexpected("Application copy checksum mismatch");
++ return {};
++}
++struct Transaction {
++ std::string id,nonce;fs::path root,old,final,backup,stage;
++ fs::path marker()const{return root/".transactions"/(id+".json");}
++ fs::path commit_marker()const{return root/".transactions"/(id+".committed");}
++ fs::path restore_marker()const{return root/".transactions"/(id+".restoring");}
++ boost::json::object json()const{return {{"schema",1},{"id",id},{"nonce",nonce},{"old",old.generic_string()},{"final",final.generic_string()},{"backup",backup.generic_string()},{"stage",stage.generic_string()}};}
++ std::expected<void,std::string> begin()const{
++  auto e=present(marker());if(!e)return std::unexpected(e.error());if(*e)return std::unexpected("Previous install needs recovery; restart before retrying");
++  auto m=mkdir(marker().parent_path());if(!m)return m;
++  return Storage::fs_write_text(marker().generic_string(),boost::json::serialize(json()),timeout);
++ }
++ std::expected<void,std::string> commit()const{
++  return Storage::fs_write_text(commit_marker().generic_string(),boost::json::serialize(boost::json::object{{"nonce",nonce}}),timeout);
++ }
++ std::expected<void,std::string> clear()const{
++  auto r=erase_tree(marker());if(!r)return r;r=erase_tree(commit_marker());if(!r)return r;return erase_tree(restore_marker());
++ }
++ std::expected<void,std::string> rollback()const{
++  // Before the old directory is renamed, its backup does not exist. Never
++  // remove the still-current directory in that power-loss window.
++  auto backed=present(backup);if(!backed)return std::unexpected(backed.error());
++  if(old==final && !*backed)return {};
++  auto r=erase_tree(final);if(!r)return r;
++  if(old.empty())return {};
++  auto exists=present(old);if(!exists)return std::unexpected(exists.error());
++  bool restoring=false;auto pending=present(restore_marker());if(!pending)return std::unexpected(pending.error());
++  if(*pending){auto value=Storage::fs_read_text(restore_marker().generic_string(),timeout);if(value){boost::system::error_code ec;auto parsed=boost::json::parse(*value,ec);restoring=!ec && parsed.is_object() && parsed.as_object().if_contains("nonce") && parsed.as_object().at("nonce").is_string() && parsed.as_object().at("nonce").as_string()==nonce;}}
++  if(*exists && !restoring)return {};
++  if(!*backed)return std::unexpected("Previous application backup is missing");
++  if(old.parent_path()==root)return move_tree(backup,old);
++  // A reset while copying back must retry the whole copy, not accept a partial
++  // destination merely because its directory now exists.
++  auto noted=Storage::fs_write_text(restore_marker().generic_string(),boost::json::serialize(boost::json::object{{"nonce",nonce}}),timeout);if(!noted)return noted;
++  auto cleared=erase_tree(old);if(!cleared)return cleared;
++  auto copied=copy_tree(backup,old);if(!copied)return copied;
++  return verify_copy(backup,old);
++ }
++};
++inline bool safe_id(const std::string &id){return !id.empty()&&id!="."&&id!=".."&&id.find('/')==std::string::npos&&id.find('\\')==std::string::npos;}
++inline std::expected<void,std::string> recover_root(const fs::path &root,const std::vector<fs::path> &roots,const std::string &system_type){
++ auto e=present(root/".transactions");if(!e)return std::unexpected(e.error());if(!*e)return {};
++ auto list=Storage::fs_list((root/".transactions").generic_string(),timeout);if(!list)return std::unexpected(list.error());
++ for(const auto &file:*list){
++  if(file.info.type!=Storage::FileType::File||fs::path(file.name).extension()!=".json")continue;
++  auto text=Storage::fs_read_text((root/".transactions"/file.name).generic_string(),timeout);if(!text)return std::unexpected(text.error());
++  boost::system::error_code ec;auto parsed=boost::json::parse(*text,ec);if(ec||!parsed.is_object())continue;
++  auto &o=parsed.as_object();auto string=[&](const char *key){auto *v=o.if_contains(key);return v&&v->is_string()?std::string(v->as_string()):std::string();};
++  Transaction t{string("id"),string("nonce"),root,fs::path(string("old")).lexically_normal(),fs::path(string("final")).lexically_normal(),fs::path(string("backup")).lexically_normal(),fs::path(string("stage")).lexically_normal()};
++  if(!safe_id(t.id)||t.nonce.empty()||file.name!=t.id+".json"||t.final!=root/t.id||t.backup!=root/".rollback"/t.id||t.stage.parent_path()!=root/".installing"||!t.stage.filename().generic_string().starts_with(t.id+"-"))continue;
++  bool old_safe=t.old.empty();for(const auto &r:roots)old_safe=old_safe||t.old==r/t.id;
++  if(!old_safe)continue;
++  if(!t.old.empty()&&t.old.parent_path()!=root&&!requires_sd(t.id))continue;
++  if(brookesia_child_requires_internal&&brookesia_child_requires_internal(t.id.c_str())&&root.generic_string().starts_with("/sdcard"))continue;
++  bool committed=false;auto done=present(t.commit_marker());if(!done)return std::unexpected(done.error());
++  if(*done){auto value=Storage::fs_read_text(t.commit_marker().generic_string(),timeout);if(value){auto d=boost::json::parse(*value,ec);committed=!ec&&d.is_object()&&d.as_object().if_contains("nonce")&&d.as_object().at("nonce").is_string()&&d.as_object().at("nonce").as_string()==t.nonce;}}
++  if(committed){auto manifest=read_unpacked_app_manifest(t.final.generic_string(),system_type);committed=manifest&&manifest->id==t.id;}
++  std::expected<void,std::string> result;
++  if(committed){if(!t.old.empty()&&t.old!=t.final)result=erase_tree(t.old);}
++  else result=t.rollback();
++  if(!result)return result;
++  result=erase_tree(t.stage);if(!result)return result;
++  result=t.clear();if(!result)return result;
++ }
++ return {};
++}
++} // namespace esp_brookesia::system::core::install_storage
