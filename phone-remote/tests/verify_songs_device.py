@@ -1,6 +1,6 @@
 """Check nursery songs over real encrypted BLE using the APK's Java protocol.
 
-Requires s3.48, idle audio, unlocked normal mode, and the original SD card.
+Requires s3.48+, idle audio, unlocked normal mode, and the original SD card.
 Restores volume, native modes, bookmarks, deep sleep and the closed BLE window.
 Pairing secrets are passed only in the Java child's environment, never logged.
 """
@@ -9,14 +9,14 @@ from pathlib import Path
 from bleak import BleakClient,BleakScanner
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'codex-quota-monitor/tools'))
-from maintenance_client import MaintenanceClient
+from maintenance_client import SharedPowerDiagnosticClient
 
 def main():
- p=argparse.ArgumentParser(description=__doc__);p.add_argument('--port',default='COM5');p.add_argument('--tools',type=Path,required=True);p.add_argument('--classes',type=Path,required=True);a=p.parse_args()
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('--port',default='COM5');p.add_argument('--tools',type=Path,required=True);p.add_argument('--classes',type=Path,required=True);p.add_argument('--catalog-rounds',type=int,default=1);a=p.parse_args();assert 1<=a.catalog_rounds<=10
  tools=json.loads(a.tools.read_text());output=ROOT/'codex-quota-monitor/runtime/songs-phone-verification.json'
  report={'passed':False,'checks':[],'reply_max_bytes':0};java=None
  def save():output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
- with MaintenanceClient(a.port,timeout=35) as usb:
+ with SharedPowerDiagnosticClient(a.port,timeout=35) as usb:
   usb.hello()
   def f(s,n,p=None):return usb.call_timeout(s,n,p or {})['result']
   deadline=time.monotonic()+60
@@ -24,7 +24,7 @@ def main():
    apps=f('SystemCore','ListApps')
    if len(apps)>=14:break
    assert time.monotonic()<deadline;time.sleep(1)
-  original=f('DeviceModes','GetState');assert original['firmware_version']=='0.8.3-s3.48' and not original['screen_locked']
+  original=f('DeviceModes','GetState');assert original['firmware_version'] in ('0.8.3-s3.48','0.8.3-s3.49') and not original['screen_locked']
   original_book=f('Audiobook','GetState')
   assert not original_book['active'] and not original_book['sleep_active']
   assert not f('Radio','GetState')['active'] and not f('VoiceAssistant','GetState')['active']
@@ -62,7 +62,8 @@ def main():
      async def cmd(**request):
       reply=protocol('crypt',await exchange(remote,protocol('crypt',json.dumps(request).encode())))
       report['reply_max_bytes']=max(report['reply_max_bytes'],len(reply));assert len(reply)<=480
-      return json.loads(reply)
+      response=json.loads(reply);report['last_request']=request;report['last_response']=response
+      return response
      async def expect_play(id):
       deadline=time.monotonic()+25
       while True:
@@ -71,10 +72,12 @@ def main():
        assert time.monotonic()<deadline,'No song PCM';await asyncio.sleep(.25)
      status=await cmd(cmd='status');assert status['ok'] and status['songs_supported'] and status['radio_supported']
      s=await cmd(cmd='song_status');assert s['ok'] and not s['active'];checked('authenticated idle status without autoplay')
-     catalog=[]
-     for page in range(7):
-      r=await cmd(cmd='songs',page=page);assert r['ok'] and r['total']==20 and r['more']==(page<6);catalog+=r['items']
-     assert catalog==[{'id':i,'name':t['title']} for i,t in enumerate(songs)]
+     for catalog_round in range(a.catalog_rounds):
+      catalog=[]
+      for page in range(7):
+       r=await cmd(cmd='songs',page=page);assert r['ok'] and r['total']==20 and r['more']==(page<6),r;catalog+=r['items']
+      assert catalog==[{'id':i,'name':t['title']} for i,t in enumerate(songs)]
+     report['catalog_rounds']=a.catalog_rounds
      empty=await cmd(cmd='songs',page=7);assert empty['items']==[] and not empty['more'];checked('all 20 songs across seven pages, separate from 30 stories')
      for request in [dict(cmd='songs',page=-1),dict(cmd='songs',page=.5),dict(cmd='song_play',id=20),dict(cmd='song_play',id=-1),dict(cmd='song_play',id='https://example.invalid/song.mp3'),dict(cmd='song_mode',value='bad'),dict(cmd='song_timer',minutes=10),dict(cmd='song_timer',minutes=15.5),dict(cmd='arbitrary_service',service='Storage')]:
       assert not (await cmd(**request))['ok'],request
@@ -132,7 +135,7 @@ def main():
      if data is not None:f('Storage','FSWriteText',{'Path':path,'Data':data})
      elif f('Storage','FSStat',{'Path':path})['exists']:f('Storage','FSRemove',{'Path':path})
     except Exception as e:cleanup.append('restore preference: '+str(e))
-   report['cleanup_errors']=cleanup;report['passed']=report['passed'] and not cleanup;save()
+   report['known_power_dependency_logs']=usb.power_dependency_logs;report['cleanup_errors']=cleanup;report['passed']=report['passed'] and not cleanup;save()
    if cleanup:raise RuntimeError('Cleanup failed; inspect private report')
  print('Encrypted BLE nursery-song checks passed; original preferences and volume restored.',flush=True)
 

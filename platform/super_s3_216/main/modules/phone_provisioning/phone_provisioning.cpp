@@ -66,6 +66,7 @@ void process_remote_command(bool stopping=false) {
 TaskHandle_t worker_task=nullptr;
 std::atomic<int> disconnect_reason{0};
 std::atomic<unsigned> stack_free{STACK},starts{0},successes{0},ip_events{0};
+std::atomic<unsigned> start_attempts{0},memory_rejections{0},start_dma_free{0},start_dma_largest{0};
 std::string device_name,pop,status="尚未开启手机配网",ssid,password,old_ssid,old_password;
 bool scan_finished=true,attempted=false,connected=false,status_reported=false;
 unsigned ip_before=0;
@@ -156,8 +157,11 @@ esp_err_t remote_endpoint(uint32_t,const uint8_t *in,ssize_t size,uint8_t **out,
 bool begin() {
     // S3's ROM controller needs a contiguous 0x7800-byte DMA block. Failing
     // this allocation can assert inside the ROM rather than return NO_MEM.
-    if(heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL|MALLOC_CAP_DMA)<0x7800 ||
-       heap_caps_get_free_size(MALLOC_CAP_INTERNAL|MALLOC_CAP_DMA)<40*1024){
+    ++start_attempts;
+    start_dma_largest=heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL|MALLOC_CAP_DMA);
+    start_dma_free=heap_caps_get_free_size(MALLOC_CAP_INTERNAL|MALLOC_CAP_DMA);
+    if(start_dma_largest<0x7800 || start_dma_free<40*1024){
+        ++memory_rejections;
         set_status("内存不足，请先关闭其他应用再重试");return false;
     }
     if(!remote_mode && !action("Start")){set_status("请先打开 Wi-Fi");return false;}
@@ -269,6 +273,9 @@ boost::json::object snapshot(bool setup=false) {
     result["app_lifecycle_stage"]=app_lifecycle_stage.load();
     {std::lock_guard<std::mutex> lock(app_error_mutex);result["last_task_error"]=app_task_error;}
     result["dma_free_bytes"]=heap_caps_get_free_size(MALLOC_CAP_INTERNAL|MALLOC_CAP_DMA);
+    result["start_attempts"]=start_attempts.load();result["memory_rejections"]=memory_rejections.load();
+    result["start_dma_free_bytes"]=start_dma_free.load();result["start_largest_dma_block"]=start_dma_largest.load();
+    result["required_dma_block"]=0x7800;
     result["mode"]=remote_mode?"remote":"provisioning";
     if(active)result["remaining_seconds"]=std::max<int64_t>(0,(remote_mode?1800:phone_provisioning::WINDOW_SECONDS)-(esp_timer_get_time()-opened_at)/1000000);
     if(setup && active)result["pop"]=pop;

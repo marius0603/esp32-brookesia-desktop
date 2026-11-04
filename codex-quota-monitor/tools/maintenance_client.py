@@ -1,5 +1,5 @@
 """USB maintenance client that separates board INFO output from RPC replies."""
-import time
+import time,re
 from deploy_audiobook_sleep import StoryClient
 
 class MaintenanceClient(StoryClient):
@@ -30,3 +30,28 @@ class MaintenanceClient(StoryClient):
     self.hello()
     return once()
   finally:self.serial.timeout=previous
+
+class SharedPowerDiagnosticClient(MaintenanceClient):
+ """Retain the known DAC-owned AXP deinit log chain outside RPC framing.
+
+ The ownership refusal leaves the shared power device running. Match its
+ specific code and a short timestamp window; other error records still fail.
+ """
+ def __init__(self,*args,**kwargs):
+  super().__init__(*args,**kwargs);self.power_dependency_logs=[];self.power_dependency_at=None
+ def read_json(self):
+  while True:
+   try:return super().read_json()
+   except RuntimeError as e:
+    message=str(e)
+    stamp=re.search(r"invalid device response: b[\"']E \((\d+)\) ",message)
+    if not stamp:raise
+    at=int(stamp.group(1))
+    if 'BOARD_DEVICE: Cannot deinit axp2101_power_manager, it is in use by audio_dac' in message:
+     self.power_dependency_at=at;self.power_dependency_logs.append(message);continue
+    if self.power_dependency_at is not None and 0<=at-self.power_dependency_at<=100 and any(text in message for text in (
+      'BOARD_MANAGER: Failed to deinitialize device axp2101_power_manager',
+      'HalAdpt: : Checked ESP error: ERROR(524793)',
+      'HalAdpt: : Failed to deinit AXP2101 power manager')):
+     self.power_dependency_logs.append(message);continue
+    raise
