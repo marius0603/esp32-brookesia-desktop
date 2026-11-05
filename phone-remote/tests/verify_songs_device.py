@@ -24,7 +24,7 @@ def main():
    apps=f('SystemCore','ListApps')
    if len(apps)>=14:break
    assert time.monotonic()<deadline;time.sleep(1)
-  original=f('DeviceModes','GetState');assert original['firmware_version'] in ('0.8.3-s3.48','0.8.3-s3.49','0.8.3-s3.50','0.8.3-s3.51') and not original['screen_locked']
+  original=f('DeviceModes','GetState');assert original['firmware_version'] in ('0.8.3-s3.48','0.8.3-s3.49','0.8.3-s3.50','0.8.3-s3.51','0.8.3-s3.53','0.8.3-s3.54') and not original['screen_locked']
   original_book=f('Audiobook','GetState')
   assert not original_book['active'] and not original_book['sleep_active']
   assert not f('Radio','GetState')['active'] and not f('VoiceAssistant','GetState')['active']

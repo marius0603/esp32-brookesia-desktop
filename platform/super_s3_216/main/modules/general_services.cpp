@@ -104,6 +104,14 @@ bool GeneralServices::init_audio()
 
 bool GeneralServices::start_audio_services()
 {
+    // Pin both full-duplex codec interfaces before DeviceModes/AudioPlayback
+    // transient volume probes. Otherwise their last handle release destroys RX
+    // while the board still owns TX; a later recorder then has a stale I2S peer.
+    static auto recorder_lifetime = hal::acquire_interfaces<hal::audio::CodecRecorderIface>();
+    static auto player_lifetime = hal::acquire_interfaces<hal::audio::CodecPlayerIface>();
+    BROOKESIA_LOGI("Shared codec lifetime pinned: recorder=%1% player=%2%",
+                   recorder_lifetime.size(), player_lifetime.size());
+
     static auto child_binding = service::ServiceManager::get_instance().bind("ChildMode");
     BROOKESIA_CHECK_FALSE_RETURN(child_binding.is_valid(), false, "Failed to bind child policy service");
     // Called after the LVGL display source has started. Keep orientation sensing

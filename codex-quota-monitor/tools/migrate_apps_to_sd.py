@@ -32,7 +32,7 @@ def main():
   def inventory():return {x['id']:x for x in f('SystemCore','AppStorageInfo')['apps']}
   def tree(path):return f('SdResources','InspectTree',{'Path':path})
   mode=f('DeviceModes','GetState')
-  assert mode['firmware_version'] in ('0.8.3-s3.46','0.8.3-s3.47','0.8.3-s3.48','0.8.3-s3.49','0.8.3-s3.50','0.8.3-s3.51')
+  assert mode['firmware_version'] in ('0.8.3-s3.46','0.8.3-s3.47','0.8.3-s3.48','0.8.3-s3.49','0.8.3-s3.50','0.8.3-s3.51','0.8.3-s3.53','0.8.3-s3.54')
   assert not mode['screen_locked'],'Unlock on the device before maintenance'
   before_audio={s:f(s,'GetState') for s in ('Audiobook','Radio','VoiceAssistant')}
   assert all(not s['active'] for s in before_audio.values()),'Finish active audio before migration'

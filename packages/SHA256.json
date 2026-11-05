@@ -108,5 +108,6 @@
   "packages/firmware/brookesia-0.8.3-s3.48-app-only.zip": "9d73a662e8ae0bb2fc48463482be52d09faf3df382760e81c9a2797aaab229a0",
   "packages/firmware/brookesia-0.8.3-s3.49-app-only.zip": "22f13672f728f8f8a437ea386dc126ed45b01986464371a008cb25be0034f762",
   "packages/firmware/brookesia-0.8.3-s3.51-app-only.zip": "aacf1c75d1f8e2d1b58ff64adc84cc36a8bd7f9f9982057e9cdefbea4d35f046",
-  "packages/resources/desktop-themes-launcher-s3.51.json": "cc1c86d8cf95a7251f58008004e2fe72fef43d3e967636d4c7ed9bc004f27c20"
+  "packages/resources/desktop-themes-launcher-s3.51.json": "cc1c86d8cf95a7251f58008004e2fe72fef43d3e967636d4c7ed9bc004f27c20",
+  "packages/firmware/brookesia-0.8.3-s3.54-app-only.zip": "3dda912b68937bd5e3d69d008fd1007e2ea4e642f38d8ac13e791605db6c64f7"
 }

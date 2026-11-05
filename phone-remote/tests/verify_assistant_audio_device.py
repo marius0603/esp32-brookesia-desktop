@@ -19,7 +19,10 @@ async def main():
  try:
   with SharedPowerDiagnosticClient(args.port,timeout=15) as c:
    c.hello()
-   def f(s,n,p=None):return c.call_timeout(s,n,p or {})['result']
+   def f(s,n,p=None):
+    report['last_rpc']=s+'.'+n
+    (ROOT/'codex-quota-monitor/runtime/assistant-real-ble-verification.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+    return c.call_timeout(s,n,p or {},timeout_ms=30000)['result']
    assert not f('ChildMode','GetState')['enabled']
    assert not f('DeviceModes','GetState')['screen_locked']
    for service in ['Audiobook','Radio','LocalVoice','VoiceAssistant']:assert not f(service,'GetState')['active'],service

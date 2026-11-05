@@ -105,7 +105,7 @@ private:
                 {"stack_total_bytes",VOICE_STACK_BYTES},{"stack_free_min_bytes",stack_free_min_.load()},
                 {"control_stack_total_bytes",CONTROL_STACK_BYTES},{"control_stack_free_min_bytes",control_stack_free_min_.load()},
                 {"codec_test_frames",codec_test_frames_.load()},
-                {"stack_limit_bytes",VOICE_STACK_LIMIT_BYTES},{"stack_peak_used_bytes",VOICE_STACK_BYTES-stack_free_min_.load()},
+                {"capture_read_retries",capture_read_retries_.load()},{"stack_limit_bytes",VOICE_STACK_LIMIT_BYTES},{"stack_peak_used_bytes",VOICE_STACK_BYTES-stack_free_min_.load()},
                 {"stack_limit_hit",stack_limit_hit_.load()},{"stop_reason",stop_reason_},
                 {"internal_free_bytes",heap_caps_get_free_size(MALLOC_CAP_INTERNAL)},
                 {"internal_largest_bytes",heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL)}};
@@ -149,6 +149,7 @@ private:
         if (!live_.compare_exchange_strong(expected,true)) return std::unexpected("助手正在运行或关闭中");
         if (!offline_voice_prepare_online()){live_=false;return std::unexpected("离线麦克风正在释放，请稍后重试");}
         if (!local_audio::claim(local_audio::Assistant)) {live_=false;return std::unexpected("请先停止听书，再连接助手");}
+        capture_read_retries_=0;
         local_test_=local_test;cancel_=false;fatal_=false;connected_=false;channel_=false;stack_free_min_=VOICE_STACK_BYTES;control_stack_free_min_=CONTROL_STACK_BYTES;codec_test_frames_=0;stack_limit_hit_=false;
         tts_=false;accept_audio_=false;command_=0;captured_=0;sent_=0;received_=0;played_=0;level_=0;peak_=0;mic0_=0;mic1_=0;
         {std::lock_guard<std::mutex> lock(mutex_);code_.clear();user_.clear();answer_.clear();error_.clear();stop_reason_.clear();}
@@ -209,13 +210,25 @@ private:
         if(player_->is_pa_on_off_supported())player_->set_pa_on_off(true);
         return true;
     }
+    std::atomic<uint32_t> capture_read_retries_{0};
     bool capture() {
         const auto &info=recorder_->get_info();
         if(info.sample_rate!=RATE || info.channels<1 || info.channels>4 || (info.bits!=16 && info.bits!=32)){
             fail("麦克风采样配置不兼容");return false;
         }
         const size_t bytes=FRAME*info.channels*(info.bits/8);
-        if(!recorder_->read_data(raw_,bytes)){fail("麦克风读取失败");return false;}
+        bool captured=false;
+        for(int attempt=0;attempt<3&&!cancel_;++attempt){
+            if(recorder_->read_data(raw_,bytes)){captured=true;break;}
+            if(attempt==2)break;
+            ++capture_read_retries_;
+            // A failed read may leave the shared RX channel without clocks.
+            // Reopen only our recorder, never tear down the shared HAL provider.
+            recorder_->close();
+            vTaskDelay(pdMS_TO_TICKS(20));
+            if(!recorder_->open())break;
+        }
+        if(!captured){if(!cancel_)fail("麦克风读取失败，请重新连接");return false;}
         const size_t m=info.mic_layout.find('M');
         const unsigned channel=m<info.channels?m:info.channels-1;
         uint32_t peaks[4]={};uint64_t energy=0;
