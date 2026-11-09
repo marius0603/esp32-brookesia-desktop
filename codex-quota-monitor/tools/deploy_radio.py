@@ -1,7 +1,7 @@
 """Install the radio BPK on s3.42+, preserving existing apps and media."""
 import argparse,json,time,zipfile,hashlib
 from pathlib import Path
-from deploy_audiobook_sleep import StoryClient
+from maintenance_client import SharedPowerDiagnosticClient as StoryClient
 ROOT=Path(__file__).resolve().parents[2]
 def main():
  p=argparse.ArgumentParser();p.add_argument('--port',default='COM5');a=p.parse_args()
@@ -15,7 +15,7 @@ def main():
   try:
    with StoryClient(a.port,timeout=30) as c:
     c.hello()
-    def f(s,n,p=None):return c.call(s,n,p or {})['result']
+    def f(s,n,p=None):return c.call_timeout(s,n,p or {})['result']
     mode=f('DeviceModes','GetState');version=mode['firmware_version'].split('-s3.')
     assert len(version)==2 and int(version[-1])>=42,'Install matching s3.42 firmware first'
     story=f('Audiobook','GetState');voice=f('VoiceAssistant','GetState')

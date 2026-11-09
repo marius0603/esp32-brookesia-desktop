@@ -110,7 +110,7 @@
         },
         {
           "type": "button",
-          "id": "favorite",
+          "id": "lockScreen",
           "placement": {
             "mode": "absolute",
             "x": 362,
@@ -136,7 +136,7 @@
           "events": [
             {
               "type": "clicked",
-              "action": "favorite"
+              "action": "lockScreen"
             }
           ],
           "children": [
@@ -163,7 +163,7 @@
                 "textAlign": "center"
               },
               "labelProps": {
-                "text": "收藏"
+                "text": "锁屏"
               }
             }
           ]

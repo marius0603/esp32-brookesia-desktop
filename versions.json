@@ -5,7 +5,7 @@
   "firmware": "0.8.3-s3.58",
   "toolkit": "1.0.1",
   "apps": {
-    "local.radio": "0.1.1",
+    "local.radio": "0.1.2",
     "local.audiobook": "0.3.6",
     "local.codex.quota": "0.2.3",
     "local.flipclock": "0.1.1",

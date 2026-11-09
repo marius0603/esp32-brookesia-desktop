@@ -4,9 +4,9 @@ let gui,storage,audio,volume,modes,wifi,timer,stations=[],current=0,category='�
 function call(h,n,p){const r=JSON.parse(brookesia.call_function(h,n,JSON.stringify(p||{})));if(!r.success)throw Error(r.error||r.error_message||n);return r.data;}
 function text(path,value){value=String(value);if(hidden||cache[path]===value)return;call(gui,'SetText',{Path:'/main/'+path,Text:value});cache[path]=value;}
 function bind(path,key,value){value=String(value);const k=path+':'+key;if(hidden||cache[k]===value)return;call(gui,'SetBinding',{Path:'/main/'+path,Key:key,Value:value});cache[k]=value;}
-function save(){try{call(storage,'FSWriteText',{Path:'/littlefs/radio-settings.json',Data:JSON.stringify({station:stations[current].id,favorites:favorites})});}catch(_){text('player/status','收藏保存失败');}}
+function save(){try{call(storage,'FSWriteText',{Path:'/littlefs/radio-settings.json',Data:JSON.stringify({station:stations[current].id,favorites:favorites})});}catch(_){text('player/status','设置保存失败');}}
 function show(next){screen=next;for(const p of ['player','stations','timer'])bind(p,'hidden',p!==next);if(next==='stations')renderList();if(next==='timer'){draft=minutes;renderTimer();}}
-function renderPlayer(){const s=stations[current];text('player/title',s.display_name||s.name);text('player/meta',s.sub);text('player/favorite/label',favorites.includes(s.id)?'已收藏':'收藏');text('player/toggle/label',state.active&&!state.paused?'暂停':'播放');text('player/timer/label',state.sleep_active?Math.ceil(state.sleep_remaining_seconds/60)+'分钟':'定时');}
+function renderPlayer(){const s=stations[current];text('player/title',s.display_name||s.name);text('player/meta',s.sub);text('player/toggle/label',state.active&&!state.paused?'暂停':'播放');text('player/timer/label',state.sleep_active?Math.ceil(state.sleep_remaining_seconds/60)+'分钟':'定时');}
 function renderList(){
  const filtered=stations.map((s,i)=>({s:s,i:i})).filter(r=>category==='收藏'?favorites.includes(r.s.id):r.s.group===category);
  const pages=Math.max(1,Math.ceil(filtered.length/3));page=Math.min(page,pages-1);rows=filtered.slice(page*3,page*3+3);
@@ -33,7 +33,7 @@ function action(name){
  if(name.indexOf('choice')===0){draft=timerOptions[Number(name.slice(6))];renderTimer();return;}
  if(name==='timerConfirm'){call(audio,'SetSleepTimer',{Minutes:draft});minutes=draft;show('player');poll();return;}
  if(name==='listNext'){page++;const n=(category==='收藏'?favorites.length:stations.filter(s=>s.group===category).length);if(page*3>=n)page=0;renderList();return;}
- if(name==='favorite'){const id=stations[current].id;favorites=favorites.includes(id)?favorites.filter(x=>x!==id):favorites.concat(id);save();renderPlayer();return;}
+ if(name==='lockScreen'){call(modes,'LockScreen');return;}
  if(name==='previous'){move(-1);return;}if(name==='next'){move(1);return;}
  if(name==='toggle'){state=call(audio,'GetState');if(state.active){call(audio,state.paused?'Resume':'Pause');poll();}else play(current);}
 }
@@ -41,7 +41,7 @@ globalThis.brookesia_app={
  on_start(){gui=brookesia.start_service('SystemGui');storage=brookesia.start_service('Storage');audio=brookesia.start_service('Radio');volume=brookesia.start_service('AudioPlayback');modes=brookesia.start_service('DeviceModes');wifi=brookesia.start_service('Wifi');timer=brookesia.start_service('SystemTimer');
   try{stations=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/apps/local.radio/app/catalog.json'}));}catch(_){stations=JSON.parse(call(storage,'FSReadText',{Path:'/sdcard/apps/local.radio/app/catalog.json'}));}
   try{const saved=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/radio-settings.json'}));favorites=Array.isArray(saved.favorites)?saved.favorites.filter(id=>stations.some(s=>s.id===id)):[];const at=stations.findIndex(s=>s.id===saved.station);if(at>=0)current=at;}catch(_){}
-  const actions=['stations','back','timerBack','timer','timerConfirm','listNext','favorite','previous','next','toggle','cat0','cat1','cat2','cat3','row0','row1','row2','choice0','choice1','choice2','choice3'];
+  const actions=['stations','back','timerBack','timer','timerConfirm','listNext','lockScreen','previous','next','toggle','cat0','cat1','cat2','cat3','row0','row1','row2','choice0','choice1','choice2','choice3'];
   for(const n of actions)call(gui,'SubscribeAction',{Action:n});hidden=false;cache={};show('player');poll();call(timer,'StartPeriodic',{Name:'radio',IntervalMs:1000});return true;},
  on_action(name){try{action(name);}catch(e){text('player/status',String(e));if(screen!=='player')text('timer/note',String(e));}return true;},
  on_timer(){if(!hidden)try{poll();}catch(e){text('player/status',String(e));}return true;},

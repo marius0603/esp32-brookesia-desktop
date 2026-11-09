@@ -11,7 +11,7 @@ assert.deepEqual(handlers,schemas,'Native handlers must match schema order');
 const stations=JSON.parse(fs.readFileSync(path.join(root,'src/app/catalog.json'),'utf8')),layout=JSON.parse(fs.readFileSync(path.join(root,'src/res/screens/main.json'),'utf8'));
 const views=new Map(),actions=new Set();function index(n,p=''){const k=p+'/'+n.id;views.set(k,n);for(const e of n.events||[]){assert(!actions.has(e.action),'Document action must be unique: '+e.action);actions.add(e.action);}if(n.imageProps)assert.match(n.imageProps.src,/^\$\{image\./);for(const c of n.children||[])index(c,k);}index(layout);
 for(const p of ['/main/player/stations','/main/player/timer']){const n=views.get(p);assert(n.placement.y+n.placement.height<=466,'Bottom controls exceed touch safe area');}
-let calls=[],texts={},bindings={},saved={},volume=40,quiet=false;
+let calls=[],texts={},bindings={},saved={'/littlefs/radio-settings.json':JSON.stringify({station:stations[0].id,favorites:[stations[2].id]})},volume=40,quiet=false;
 let state={station:'',active:false,paused:false,state:'Idle',sleep_active:false};
 const brookesia={start_service:n=>n,call_function(h,n,json){
  const a=JSON.parse(json);calls.push({h,n,a});let data=null;
@@ -40,7 +40,8 @@ assert.equal(texts['/main/player/title'],'苏州儿童广播');
 action('toggle');assert.equal(state.station,stations[0].id);action('toggle');assert.equal(state.paused,true);action('toggle');assert.equal(state.paused,false);
 action('next');assert.equal(state.station,stations[1].id);action('previous');assert.equal(state.station,stations[0].id);
 action('previous');assert.equal(state.station,stations[2].id,'Previous wraps within category');
-action('favorite');assert.deepEqual(JSON.parse(saved['/littlefs/radio-settings.json']).favorites,[stations[2].id]);
+const playbackBefore={...state},settingsBefore=saved['/littlefs/radio-settings.json'],lockCallBefore=calls.length;
+action('lockScreen');assert.equal(calls.slice(lockCallBefore).filter(c=>c.h==='DeviceModes'&&c.n==='LockScreen').length,1);assert.deepEqual(state,playbackBefore,'Lock must not stop/pause playback or change its timer');assert.equal(saved['/littlefs/radio-settings.json'],settingsBefore,'Lock must preserve selection/favorites');assert(views.has('/main/player/lockScreen'));assert(!views.has('/main/player/favorite'));assert.equal(views.get('/main/player/lockScreen/label').labelProps.text,'锁屏');
 action('stations');action('cat3');assert.equal(texts['/main/stations/row0/name'],'Story Quest');assert.equal(bindings['/main/stations/row1:hidden'],'true');action('row0');
 action('timer');action('choice2');action('timerConfirm');assert.equal(state.sleep_remaining_seconds,1800);assert.equal(texts['/main/player/timer/label'],'30分钟');
 volume=15;quiet=true;ctx.brookesia_app.on_timer();assert.equal(texts['/main/player/volume'],'音量 15% · 静音');
@@ -48,7 +49,7 @@ ctx.brookesia_app.on_pause();const before=calls.length;ctx.brookesia_app.on_time
 state={...state,active:false,state:'TimerEnded',sleep_active:false};ctx.brookesia_app.on_timer();assert.equal(texts['/main/player/status'],'定时结束，已停止');assert.equal(texts['/main/player/timer/label'],'定时');
 action('stations');action('cat1');action('row1');assert.equal(state.station,'naps-0');
 ctx.brookesia_app.on_stop();assert.equal(state.active,false);start();assert.equal(texts['/main/player/title'],'Fun Kids Naps','Selection persists');
-for(let i=0;i<stations.length;i++){action('stations');action('cat'+['儿童','音乐','资讯'].indexOf(stations[i].group));const local=stations.filter(s=>s.group===stations[i].group).findIndex(s=>s.id===stations[i].id);action('row'+local);if(!JSON.parse(saved['/littlefs/radio-settings.json']).favorites.includes(stations[i].id))action('favorite');}
+saved['/littlefs/radio-settings.json']=JSON.stringify({station:stations[0].id,favorites:stations.map(s=>s.id)});start();
 action('stations');action('cat3');action('listNext');assert.equal(bindings['/main/stations/row2:hidden'],'false');action('listNext');assert.equal(bindings['/main/stations/row2:hidden'],'true');assert.equal(texts['/main/stations/footer/label'],'下一页 3/3');
 state={...state,state:'Error',error:'network error',active:false};ctx.brookesia_app.on_timer();assert.equal(texts['/main/player/status'],'播放失败，请切换频道或重试');
 console.log('Radio lifecycle, silent start, playback controls, all categories, favorites pagination, persistence, timer and hardware-volume refresh passed.');
