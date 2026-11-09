@@ -22,7 +22,7 @@ def main():
         def f(s,n,v=None):
             print(s+'.'+n,flush=True)
             return c.call_timeout(s,n,v or {})['result']
-        mode=f('DeviceModes','GetState');assert mode['firmware_version'] in ['0.8.3-s3.49','0.8.3-s3.50','0.8.3-s3.51','0.8.3-s3.53','0.8.3-s3.54']
+        mode=f('DeviceModes','GetState');assert mode['firmware_version'] in ['0.8.3-s3.49','0.8.3-s3.50','0.8.3-s3.51','0.8.3-s3.53','0.8.3-s3.54','0.8.3-s3.55','0.8.3-s3.56','0.8.3-s3.57']
         assert not mode['screen_locked'] and not f('Audiobook','GetState')['active'] and not f('Audiobook','GetState')['sleep_active']
         assert not f('Radio','GetState')['active'] and not f('VoiceAssistant','GetState')['active']
         originals={name:f('Storage','FSReadText',{'Path':BASE+name}) for name in NAMES}

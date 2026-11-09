@@ -27,7 +27,7 @@ def main():
     assert time.monotonic()<end,'State deadline: '+s
     time.sleep(.2)
   mode=f('DeviceModes','GetState');book=f('Audiobook','GetState');phone=f('PhoneProvisioning','GetState')
-  assert mode['firmware_version']=='0.8.3-s3.49' and not mode['screen_locked']
+  assert mode['firmware_version'] in ('0.8.3-s3.49','0.8.3-s3.55','0.8.3-s3.56','0.8.3-s3.57') and not mode['screen_locked']
   assert not f('ChildMode','GetState')['enabled'],'Do not bypass parent policy for tests'
   assert not book['active'] and not book['sleep_active'] and not f('Radio','GetState')['active'] and not f('VoiceAssistant','GetState')['active']
   assert not phone['active'] and not phone['starting']
@@ -61,6 +61,16 @@ def main():
    for cycle in range(a.rounds):
     for id in names:
      open_app(id);time.sleep(.3);f('SystemCore','StopApp',{'AppId':ids[id]});report['app_checks'].append({'round':cycle+1,'id':id});save()
+    # Exercise both native microphone workers and the cloud TLS/NVS path,
+    # rather than only opening/closing the JavaScript shell.
+    for service in ['LocalVoice','VoiceAssistant']:
+     f(service,'TestMicrophone')
+     sample=wait(service,'GetState',lambda v:not v['active'],25)
+     assert not sample['error'] and sample['captured_frames']==48000 and sample['played_bytes']>=90000,sample['error']
+    f('VoiceAssistant','Connect')
+    connected=wait('VoiceAssistant','GetState',lambda v:v['channel'] or bool(v['error']),40)
+    assert connected['channel'],connected['error']
+    f('VoiceAssistant','Disconnect');wait('VoiceAssistant','GetState',lambda v:not v['active'],25)
     start_ble('apps-'+str(cycle+1))
     open_app('local.nurserysongs')
     f('Audiobook','SetSpeed',{'Speed':1});f('Audiobook','Play',{'Path':songs[cycle%len(songs)]['path'],'Position':0})

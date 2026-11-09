@@ -1,6 +1,6 @@
 """Exercise assistant audio and foreground startup with real encrypted BLE.
 
-Records three seconds locally; no microphone upload. Requires idle audio,
+Records three seconds locally; no microphone upload. --offline-only skips cloud/UI. Requires idle audio,
 normal/unlocked desktop, original SD, XiaoZhi binding/Wi-Fi, Java tools and Bleak.
 Restores the Windows Bluetooth radio state and closes test sessions.
 """
@@ -10,7 +10,7 @@ from bleak import BleakClient,BleakScanner
 from winrt.windows.devices.radios import Radio,RadioKind,RadioState
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'codex-quota-monitor/tools'))
-p=argparse.ArgumentParser(description=__doc__);p.add_argument('--port',default='COM5');p.add_argument('--tools',type=Path,required=True);p.add_argument('--classes',type=Path,required=True);args=p.parse_args()
+p=argparse.ArgumentParser(description=__doc__);p.add_argument('--port',default='COM5');p.add_argument('--tools',type=Path,required=True);p.add_argument('--classes',type=Path,required=True);p.add_argument('--offline-only',action='store_true',help='Skip cloud/UI checks when Wi-Fi is unavailable');args=p.parse_args()
 from maintenance_client import SharedPowerDiagnosticClient
 async def main():
  radios=[r for r in await Radio.get_radios_async() if r.kind==RadioKind.BLUETOOTH];old=[r.state for r in radios]
@@ -26,7 +26,7 @@ async def main():
    assert not f('ChildMode','GetState')['enabled']
    assert not f('DeviceModes','GetState')['screen_locked']
    for service in ['Audiobook','Radio','LocalVoice','VoiceAssistant']:assert not f(service,'GetState')['active'],service
-   assert json.loads(f('Storage','FSReadText',{'Path':'/littlefs/voice-assistant-backend.json'}))['backend']=='xiaozhi','Select XiaoZhi mode first'
+   if not args.offline_only:assert json.loads(f('Storage','FSReadText',{'Path':'/littlefs/voice-assistant-backend.json'}))['backend']=='xiaozhi','Select XiaoZhi mode first'
    assert not f('PhoneProvisioning','GetState')['active'],'Close the existing BLE session before diagnostics'
    f('PhoneProvisioning','Stop')
    for _ in range(100):
@@ -49,6 +49,16 @@ async def main():
      await client.write_gatt_char(ep,data,response=True);await asyncio.sleep(.05);return bytes(await client.read_gatt_char(ep))
     response=await exchange(session,protocol('hello'));response=await exchange(session,protocol('prove',response));assert protocol('verify',response)=='OK'
     print('Encrypted BLE connected',flush=True)
+    remote='1775ff55-6b43-439b-877c-060f2d9bed07'
+    async def command(request):
+     value=protocol('crypt',await exchange(remote,protocol('crypt',json.dumps(request).encode())))
+     result=json.loads(value);assert result['ok'];return result
+    status=await command({'cmd':'status'});assert status['songs_supported']
+    count=0
+    for page in range(7):
+     result=await command({'cmd':'songs','page':page});assert result['total']==20;count+=len(result['items'])
+    assert count==20;report['songs_catalog']=count
+    print('Encrypted control status and 20-song catalog verified',flush=True)
     for service in ['LocalVoice','VoiceAssistant']*2:
      f(service,'TestMicrophone');end=time.monotonic()+20;last={}
      while time.monotonic()<end:
@@ -62,20 +72,21 @@ async def main():
      for _ in range(40):
       if not f(service,'GetState')['active']:break
       await asyncio.sleep(.1)
-    apps=f('SystemCore','ListApps');aid=next(a['app_id'] for a in apps if a['manifest']['id']=='local.voiceassistant')
-    for attempt in range(3):
-     f('SystemCore','StartApp',{'AppId':aid});deadline=time.monotonic()+25
-     while True:
-      v=f('VoiceAssistant','GetState')
-      if v['error']:raise RuntimeError('UI start: '+v['error'])
-      if v['channel']:break
-      assert time.monotonic()<deadline,v['state'];await asyncio.sleep(.4)
-     print('UI small-horse assistant ready with encrypted BLE: '+str(attempt+1),flush=True)
-     f('SystemCore','RequestCloseApp',{'AppId':aid})
-     deadline=time.monotonic()+20
-     while f('VoiceAssistant','GetState')['active']:
-      assert time.monotonic()<deadline;await asyncio.sleep(.2)
-    report['ui_ready_rounds']=3
+    if not args.offline_only:
+     apps=f('SystemCore','ListApps');aid=next(a['app_id'] for a in apps if a['manifest']['id']=='local.voiceassistant')
+     for attempt in range(3):
+      f('SystemCore','StartApp',{'AppId':aid});deadline=time.monotonic()+25
+      while True:
+       v=f('VoiceAssistant','GetState')
+       if v['error']:raise RuntimeError('UI start: '+v['error'])
+       if v['channel']:break
+       assert time.monotonic()<deadline,v['state'];await asyncio.sleep(.4)
+      print('UI small-horse assistant ready with encrypted BLE: '+str(attempt+1),flush=True)
+      f('SystemCore','RequestCloseApp',{'AppId':aid})
+      deadline=time.monotonic()+20
+      while f('VoiceAssistant','GetState')['active']:
+       assert time.monotonic()<deadline;await asyncio.sleep(.2)
+     report['ui_ready_rounds']=3
    f('PhoneProvisioning','Stop')
    for _ in range(100):
     if not f('PhoneProvisioning','GetState')['active']:break

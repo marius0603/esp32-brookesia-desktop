@@ -4,7 +4,7 @@
 
 | 内容 | 版本与当前行为 |
 | --- | --- |
-| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.54；基础功能保留Flash、附加App脚本与资源使用SD；手机BLE加密配网与独立蓝牙遥控；可切换经典Q版与赛博朋克桌面，壁纸和10个图标同步更换并记住选择；图标原生预载、手机式跟手分页，每页3×3九个应用，92像素图标及18像素格间距及页码圆点；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转 |
+| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.57；基础功能保留Flash、附加App脚本与资源使用SD；手机BLE加密配网与独立蓝牙遥控；可切换经典Q版与赛博朋克桌面，壁纸和10个图标同步更换并记住选择；图标原生预载、手机式跟手分页，每页3×3九个应用，92像素图标及18像素格间距及页码圆点；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转 |
 | 额度显示 | 0.2.3，黑底双圆角卡片、34号“5小时/每周”标题、48号真实剩余百分比、吃豆人动画、30号倒计时和同步胶囊；随包保留Q版图标 |
 | 天气 | 0.2.9，默认上海、开发板直接联网；按城市日出日落决定昼夜，白天亮色天空/深色文字、夜间深色天空/浅色文字，再叠加天气动画；24小时卡片按预报时刻切换暖白/深蓝配色并以细边框区分 |
 | 听书 | 0.3.6，六档保持音高倍速、开机默认1倍；64KiB PCM缓冲修复周期性卡顿，手机与设备通过内存同步播放模式；30篇故事使用统一响度目标，移出月亮灯并分两批新增21篇中文朗读，保留双声道抵消修正；图标切换顺序播放、随机播放与单故事循环，自动保存模式；音量与锁屏置顶、Q版图标、中文书名、大号播放按钮、睡眠选择框、语音控制、章节与书签；连按两次音量＋解锁，最后2分钟声音/亮度渐弱，到时离线“晚安”并停播 |
@@ -74,7 +74,7 @@ npm --prefix tools/brookesia-toolkit install
 
 SD应用存储、基础Flash保留及迁移验证见 [SD存储说明](codex-quota-monitor/SD_APP_STORAGE.md)。
 
-任务接续见 [TASK_STATUS.md](TASK_STATUS.md)，依赖、十一份补丁和换电脑恢复见 [BUILD_DEPENDENCIES.md](BUILD_DEPENDENCIES.md)，安卓原签名见 [加密备份说明](phone-remote/signing/README.md)。
+任务接续见 [TASK_STATUS.md](TASK_STATUS.md)，依赖、十三份补丁和换电脑恢复见 [BUILD_DEPENDENCIES.md](BUILD_DEPENDENCIES.md)，安卓原签名见 [加密备份说明](phone-remote/signing/README.md)。
 
 ## 恢复电脑端额度同步
 
@@ -106,7 +106,7 @@ SD应用存储、基础Flash保留及迁移验证见 [SD存储说明](codex-quot
 
 ## 固件文件与备份
 
-`packages/apps` 保存可安装 BPK，当前听书为 [0.3.6](packages/apps/local.audiobook.debug.0.3.6.bpk)，小马助手为 [0.2.3](packages/apps/local.voiceassistant.debug.0.2.3.bpk)，儿歌为 [0.1.1](packages/apps/local.nurserysongs.debug.0.1.1.bpk)；`packages/firmware` 包含 [s3.54 应用分区更新包](packages/firmware/brookesia-0.8.3-s3.54-app-only.zip) 及历史版本。更新包附带只用于核对的分区表，使用 [听书缓冲更新步骤](codex-quota-monitor/AUDIOBOOK_BUFFER.md) 安装；校验值见 `packages/SHA256.json`。
+`packages/apps` 保存可安装 BPK，当前听书为 [0.3.6](packages/apps/local.audiobook.debug.0.3.6.bpk)，小马助手为 [0.2.3](packages/apps/local.voiceassistant.debug.0.2.3.bpk)，儿歌为 [0.1.1](packages/apps/local.nurserysongs.debug.0.1.1.bpk)；`packages/firmware` 包含 [s3.57 应用分区更新包](packages/firmware/brookesia-0.8.3-s3.57-app-only.zip) 及历史版本。更新包附带只用于核对的分区表，使用 [听书缓冲更新步骤](codex-quota-monitor/AUDIOBOOK_BUFFER.md) 安装；校验值见 `packages/SHA256.json`。
 它们不包含用户 NVS、Wi-Fi 数据或设备系统资源分区，不能当成任意新设备的完整恢复镜像。
 
 原电脑的恢复工具会检查完整备份和设备身份，新电脑没有备份时会拒绝直接烧录。这是已有防误刷机制。

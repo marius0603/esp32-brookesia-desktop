@@ -1,0 +1,18 @@
+--- a/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_devices.yaml
++++ b/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_devices.yaml
+@@ -78,6 +78,7 @@
+       io_spi_config:
+         cs_gpio_num: 12                   # GPIO14 - LCD_CS (BSP_LCD_CS)
+         spi_mode: 0                       # Traditional SPI mode (0~3)
++        trans_queue_depth: 1             # Bound in-flight DMA bounce allocation
+         lcd_cmd_bits: 32                   # Bit-width of LCD command
+         flags:
+           quad_mode: true                 # Quad mode (4 data lines) - ST77916 uses quad mode
+--- a/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_peripherals.yaml
++++ b/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_peripherals.yaml
+@@ -60,4 +60,4 @@
+         quadwp_io_num: 6                 # QUADWP_IO_NUM
+         quadhd_io_num: 7                 # QUADHD_IO_NUM
+         sclk_io_num: 38                   # SPI Clock signal
+-        max_transfer_sz: 9600             # Maximum transfer size in bytes : width * 2 * 10
++        max_transfer_sz: 3840             # Four RGB565 rows; one DMA descriptor after IDF rounding
