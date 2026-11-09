@@ -5,7 +5,7 @@
       "en": "Flip Clock",
       "zh_CN": "翻页时钟"
     },
-    "version": "0.1.1",
+    "version": "0.2.0",
     "visible": true,
     "systems": [
       "super"
@@ -25,6 +25,18 @@
     {
       "name": "Storage",
       "version": "0.8.3"
+    },
+    {
+      "name": "Wifi",
+      "version": "0.8.2"
+    },
+    {
+      "name": "Http",
+      "version": "0.8.2"
+    },
+    {
+      "name": "DeviceModes",
+      "version": "0.1.0"
     }
   ]
 }

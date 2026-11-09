@@ -135,9 +135,21 @@
     },
     {
       "id": "launcher_icon",
-      "src": "launcher_icon.png",
+      "src": "launcher_icon.bin",
       "width": 92,
       "height": 92
+    },
+    {
+      "id": "metal_dial",
+      "src": "metal_dial.bin",
+      "width": 340,
+      "height": 340
+    },
+    {
+      "id": "cat_scene",
+      "src": "cat_scene.bin",
+      "width": 340,
+      "height": 150
     }
   ]
 }

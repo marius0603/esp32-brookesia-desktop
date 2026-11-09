@@ -55,3 +55,6 @@ d=ImageDraw.Draw(preview)
 for y in (211,259):d.ellipse((235,y,245,y+10),fill='#c7c1b1')
 preview.save(APP/'preview.png')
 print(f'Generated {len(images)} images')
+
+from watchfaces import augment
+augment()

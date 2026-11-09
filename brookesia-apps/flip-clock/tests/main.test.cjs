@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const code=fs.readFileSync(path.join(__dirname,'../src/app/main.js'),'utf8');
 let now=Date.UTC(2026,9,18,15,59,59),calls=[],files={},stopped=false;
 class Clock extends Date{static now(){return now;}}
-const context=vm.createContext({Date:Clock,brookesia:{start_service:n=>n,call_function(h,n,s){
+const context=vm.createContext({Date:Clock,brookesia:{subscribe_event(){},start_service:n=>n,call_function(h,n,s){
  const a=JSON.parse(s);calls.push({n,a});let data=null;
  if(n==='StartPeriodic')data=123;
  if(n==='FSWriteText')files[a.Path]=JSON.parse(a.Data);

@@ -11,379 +11,1242 @@
   "children": [
     {
       "type": "container",
-      "id": "d0",
+      "id": "flip",
       "placement": {
         "mode": "absolute",
-        "x": 34,
-        "y": 164,
-        "width": 92,
-        "height": 152
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
       },
       "commonProps": {
         "scrollable": false,
         "clickable": false
       },
       "style": {
-        "bgColor": "#0a0b0e",
-        "borderColor": "#30333b",
-        "borderWidth": 1,
-        "radius": 7,
-        "clipCorner": true,
-        "padding": 0
-      },
-      "children": [
-        {
-          "type": "image",
-          "id": "top",
-          "placement": {
-            "mode": "absolute",
-            "x": 0,
-            "y": 0,
-            "width": 92,
-            "height": 75
-          },
-          "style": {
-            "opacity": 255
-          },
-          "imageProps": {
-            "src": "${image.big_top_-}",
-            "innerAlign": "stretch"
-          }
-        },
-        {
-          "type": "image",
-          "id": "bottom",
-          "placement": {
-            "mode": "absolute",
-            "x": 0,
-            "y": 77,
-            "width": 92,
-            "height": 75
-          },
-          "style": {
-            "opacity": 255
-          },
-          "imageProps": {
-            "src": "${image.big_bottom_-}",
-            "innerAlign": "stretch"
-          }
-        },
-        {
-          "type": "image",
-          "id": "flap",
-          "placement": {
-            "mode": "absolute",
-            "x": 0,
-            "y": 0,
-            "width": 92,
-            "height": 75
-          },
-          "style": {
-            "opacity": 0
-          },
-          "imageProps": {
-            "src": "${image.big_top_-}",
-            "innerAlign": "stretch"
-          },
-          "bindings": {
-            "placement.y": "y",
-            "placement.height": "height",
-            "style.opacity": "opacity"
-          }
-        }
-      ]
-    },
-    {
-      "type": "container",
-      "id": "d1",
-      "placement": {
-        "mode": "absolute",
-        "x": 134,
-        "y": 164,
-        "width": 92,
-        "height": 152
-      },
-      "commonProps": {
-        "scrollable": false,
-        "clickable": false
-      },
-      "style": {
-        "bgColor": "#0a0b0e",
-        "borderColor": "#30333b",
-        "borderWidth": 1,
-        "radius": 7,
-        "clipCorner": true,
-        "padding": 0
-      },
-      "children": [
-        {
-          "type": "image",
-          "id": "top",
-          "placement": {
-            "mode": "absolute",
-            "x": 0,
-            "y": 0,
-            "width": 92,
-            "height": 75
-          },
-          "style": {
-            "opacity": 255
-          },
-          "imageProps": {
-            "src": "${image.big_top_-}",
-            "innerAlign": "stretch"
-          }
-        },
-        {
-          "type": "image",
-          "id": "bottom",
-          "placement": {
-            "mode": "absolute",
-            "x": 0,
-            "y": 77,
-            "width": 92,
-            "height": 75
-          },
-          "style": {
-            "opacity": 255
-          },
-          "imageProps": {
-            "src": "${image.big_bottom_-}",
-            "innerAlign": "stretch"
-          }
-        },
-        {
-          "type": "image",
-          "id": "flap",
-          "placement": {
-            "mode": "absolute",
-            "x": 0,
-            "y": 0,
-            "width": 92,
-            "height": 75
-          },
-          "style": {
-            "opacity": 0
-          },
-          "imageProps": {
-            "src": "${image.big_top_-}",
-            "innerAlign": "stretch"
-          },
-          "bindings": {
-            "placement.y": "y",
-            "placement.height": "height",
-            "style.opacity": "opacity"
-          }
-        }
-      ]
-    },
-    {
-      "type": "container",
-      "id": "d2",
-      "placement": {
-        "mode": "absolute",
-        "x": 254,
-        "y": 164,
-        "width": 92,
-        "height": 152
-      },
-      "commonProps": {
-        "scrollable": false,
-        "clickable": false
-      },
-      "style": {
-        "bgColor": "#0a0b0e",
-        "borderColor": "#30333b",
-        "borderWidth": 1,
-        "radius": 7,
-        "clipCorner": true,
-        "padding": 0
-      },
-      "children": [
-        {
-          "type": "image",
-          "id": "top",
-          "placement": {
-            "mode": "absolute",
-            "x": 0,
-            "y": 0,
-            "width": 92,
-            "height": 75
-          },
-          "style": {
-            "opacity": 255
-          },
-          "imageProps": {
-            "src": "${image.big_top_-}",
-            "innerAlign": "stretch"
-          }
-        },
-        {
-          "type": "image",
-          "id": "bottom",
-          "placement": {
-            "mode": "absolute",
-            "x": 0,
-            "y": 77,
-            "width": 92,
-            "height": 75
-          },
-          "style": {
-            "opacity": 255
-          },
-          "imageProps": {
-            "src": "${image.big_bottom_-}",
-            "innerAlign": "stretch"
-          }
-        },
-        {
-          "type": "image",
-          "id": "flap",
-          "placement": {
-            "mode": "absolute",
-            "x": 0,
-            "y": 0,
-            "width": 92,
-            "height": 75
-          },
-          "style": {
-            "opacity": 0
-          },
-          "imageProps": {
-            "src": "${image.big_top_-}",
-            "innerAlign": "stretch"
-          },
-          "bindings": {
-            "placement.y": "y",
-            "placement.height": "height",
-            "style.opacity": "opacity"
-          }
-        }
-      ]
-    },
-    {
-      "type": "container",
-      "id": "d3",
-      "placement": {
-        "mode": "absolute",
-        "x": 354,
-        "y": 164,
-        "width": 92,
-        "height": 152
-      },
-      "commonProps": {
-        "scrollable": false,
-        "clickable": false
-      },
-      "style": {
-        "bgColor": "#0a0b0e",
-        "borderColor": "#30333b",
-        "borderWidth": 1,
-        "radius": 7,
-        "clipCorner": true,
-        "padding": 0
-      },
-      "children": [
-        {
-          "type": "image",
-          "id": "top",
-          "placement": {
-            "mode": "absolute",
-            "x": 0,
-            "y": 0,
-            "width": 92,
-            "height": 75
-          },
-          "style": {
-            "opacity": 255
-          },
-          "imageProps": {
-            "src": "${image.big_top_-}",
-            "innerAlign": "stretch"
-          }
-        },
-        {
-          "type": "image",
-          "id": "bottom",
-          "placement": {
-            "mode": "absolute",
-            "x": 0,
-            "y": 77,
-            "width": 92,
-            "height": 75
-          },
-          "style": {
-            "opacity": 255
-          },
-          "imageProps": {
-            "src": "${image.big_bottom_-}",
-            "innerAlign": "stretch"
-          }
-        },
-        {
-          "type": "image",
-          "id": "flap",
-          "placement": {
-            "mode": "absolute",
-            "x": 0,
-            "y": 0,
-            "width": 92,
-            "height": 75
-          },
-          "style": {
-            "opacity": 0
-          },
-          "imageProps": {
-            "src": "${image.big_top_-}",
-            "innerAlign": "stretch"
-          },
-          "bindings": {
-            "placement.y": "y",
-            "placement.height": "height",
-            "style.opacity": "opacity"
-          }
-        }
-      ]
-    },
-    {
-      "type": "container",
-      "id": "colon0",
-      "placement": {
-        "mode": "absolute",
-        "x": 235,
-        "y": 211,
-        "width": 10,
-        "height": 10
-      },
-      "style": {
-        "bgColor": "#c7c1b1",
-        "radius": 5,
+        "padding": 0,
         "borderWidth": 0,
-        "padding": 0
+        "bgOpacity": 0
       },
-      "commonProps": {
-        "clickable": false
+      "children": [
+        {
+          "type": "container",
+          "id": "d0",
+          "placement": {
+            "mode": "absolute",
+            "x": 34,
+            "y": 164,
+            "width": 92,
+            "height": 152
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "bgColor": "#0a0b0e",
+            "borderColor": "#30333b",
+            "borderWidth": 1,
+            "radius": 7,
+            "clipCorner": true,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "image",
+              "id": "top",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 92,
+                "height": 75
+              },
+              "style": {
+                "opacity": 255
+              },
+              "imageProps": {
+                "src": "${image.big_top_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "bottom",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 77,
+                "width": 92,
+                "height": 75
+              },
+              "style": {
+                "opacity": 255
+              },
+              "imageProps": {
+                "src": "${image.big_bottom_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "flap",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 92,
+                "height": 75
+              },
+              "style": {
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.big_top_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "d1",
+          "placement": {
+            "mode": "absolute",
+            "x": 134,
+            "y": 164,
+            "width": 92,
+            "height": 152
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "bgColor": "#0a0b0e",
+            "borderColor": "#30333b",
+            "borderWidth": 1,
+            "radius": 7,
+            "clipCorner": true,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "image",
+              "id": "top",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 92,
+                "height": 75
+              },
+              "style": {
+                "opacity": 255
+              },
+              "imageProps": {
+                "src": "${image.big_top_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "bottom",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 77,
+                "width": 92,
+                "height": 75
+              },
+              "style": {
+                "opacity": 255
+              },
+              "imageProps": {
+                "src": "${image.big_bottom_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "flap",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 92,
+                "height": 75
+              },
+              "style": {
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.big_top_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "d2",
+          "placement": {
+            "mode": "absolute",
+            "x": 254,
+            "y": 164,
+            "width": 92,
+            "height": 152
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "bgColor": "#0a0b0e",
+            "borderColor": "#30333b",
+            "borderWidth": 1,
+            "radius": 7,
+            "clipCorner": true,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "image",
+              "id": "top",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 92,
+                "height": 75
+              },
+              "style": {
+                "opacity": 255
+              },
+              "imageProps": {
+                "src": "${image.big_top_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "bottom",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 77,
+                "width": 92,
+                "height": 75
+              },
+              "style": {
+                "opacity": 255
+              },
+              "imageProps": {
+                "src": "${image.big_bottom_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "flap",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 92,
+                "height": 75
+              },
+              "style": {
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.big_top_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "d3",
+          "placement": {
+            "mode": "absolute",
+            "x": 354,
+            "y": 164,
+            "width": 92,
+            "height": 152
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "bgColor": "#0a0b0e",
+            "borderColor": "#30333b",
+            "borderWidth": 1,
+            "radius": 7,
+            "clipCorner": true,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "image",
+              "id": "top",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 92,
+                "height": 75
+              },
+              "style": {
+                "opacity": 255
+              },
+              "imageProps": {
+                "src": "${image.big_top_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "bottom",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 77,
+                "width": 92,
+                "height": 75
+              },
+              "style": {
+                "opacity": 255
+              },
+              "imageProps": {
+                "src": "${image.big_bottom_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "flap",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 92,
+                "height": 75
+              },
+              "style": {
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.big_top_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "colon0",
+          "placement": {
+            "mode": "absolute",
+            "x": 235,
+            "y": 211,
+            "width": 10,
+            "height": 10
+          },
+          "style": {
+            "bgColor": "#c7c1b1",
+            "radius": 5,
+            "borderWidth": 0,
+            "padding": 0
+          },
+          "commonProps": {
+            "clickable": false
+          }
+        },
+        {
+          "type": "container",
+          "id": "colon1",
+          "placement": {
+            "mode": "absolute",
+            "x": 235,
+            "y": 259,
+            "width": 10,
+            "height": 10
+          },
+          "style": {
+            "bgColor": "#c7c1b1",
+            "radius": 5,
+            "borderWidth": 0,
+            "padding": 0
+          },
+          "commonProps": {
+            "clickable": false
+          }
+        }
+      ],
+      "bindings": {
+        "commonProps.hidden": "hidden"
       }
     },
     {
       "type": "container",
-      "id": "colon1",
+      "id": "analog",
       "placement": {
         "mode": "absolute",
-        "x": 235,
-        "y": 259,
-        "width": 10,
-        "height": 10
-      },
-      "style": {
-        "bgColor": "#c7c1b1",
-        "radius": 5,
-        "borderWidth": 0,
-        "padding": 0
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
       },
       "commonProps": {
+        "scrollable": false,
         "clickable": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0
+      },
+      "children": [
+        {
+          "type": "image",
+          "id": "dial",
+          "placement": {
+            "mode": "absolute",
+            "x": 70,
+            "y": 70,
+            "width": 340,
+            "height": 340
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0
+          },
+          "imageProps": {
+            "src": "${image.metal_dial}",
+            "innerAlign": "contain"
+          }
+        },
+        {
+          "type": "line",
+          "id": "hour",
+          "placement": {
+            "mode": "absolute",
+            "x": 70,
+            "y": 70,
+            "width": 340,
+            "height": 340
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "lineWidth": 7,
+            "lineColor": "#d7e1f4"
+          },
+          "lineProps": {
+            "points": [
+              {
+                "x": 170,
+                "y": 180
+              },
+              {
+                "x": 170,
+                "y": 77
+              }
+            ]
+          },
+          "bindings": {
+            "lineProps.points": "points"
+          }
+        },
+        {
+          "type": "line",
+          "id": "minute",
+          "placement": {
+            "mode": "absolute",
+            "x": 70,
+            "y": 70,
+            "width": 340,
+            "height": 340
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "lineWidth": 4,
+            "lineColor": "#ecf3ff"
+          },
+          "lineProps": {
+            "points": [
+              {
+                "x": 170,
+                "y": 180
+              },
+              {
+                "x": 170,
+                "y": 37
+              }
+            ]
+          },
+          "bindings": {
+            "lineProps.points": "points"
+          }
+        },
+        {
+          "type": "line",
+          "id": "second",
+          "placement": {
+            "mode": "absolute",
+            "x": 70,
+            "y": 70,
+            "width": 340,
+            "height": 340
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "lineWidth": 2,
+            "lineColor": "#eb725f"
+          },
+          "lineProps": {
+            "points": [
+              {
+                "x": 170,
+                "y": 190
+              },
+              {
+                "x": 170,
+                "y": 25
+              }
+            ]
+          },
+          "bindings": {
+            "lineProps.points": "points"
+          }
+        },
+        {
+          "type": "container",
+          "id": "hub",
+          "placement": {
+            "mode": "absolute",
+            "x": 235,
+            "y": 235,
+            "width": 10,
+            "height": 10
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 255,
+            "bgColor": "#dbe4f5",
+            "radius": 5
+          }
+        }
+      ],
+      "bindings": {
+        "commonProps.hidden": "hidden"
       }
+    },
+    {
+      "type": "container",
+      "id": "companion",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "time",
+          "placement": {
+            "mode": "absolute",
+            "x": 50,
+            "y": 152,
+            "width": 380,
+            "height": 105
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 82,
+            "textColor": "#e5e9f8",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "--:--"
+          }
+        },
+        {
+          "type": "image",
+          "id": "scene",
+          "placement": {
+            "mode": "absolute",
+            "x": 70,
+            "y": 267,
+            "width": 340,
+            "height": 150
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0
+          },
+          "imageProps": {
+            "src": "${image.cat_scene}",
+            "innerAlign": "contain"
+          }
+        },
+        {
+          "type": "container",
+          "id": "leftEye",
+          "placement": {
+            "mode": "absolute",
+            "x": 210,
+            "y": 323,
+            "width": 14,
+            "height": 18
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 255,
+            "bgColor": "#342d2f",
+            "radius": 7
+          },
+          "bindings": {
+            "placement.y": "y",
+            "placement.height": "height"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "glint",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 3,
+                "width": 4,
+                "height": 4
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 255,
+                "bgColor": "#ffffff",
+                "radius": 2
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "rightEye",
+          "placement": {
+            "mode": "absolute",
+            "x": 258,
+            "y": 323,
+            "width": 14,
+            "height": 18
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 255,
+            "bgColor": "#342d2f",
+            "radius": 7
+          },
+          "bindings": {
+            "placement.y": "y",
+            "placement.height": "height"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "glint",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 3,
+                "width": 4,
+                "height": 4
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 255,
+                "bgColor": "#ffffff",
+                "radius": 2
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "leftPaw",
+          "placement": {
+            "mode": "absolute",
+            "x": 203,
+            "y": 373,
+            "width": 32,
+            "height": 18
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#f4d9ac",
+            "borderColor": "#ae7748",
+            "radius": 9
+          },
+          "bindings": {
+            "placement.y": "y"
+          },
+          "children": [
+            {
+              "type": "line",
+              "id": "toe0",
+              "placement": {
+                "mode": "absolute",
+                "x": 10,
+                "y": 8,
+                "width": 2,
+                "height": 5
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "lineColor": "#b88c5c",
+                "lineWidth": 1
+              },
+              "lineProps": {
+                "points": [
+                  {
+                    "x": 0,
+                    "y": 0
+                  },
+                  {
+                    "x": 0,
+                    "y": 4
+                  }
+                ]
+              }
+            },
+            {
+              "type": "line",
+              "id": "toe1",
+              "placement": {
+                "mode": "absolute",
+                "x": 18,
+                "y": 8,
+                "width": 2,
+                "height": 5
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "lineColor": "#b88c5c",
+                "lineWidth": 1
+              },
+              "lineProps": {
+                "points": [
+                  {
+                    "x": 0,
+                    "y": 0
+                  },
+                  {
+                    "x": 0,
+                    "y": 4
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "rightPaw",
+          "placement": {
+            "mode": "absolute",
+            "x": 247,
+            "y": 373,
+            "width": 32,
+            "height": 18
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 255,
+            "bgColor": "#f4d9ac",
+            "borderColor": "#ae7748",
+            "radius": 9
+          },
+          "bindings": {
+            "placement.y": "y"
+          },
+          "children": [
+            {
+              "type": "line",
+              "id": "toe0",
+              "placement": {
+                "mode": "absolute",
+                "x": 10,
+                "y": 8,
+                "width": 2,
+                "height": 5
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "lineColor": "#b88c5c",
+                "lineWidth": 1
+              },
+              "lineProps": {
+                "points": [
+                  {
+                    "x": 0,
+                    "y": 0
+                  },
+                  {
+                    "x": 0,
+                    "y": 4
+                  }
+                ]
+              }
+            },
+            {
+              "type": "line",
+              "id": "toe1",
+              "placement": {
+                "mode": "absolute",
+                "x": 18,
+                "y": 8,
+                "width": 2,
+                "height": 5
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "lineColor": "#b88c5c",
+                "lineWidth": 1
+              },
+              "lineProps": {
+                "points": [
+                  {
+                    "x": 0,
+                    "y": 0
+                  },
+                  {
+                    "x": 0,
+                    "y": 4
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      }
+    },
+    {
+      "type": "container",
+      "id": "status",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "network",
+          "placement": {
+            "mode": "absolute",
+            "x": 76,
+            "y": 50,
+            "width": 180,
+            "height": 24
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 16,
+            "textColor": "#8196b5",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "Wi-Fi --"
+          }
+        },
+        {
+          "type": "label",
+          "id": "battery",
+          "placement": {
+            "mode": "absolute",
+            "x": 279,
+            "y": 50,
+            "width": 125,
+            "height": 24
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 16,
+            "textColor": "#8196b5",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "电量 --"
+          }
+        },
+        {
+          "type": "label",
+          "id": "date",
+          "placement": {
+            "mode": "absolute",
+            "x": 80,
+            "y": 91,
+            "width": 320,
+            "height": 27
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 19,
+            "textColor": "#d4dbea",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "--月--日"
+          },
+          "bindings": {
+            "placement.y": "y"
+          }
+        },
+        {
+          "type": "label",
+          "id": "weather",
+          "placement": {
+            "mode": "absolute",
+            "x": 75,
+            "y": 424,
+            "width": 330,
+            "height": 29
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 20,
+            "textColor": "#c3cedf",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "天气待更新"
+          },
+          "bindings": {
+            "placement.y": "y"
+          }
+        },
+        {
+          "type": "label",
+          "id": "weatherAge",
+          "placement": {
+            "mode": "absolute",
+            "x": 105,
+            "y": 455,
+            "width": 270,
+            "height": 18
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 12,
+            "textColor": "#8390a6",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": ""
+          },
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "container",
+          "id": "page0",
+          "placement": {
+            "mode": "absolute",
+            "x": 221,
+            "y": 128,
+            "width": 6,
+            "height": 6
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 255,
+            "bgColor": "#56647e",
+            "radius": 3
+          },
+          "bindings": {
+            "style.bgColor": "color",
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "container",
+          "id": "page1",
+          "placement": {
+            "mode": "absolute",
+            "x": 237,
+            "y": 128,
+            "width": 6,
+            "height": 6
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 255,
+            "bgColor": "#56647e",
+            "radius": 3
+          },
+          "bindings": {
+            "style.bgColor": "color",
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "container",
+          "id": "page2",
+          "placement": {
+            "mode": "absolute",
+            "x": 253,
+            "y": 128,
+            "width": 6,
+            "height": 6
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 255,
+            "bgColor": "#56647e",
+            "radius": 3
+          },
+          "bindings": {
+            "style.bgColor": "color",
+            "commonProps.hidden": "hidden"
+          }
+        }
+      ],
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      }
+    },
+    {
+      "type": "container",
+      "id": "swipe",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 35,
+        "width": 480,
+        "height": 410
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": true,
+        "pressLock": true
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0
+      },
+      "events": [
+        {
+          "type": "pressed",
+          "action": "facePress"
+        },
+        {
+          "type": "released",
+          "action": "faceRelease"
+        },
+        {
+          "type": "pressLost",
+          "action": "faceCancel"
+        }
+      ]
     }
   ]
 }
