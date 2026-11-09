@@ -7,7 +7,7 @@ function image(i,part,value,half){call(gui,'SetViewSrc',{Path:'/main/flip/d'+i+'
 function bind(i,key,value){return {Path:'/main/flip/d'+i+'/flap',Key:key,Value:String(value)};}
 function digits(now){if(now<1704067200000)return '----';const d=new Date(now+8*3600000);return String(d.getUTCHours()).padStart(2,'0')+String(d.getUTCMinutes()).padStart(2,'0');}
 function height(i){return 75;}
-function record(){try{call(storage,'FSWriteText',{Path:'/littlefs/clock-state.json',Data:JSON.stringify({version:1,time:Date.now(),digits:face===0?shown:digits(Date.now()),face,paw_frame:pawFrame,frames,paused,timezone:'Asia/Shanghai'})});}catch(_){} }
+function record(){try{call(storage,'FSWriteText',{Path:'/littlefs/clock-state.json',Data:JSON.stringify({version:2,time:Date.now(),digits:face===0?shown:digits(Date.now()),face,paw_frame:pawFrame,frames,paused,timezone:'Asia/Shanghai',cat_updates:catUpdates,cat_max_ms:catMaxMs,cat_error:catError,cat_scene:catScene,solar:daylight(Date.now())})});}catch(_){} }
 function stopFx(){if(fx){try{call(timer,'Stop',{TimerId:fx});}catch(_){}fx=0;}}
 function finish(){
   if(!flips.length){stopFx();return;}
@@ -46,12 +46,37 @@ function animate(){
   call(gui,'SetBindings',{Updates:updates});
 }
 let face=0,wifi,http,modes,press=null,lastSwipe=-1000,lastSecond=-1,pawFrame=-1,nextStatus=0,asleep=false,weather=null,pending=null,nextFetch=0,cache={};
+let catScene='',catUpdates=0,catMaxMs=0,catError='',catReported=false;
 const PLACE={city:'上海',latitude:31.2304,longitude:121.4737};let place=PLACE;
 function read(p){try{return JSON.parse(call(storage,'FSReadText',{Path:p}));}catch(_){return null;}}
 function set(path,key,value){value=String(value);const k=path+':'+key;if(cache[k]===value)return;call(gui,'SetBinding',{Path:'/main/'+path,Key:key,Value:value});cache[k]=value;}
 function text(path,value){value=String(value);if(cache[path]===value)return;call(gui,'SetText',{Path:'/main/'+path,Text:value});cache[path]=value;}
 function condition(c){if(c===0)return '晴';if(c<3)return '多云';if(c===3)return '阴';if(c<50)return '雾';if(c<70)return '雨';if(c<80)return '雪';if(c<85)return '阵雨';if(c<90)return '阵雪';return '雷雨';}
 function validPlace(p){return p&&typeof p.city==='string'&&Number.isFinite(p.latitude)&&Math.abs(p.latitude)<=90&&Number.isFinite(p.longitude)&&Math.abs(p.longitude)<=180;}
+// ISO daily solar times are local to the API's returned city offset.
+// No fixed-hour day/night rule; stale/missing solar data falls back explicitly.
+function solarData(d){
+ const daily=d&&d.daily,offset=d&&d.utc_offset_seconds;
+ if(!daily||!Array.isArray(daily.time)||!Number.isFinite(offset)||Math.abs(offset)>50400)return null;
+ const array=k=>Array.isArray(daily[k])?daily[k].slice(0,16):[];
+ return {utc_offset_seconds:offset,daily:{time:array('time'),sunrise:array('sunrise'),sunset:array('sunset'),daylight_duration:array('daylight_duration')}};
+}
+function daylight(now){
+ const s=weather&&weather.solar;
+ if(s&&s.daily&&Number.isFinite(s.utc_offset_seconds)&&Math.abs(s.utc_offset_seconds)<=50400&&now>=1704067200000){
+  const local=new Date(now+s.utc_offset_seconds*1000).toISOString().slice(0,19),daily=s.daily;
+  const i=Array.isArray(daily.time)?daily.time.indexOf(local.slice(0,10)):-1;
+  if(i>=0){
+   const rise=(daily.sunrise||[])[i],end=(daily.sunset||[])[i];
+   const valid=t=>typeof t==='string'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d)?$/.test(t)&&t.slice(0,10)===local.slice(0,10);
+   const seconds=t=>t.length===16?t+':00':t;
+   if(valid(rise)&&valid(end)&&rise<end)return {day:local>=seconds(rise)&&local<seconds(end)?1:0,source:'sunrise_sunset',sunrise:rise,sunset:end};
+   const duration=(daily.daylight_duration||[])[i];
+   if(duration===0||duration>=86399)return {day:duration===0?0:1,source:'polar',sunrise:null,sunset:null};
+  }
+ }
+ return {day:weather&&weather.day===0?0:1,source:weather&&(weather.day===0||weather.day===1)?'weather_flag':'unavailable',sunrise:null,sunset:null};
+}
 function cancel(){if(pending)try{call(http,'CancelRequest',{RequestId:pending.id});}catch(_){}pending=null;}
 function status(now){
  if(now<nextStatus)return;nextStatus=now+5000;
@@ -63,7 +88,7 @@ function status(now){
  if(pending&&now-pending.started>25000){cancel();nextFetch=now+60000;}
  if(online&&!pending&&now>=nextFetch){
   nextFetch=now+600000;
-  try{const url='https://api.open-meteo.com/v1/forecast?latitude='+place.latitude+'&longitude='+place.longitude+'&current=temperature_2m,weather_code&timezone=auto';
+  try{const url='https://api.open-meteo.com/v1/forecast?latitude='+place.latitude+'&longitude='+place.longitude+'&current=temperature_2m,weather_code,is_day&daily=sunrise,sunset,daylight_duration&forecast_days=3&timezone=auto';
    pending={id:call(http,'RequestAsync',{Request:{url,method:'Get',timeout_ms:15000,headers:{},body:''}}),started:now};
   }catch(_){nextFetch=now+60000;}
  }
@@ -79,15 +104,25 @@ function extraTick(){
   if(valid){call(gui,'SetBindings',{Updates:[['hour',h*30+m*.5+v/120,93,10],['minute',m*6+v*.1,133,10],['second',v*6,145,20]].map(a=>({Path:'/main/analog/'+a[0],Key:'points',Value:points(a[1],a[2],a[3])}))});}
  }else{
   const value=digits(now);text('companion/time',value.slice(0,2)+':'+value.slice(2));
-  const phase=Math.floor(now/250)%4;if(phase!==pawFrame){pawFrame=phase;set('companion/leftPaw','y',[371,376,373,369][phase]);set('companion/rightPaw','y',[373,369,371,376][phase]);const blink=Math.floor(now/250)%20===0;for(const eye of ['leftEye','rightEye']){set('companion/'+eye,'height',blink?3:18);set('companion/'+eye,'y',blink?331:323);set('companion/'+eye+'/glint','hidden',blink);}}
+  const step=Math.floor(now/180),phase=step%8,pose=phase===4&&Math.floor(step/8)%4!==3?3:phase;
+  const scene=daylight(now).day?'day':'night';
+  if(pose!==pawFrame||scene!==catScene){
+   const changed=scene!==catScene,begin=Date.now();
+   try{call(gui,'SetViewSrc',{Path:'/main/companion/scene',Src:'cat_'+scene+'_'+pose});pawFrame=pose;catScene=scene;catUpdates++;catMaxMs=Math.max(catMaxMs,Date.now()-begin);catError='';}
+   catch(e){catError=String(e);}
+   if(changed||(!catReported&&catUpdates>=8)){catReported=catUpdates>=8;record();}
+  }
  }
 }
 function select(next,persist){
  finish();face=(next+3)%3;cache={};lastSecond=-1;pawFrame=-1;second=-1;shown=null;nextStatus=0;
  for(const [id,i] of [['flip',0],['analog',1],['companion',2]])set(id,'hidden',face!==i);
  set('status','hidden',face===0);set('status/date','y',face===1?415:91);
+ for(const [id,x,width,size] of face===2?[['date',72,168,16],['weather',244,164,16]]:[['date',80,320,19],['weather',75,330,20]]){
+  set('status/'+id,'x',x);set('status/'+id,'width',width);set('status/'+id,'fontSize',size);
+ }
  for(let i=0;i<3;i++){set('status/page'+i,'color',i===face?'#d7e3f9':'#536078');set('status/page'+i,'hidden',face===1);}
- set('status/weather','y',face===1?444:424);set('status/weatherAge','hidden',face===1);
+ set('status/weather','y',face===1?444:91);set('status/weatherAge','hidden',face===1);
  if(face===0)cancel();extraTick();
  if(persist)try{call(storage,'FSWriteText',{Path:'/littlefs/clock-face.json',Data:JSON.stringify({face})});}catch(_){}
  record();
@@ -98,10 +133,11 @@ globalThis.brookesia_app={
   wifi=brookesia.start_service('Wifi');http=brookesia.start_service('Http');modes=brookesia.start_service('DeviceModes');
   for(const e of ['RequestCompleted','RequestFailed','RequestCanceled'])brookesia.subscribe_event(http,e);
   for(const a of ['facePress','faceRelease','faceCancel'])call(gui,'SubscribeAction',{Action:a});
+  catScene='';catUpdates=0;catMaxMs=0;catError='';catReported=false;asleep=false;
   const settings=read('/littlefs/weather-settings.json'),old=read('/littlefs/weather-cache.json'),own=read('/littlefs/clock-weather.json');
-  if(old&&old.mode===(settings&&settings.mode==='auto'?'auto':'shanghai')&&validPlace(old.location)){place=old.location;const c=old.data&&old.data.current;if(c&&Number.isFinite(c.temperature_2m)&&Number.isInteger(c.weather_code))weather={temperature:c.temperature_2m,code:c.weather_code,received_at:old.received_at||0};}
+  if(old&&old.mode===(settings&&settings.mode==='auto'?'auto':'shanghai')&&validPlace(old.location)){place=old.location;const c=old.data&&old.data.current;if(c&&Number.isFinite(c.temperature_2m)&&Number.isInteger(c.weather_code))weather={temperature:c.temperature_2m,code:c.weather_code,day:c.is_day,solar:solarData(old.data),received_at:old.received_at||0};}
   if(own&&validPlace(own.place)&&own.place.latitude===place.latitude&&own.place.longitude===place.longitude&&own.weather&&Number.isFinite(own.weather.temperature)&&Number.isInteger(own.weather.code)&&(!weather||own.weather.received_at>weather.received_at)){place=own.place;weather=own.weather;}
-  nextFetch=weather?weather.received_at+600000:0;const pref=read('/littlefs/clock-face.json');paused=false;select(pref&&Number.isInteger(pref.face)&&pref.face>=0&&pref.face<3?pref.face:0,false);call(timer,'StartPeriodic',{Name:'clock',IntervalMs:250});return true;
+  nextFetch=weather&&weather.solar?weather.received_at+600000:0;const pref=read('/littlefs/clock-face.json');paused=false;select(pref&&Number.isInteger(pref.face)&&pref.face>=0&&pref.face<3?pref.face:0,false);call(timer,'StartPeriodic',{Name:'clock',IntervalMs:180});return true;
  },
  on_action(name,path,payload){
   if(name==='faceCancel'){press=null;return true;}
@@ -113,7 +149,7 @@ globalThis.brookesia_app={
  },
  on_event(service,event,payload){
   if(paused||service!=='Http'||!pending)return true;
-  try{const v=JSON.parse(payload);if(v.RequestId!==pending.id)return true;pending=null;const r=v.Response||{};if(r.status_code!==200||r.error!=='Ok')throw Error('weather');const d=JSON.parse(r.body),c=d.current;if(!c||!Number.isFinite(c.temperature_2m)||!Number.isInteger(c.weather_code)||c.temperature_2m< -100||c.temperature_2m>70)throw Error('weather');weather={temperature:c.temperature_2m,code:c.weather_code,received_at:Date.now()};call(storage,'FSWriteText',{Path:'/littlefs/clock-weather.json',Data:JSON.stringify({place,weather})});nextStatus=0;extraTick();}catch(_){pending=null;nextFetch=Date.now()+60000;}return true;
+  try{const v=JSON.parse(payload);if(v.RequestId!==pending.id)return true;pending=null;const r=v.Response||{};if(r.status_code!==200||r.error!=='Ok')throw Error('weather');const d=JSON.parse(r.body),c=d.current;if(!c||!Number.isFinite(c.temperature_2m)||!Number.isInteger(c.weather_code)||c.temperature_2m< -100||c.temperature_2m>70)throw Error('weather');weather={temperature:c.temperature_2m,code:c.weather_code,day:c.is_day,solar:solarData(d),received_at:Date.now()};call(storage,'FSWriteText',{Path:'/littlefs/clock-weather.json',Data:JSON.stringify({place,weather})});nextStatus=0;extraTick();}catch(_){pending=null;nextFetch=Date.now()+60000;}return true;
  },
  on_timer(id,name){if(name==='flip')animate();else extraTick();return true;},
  on_pause(){finish();paused=true;press=null;stopFx();cancel();return true;},

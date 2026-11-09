@@ -146,8 +146,98 @@
       "height": 340
     },
     {
-      "id": "cat_scene",
-      "src": "cat_scene.bin",
+      "id": "cat_day_0",
+      "src": "cat_day_0.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_day_1",
+      "src": "cat_day_1.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_day_2",
+      "src": "cat_day_2.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_day_3",
+      "src": "cat_day_3.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_day_4",
+      "src": "cat_day_4.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_day_5",
+      "src": "cat_day_5.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_day_6",
+      "src": "cat_day_6.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_day_7",
+      "src": "cat_day_7.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_night_0",
+      "src": "cat_night_0.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_night_1",
+      "src": "cat_night_1.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_night_2",
+      "src": "cat_night_2.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_night_3",
+      "src": "cat_night_3.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_night_4",
+      "src": "cat_night_4.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_night_5",
+      "src": "cat_night_5.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_night_6",
+      "src": "cat_night_6.bin",
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "cat_night_7",
+      "src": "cat_night_7.bin",
       "width": 340,
       "height": 150
     }

@@ -1,0 +1,18 @@
+{
+  "frame_size": [
+    340,
+    150
+  ],
+  "frame_ms": 180,
+  "frames_per_phase": 8,
+  "sources": {
+    "day": {
+      "file": "cat-day-sheet.png",
+      "sha256": "1359698d730d3cd73e125a76a68f5a3cb4fd9095ae9daa4d51494d020976d29a"
+    },
+    "night": {
+      "file": "cat-night-sheet.png",
+      "sha256": "755aef721425cbad2a2d82de45d7278c5387ffdaeb8af7484adaa0cae19552b4"
+    }
+  }
+}
