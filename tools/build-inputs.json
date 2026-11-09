@@ -13,7 +13,8 @@
     "patches/sd-app-storage.patch",
     "patches/nine-grid-launcher.patch",
     "patches/bounded-display-dma.patch",
-    "patches/persistent-display-dma.patch"
+    "patches/persistent-display-dma.patch",
+    "patches/aligned-display-strips.patch"
   ],
   "sha256": {
     "patches/brookesia-s3.patch": "75e0bb3f720b9bd442955f1b04ab4d6f1437c2cbdfa4359646f1176044bc0346",
@@ -27,7 +28,7 @@
     "phone-remote/tools/downloads.json": "f4dca27ac3cb2d5b30d308eafae0ae106e9108809f3d0d0f595664f98f0e8e1d",
     "phone-remote/tools/requirements-signing.txt": "8b5c18678b29b5e8e0fb586a35ac1dce3ccd9da321e8f12ace0e118350b4e568",
     "platform/super_s3_216/sdkconfig.reproducible": "00cba8885f30a1618c335b79945006bff45c019a38f0d2327b9aeff7f81209a1",
-    "versions.json": "3a8626bf1b68b7b60a655b77a8c35f44e952084afc85a4e3845a3daaf1d98591",
+    "versions.json": "0e1293a37e2273c6356fa8b06b09e657b3df92a4273ce74d68b2487d3ccfd9cc",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.c": "52a51002bd22aac5c2105187c27cd393a34f13143c8ae97b0964ad27dec1c1ea",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.h": "a2fc087b68c25141e2fb7ab56e71b111bee79cf311fcc850d492eb574c0eeffe",
     "patches/transparent-launcher.patch": "b9cbe446371691db2c9e4674b73293646b63ca003a24f59a5c0a2646ce871732",
@@ -39,6 +40,7 @@
     "platform/super_s3_216/main/modules/voice_assistant/voice_assistant.cpp": "9543bca2d3b1799a61632248d18b41a32b9e022e190a53fc84f7282665ffe30f",
     "platform/super_s3_216/main/modules/general_services.cpp": "b09a61a7ec9adf0a69afbfa21cf496cc51bc83a7f05d1ea0dfd81d269ef06243",
     "patches/bounded-display-dma.patch": "b1e6eb13627718506036f14f94f0a9cb3bac0a893094068084707bb29152e290",
-    "patches/persistent-display-dma.patch": "cc8c6cf3dbe36d4089abff0242a3f740cca31e111138ea88df3a341b09d8c264"
+    "patches/persistent-display-dma.patch": "cc8c6cf3dbe36d4089abff0242a3f740cca31e111138ea88df3a341b09d8c264",
+    "patches/aligned-display-strips.patch": "1629b23605921dd00fab60995969fd3ad5c5243cb540b9f20a64da4841d25dc2"
   }
 }

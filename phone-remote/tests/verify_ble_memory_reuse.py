@@ -27,7 +27,7 @@ def main():
     assert time.monotonic()<end,'State deadline: '+s
     time.sleep(.2)
   mode=f('DeviceModes','GetState');book=f('Audiobook','GetState');phone=f('PhoneProvisioning','GetState')
-  assert mode['firmware_version'] in ('0.8.3-s3.49','0.8.3-s3.55','0.8.3-s3.56','0.8.3-s3.57') and not mode['screen_locked']
+  assert mode['firmware_version'] in ('0.8.3-s3.49','0.8.3-s3.55','0.8.3-s3.56','0.8.3-s3.57','0.8.3-s3.58') and not mode['screen_locked']
   assert not f('ChildMode','GetState')['enabled'],'Do not bypass parent policy for tests'
   assert not book['active'] and not book['sleep_active'] and not f('Radio','GetState')['active'] and not f('VoiceAssistant','GetState')['active']
   assert not phone['active'] and not phone['starting']

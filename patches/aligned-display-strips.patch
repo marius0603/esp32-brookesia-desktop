@@ -1,0 +1,14 @@
+--- a/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.cpp
++++ b/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.cpp
+@@ -418,7 +418,10 @@
+     if (!is_valid_internal() || !data || x2<=x1 || y2<=y1 || x2>get_info().h_res || y2>get_info().v_res) return false;
+     if (!event_dispatcher_enabled_ && !enable_event_dispatcher_locked()) return false;
+     const size_t row_bytes=(x2-x1)*2;
+-    const uint32_t rows=3840/row_bytes;
++    // LVGL rounds whole dirty areas to the panel's row alignment. Each
++    // staging subwindow must preserve that alignment as well (CO5300: 2 rows).
++    constexpr uint32_t row_alignment = 1U << (BROOKESIA_HAL_ADAPTOR_DISPLAY_LCD_PANEL_DRAW_Y_ALIGN_BYTES - 1);
++    const uint32_t rows=(3840/row_bytes)/row_alignment*row_alignment;
+     if (!rows) return false;
+     const TickType_t started=xTaskGetTickCount(),budget=std::max<TickType_t>(1,pdMS_TO_TICKS(timeout_ms));
+     bool ok=true;
