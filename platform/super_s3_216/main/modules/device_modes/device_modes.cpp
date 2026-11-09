@@ -20,6 +20,7 @@
 #include "deep_sleep.hpp"
 #include "idle_deep_sleep.hpp"
 #include "screen_lock.hpp"
+#include "resource_monitor.hpp"
 #include "../audio_ownership.hpp"
 #include "../audiobook/audiobook.hpp"
 #include "driver/gpio.h"
@@ -92,6 +93,15 @@ private:
                 {"battery_status",battery_status.load()},
                 {"resume_volume",desired_volume.load()}};
     }
+    boost::json::object resource_usage(){
+        const auto v=resource_monitor::snapshot();
+        return {{"cpu_percent",v.cpu_basis_points<0?-1.0:v.cpu_basis_points/100.0},{"cpu_core0_percent",v.core_basis_points[0]<0?-1.0:v.core_basis_points[0]/100.0},
+                {"cpu_core1_percent",v.core_basis_points[1]<0?-1.0:v.core_basis_points[1]/100.0},{"cpu_cores",v.cores},
+                {"ram_percent",v.ram_basis_points<0?-1.0:v.ram_basis_points/100.0},{"ram_total_bytes",v.ram_total},{"ram_free_bytes",v.ram_free},
+                {"internal_total_bytes",v.internal_total},{"internal_free_bytes",v.internal_free},
+                {"psram_total_bytes",v.psram_total},{"psram_free_bytes",v.psram_free},
+                {"sample_count",v.samples},{"sampled_at_us",v.sampled_us},{"interval_ms",1000},{"ram_scope","byte_addressable_heap_including_psram"}};
+    }
     FunctionResult speaker_volume(){
         void *handle=nullptr;
         if(esp_board_manager_get_device_handle("audio_dac",&handle)!=ESP_OK || !handle)
@@ -126,9 +136,17 @@ private:
                     {"scale_y",lv_image_get_scale_y(object)}});
             }
             if(lv_obj_check_type(object,&lv_label_class) && lv_obj_get_parent(object)==lv_layer_sys() && color==0x3b2b29){
-                layers.push_back(boost::json::object{{"kind","top_status"},{"text",lv_label_get_text(object)},
+                const char *text=lv_label_get_text(object);
+                layers.push_back(boost::json::object{{"kind",std::string_view(text).starts_with("CPU ")?"resource_status":"top_status"},{"text",text},
                     {"x",area.x1},{"y",area.y1},{"width",w},{"height",h},
-                    {"clickable",lv_obj_has_flag(object,LV_OBJ_FLAG_CLICKABLE)}});
+                    {"clickable",lv_obj_has_flag(object,LV_OBJ_FLAG_CLICKABLE)},{"background_opacity",bg},
+                    {"text_rgb",lv_color_to_u32(lv_obj_get_style_text_color(object,LV_PART_MAIN)) & 0xffffff}});
+            }
+            if(lv_obj_check_type(object,&lv_label_class) && lv_obj_get_parent(object)!=lv_layer_sys() && effective>0 && area.y1>=0 && area.y2<60){
+                const std::string_view text=lv_label_get_text(object);
+                if(text=="Wi-Fi" || text=="WiFi" || text=="WIFI" || text.find(':')!=std::string_view::npos)
+                    layers.push_back(boost::json::object{{"kind","system_header"},{"text",std::string(text)},
+                        {"x",area.x1},{"y",area.y1},{"width",w},{"height",h}});
             }
             if(layers.size()<32 && lv_obj_check_type(object,&lv_dropdown_class)){
                 const auto count=lv_dropdown_get_option_count(object);
@@ -162,6 +180,7 @@ private:
                 {"ProfileRefresh","Measure native full-screen refresh",{{"Force","Force one whole-screen redraw",FunctionValueType::Boolean}},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Refresh timing"}},
                 {"GetWeatherLayers","Read visible native layer opacity for weather diagnostics",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Visible surfaces"}},
                 {"GetState","Get screen and sound mode state",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Modes"}},
+                {"GetResourceUsage","Read cached per-second CPU and heap RAM use",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"CPU and memory"}},
                 {"SetAutoSleep","Enable ten minute inactivity timeout",{{"Enabled","Enabled",FunctionValueType::Boolean}}},
                 {"SetDoNotDisturb","Mute speaker while retaining its volume",{{"Enabled","Enabled",FunctionValueType::Boolean}}},
                 {"SetQuietHours","Set daily quiet hours in Beijing time",{{"Enabled","Schedule enabled",FunctionValueType::Boolean},{"StartMinute","0-1439 inclusive",FunctionValueType::Number},{"EndMinute","0-1439 exclusive; equal means all day",FunctionValueType::Number}}},
@@ -182,6 +201,7 @@ private:
                     esp_lv_adapter_unlock();return {.success=true,.data=FunctionValue(std::move(result))};}},
                 {"GetWeatherLayers",[this](FunctionParameterMap &&)->FunctionResult{return visual_layers();}},
                 {"GetState",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(state())};}},
+                {"GetResourceUsage",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(resource_usage())};}},
                 {"SetAutoSleep",[](FunctionParameterMap &&p)->FunctionResult{brookesia_board_set_auto_sleep(std::get<bool>(p.at("Enabled")));return {.success=true};}},
                 {"SetDoNotDisturb",[](FunctionParameterMap &&p)->FunctionResult{brookesia_board_set_do_not_disturb(std::get<bool>(p.at("Enabled")));return {.success=true};}},
                 {"SetQuietHours",[](FunctionParameterMap &&p)->FunctionResult{
@@ -340,6 +360,7 @@ void story_brightness_poll() {
 }
 void device_modes_poll(){
     if(!ready)return;
+    resource_monitor::poll();
     // Service start runs on a PSRAM-backed thread. Even NVS reads must run
     // here on the orientation worker's internal stack while flash cache pauses.
     if(!preferences_loaded){

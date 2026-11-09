@@ -23,11 +23,15 @@
 #include "brookesia/service_manager/helper/base.hpp"
 #include "brookesia/service_manager/service/manager.hpp"
 #include "display.hpp"
+#include "device_modes/resource_monitor.hpp"
+#include "device_modes/resource_math.hpp"
 
 extern "C" int brookesia_board_user_volume();
 extern "C" bool brookesia_board_volume_muted();
 extern "C" int brookesia_board_battery_status();
 extern "C" bool brookesia_board_desktop_visible();
+extern "C" bool brookesia_board_screen_asleep();
+extern "C" int brookesia_board_desktop_theme();
 
 using namespace esp_brookesia;
 using DisplayHelper = service::helper::Display;
@@ -39,12 +43,28 @@ constexpr uint32_t DISPLAY_SERVICE_TIMEOUT_MS = 1000;
 
 // The system layer survives application changes and full-screen app layouts.
 // Read only the shared settings: querying the codec here could block the GUI.
+lv_obj_t *make_status_badge()
+{
+    auto *label=lv_label_create(lv_layer_sys());
+    lv_obj_remove_flag(label,LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_text_font(label,&lv_font_montserrat_16,0);
+    lv_obj_set_style_text_color(label,lv_color_hex(0xfff0d4),0);
+    lv_obj_set_style_bg_color(label,lv_color_hex(0x3b2b29),0);
+    lv_obj_set_style_bg_opa(label,LV_OPA_TRANSP,0);
+    lv_obj_set_style_pad_hor(label,0,0);
+    lv_obj_set_style_pad_ver(label,2,0);
+    return label;
+}
+
 void update_volume_badge(lv_timer_t *)
 {
-    static lv_obj_t *badge=nullptr;
+    static lv_obj_t *badge=nullptr,*resource_badge=nullptr;
     static int previous=-1;
-    if(!brookesia_board_desktop_visible()){
+    static int previous_cpu=-2,previous_ram=-2;
+    static int previous_theme=-1;
+    if(!brookesia_board_desktop_visible() || brookesia_board_screen_asleep()){
         if(badge)lv_obj_add_flag(badge,LV_OBJ_FLAG_HIDDEN);
+        if(resource_badge)lv_obj_add_flag(resource_badge,LV_OBJ_FLAG_HIDDEN);
         return;
     }
     const int requested=brookesia_board_user_volume();
@@ -53,27 +73,47 @@ void update_volume_badge(lv_timer_t *)
     const int battery=brookesia_board_battery_status();
     const int level=battery&255;
     const int key=volume+(brookesia_board_volume_muted()?101:0)+battery*256;
+    const auto resources=resource_monitor::snapshot();
+    const int cpu=resource_math::rounded_percent(resources.cpu_basis_points),ram=resource_math::rounded_percent(resources.ram_basis_points);
+    bool layout_changed=false;
     if(!badge){
-        badge=lv_label_create(lv_layer_sys());
-        lv_obj_remove_flag(badge,LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_set_style_text_font(badge,&lv_font_montserrat_16,0);
-        lv_obj_set_style_text_color(badge,lv_color_hex(0xfff6e8),0);
-        lv_obj_set_style_bg_color(badge,lv_color_hex(0x3b2b29),0);
-        lv_obj_set_style_bg_opa(badge,LV_OPA_80,0);
-        lv_obj_set_style_radius(badge,10,0);
-        lv_obj_set_style_pad_hor(badge,4,0);
-        lv_obj_set_style_pad_ver(badge,2,0);
+        badge=make_status_badge();
+        lv_obj_set_style_text_align(badge,LV_TEXT_ALIGN_CENTER,0);
+    }
+    if(!resource_badge){
+        resource_badge=make_status_badge();
+        lv_obj_align(resource_badge,LV_ALIGN_TOP_LEFT,8,11);
+    }
+    const auto theme=brookesia_board_desktop_theme();
+    if(previous_theme!=theme){
+        const auto foreground=lv_color_hex(theme==1?0xa7f2ff:0xfff0d4);
+        lv_obj_set_style_text_color(badge,foreground,0);
+        lv_obj_set_style_text_color(resource_badge,foreground,0);
+        previous_theme=theme;
     }
     if(previous!=key){
         char percent[12];
         if(level<=100)lv_snprintf(percent,sizeof(percent),"%d%%",level);
         else lv_snprintf(percent,sizeof(percent),"%s",level==102 && (battery&512)?"USB":"--");
         const char *icon=battery&256?LV_SYMBOL_CHARGE:level>100 || level<=10?LV_SYMBOL_BATTERY_EMPTY:level<=35?LV_SYMBOL_BATTERY_1:level<=65?LV_SYMBOL_BATTERY_2:level<=90?LV_SYMBOL_BATTERY_3:LV_SYMBOL_BATTERY_FULL;
-        lv_label_set_text_fmt(badge,"%s %d%%  %s %s",volume==0?LV_SYMBOL_MUTE:LV_SYMBOL_VOLUME_MID,volume,icon,percent);
-        lv_obj_align(badge,LV_ALIGN_TOP_MID,0,11);
+        lv_label_set_text_fmt(badge,"%s %d%%    %s %s",volume==0?LV_SYMBOL_MUTE:LV_SYMBOL_VOLUME_MID,volume,icon,percent);
         previous=key;
+        layout_changed=true;
+    }
+    if(previous_cpu!=cpu || previous_ram!=ram){
+        char cpu_text[8],ram_text[8];
+        if(cpu<0)lv_snprintf(cpu_text,sizeof(cpu_text),"--");else lv_snprintf(cpu_text,sizeof(cpu_text),"%d%%",cpu);
+        if(ram<0)lv_snprintf(ram_text,sizeof(ram_text),"--");else lv_snprintf(ram_text,sizeof(ram_text),"%d%%",ram);
+        lv_label_set_text_fmt(resource_badge,"CPU %s    RAM %s",cpu_text,ram_text);
+        previous_cpu=cpu;previous_ram=ram;
+        layout_changed=true;
+    }
+    if(layout_changed){
+        lv_obj_update_layout(resource_badge);
+        lv_obj_align_to(badge,resource_badge,LV_ALIGN_OUT_RIGHT_TOP,20,0);
     }
     lv_obj_remove_flag(badge,LV_OBJ_FLAG_HIDDEN);
+    lv_obj_remove_flag(resource_badge,LV_OBJ_FLAG_HIDDEN);
 }
 
 // Count actual render cycles, excluding idle LVGL refresh timer wakeups.

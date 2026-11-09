@@ -5,10 +5,10 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-IDF = ROOT.parent / 'esp-idf-v6.0.2'
-PROJECT = ROOT.parent / 'esp-brookesia-v08/examples/system/super_s3_216'
+IDF = Path(os.environ.get('IDF_PATH',ROOT.parent / 'esp-idf-v6.0.2')).resolve()
+PROJECT = Path(os.environ.get('BROOKESIA_PROJECT',ROOT.parent / 'esp-brookesia-v08/examples/system/super_s3_216')).resolve()
 env = os.environ.copy()
-env.update(IDF_PATH=str(IDF), IDF_TOOLS_PATH=str(ROOT.parent/'i6'), IDF_TARGET='esp32s3',
+env.update(IDF_PATH=str(IDF), IDF_TOOLS_PATH=os.environ.get('IDF_TOOLS_PATH',str(ROOT.parent/'i6')), IDF_TARGET='esp32s3',
            IDF_GITHUB_ASSETS='dl.espressif.com/github_assets', PYTHONIOENCODING='utf-8')
 result = subprocess.run([sys.executable, str(IDF/'tools/idf_tools.py'), 'export', '--format', 'key-value'],
                         env=env, text=True, encoding='utf-8', capture_output=True, check=True)
