@@ -54,7 +54,16 @@ def main():
             if active.get('app_id') and active['app_id']!=shell['app_id']:
                 f('SystemCore','StopApp',{'AppId':active['app_id']})
             f('SystemCore','StartApp',{'AppId':shell['app_id']});time.sleep(.5)
-        def native_layers():return f('DeviceModes','GetWeatherLayers')['layers']
+        def native_layers():
+            # A clock render may hold the GUI lock beyond the diagnostic's
+            # 100 ms try-lock. Retry only this read-only, explicit non-execution.
+            until=time.monotonic()+3
+            while True:
+                try:return f('DeviceModes','GetWeatherLayers')['layers']
+                except RuntimeError as exc:
+                    if str(exc)!='call_failed: GUI busy' or time.monotonic()>=until:raise
+                    report['gui_busy_read_retries']=report.get('gui_busy_read_retries',0)+1
+                    time.sleep(.2)
         def layers():return [v for v in native_layers() if v['kind'] in ('top_status','resource_status')]
         def sample():
             v=f('DeviceModes','GetResourceUsage')
@@ -68,20 +77,37 @@ def main():
         desktop()
         for _ in range(5):report['desktop_samples'].append(sample());time.sleep(1.1)
         assert report['desktop_samples'][-1]['sample_count']>report['desktop_samples'][0]['sample_count']+2
-        visible=layers();resource=next(v for v in visible if v['kind']=='resource_status');status=next(v for v in visible if v['kind']=='top_status')
-        assert re.fullmatch(r'CPU \d+%    RAM \d+%',resource['text']) and resource['height']<=26
-        assert 0<=resource['x']<=16 and 0<=resource['y']<=16
-        assert resource['x']+resource['width']<=status['x'],'Resource badge overlaps sound/battery'
-        assert abs(status['x']-(resource['x']+resource['width']+20))<=2,'Sound/battery must follow RAM with a wider gap'
-        assert status['y']==resource['y']
+        def geometry(values):
+            return {v['field']:(v['x'],v['y'],v['width'],v['height']) for v in values}
+        visible=layers()
+        fields={v['field']:v for v in visible}
+        assert set(fields)=={'cpu','ram','volume','battery'}
+        for field,position,width in [('cpu',8,84),('ram',108,86),('volume',210,58),('battery',284,66)]:
+            label=fields[field]
+            assert label['x']==position and label['width']==width and label['y']==11 and label['height']<=26,label
+        assert re.fullmatch(r'CPU \d+%',fields['cpu']['text'])
+        assert re.fullmatch(r'RAM \d+%',fields['ram']['text'])
+        ordered=[fields[name] for name in ('cpu','ram','volume','battery')]
+        for left,right in zip(ordered,ordered[1:]):
+            assert right['x']-(left['x']+left['width'])>=16,'Status field gap too small'
         headers=[v for v in native_layers() if v['kind']=='system_header']
         for header in headers:
-            assert status['x']+status['width']<=header['x'],'Telemetry overlaps existing Wi-Fi/time'
+            assert fields['battery']['x']+fields['battery']['width']<=header['x'],'Telemetry overlaps existing Wi-Fi/time'
         report['native_header']=headers
         expected_color=0xa7f2ff if original['theme']==1 else 0xfff0d4
         for label in visible:
             assert label['background_opacity']==0 and label['text_rgb']==expected_color and not label['clickable'],label
         report['desktop_labels']=visible
+        # Check real updates over multiple sample windows, not just one snapshot.
+        report['stable_layout_samples']=[]
+        for _ in range(8):
+            time.sleep(1.1)
+            current=layers()
+            assert geometry(current)==geometry(visible),'Live values moved a neighboring field'
+            report['stable_layout_samples'].append(current)
+        report['cpu_text_changed']=len({next(v['text'] for v in frame if v['field']=='cpu')
+                                       for frame in [visible]+report['stable_layout_samples']})>1
+        assert report['cpu_text_changed'],'CPU did not change during live layout check'
         try:
             f('SystemCore','StartApp',{'AppId':clock['app_id']});time.sleep(1)
             assert layers()==[],'Desktop status must be hidden in apps'
@@ -90,7 +116,7 @@ def main():
             assert active['app_id']==clock['app_id'] and active['state']=='Running' and not active['last_error']
         finally:
             desktop()
-        assert len(layers())==2,'Desktop labels did not return'
+        assert geometry(layers())==geometry(visible),'Desktop label positions did not return'
         assert len(f('Audiobook','List')['tracks'])==30
         assert len(f('Audiobook','ListSongs')['tracks'])==20
         report.update(passed=True,firmware=expected,apps_preserved=len(apps),stories_preserved=30,songs_preserved=20,

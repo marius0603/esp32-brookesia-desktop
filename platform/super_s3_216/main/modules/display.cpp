@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: CC0-1.0
  */
 #include <algorithm>
+#include <array>
 #include <string>
 #include <utility>
 #include <vector>
@@ -58,62 +59,60 @@ lv_obj_t *make_status_badge()
 
 void update_volume_badge(lv_timer_t *)
 {
-    static lv_obj_t *badge=nullptr,*resource_badge=nullptr;
-    static int previous=-1;
-    static int previous_cpu=-2,previous_ram=-2;
-    static int previous_theme=-1;
+    // Reserve room for 100% in every independent field. Never anchor a field
+    // to another label's text width: live CPU changes must not move its peers.
+    static std::array<lv_obj_t *,4> badges{};
+    static constexpr std::array<int,4> x{{8,108,210,284}},width{{84,86,58,66}};
+    static int previous_volume=-1,previous_battery=-1;
+    static int previous_cpu=-2,previous_ram=-2,previous_theme=-1;
     if(!brookesia_board_desktop_visible() || brookesia_board_screen_asleep()){
-        if(badge)lv_obj_add_flag(badge,LV_OBJ_FLAG_HIDDEN);
-        if(resource_badge)lv_obj_add_flag(resource_badge,LV_OBJ_FLAG_HIDDEN);
+        for(auto *label:badges)if(label)lv_obj_add_flag(label,LV_OBJ_FLAG_HIDDEN);
         return;
     }
     const int requested=brookesia_board_user_volume();
     if(requested<0)return;
-    const int volume=brookesia_board_volume_muted()?0:requested;
+    const bool muted=brookesia_board_volume_muted();
+    const int volume=muted?0:requested;
+    const int volume_key=volume+(muted?101:0);
     const int battery=brookesia_board_battery_status();
     const int level=battery&255;
-    const int key=volume+(brookesia_board_volume_muted()?101:0)+battery*256;
     const auto resources=resource_monitor::snapshot();
     const int cpu=resource_math::rounded_percent(resources.cpu_basis_points),ram=resource_math::rounded_percent(resources.ram_basis_points);
-    bool layout_changed=false;
-    if(!badge){
-        badge=make_status_badge();
-        lv_obj_set_style_text_align(badge,LV_TEXT_ALIGN_CENTER,0);
-    }
-    if(!resource_badge){
-        resource_badge=make_status_badge();
-        lv_obj_align(resource_badge,LV_ALIGN_TOP_LEFT,8,11);
+    if(!badges[0]){
+        for(unsigned i=0;i<badges.size();++i){
+            badges[i]=make_status_badge();
+            lv_label_set_long_mode(badges[i],LV_LABEL_LONG_CLIP);
+            lv_obj_set_width(badges[i],width[i]);
+            lv_obj_align(badges[i],LV_ALIGN_TOP_LEFT,x[i],11);
+        }
     }
     const auto theme=brookesia_board_desktop_theme();
     if(previous_theme!=theme){
         const auto foreground=lv_color_hex(theme==1?0xa7f2ff:0xfff0d4);
-        lv_obj_set_style_text_color(badge,foreground,0);
-        lv_obj_set_style_text_color(resource_badge,foreground,0);
+        for(auto *label:badges)lv_obj_set_style_text_color(label,foreground,0);
         previous_theme=theme;
     }
-    if(previous!=key){
+    if(previous_volume!=volume_key){
+        lv_label_set_text_fmt(badges[2],"%s %d%%",volume==0?LV_SYMBOL_MUTE:LV_SYMBOL_VOLUME_MID,volume);
+        previous_volume=volume_key;
+    }
+    if(previous_battery!=battery){
         char percent[12];
         if(level<=100)lv_snprintf(percent,sizeof(percent),"%d%%",level);
         else lv_snprintf(percent,sizeof(percent),"%s",level==102 && (battery&512)?"USB":"--");
         const char *icon=battery&256?LV_SYMBOL_CHARGE:level>100 || level<=10?LV_SYMBOL_BATTERY_EMPTY:level<=35?LV_SYMBOL_BATTERY_1:level<=65?LV_SYMBOL_BATTERY_2:level<=90?LV_SYMBOL_BATTERY_3:LV_SYMBOL_BATTERY_FULL;
-        lv_label_set_text_fmt(badge,"%s %d%%    %s %s",volume==0?LV_SYMBOL_MUTE:LV_SYMBOL_VOLUME_MID,volume,icon,percent);
-        previous=key;
-        layout_changed=true;
+        lv_label_set_text_fmt(badges[3],"%s %s",icon,percent);
+        previous_battery=battery;
     }
-    if(previous_cpu!=cpu || previous_ram!=ram){
-        char cpu_text[8],ram_text[8];
-        if(cpu<0)lv_snprintf(cpu_text,sizeof(cpu_text),"--");else lv_snprintf(cpu_text,sizeof(cpu_text),"%d%%",cpu);
-        if(ram<0)lv_snprintf(ram_text,sizeof(ram_text),"--");else lv_snprintf(ram_text,sizeof(ram_text),"%d%%",ram);
-        lv_label_set_text_fmt(resource_badge,"CPU %s    RAM %s",cpu_text,ram_text);
-        previous_cpu=cpu;previous_ram=ram;
-        layout_changed=true;
+    if(previous_cpu!=cpu){
+        if(cpu<0)lv_label_set_text(badges[0],"CPU --");else lv_label_set_text_fmt(badges[0],"CPU %d%%",cpu);
+        previous_cpu=cpu;
     }
-    if(layout_changed){
-        lv_obj_update_layout(resource_badge);
-        lv_obj_align_to(badge,resource_badge,LV_ALIGN_OUT_RIGHT_TOP,20,0);
+    if(previous_ram!=ram){
+        if(ram<0)lv_label_set_text(badges[1],"RAM --");else lv_label_set_text_fmt(badges[1],"RAM %d%%",ram);
+        previous_ram=ram;
     }
-    lv_obj_remove_flag(badge,LV_OBJ_FLAG_HIDDEN);
-    lv_obj_remove_flag(resource_badge,LV_OBJ_FLAG_HIDDEN);
+    for(auto *label:badges)lv_obj_remove_flag(label,LV_OBJ_FLAG_HIDDEN);
 }
 
 // Count actual render cycles, excluding idle LVGL refresh timer wakeups.

@@ -137,7 +137,10 @@ private:
             }
             if(lv_obj_check_type(object,&lv_label_class) && lv_obj_get_parent(object)==lv_layer_sys() && color==0x3b2b29){
                 const char *text=lv_label_get_text(object);
-                layers.push_back(boost::json::object{{"kind",std::string_view(text).starts_with("CPU ")?"resource_status":"top_status"},{"text",text},
+                const std::string_view value=text;
+                const char *field=value.starts_with("CPU ")?"cpu":value.starts_with("RAM ")?"ram":
+                    value.starts_with(LV_SYMBOL_VOLUME_MID) || value.starts_with(LV_SYMBOL_MUTE)?"volume":"battery";
+                layers.push_back(boost::json::object{{"kind",value.starts_with("CPU ") || value.starts_with("RAM ")?"resource_status":"top_status"},{"field",field},{"text",text},
                     {"x",area.x1},{"y",area.y1},{"width",w},{"height",h},
                     {"clickable",lv_obj_has_flag(object,LV_OBJ_FLAG_CLICKABLE)},{"background_opacity",bg},
                     {"text_rgb",lv_color_to_u32(lv_obj_get_style_text_color(object,LV_PART_MAIN)) & 0xffffff}});
