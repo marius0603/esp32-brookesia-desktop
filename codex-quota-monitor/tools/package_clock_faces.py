@@ -5,7 +5,7 @@ from build_learning_packages import archive
 from runtime_paths import find_node
 ROOT=Path(__file__).resolve().parents[2];APP=ROOT/'brookesia-apps/flip-clock'
 def main():
- for test in ['main.test.cjs','watchfaces.test.cjs']:subprocess.run([find_node(),str(APP/'tests'/test)],check=True)
+ for test in ['main.test.cjs','watchfaces.test.cjs','companion.test.cjs']:subprocess.run([find_node(),str(APP/'tests'/test)],check=True)
  src=APP/'src';v=json.loads((src/'manifest.json').read_text(encoding='utf-8'))['package']['version']
  files={p.relative_to(src).as_posix():p.read_bytes() for p in src.rglob('*') if p.is_file()}
  name='packages/apps/local.flipclock.debug.'+v+'.bpk';digest=archive(ROOT/name,files)

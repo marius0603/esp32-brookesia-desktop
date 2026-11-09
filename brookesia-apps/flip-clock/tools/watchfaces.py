@@ -5,6 +5,7 @@ from PIL import Image,ImageDraw,ImageFont
 APP=Path(__file__).resolve().parents[1];ROOT=APP.parents[1];RES=APP/'src/res'
 sys.path.insert(0,str(ROOT/'tools'))
 from build_wallpaper_render import rle_pixels
+from status_icons import wifi,battery,weather,box,stroke,INK
 BG='#08090c'
 ART_IMAGES={}
 def write(p,d):p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
@@ -15,6 +16,59 @@ def label(id,text,x,y,w,h,size,color='#d4dbea'):
 def image(id,src,x,y,w,h):return node('image',id,x,y,w,h,imageProps={'src':'${image.'+src+'}','innerAlign':'contain'})
 def group(id,children):
  n=node('container',id,0,0,480,480,children=children);n['bindings']={'commonProps.hidden':'hidden'};return n
+
+def png(name,im,size):
+ im.resize(size,Image.Resampling.LANCZOS).save(RES/'images'/(name+'.png'))
+ return {'id':name,'src':name+'.png','width':size[0],'height':size[1]}
+
+def modern_widgets():
+ resources=[];companion=[image('scene','cat_background_night',0,242,480,216),image('motion','cat_night_0',152,242,216,216)]
+ font=ImageFont.truetype('C:/Windows/Fonts/bahnschrift.ttf',82)
+ for digit in '0123456789-':
+  im=Image.new('RGB',(58,100));d=ImageDraw.Draw(im)
+  for y in range(100):
+   v=19-round(5*y/100);d.line((0,y,58,y),fill=(v,v+2,v+6))
+  d.text((29,50),digit,font=font,fill='#dce3f4',anchor='mm')
+  for part,bounds in [('top',(0,0,58,49)),('bottom',(0,51,58,100))]:resources.append(native('clock_'+part+'_'+digit,im.crop(bounds)))
+ for i,x in enumerate([38,100,180,242,322,384]):
+  children=[]
+  for part,y in [('top',0),('bottom',51),('flap',0),('incoming',51)]:
+   item=image(part,'clock_'+('top' if part=='flap' else 'bottom' if part=='incoming' else part)+'_-',0,y,58,49)
+   item['imageProps']['innerAlign']='stretch'
+   if part in ('flap','incoming'):
+    item['style']['opacity']=0;item['commonProps']['hidden']=True;item['bindings']={'placement.y':'y','placement.height':'height','style.opacity':'opacity','commonProps.hidden':'hidden'}
+   children.append(item)
+  companion.append(node('container','d'+str(i),x,140,58,100,children=children))
+ for i,(x,y) in enumerate([(166,174),(166,204),(308,174),(308,204)]):
+  dot=node('container','colon'+str(i),x,y,7,7);dot['style'].update(bgColor='#abb9d2',bgOpacity=255,radius=4);companion.append(dot)
+ resources+=[png('icon_wifi_on',wifi(),(44,33)),png('icon_wifi_off',wifi(False),(44,33))]
+ for level in range(11):
+  for charge in [False,True]:resources.append(png('icon_battery_'+('charge_' if charge else '')+str(level),battery(level*10,charge),(48,36)))
+ for kind in ['unknown','usb']:
+  im=battery(0);d=ImageDraw.Draw(im)
+  if kind=='unknown':stroke(d,(26,24,39,24),INK,2)
+  else:
+   d.rounded_rectangle(box((25,19,39,28)),radius=2*4,outline=INK,width=2*4)
+   for x in [28,36]:stroke(d,(x,14,x,19),INK,2)
+   stroke(d,(32,28,32,32),INK,2)
+  resources.append(png('icon_battery_'+kind,im,(48,36)))
+ for name,code,day in [('clear_day',0,True),('clear_night',0,False),('partly_day',2,True),('partly_night',2,False),('clouds',3,True),('fog',45,True),('rain',61,True),('snow',71,True),('thunder',95,True),('unknown',-1,True)]:
+  resources.append(png('icon_weather_'+name,weather(code,day),(40,30)))
+ date=label('date','--月--日',32,77,205,38,28,'#c3cedf')
+ date['bindings']={'placement.y':'y','placement.x':'x','placement.width':'width','style.fontSize':'fontSize'}
+ city=label('city','上海',248,0,58,38,28,'#c3cedf')
+ temperature=label('temperature','--°C',358,0,82,38,28,'#c3cedf')
+ symbol=image('symbol','icon_weather_unknown',312,1,40,30)
+ for item in [city,temperature,symbol]:
+  item['bindings']={'placement.x':'x'}
+  if item['type']=='label':item['bindings'].update({'placement.width':'width','style.fontSize':'fontSize'})
+ weather_row=node('container','weather',0,77,480,38,children=[city,symbol,temperature]);weather_row['bindings']={'placement.y':'y'}
+ shared=[image('network','icon_wifi_off',218,12,44,33),image('battery','icon_battery_unknown',393,12,48,36),date,weather_row]
+ age=label('weatherAge','',105,116,270,18,12,'#8390a6');age['bindings']={'commonProps.hidden':'hidden'};shared.append(age)
+ dots=[]
+ for i in range(3):
+  dot=node('container','page'+str(i),218+i*18,465,8,8);dot['style'].update(bgColor='#536078',bgOpacity=255,radius=4);dot['bindings']={'style.bgColor':'color'};dots.append(dot)
+ return companion,group('status',shared),group('pager',dots),resources
 def native(name,im):
  ART_IMAGES[name]=im.copy();rgb=im.convert('RGB').tobytes();raw=bytearray()
  for r,g,b in zip(rgb[::3],rgb[1::3],rgb[2::3]):raw+=struct.pack('<H',((r>>3)<<11)|((g>>2)<<5)|(b>>3))
@@ -61,25 +115,15 @@ def augment():
  for name,length,width,color in [('hour',93,7,'#d7e1f4'),('minute',133,4,'#ecf3ff'),('second',145,2,'#eb725f')]:
   n=node('line',name,70,70,340,340);n['style'].update(lineWidth=width,lineColor=color);n['lineProps']={'points':[{'x':170,'y':190 if name=='second' else 180},{'x':170,'y':170-length}]};n['bindings']={'lineProps.points':'points'};analog.append(n)
  hub=node('container','hub',235,235,10,10);hub['style'].update(bgColor='#dbe4f5',bgOpacity=255,radius=5);analog.append(hub)
- companion=[label('time','--:--',50,152,380,105,82,'#e5e9f8'),image('scene','cat_night_0',70,267,340,150)]
- shared=[label('network','Wi-Fi --',76,50,180,24,16,'#8196b5'),label('battery','电量 --',279,50,125,24,16,'#8196b5'),label('date','--月--日',80,91,320,27,19)]
- # Analog date sits beneath the dial; companion date stays above its digits.
- shared[-1]['bindings']={'placement.y':'y','placement.x':'x','placement.width':'width','style.fontSize':'fontSize'}
- shared+=[label('weather','天气待更新',75,424,330,29,20,'#c3cedf'),label('weatherAge','',105,455,270,18,12,'#8390a6')]
- for i in range(3):
-  n=node('container','page'+str(i),221+i*16,128,6,6);n['style'].update(bgColor='#56647e',bgOpacity=255,radius=3);n['bindings']={'style.bgColor':'color'};shared.append(n)
- for n in shared:
-  if n['id']=='weather':n['bindings']={'placement.y':'y','placement.x':'x','placement.width':'width','style.fontSize':'fontSize'}
-  if n['id']=='weatherAge' or n['id'].startswith('page'):n.setdefault('bindings',{})['commonProps.hidden']='hidden'
- status=group('status',shared)
+ companion,status,pager,modern=modern_widgets()
  hit=node('container','swipe',0,35,480,410);hit['commonProps'].update(clickable=True,pressLock=True);hit['events']=[{'type':'pressed','action':'facePress'},{'type':'released','action':'faceRelease'},{'type':'pressLost','action':'faceCancel'}]
- layout['children']=[flip,group('analog',analog),group('companion',companion),status,hit];write(RES/'screens/main.json',layout)
- idx=json.loads((RES/'images/index.json').read_text());idx['images']=[i for i in idx['images'] if i['id'] not in ['metal_dial','cat_scene'] and not i['id'].startswith('cat_')]+[dial]
+ layout['children']=[flip,group('analog',analog),group('companion',companion),status,pager,hit];write(RES/'screens/main.json',layout)
+ idx=json.loads((RES/'images/index.json').read_text());idx['images']=[i for i in idx['images'] if i['id'] not in ['metal_dial','cat_scene'] and not i['id'].startswith(('cat_','clock_','icon_'))]+[dial]+modern
  for i in idx['images']:
   if i['id']=='launcher_icon':
    src=ROOT/'themes/cartoon-q-v1/launcher-optimized/local.flipclock.bin';shutil.copyfile(src,RES/'images/launcher_icon.bin');i['src']='launcher_icon.bin'
  write(RES/'images/index.json',idx)
- manifest=json.loads((APP/'src/manifest.json').read_text());manifest['package']['version']='0.2.1'
+ manifest=json.loads((APP/'src/manifest.json').read_text());manifest['package']['version']='0.2.5'
  for service,version in [('Wifi','0.8.2'),('Http','0.8.2'),('DeviceModes','0.1.0')]:
   if not any(s['name']==service for s in manifest['services']):manifest['services'].append({'name':service,'version':version})
  write(APP/'src/manifest.json',manifest)
@@ -87,6 +131,6 @@ def augment():
  from cat_animation import export
  export()
  shutil.copyfile(APP/'watchface-cat-night-preview.png',APP/'watchface-cat-preview.png')
- write(APP/'package.json',{'name':'local-flip-clock','version':'0.2.1','private':True})
- root=json.loads((RES/'root.json').read_text());root['version']='0.2.1';write(RES/'root.json',root)
+ write(APP/'package.json',{'name':'local-flip-clock','version':'0.2.5','private':True})
+ root=json.loads((RES/'root.json').read_text());root['version']='0.2.5';write(RES/'root.json',root)
 if __name__=='__main__':augment()

@@ -1,7 +1,17 @@
 {
   "frame_size": [
-    340,
-    150
+    216,
+    216
+  ],
+  "scene_size": [
+    480,
+    216
+  ],
+  "motion_crop": [
+    152,
+    0,
+    216,
+    216
   ],
   "frame_ms": 180,
   "frames_per_phase": 8,

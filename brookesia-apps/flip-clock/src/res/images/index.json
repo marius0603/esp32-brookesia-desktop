@@ -146,100 +146,460 @@
       "height": 340
     },
     {
+      "id": "clock_top_0",
+      "src": "clock_top_0.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_bottom_0",
+      "src": "clock_bottom_0.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_top_1",
+      "src": "clock_top_1.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_bottom_1",
+      "src": "clock_bottom_1.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_top_2",
+      "src": "clock_top_2.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_bottom_2",
+      "src": "clock_bottom_2.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_top_3",
+      "src": "clock_top_3.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_bottom_3",
+      "src": "clock_bottom_3.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_top_4",
+      "src": "clock_top_4.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_bottom_4",
+      "src": "clock_bottom_4.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_top_5",
+      "src": "clock_top_5.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_bottom_5",
+      "src": "clock_bottom_5.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_top_6",
+      "src": "clock_top_6.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_bottom_6",
+      "src": "clock_bottom_6.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_top_7",
+      "src": "clock_top_7.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_bottom_7",
+      "src": "clock_bottom_7.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_top_8",
+      "src": "clock_top_8.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_bottom_8",
+      "src": "clock_bottom_8.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_top_9",
+      "src": "clock_top_9.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_bottom_9",
+      "src": "clock_bottom_9.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_top_-",
+      "src": "clock_top_-.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "clock_bottom_-",
+      "src": "clock_bottom_-.bin",
+      "width": 58,
+      "height": 49
+    },
+    {
+      "id": "icon_wifi_on",
+      "src": "icon_wifi_on.png",
+      "width": 44,
+      "height": 33
+    },
+    {
+      "id": "icon_wifi_off",
+      "src": "icon_wifi_off.png",
+      "width": 44,
+      "height": 33
+    },
+    {
+      "id": "icon_battery_0",
+      "src": "icon_battery_0.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_charge_0",
+      "src": "icon_battery_charge_0.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_1",
+      "src": "icon_battery_1.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_charge_1",
+      "src": "icon_battery_charge_1.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_2",
+      "src": "icon_battery_2.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_charge_2",
+      "src": "icon_battery_charge_2.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_3",
+      "src": "icon_battery_3.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_charge_3",
+      "src": "icon_battery_charge_3.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_4",
+      "src": "icon_battery_4.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_charge_4",
+      "src": "icon_battery_charge_4.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_5",
+      "src": "icon_battery_5.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_charge_5",
+      "src": "icon_battery_charge_5.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_6",
+      "src": "icon_battery_6.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_charge_6",
+      "src": "icon_battery_charge_6.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_7",
+      "src": "icon_battery_7.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_charge_7",
+      "src": "icon_battery_charge_7.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_8",
+      "src": "icon_battery_8.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_charge_8",
+      "src": "icon_battery_charge_8.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_9",
+      "src": "icon_battery_9.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_charge_9",
+      "src": "icon_battery_charge_9.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_10",
+      "src": "icon_battery_10.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_charge_10",
+      "src": "icon_battery_charge_10.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_unknown",
+      "src": "icon_battery_unknown.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_battery_usb",
+      "src": "icon_battery_usb.png",
+      "width": 48,
+      "height": 36
+    },
+    {
+      "id": "icon_weather_clear_day",
+      "src": "icon_weather_clear_day.png",
+      "width": 40,
+      "height": 30
+    },
+    {
+      "id": "icon_weather_clear_night",
+      "src": "icon_weather_clear_night.png",
+      "width": 40,
+      "height": 30
+    },
+    {
+      "id": "icon_weather_partly_day",
+      "src": "icon_weather_partly_day.png",
+      "width": 40,
+      "height": 30
+    },
+    {
+      "id": "icon_weather_partly_night",
+      "src": "icon_weather_partly_night.png",
+      "width": 40,
+      "height": 30
+    },
+    {
+      "id": "icon_weather_clouds",
+      "src": "icon_weather_clouds.png",
+      "width": 40,
+      "height": 30
+    },
+    {
+      "id": "icon_weather_fog",
+      "src": "icon_weather_fog.png",
+      "width": 40,
+      "height": 30
+    },
+    {
+      "id": "icon_weather_rain",
+      "src": "icon_weather_rain.png",
+      "width": 40,
+      "height": 30
+    },
+    {
+      "id": "icon_weather_snow",
+      "src": "icon_weather_snow.png",
+      "width": 40,
+      "height": 30
+    },
+    {
+      "id": "icon_weather_thunder",
+      "src": "icon_weather_thunder.png",
+      "width": 40,
+      "height": 30
+    },
+    {
+      "id": "icon_weather_unknown",
+      "src": "icon_weather_unknown.png",
+      "width": 40,
+      "height": 30
+    },
+    {
+      "id": "cat_background_day",
+      "src": "cat_background_day.bin",
+      "width": 480,
+      "height": 216
+    },
+    {
       "id": "cat_day_0",
       "src": "cat_day_0.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     },
     {
       "id": "cat_day_1",
       "src": "cat_day_1.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     },
     {
       "id": "cat_day_2",
       "src": "cat_day_2.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     },
     {
       "id": "cat_day_3",
       "src": "cat_day_3.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     },
     {
       "id": "cat_day_4",
       "src": "cat_day_4.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     },
     {
       "id": "cat_day_5",
       "src": "cat_day_5.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     },
     {
       "id": "cat_day_6",
       "src": "cat_day_6.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     },
     {
       "id": "cat_day_7",
       "src": "cat_day_7.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
+    },
+    {
+      "id": "cat_background_night",
+      "src": "cat_background_night.bin",
+      "width": 480,
+      "height": 216
     },
     {
       "id": "cat_night_0",
       "src": "cat_night_0.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     },
     {
       "id": "cat_night_1",
       "src": "cat_night_1.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     },
     {
       "id": "cat_night_2",
       "src": "cat_night_2.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     },
     {
       "id": "cat_night_3",
       "src": "cat_night_3.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     },
     {
       "id": "cat_night_4",
       "src": "cat_night_4.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     },
     {
       "id": "cat_night_5",
       "src": "cat_night_5.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     },
     {
       "id": "cat_night_6",
       "src": "cat_night_6.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     },
     {
       "id": "cat_night_7",
       "src": "cat_night_7.bin",
-      "width": 340,
-      "height": 150
+      "width": 216,
+      "height": 216
     }
   ]
 }

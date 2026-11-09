@@ -1,4 +1,4 @@
-"""Draw native split-flap faces and layout; no external images or fonts are embedded."""
+"""Draw split-flap faces and compose clock resources with the approved cat artwork."""
 import json
 from pathlib import Path
 import shutil

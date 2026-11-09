@@ -37,7 +37,7 @@ def main():
             deadline = time.monotonic() + 20
             while time.monotonic() < deadline:
                 value = state()
-                if (value.get('face') == 2 and value.get('cat_updates', 0) >= 8
+                if (value.get('face') == 2 and value.get('cat_updates', 0) >= 8 and value.get('frames',0) > 0
                     and (expected is None or value['cat_scene'] == expected)
                     and (not solar or value['solar']['source'] == 'sunrise_sunset')):
                     assert not value['cat_error'], value
@@ -51,15 +51,28 @@ def main():
         call('DeviceModes', 'Wake')
         apps = call('SystemCore', 'ListApps')
         app = next(item for item in apps if item['manifest']['id'] == 'local.flipclock')
-        assert app['manifest']['version'] == '0.2.1'
+        assert app['manifest']['version'] == json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))['apps']['local.flipclock']
         original_apps = {item['manifest']['id']: item['manifest']['version'] for item in apps}
         for name in ('app/main.js', 'res/screens/main.json', 'res/images/index.json'):
-            assert read('/sdcard/apps/local.flipclock/' + name).replace('\r\n', '\n') == (APP / name).read_text(encoding='utf-8'), name
-        for phase in ('day', 'night'):
-            for number in range(8):
-                name = f'res/images/cat_{phase}_{number}.bin'
-                info = call('Storage', 'FSStat', {'Path': '/sdcard/apps/local.flipclock/' + name})
-                assert info['exists'] and info['size'] == (APP / name).stat().st_size, name
+            # Long escaped USB JSON strings can lose fragments on this transport.
+            # Verify larger documents with the device-side streaming tree hash below.
+            local = APP/name
+            if local.stat().st_size < 32768:
+                assert read('/sdcard/apps/local.flipclock/' + name).replace('\r\n', '\n') == local.read_text(encoding='utf-8'), name
+            else:
+                assert call('Storage','FSStat',{'Path':'/sdcard/apps/local.flipclock/'+name})['size'] == local.stat().st_size
+                staged = json.loads((RUNTIME/'clock-widgets-deployment.json').read_text(encoding='utf-8'))
+                assert call('SdResources','InspectTree',{'Path':'/sdcard/apps/local.flipclock'})['sha256'] == staged['tree_sha256']
+        image_index = json.loads((APP/'res/images/index.json').read_text(encoding='utf-8'))
+        checked = 0
+        for image in image_index['images']:
+            if not image['id'].startswith(('cat_','clock_','icon_')):
+                continue
+            name = 'res/images/' + image['src']
+            info = call('Storage', 'FSStat', {'Path': '/sdcard/apps/local.flipclock/' + name})
+            assert info['exists'] and info['size'] == (APP / name).stat().st_size, name
+            checked += 1
+        report['resources_checked'] = checked
         paths = ('/littlefs/clock-weather.json', '/littlefs/clock-face.json')
         originals = {path: read(path) if call('Storage', 'FSStat', {'Path': path})['exists'] else None for path in paths}
         recovery = RUNTIME / 'clock-cat-fixture-recovery.json'
@@ -73,6 +86,10 @@ def main():
         try:
             reopen(2)
             real = wait_cat(solar=True)
+            expected = dt.datetime.fromtimestamp(real['time']/1000, dt.timezone(dt.timedelta(hours=8))).strftime('%H%M%S')
+            assert real['digits'] == expected and real['frames'] > 0, real
+            assert real['icons']['status/network'] == 'icon_wifi_on', real
+            assert real['icons']['status/battery'].startswith('icon_battery_'), real
             report['real_solar'] = real
             samples = [memory()]
             for _ in range(5):
@@ -87,6 +104,7 @@ def main():
                 # Deliberately contradict is_day so the test requires solar priority.
                 fixture = json.loads(json.dumps(base))
                 weather = fixture['weather']
+                weather['code'] = 2
                 weather['day'] = 1 if expected == 'night' else 0
                 weather['received_at'] = int(time.time()*1000) + 60000
                 rise, end = ('00:00', '23:59') if expected == 'day' else ('00:00', '00:01')
@@ -98,8 +116,10 @@ def main():
                 write(paths[0], fixture)
                 reopen(2)
                 result = wait_cat(expected, solar=True)
+                assert result['icons']['status/weather/symbol'] == 'icon_weather_partly_'+expected, result
                 report['fixtures'].append({'phase': expected, 'updates': result['cat_updates'],
-                                           'max_set_source_ms': result['cat_max_ms'], 'error': result['cat_error']})
+                                           'max_set_source_ms': result['cat_max_ms'], 'error': result['cat_error'],
+                                           'weather_icon': result['icons']['status/weather/symbol'], 'flip_frames': result['frames']})
             for face in (0, 1, 2):
                 reopen(face)
                 value = state()
@@ -120,6 +140,15 @@ def main():
         assert {item['manifest']['id']: item['manifest']['version'] for item in call('SystemCore','ListApps')} == original_apps
         assert call('DeviceModes', 'GetState')['resume_volume'] == modes['resume_volume']
         report.update(passed=True, apps_preserved=len(apps), volume_preserved=modes['resume_volume'], final_memory=memory())
+        staged_path = RUNTIME/'clock-widgets-deployment.json'
+        if staged_path.exists():
+            staged = json.loads(staged_path.read_text(encoding='utf-8'))
+            if staged.get('staged') and staged.get('version') == app['manifest']['version']:
+                actual_others = {key:value for key,value in original_apps.items() if key!='local.flipclock'}
+                assert actual_others == staged['other_apps'] and modes['resume_volume'] == staged['volume']
+                assert call('SdResources','InspectTree',{'Path':'/sdcard/apps/local.flipclock'})['sha256'] == staged['tree_sha256']
+                staged.update(passed=True,restart_required=False,apps_preserved=len(apps),verification='clock-cat-verification.json')
+                staged_path.write_text(json.dumps(staged,ensure_ascii=False,indent=2),encoding='utf-8')
     (RUNTIME / 'clock-cat-verification.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
     print(json.dumps(report, ensure_ascii=False, indent=2), flush=True)
 

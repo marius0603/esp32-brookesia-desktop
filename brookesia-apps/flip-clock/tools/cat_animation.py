@@ -23,8 +23,16 @@ def export():
     index['images'] = [item for item in index['images'] if not item['id'].startswith('cat_')]
     for old in images.glob('cat_*.bin'):
         old.unlink()
-    info = {'frame_size': [340, 150], 'frame_ms': 180, 'frames_per_phase': 8, 'sources': {}}
+    info = {'frame_size': [216,216], 'scene_size':[480,216], 'motion_crop':[152,0,216,216], 'frame_ms':180, 'frames_per_phase':8, 'sources':{}}
     first = {}
+    def encode(name,frame):
+        rgb=frame.tobytes();raw=bytearray()
+        for r,g,b in zip(rgb[::3],rgb[1::3],rgb[2::3]):
+            raw+=struct.pack('<H',((r>>3)<<11)|((g>>2)<<5)|(b>>3))
+        encoded=rle_pixels(bytes(raw));w,h=frame.size
+        data=struct.pack('<BBHHHHH',0x19,0x12,8,w,h,w*2,0)+struct.pack('<III',1,len(encoded),len(raw))+encoded
+        (images/(name+'.bin')).write_bytes(data)
+        index['images'].append({'id':name,'src':name+'.bin','width':w,'height':h})
     for phase in ('day', 'night'):
         source = APP / f'assets/cat-{phase}-sheet.png'
         sheet = Image.open(source).convert('RGB')
@@ -33,33 +41,34 @@ def export():
             row, col = divmod(number, 2)
             box = (round(col * sheet.width / 2) + 2, round(row * sheet.height / 4) + 2,
                    round((col + 1) * sheet.width / 2) - 2, round((row + 1) * sheet.height / 4) - 2)
-            frame = sheet.crop(box).resize((340, 150), Image.Resampling.LANCZOS)
+            frame = sheet.crop(box).resize((480, 216), Image.Resampling.LANCZOS)
             if number == 0:
                 first[phase] = frame
-            rgb = frame.tobytes()
-            raw = bytearray()
-            for r, g, b in zip(rgb[::3], rgb[1::3], rgb[2::3]):
-                raw += struct.pack('<H', ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3))
-            encoded = rle_pixels(bytes(raw))
+                encode('cat_background_'+phase,frame)
+            frame=frame.crop((152,0,368,216))
             name = f'cat_{phase}_{number}'
-            data = struct.pack('<BBHHHHH', 0x19, 0x12, 8, 340, 150, 680, 0)
-            data += struct.pack('<III', 1, len(encoded), len(raw)) + encoded
-            (images / (name + '.bin')).write_bytes(data)
-            index['images'].append({'id': name, 'src': name + '.bin', 'width': 340, 'height': 150})
+            encode(name,frame)
     index_path.write_text(json.dumps(index, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     (APP / 'assets/animation.json').write_text(json.dumps(info, indent=2) + '\n', encoding='utf-8')
+    from status_icons import wifi, battery, weather
+    from watchfaces import ART_IMAGES
     font = lambda size: ImageFont.truetype('C:/Windows/Fonts/msyh.ttc', size)
     for phase, frame in first.items():
         preview = Image.new('RGB', (480, 480), '#08090c')
         d = ImageDraw.Draw(preview)
-        for xy, caption, size in [((152, 62), 'Wi-Fi 已连接', 16), ((341, 62), '电量 86%', 16),
-                                   ((155, 104), '11月9日 周一', 16), ((326, 104), '上海 23°C 多云', 16)]:
+        for icon, xy, size in [(wifi(), (218,12), (44,33)), (battery(86), (393,12), (48,36)),
+                               (weather(2,phase=='day'), (312,78), (40,30))]:
+            icon=icon.resize(size,Image.Resampling.LANCZOS);preview.paste(icon,xy,icon)
+        for xy, caption, size in [((134,96), '11月9日 周一',28), ((277,96),'上海',28), ((399,96),'23°C',28)]:
             d.text(xy, caption, font=font(size), fill='#bfcbdc', anchor='mm')
-        d.text((240, 207), '12:30' if phase == 'day' else '20:30',
-               font=ImageFont.truetype('C:/Windows/Fonts/bahnschrift.ttf', 82), fill='#e5e9f8', anchor='mm')
+        value='122958' if phase=='day' else '202958'
+        for digit,x in zip(value,[38,100,180,242,322,384]):
+            preview.paste(ART_IMAGES['clock_top_'+digit],(x,140))
+            preview.paste(ART_IMAGES['clock_bottom_'+digit],(x,191))
+        for x,y in [(166,174),(166,204),(308,174),(308,204)]:d.ellipse((x,y,x+6,y+6),fill='#abb9d2')
         for i in range(3):
-            d.ellipse((221+i*16, 128, 227+i*16, 134), fill='#d7e3f9' if i == 2 else '#536078')
-        preview.paste(frame, (70, 267))
+            d.ellipse((218+i*18,465,225+i*18,472), fill='#d7e3f9' if i == 2 else '#536078')
+        preview.paste(frame, (0,242))
         preview.save(APP / f'watchface-cat-{phase}-preview.png')
     first['night'].save(APP / 'assets/cat-scene-preview.png')
 

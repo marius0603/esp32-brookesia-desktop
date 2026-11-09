@@ -613,14 +613,14 @@
       },
       "children": [
         {
-          "type": "label",
-          "id": "time",
+          "type": "image",
+          "id": "scene",
           "placement": {
             "mode": "absolute",
-            "x": 50,
-            "y": 152,
-            "width": 380,
-            "height": 105
+            "x": 0,
+            "y": 242,
+            "width": 480,
+            "height": 216
           },
           "commonProps": {
             "scrollable": false,
@@ -629,25 +629,22 @@
           "style": {
             "padding": 0,
             "borderWidth": 0,
-            "bgOpacity": 0,
-            "font": "${font.zh_CN}",
-            "fontSize": 82,
-            "textColor": "#e5e9f8",
-            "textAlign": "center"
+            "bgOpacity": 0
           },
-          "labelProps": {
-            "text": "--:--"
+          "imageProps": {
+            "src": "${image.cat_background_night}",
+            "innerAlign": "contain"
           }
         },
         {
           "type": "image",
-          "id": "scene",
+          "id": "motion",
           "placement": {
             "mode": "absolute",
-            "x": 70,
-            "y": 267,
-            "width": 340,
-            "height": 150
+            "x": 152,
+            "y": 242,
+            "width": 216,
+            "height": 216
           },
           "commonProps": {
             "scrollable": false,
@@ -661,6 +658,898 @@
           "imageProps": {
             "src": "${image.cat_night_0}",
             "innerAlign": "contain"
+          }
+        },
+        {
+          "type": "container",
+          "id": "d0",
+          "placement": {
+            "mode": "absolute",
+            "x": 38,
+            "y": 140,
+            "width": 58,
+            "height": 100
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0
+          },
+          "children": [
+            {
+              "type": "image",
+              "id": "top",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_top_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "bottom",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 51,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_bottom_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "flap",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_top_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity",
+                "commonProps.hidden": "hidden"
+              }
+            },
+            {
+              "type": "image",
+              "id": "incoming",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 51,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_bottom_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity",
+                "commonProps.hidden": "hidden"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "d1",
+          "placement": {
+            "mode": "absolute",
+            "x": 100,
+            "y": 140,
+            "width": 58,
+            "height": 100
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0
+          },
+          "children": [
+            {
+              "type": "image",
+              "id": "top",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_top_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "bottom",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 51,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_bottom_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "flap",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_top_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity",
+                "commonProps.hidden": "hidden"
+              }
+            },
+            {
+              "type": "image",
+              "id": "incoming",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 51,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_bottom_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity",
+                "commonProps.hidden": "hidden"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "d2",
+          "placement": {
+            "mode": "absolute",
+            "x": 180,
+            "y": 140,
+            "width": 58,
+            "height": 100
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0
+          },
+          "children": [
+            {
+              "type": "image",
+              "id": "top",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_top_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "bottom",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 51,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_bottom_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "flap",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_top_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity",
+                "commonProps.hidden": "hidden"
+              }
+            },
+            {
+              "type": "image",
+              "id": "incoming",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 51,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_bottom_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity",
+                "commonProps.hidden": "hidden"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "d3",
+          "placement": {
+            "mode": "absolute",
+            "x": 242,
+            "y": 140,
+            "width": 58,
+            "height": 100
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0
+          },
+          "children": [
+            {
+              "type": "image",
+              "id": "top",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_top_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "bottom",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 51,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_bottom_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "flap",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_top_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity",
+                "commonProps.hidden": "hidden"
+              }
+            },
+            {
+              "type": "image",
+              "id": "incoming",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 51,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_bottom_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity",
+                "commonProps.hidden": "hidden"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "d4",
+          "placement": {
+            "mode": "absolute",
+            "x": 322,
+            "y": 140,
+            "width": 58,
+            "height": 100
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0
+          },
+          "children": [
+            {
+              "type": "image",
+              "id": "top",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_top_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "bottom",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 51,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_bottom_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "flap",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_top_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity",
+                "commonProps.hidden": "hidden"
+              }
+            },
+            {
+              "type": "image",
+              "id": "incoming",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 51,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_bottom_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity",
+                "commonProps.hidden": "hidden"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "d5",
+          "placement": {
+            "mode": "absolute",
+            "x": 384,
+            "y": 140,
+            "width": 58,
+            "height": 100
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0
+          },
+          "children": [
+            {
+              "type": "image",
+              "id": "top",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_top_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "bottom",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 51,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_bottom_-}",
+                "innerAlign": "stretch"
+              }
+            },
+            {
+              "type": "image",
+              "id": "flap",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_top_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity",
+                "commonProps.hidden": "hidden"
+              }
+            },
+            {
+              "type": "image",
+              "id": "incoming",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 51,
+                "width": 58,
+                "height": 49
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "opacity": 0
+              },
+              "imageProps": {
+                "src": "${image.clock_bottom_-}",
+                "innerAlign": "stretch"
+              },
+              "bindings": {
+                "placement.y": "y",
+                "placement.height": "height",
+                "style.opacity": "opacity",
+                "commonProps.hidden": "hidden"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "colon0",
+          "placement": {
+            "mode": "absolute",
+            "x": 166,
+            "y": 174,
+            "width": 7,
+            "height": 7
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 255,
+            "bgColor": "#abb9d2",
+            "radius": 4
+          }
+        },
+        {
+          "type": "container",
+          "id": "colon1",
+          "placement": {
+            "mode": "absolute",
+            "x": 166,
+            "y": 204,
+            "width": 7,
+            "height": 7
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 255,
+            "bgColor": "#abb9d2",
+            "radius": 4
+          }
+        },
+        {
+          "type": "container",
+          "id": "colon2",
+          "placement": {
+            "mode": "absolute",
+            "x": 308,
+            "y": 174,
+            "width": 7,
+            "height": 7
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 255,
+            "bgColor": "#abb9d2",
+            "radius": 4
+          }
+        },
+        {
+          "type": "container",
+          "id": "colon3",
+          "placement": {
+            "mode": "absolute",
+            "x": 308,
+            "y": 204,
+            "width": 7,
+            "height": 7
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 255,
+            "bgColor": "#abb9d2",
+            "radius": 4
           }
         }
       ],
@@ -689,14 +1578,14 @@
       },
       "children": [
         {
-          "type": "label",
+          "type": "image",
           "id": "network",
           "placement": {
             "mode": "absolute",
-            "x": 76,
-            "y": 50,
-            "width": 180,
-            "height": 24
+            "x": 218,
+            "y": 12,
+            "width": 44,
+            "height": 33
           },
           "commonProps": {
             "scrollable": false,
@@ -705,25 +1594,22 @@
           "style": {
             "padding": 0,
             "borderWidth": 0,
-            "bgOpacity": 0,
-            "font": "${font.zh_CN}",
-            "fontSize": 16,
-            "textColor": "#8196b5",
-            "textAlign": "center"
+            "bgOpacity": 0
           },
-          "labelProps": {
-            "text": "Wi-Fi --"
+          "imageProps": {
+            "src": "${image.icon_wifi_off}",
+            "innerAlign": "contain"
           }
         },
         {
-          "type": "label",
+          "type": "image",
           "id": "battery",
           "placement": {
             "mode": "absolute",
-            "x": 279,
-            "y": 50,
-            "width": 125,
-            "height": 24
+            "x": 393,
+            "y": 12,
+            "width": 48,
+            "height": 36
           },
           "commonProps": {
             "scrollable": false,
@@ -732,14 +1618,11 @@
           "style": {
             "padding": 0,
             "borderWidth": 0,
-            "bgOpacity": 0,
-            "font": "${font.zh_CN}",
-            "fontSize": 16,
-            "textColor": "#8196b5",
-            "textAlign": "center"
+            "bgOpacity": 0
           },
-          "labelProps": {
-            "text": "电量 --"
+          "imageProps": {
+            "src": "${image.icon_battery_unknown}",
+            "innerAlign": "contain"
           }
         },
         {
@@ -747,10 +1630,10 @@
           "id": "date",
           "placement": {
             "mode": "absolute",
-            "x": 80,
-            "y": 91,
-            "width": 320,
-            "height": 27
+            "x": 32,
+            "y": 77,
+            "width": 205,
+            "height": 38
           },
           "commonProps": {
             "scrollable": false,
@@ -761,8 +1644,8 @@
             "borderWidth": 0,
             "bgOpacity": 0,
             "font": "${font.zh_CN}",
-            "fontSize": 19,
-            "textColor": "#d4dbea",
+            "fontSize": 28,
+            "textColor": "#c3cedf",
             "textAlign": "center"
           },
           "labelProps": {
@@ -776,14 +1659,14 @@
           }
         },
         {
-          "type": "label",
+          "type": "container",
           "id": "weather",
           "placement": {
             "mode": "absolute",
-            "x": 75,
-            "y": 424,
-            "width": 330,
-            "height": 29
+            "x": 0,
+            "y": 77,
+            "width": 480,
+            "height": 38
           },
           "commonProps": {
             "scrollable": false,
@@ -792,20 +1675,103 @@
           "style": {
             "padding": 0,
             "borderWidth": 0,
-            "bgOpacity": 0,
-            "font": "${font.zh_CN}",
-            "fontSize": 20,
-            "textColor": "#c3cedf",
-            "textAlign": "center"
+            "bgOpacity": 0
           },
-          "labelProps": {
-            "text": "天气待更新"
-          },
+          "children": [
+            {
+              "type": "label",
+              "id": "city",
+              "placement": {
+                "mode": "absolute",
+                "x": 248,
+                "y": 0,
+                "width": 58,
+                "height": 38
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 28,
+                "textColor": "#c3cedf",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "上海"
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.width": "width",
+                "style.fontSize": "fontSize"
+              }
+            },
+            {
+              "type": "image",
+              "id": "symbol",
+              "placement": {
+                "mode": "absolute",
+                "x": 312,
+                "y": 1,
+                "width": 40,
+                "height": 30
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0
+              },
+              "imageProps": {
+                "src": "${image.icon_weather_unknown}",
+                "innerAlign": "contain"
+              },
+              "bindings": {
+                "placement.x": "x"
+              }
+            },
+            {
+              "type": "label",
+              "id": "temperature",
+              "placement": {
+                "mode": "absolute",
+                "x": 358,
+                "y": 0,
+                "width": 82,
+                "height": 38
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgOpacity": 0,
+                "font": "${font.zh_CN}",
+                "fontSize": 28,
+                "textColor": "#c3cedf",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "--°C"
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.width": "width",
+                "style.fontSize": "fontSize"
+              }
+            }
+          ],
           "bindings": {
-            "placement.y": "y",
-            "placement.x": "x",
-            "placement.width": "width",
-            "style.fontSize": "fontSize"
+            "placement.y": "y"
           }
         },
         {
@@ -814,7 +1780,7 @@
           "placement": {
             "mode": "absolute",
             "x": 105,
-            "y": 455,
+            "y": 116,
             "width": 270,
             "height": 18
           },
@@ -837,16 +1803,41 @@
           "bindings": {
             "commonProps.hidden": "hidden"
           }
-        },
+        }
+      ],
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      }
+    },
+    {
+      "type": "container",
+      "id": "pager",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0
+      },
+      "children": [
         {
           "type": "container",
           "id": "page0",
           "placement": {
             "mode": "absolute",
-            "x": 221,
-            "y": 128,
-            "width": 6,
-            "height": 6
+            "x": 218,
+            "y": 465,
+            "width": 8,
+            "height": 8
           },
           "commonProps": {
             "scrollable": false,
@@ -856,12 +1847,11 @@
             "padding": 0,
             "borderWidth": 0,
             "bgOpacity": 255,
-            "bgColor": "#56647e",
-            "radius": 3
+            "bgColor": "#536078",
+            "radius": 4
           },
           "bindings": {
-            "style.bgColor": "color",
-            "commonProps.hidden": "hidden"
+            "style.bgColor": "color"
           }
         },
         {
@@ -869,10 +1859,10 @@
           "id": "page1",
           "placement": {
             "mode": "absolute",
-            "x": 237,
-            "y": 128,
-            "width": 6,
-            "height": 6
+            "x": 236,
+            "y": 465,
+            "width": 8,
+            "height": 8
           },
           "commonProps": {
             "scrollable": false,
@@ -882,12 +1872,11 @@
             "padding": 0,
             "borderWidth": 0,
             "bgOpacity": 255,
-            "bgColor": "#56647e",
-            "radius": 3
+            "bgColor": "#536078",
+            "radius": 4
           },
           "bindings": {
-            "style.bgColor": "color",
-            "commonProps.hidden": "hidden"
+            "style.bgColor": "color"
           }
         },
         {
@@ -895,10 +1884,10 @@
           "id": "page2",
           "placement": {
             "mode": "absolute",
-            "x": 253,
-            "y": 128,
-            "width": 6,
-            "height": 6
+            "x": 254,
+            "y": 465,
+            "width": 8,
+            "height": 8
           },
           "commonProps": {
             "scrollable": false,
@@ -908,12 +1897,11 @@
             "padding": 0,
             "borderWidth": 0,
             "bgOpacity": 255,
-            "bgColor": "#56647e",
-            "radius": 3
+            "bgColor": "#536078",
+            "radius": 4
           },
           "bindings": {
-            "style.bgColor": "color",
-            "commonProps.hidden": "hidden"
+            "style.bgColor": "color"
           }
         }
       ],

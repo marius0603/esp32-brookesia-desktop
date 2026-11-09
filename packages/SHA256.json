@@ -114,5 +114,9 @@
   "packages/firmware/brookesia-0.8.3-s3.58-app-only.zip": "51f94b5440a3e4157c5962f39c0459073f9d44f2caabe7d2a60b6ea5b1527903",
   "packages/apps/local.radio.debug.0.1.2.bpk": "32078986cfd1e458b8dc4bca8adb68a17d7644abdac7ac08b20a37124b0cbfa2",
   "packages/apps/local.flipclock.debug.0.2.0.bpk": "91be796be8c827ac1604fa70b777084c460100319efdccb97246232d7ccc4cc4",
-  "packages/apps/local.flipclock.debug.0.2.1.bpk": "6b2bc0e3ad5056e96a1777e336f171aa808f36094e5e899155cdc5bbce0b8615"
+  "packages/apps/local.flipclock.debug.0.2.1.bpk": "6b2bc0e3ad5056e96a1777e336f171aa808f36094e5e899155cdc5bbce0b8615",
+  "packages/apps/local.flipclock.debug.0.2.2.bpk": "9ee3d0ace4e875f566d788677f5e002f15876b5fbd9ba9981a4a1f3843c0e0ad",
+  "packages/apps/local.flipclock.debug.0.2.3.bpk": "c62ada1e7b1969cb7c26a964172cb36dd6e0bac65d8f4a546e5e8eef4f74e3c5",
+  "packages/apps/local.flipclock.debug.0.2.4.bpk": "6c4ac3d800a36139fe19b39f8076bfbab7efb42d4a3237d7ed5693da1581ef34",
+  "packages/apps/local.flipclock.debug.0.2.5.bpk": "20140b752e7111131a31ad5a4b5e07b6d7cebc0e58dbc2bc661e34fd47acb3a4"
 }
