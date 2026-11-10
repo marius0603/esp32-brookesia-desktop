@@ -123,5 +123,7 @@
   "packages/firmware/brookesia-s3.61.bin": "40dda59c4a81e6238235d1ee86f76587aa0e7437e5d03be839bac010d5fd745c",
   "packages/apps/local.nurserysongs.debug.0.1.3.bpk": "bfa2ea599185dfdb4478a4c2bab3ee537e393e1402f74b0b02cd6a9ab04058cf",
   "packages/apps/local.audiobook.debug.0.3.7.bpk": "3d9422326a83c344678b43e07abcb19a08637c935260cc5209dfe07a03c0af8e",
-  "packages/apps/local.radio.debug.0.1.3.bpk": "256455facc292618e478c8b7f4606ae818680b9fac79cf6b3348b8f01080bd67"
+  "packages/apps/local.radio.debug.0.1.3.bpk": "256455facc292618e478c8b7f4606ae818680b9fac79cf6b3348b8f01080bd67",
+  "packages/apps/local.childmode.debug.0.1.3.bpk": "bc90665e7c12df89d1899befa0493112123378466b37a2e23865e13a8c8b0fa1",
+  "packages/firmware/brookesia-s3.62.bin": "ad2e9debddc22467c1fa185d8f5e2d4dad9648c79956c1a6b881d6e6bfe00b8a"
 }

@@ -37,6 +37,7 @@ const existing=fixture(true);existing.enter('111111');
 for(let i=0;i<8;i++)existing.app.on_timer();
 assert.equal(existing.text['/main/status'],'PIN 不正确');
 existing.enter('135790');assert.equal(existing.bindings['/main/control'],'false');
+existing.app.on_action('apps');assert.equal(existing.text['/main/apps/book/label'],'听书/儿歌/电台：允许');existing.app.on_action('back_apps');
 existing.jumpClock();existing.app.on_timer();assert.equal(existing.bindings['/main/control'],'false');
 existing.app.on_pause();assert.equal(existing.bindings['/main/gate'],'false');
 assert.ok([...first.pinCalls,...existing.pinCalls].every(c=>c.timeout===15000));

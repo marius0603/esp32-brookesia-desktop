@@ -189,7 +189,7 @@ private:
         const auto [day,hour]=local_clock();
         const unsigned remaining=prefs.minutes?std::max(0,int(prefs.minutes)*60-int(used)):0;
         boost::json::object o{{"configured",prefs.has_pin!=0},{"enabled",prefs.enabled!=0},
-            {"allow_audiobook",(prefs.mask&1)!=0},{"allow_weather",(prefs.mask&2)!=0},
+            {"allow_audiobook",(prefs.mask&1)!=0},{"allow_songs",(prefs.mask&1)!=0},{"allow_radio",(prefs.mask&1)!=0},{"allow_weather",(prefs.mask&2)!=0},
             {"allow_clock",(prefs.mask&4)!=0},{"allow_assistant",(prefs.mask&8)!=0},
             {"allow_learning",(prefs.mask&16)!=0},
             {"max_volume",prefs.volume},{"daily_minutes",prefs.minutes},{"used_seconds",used},
@@ -302,10 +302,10 @@ private:
 std::shared_ptr<ServiceBase> make_child_mode_service(){return std::make_shared<ChildMode>();}
 void child_mode_attach_system(system::core::System *system){system_ptr=system;}
 bool child_mode_voice_allowed(){return ready && (!enabled || ((mask.load()&8) && !resting));}
-bool child_mode_audiobook_allowed(){return ready && (!enabled || ((mask.load()&1) && !resting));}
+bool child_mode_audiobook_allowed(){return child_policy::audio_allowed(ready,enabled,mask,resting);}
 bool child_mode_learning_allowed(){return ready && (!enabled || ((mask.load()&16) && !resting));}
-// Live programming has not been reviewed as a child-mode content pack.
-bool child_mode_radio_allowed(){return ready && !enabled;}
+// Parent audio permission covers stories, songs and network radio.
+bool child_mode_radio_allowed(){return child_policy::audio_allowed(ready,enabled,mask,resting);}
 extern "C" bool brookesia_child_visible(const char *id) {
     return child_policy::administrative(id) || (ready && child_policy::visible(enabled,mask,id));
 }

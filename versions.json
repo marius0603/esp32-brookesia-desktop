@@ -2,7 +2,7 @@
   "upstream": "https://github.com/espressif/esp-brookesia.git",
   "commit": "68ac00e7aa9012cd8cbf0cbf6bee155801db0e8c",
   "esp_idf": "6.0.2",
-  "firmware": "0.8.3-s3.61",
+  "firmware": "0.8.3-s3.62",
   "toolkit": "1.0.1",
   "apps": {
     "local.radio": "0.1.3",
@@ -11,7 +11,7 @@
     "local.flipclock": "0.2.5",
     "local.weather": "0.2.9",
     "local.voiceassistant": "0.2.3",
-    "local.childmode": "0.1.2",
+    "local.childmode": "0.1.3",
     "local.lightlearning": "0.1.2",
     "local.virtualpet": "0.1.3",
     "local.nurserysongs": "0.1.3"

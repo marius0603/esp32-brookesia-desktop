@@ -28,7 +28,7 @@
     "phone-remote/tools/downloads.json": "f4dca27ac3cb2d5b30d308eafae0ae106e9108809f3d0d0f595664f98f0e8e1d",
     "phone-remote/tools/requirements-signing.txt": "8b5c18678b29b5e8e0fb586a35ac1dce3ccd9da321e8f12ace0e118350b4e568",
     "platform/super_s3_216/sdkconfig.reproducible": "00cba8885f30a1618c335b79945006bff45c019a38f0d2327b9aeff7f81209a1",
-    "versions.json": "01533d0b8fa73e186bbe442143b204ba84da40185760875d0facb6e226b48791",
+    "versions.json": "bea4c4533a66e08cc24f47fe920cce78e835399a83d28c98b85386bf452a7bd7",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.c": "52a51002bd22aac5c2105187c27cd393a34f13143c8ae97b0964ad27dec1c1ea",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.h": "a2fc087b68c25141e2fb7ab56e71b111bee79cf311fcc850d492eb574c0eeffe",
     "patches/transparent-launcher.patch": "b9cbe446371691db2c9e4674b73293646b63ca003a24f59a5c0a2646ce871732",
@@ -42,7 +42,7 @@
     "patches/bounded-display-dma.patch": "b1e6eb13627718506036f14f94f0a9cb3bac0a893094068084707bb29152e290",
     "patches/persistent-display-dma.patch": "cc8c6cf3dbe36d4089abff0242a3f740cca31e111138ea88df3a341b09d8c264",
     "patches/aligned-display-strips.patch": "1629b23605921dd00fab60995969fd3ad5c5243cb540b9f20a64da4841d25dc2",
-    "platform/super_s3_216/CMakeLists.txt": "17660f47b72f1eff51764aaaf049ef50ba6e6c07408789f0ed84418ecda68aab",
+    "platform/super_s3_216/CMakeLists.txt": "1cf6ea27261cf12f7559e01bf8b1b9267a3930684c0de010e603c3c393cc4e8e",
     "platform/super_s3_216/main/modules/display.cpp": "4cffdf3f78a7b16697552cd9145b80bab03743b24ce416472a792de31dd78d8b",
     "platform/super_s3_216/main/modules/device_modes/device_modes.cpp": "533bc2d2df6fd4485592312be630d75c99a6fa13bb456352ce998855c5b4e2c4",
     "platform/super_s3_216/main/modules/device_modes/resource_monitor.cpp": "c756c10f98051347df0a11f80b520808a1afeed329cad45468259aa5b76835e5",
@@ -53,6 +53,9 @@
     "brookesia-apps/nursery-songs/src/res/screens/main.json": "ea7853ee1ce984c494ea35b36db7d9ed9bdd67a6085a7876f5d60b8d557ae5b7",
     "tools/apply_audio_themes.py": "2f5e1024e67e797320cc7994df0e1faf3cd8423bae648a6a8ba1bc3a421bcd6d",
     "brookesia-apps/audiobook/src/app/main.js": "62890db3b05cf30e272ea0515c46cc9eb2eb6ed83deccd099cfcd80e347af5cf",
-    "brookesia-apps/radio/src/app/main.js": "afb5c7b18facbb1123fd599ad93ddabfdf3b57bdf846323ae80df0f3814f12f8"
+    "brookesia-apps/radio/src/app/main.js": "afb5c7b18facbb1123fd599ad93ddabfdf3b57bdf846323ae80df0f3814f12f8",
+    "platform/super_s3_216/main/modules/child_mode/policy.hpp": "6acaf94c09b7ab627438131c064df0bf56bc7fbf195243d2bb4354657583e7f8",
+    "platform/super_s3_216/main/modules/child_mode/child_mode.cpp": "5d321235a65c854feb5c65127a239ab5c00b7a93aee045c7c75f8a750c0bbbf8",
+    "platform/super_s3_216/main/modules/radio/radio.cpp": "e8aa33fcf218e2a493a8271f346f4dd6e456c3389fa7fbd790574a7bedee3cf9"
   }
 }

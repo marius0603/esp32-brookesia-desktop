@@ -62,7 +62,7 @@ private:
  std::expected<void,std::string> play(const std::string &id){
   const radio_catalog::Station *chosen=nullptr;for(const auto &s:radio_catalog::stations)if(id==s.id){chosen=&s;break;}
   if(!chosen)return std::unexpected("Unknown station");
-  if(!child_mode_radio_allowed())return std::unexpected("网络电台暂未开放给儿童模式");
+  if(!child_mode_radio_allowed())return std::unexpected("电台未获家长授权，或已到休息时间");
   auto stopped=stop();if(!stopped)return stopped;
   std::lock_guard op(operation_);
   if(!local_audio::claim(local_audio::Radio))return std::unexpected("请先关闭听书或语音助手");

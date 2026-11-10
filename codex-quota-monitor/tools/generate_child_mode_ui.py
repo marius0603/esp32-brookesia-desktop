@@ -24,12 +24,12 @@ def group(id,children,hidden=True):
 def stepper(prefix,title,y):
     return [button(prefix+'_minus','-',104,y,48),label(prefix,title,158,y+5,164,38),button(prefix+'_plus','+',328,y,48)]
 
-write('package.json',{'name':'local.childmode','version':'0.1.0','private':True,'scripts':{'build':'brookesia build'}})
+write('package.json',{'name':'local.childmode','version':'0.1.3','private':True,'scripts':{'build':'brookesia build'}})
 (APP/'brookesia.config.js').write_text("module.exports={cli:{sourceRoot:'src',outputPath:'build',releasePath:'dist',signRoot:'sign'},convertImages:false};\n",encoding='utf-8')
-write('src/manifest.json',{'package':{'id':'local.childmode','name':{'en':'Child Mode','zh_CN':'儿童模式'},'version':'0.1.0','visible':True,'systems':['super']},
+write('src/manifest.json',{'package':{'id':'local.childmode','name':{'en':'Child Mode','zh_CN':'儿童模式'},'version':'0.1.3','visible':True,'systems':['super']},
     'runtime':{'type':'JavaScript','entry':'app/main.js','resource_dir':'res','arguments':[]},'services':[{'name':'ChildMode','version':'0.1.0'}]})
 write('src/res/profile.json',{'root':'root.json','icon_id':'launcher_icon','screen_flows':[{'screen_flow':'main','layer':'AppDefault'}]})
-write('src/res/root.json',{'version':'0.1.0','assets':['images/index.json','screens/main.json','flows/main.json']})
+write('src/res/root.json',{'version':'0.1.3','assets':['images/index.json','screens/main.json','flows/main.json']})
 write('src/res/flows/main.json',{'type':'screenFlow','id':'main','screens':['main'],'initial':'main'})
 gate=[label('dots','',120,137,240,40,32)]
 for i,char in enumerate('123456789'):
@@ -39,7 +39,7 @@ gate += [button('erase','删除',104,365,84,48),button('digit0','0',198,365,84,4
 control=[button('mode','开启儿童模式',105,126,270),*stepper('volume','音量上限 30%',187),
          *stepper('limit','每日 30 分钟',246),button('apps','允许使用的应用',105,306,270),
          button('time','休息时间 / PIN',105,363,270),button('lock','完成并锁定',140,420,200,36)]
-apps=[button('book','听书：允许',105,126,270),button('weather','天气：允许',105,183,270),
+apps=[button('book','听书/儿歌/电台：允许',105,126,270),button('weather','天气：允许',105,183,270),
       button('clock','时钟：允许',105,240,270),button('assistant','语音助手：关闭',105,297,270),button('back_apps','返回',140,376,200)]
 times=[button('night','夜间休息：关闭',105,126,270),*stepper('start','开始 21:00',185),*stepper('end','结束 08:00',242),
        button('reset','重置今日时长',120,299,240),button('change','修改家长 PIN',120,354,240),button('back_time','返回',140,413,200,36)]
