@@ -17,8 +17,8 @@ ROOT = Path(__file__).resolve().parents[2]
 APP_ROOT = '/sdcard/apps/local.flipclock'
 
 
-def archive(version):
-    package = ROOT / f'packages/apps/local.flipclock.debug.{version}.bpk'
+def archive(version, package=None):
+    package = package or ROOT / f'packages/apps/local.flipclock.debug.{version}.bpk'
     with zipfile.ZipFile(package) as z:
         assert z.testzip() is None
         files = {name: z.read(name) for name in z.namelist()}
@@ -40,6 +40,7 @@ def tree_hash(files):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', default='COM5')
+    parser.add_argument('--previous-package', type=Path, help='Exact private package for an installed, not-yet-published revision')
     args = parser.parse_args()
     version = json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))['apps']['local.flipclock']
     package, files = archive(version)
@@ -69,7 +70,7 @@ def main():
         report['volume'] = modes['resume_volume']
         call('SystemCore','StopApp',{'AppId':app['app_id']})
         previous_version = json.loads(call('Storage','FSReadText',{'Path':APP_ROOT+'/manifest.json'}))['package']['version']
-        _, old_files = archive(previous_version)
+        _, old_files = archive(previous_version,args.previous_package)
         original = inspect(APP_ROOT)
         assert original['sha256'] == tree_hash(old_files), 'Unrecognized app edits; refusing to replace the directory'
         call('Storage','FSCopyTree',{'From':APP_ROOT,'To':ready,'Overwrite':False})

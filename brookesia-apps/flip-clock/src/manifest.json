@@ -5,7 +5,7 @@
       "en": "Flip Clock",
       "zh_CN": "翻页时钟"
     },
-    "version": "0.2.5",
+    "version": "0.2.6",
     "visible": true,
     "systems": [
       "super"

@@ -77,7 +77,15 @@ function animate(){
   }
   call(gui,'SetBindings',{Updates:updates});
 }
-let face=0,wifi,http,modes,press=null,lastSwipe=-1000,lastSecond=-1,pawFrame=-1,nextStatus=0,asleep=false,weather=null,pending=null,nextFetch=0,cache={};
+let face=0,wifi,http,modes,press=null,lastSwipe=-1000,lastSecond=-1,pawFrame=-1,nextStatus=0,asleep=false,weather=null,pending=null,nextFetch=0,cache={},touchUntil=0;
+function swipePoint(p,release){
+ if(!press)return;
+ const dx=p.x-press.x,dy=p.y-press.y,ax=Math.abs(dx),ay=Math.abs(dy);
+ // Once a vertical gesture is established, leave it to the system.
+ if(ay>=24&&ay>ax*1.2){press=null;return;}
+ if(ax>=32&&ax>ay*1.1&&Date.now()-lastSwipe>=180){press=null;lastSwipe=Date.now();select(face+(dx<0?1:-1),true);}
+ else if(release)press=null;
+}
 let catScene='',catUpdates=0,catMaxMs=0,catError='',catReported=false;
 let iconState={};
 const PLACE={city:'上海',latitude:31.2304,longitude:121.4737};let place=PLACE;
@@ -143,6 +151,7 @@ function status(now){
  }
 }
 function extraTick(){
+ if(Date.now()<touchUntil)return; // Prioritize touch delivery over cat-frame decoding.
  if(paused)return;const now=Date.now();status(now);if(asleep){finish();second=-1;shown=null;return;}if(face===0){tick();return;}
  const d=new Date(now+8*3600000),valid=now>=1704067200000;
  text('status/date',valid?(d.getUTCMonth()+1)+'月'+d.getUTCDate()+'日  周'+'日一二三四五六'[d.getUTCDay()]:'等待校时');
@@ -183,7 +192,7 @@ globalThis.brookesia_app={
   gui=brookesia.start_service('SystemGui');timer=brookesia.start_service('SystemTimer');storage=brookesia.start_service('Storage');brookesia.start_service('SNTP');
   wifi=brookesia.start_service('Wifi');http=brookesia.start_service('Http');modes=brookesia.start_service('DeviceModes');
   for(const e of ['RequestCompleted','RequestFailed','RequestCanceled'])brookesia.subscribe_event(http,e);
-  for(const a of ['facePress','faceRelease','faceCancel'])call(gui,'SubscribeAction',{Action:a});
+  for(const a of ['facePress','faceMove','faceGesture','faceRelease','faceCancel'])call(gui,'SubscribeAction',{Action:a});
   catScene='';catUpdates=0;catMaxMs=0;catError='';catReported=false;asleep=false;iconState={};frames=0;reported=false;nativeIds=[];nativeFlips=0;
   const settings=read('/littlefs/weather-settings.json'),old=read('/littlefs/weather-cache.json'),own=read('/littlefs/clock-weather.json');
   if(old&&old.mode===(settings&&settings.mode==='auto'?'auto':'shanghai')&&validPlace(old.location)){place=old.location;const c=old.data&&old.data.current;if(c&&Number.isFinite(c.temperature_2m)&&Number.isInteger(c.weather_code))weather={temperature:c.temperature_2m,code:c.weather_code,day:c.is_day,solar:solarData(old.data),received_at:old.received_at||0};}
@@ -191,11 +200,19 @@ globalThis.brookesia_app={
   nextFetch=weather&&weather.solar?weather.received_at+600000:0;const pref=read('/littlefs/clock-face.json');paused=false;select(pref&&Number.isInteger(pref.face)&&pref.face>=0&&pref.face<3?pref.face:0,false);call(timer,'StartPeriodic',{Name:'clock',IntervalMs:180});return true;
  },
  on_action(name,path,payload){
-  if(name==='faceCancel'){press=null;return true;}
+  if(paused||asleep){press=null;touchUntil=0;return true;}
+  if(name==='faceCancel'){press=null;touchUntil=0;return true;}
   let p;try{p=typeof payload==='string'?JSON.parse(payload):payload;}catch(_){press=null;return true;}
+  if(name==='faceGesture'){
+   if(p&&press&&(p.direction==='left'||p.direction==='right')&&Date.now()-lastSwipe>=180){press=null;lastSwipe=Date.now();select(face+(p.direction==='left'?1:-1),true);}
+   else if(p&&(p.direction==='up'||p.direction==='down'))press=null;
+   return true;
+  }
   if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y))return true;
-  if(name==='facePress'){press={x:p.x,y:p.y};return true;}
-  if(name==='faceRelease'&&press){const dx=p.x-press.x,dy=p.y-press.y;press=null;if(Math.abs(dx)>=48&&Math.abs(dx)>Math.abs(dy)*1.25&&Date.now()-lastSwipe>=300){lastSwipe=Date.now();select(face+(dx<0?1:-1),true);}}
+  if(name==='facePress'){press={x:p.x,y:p.y};touchUntil=Date.now()+1500;return true;}
+  if(name==='faceMove')touchUntil=Date.now()+1500;
+  if(name==='faceRelease')touchUntil=0;
+  if(name==='faceMove'||name==='faceRelease')swipePoint(p,name==='faceRelease');
   return true;
  },
  on_event(service,event,payload){
@@ -203,8 +220,8 @@ globalThis.brookesia_app={
   try{const v=JSON.parse(payload);if(v.RequestId!==pending.id)return true;pending=null;const r=v.Response||{};if(r.status_code!==200||r.error!=='Ok')throw Error('weather');const d=JSON.parse(r.body),c=d.current;if(!c||!Number.isFinite(c.temperature_2m)||!Number.isInteger(c.weather_code)||c.temperature_2m< -100||c.temperature_2m>70)throw Error('weather');weather={temperature:c.temperature_2m,code:c.weather_code,day:c.is_day,solar:solarData(d),received_at:Date.now()};call(storage,'FSWriteText',{Path:'/littlefs/clock-weather.json',Data:JSON.stringify({place,weather})});nextStatus=0;extraTick();}catch(_){pending=null;nextFetch=Date.now()+60000;}return true;
  },
  on_timer(id,name){if(name==='flip')animate();else extraTick();return true;},
- on_pause(){finish();paused=true;press=null;stopFx();cancel();return true;},
+ on_pause(){finish();paused=true;press=null;touchUntil=0;stopFx();cancel();return true;},
  on_resume(){paused=false;reported=false;select(face,false);return true;},
- on_stop(){paused=true;press=null;stopFx();stopNative();cancel();flips=[];return true;}
+ on_stop(){paused=true;press=null;touchUntil=0;stopFx();stopNative();cancel();flips=[];return true;}
 };
 })();

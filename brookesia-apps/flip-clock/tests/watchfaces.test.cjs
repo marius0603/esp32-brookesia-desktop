@@ -45,4 +45,34 @@ swipe(0,100);assert.equal(saved['/littlefs/clock-face.json'].face,2,'vertical ge
 context.brookesia_app.on_pause();const stopped=calls.length;now+=2000;context.brookesia_app.on_timer(1,'clock');assert.equal(calls.length,stopped);context.brookesia_app.on_resume();assert.equal(saved['/littlefs/clock-face.json'].face,2);
 swipe(-100);assert.equal(saved['/littlefs/clock-face.json'].face,0);const cut=calls.length;now+=250;context.brookesia_app.on_timer(1,'clock');assert(!calls.slice(cut).some(c=>c.a.Path==='/main/companion/motion'));
 swipe(100);assert.equal(saved['/littlefs/clock-face.json'].face,2);context.brookesia_app.on_stop();vm.runInContext(code,context);context.brookesia_app.on_start();assert.equal(binding('/main/companion','hidden'),'false','restore saved face');
+// Short and mildly diagonal swipes should work without requiring a release.
+const swipeLayer=nodes.get('/main/swipe');
+assert.equal(swipeLayer.placement.y,0);assert.equal(swipeLayer.placement.height,456);
+assert(swipeLayer.events.some(e=>e.type==='pressing'&&e.action==='faceMove'));
+swipe(-34,20);assert.equal(saved['/littlefs/clock-face.json'].face,0);
+swipe(34,-20);assert.equal(saved['/littlefs/clock-face.json'].face,2);
+swipe(-40,34);assert.equal(saved['/littlefs/clock-face.json'].face,0);
+swipe(31);assert.equal(saved['/littlefs/clock-face.json'].face,0,'small accidental movements must not switch');
+now+=200;act('facePress',280,100);act('faceMove',312,110);
+assert.equal(saved['/littlefs/clock-face.json'].face,2,'switch during motion');
+act('faceMove',400,110);act('faceRelease',400,110);
+assert.equal(saved['/littlefs/clock-face.json'].face,2,'one physical swipe switches exactly once');
+now+=200;act('facePress',240,350);act('faceMove',245,300);act('faceRelease',340,280);
+assert.equal(saved['/littlefs/clock-face.json'].face,2,'vertical intent is never reused for a horizontal switch');
+now+=200;act('facePress',240,200);act('faceCancel',240,200);act('faceRelease',100,200);
+assert.equal(saved['/littlefs/clock-face.json'].face,2,'cancel removes the old press');
+context.brookesia_app.on_pause();act('facePress',240,200);act('faceMove',100,200);
+assert.equal(saved['/littlefs/clock-face.json'].face,2,'paused clock ignores touch actions');
+context.brookesia_app.on_resume();
+// Cat decoding yields while a gesture is in progress, then resumes.
+now+=200;act('facePress',240,300);const held=calls.length;
+now+=180;context.brookesia_app.on_timer(1,'clock');
+assert(!calls.slice(held).some(c=>c.n==='SetViewSrc'&&c.a.Path==='/main/companion/motion'));
+context.brookesia_app.on_action('faceGesture','/main/swipe',JSON.stringify({direction:'left'}));
+assert.equal(saved['/littlefs/clock-face.json'].face,0,'native flick fallback');
+act('faceRelease',120,300);assert.equal(saved['/littlefs/clock-face.json'].face,0,'native and release do not double switch');
+swipe(100);assert.equal(saved['/littlefs/clock-face.json'].face,2);
+now+=200;act('facePress',240,300);now+=1600;const recovered=calls.length;context.brookesia_app.on_timer(1,'clock');
+assert(calls.slice(recovered).some(c=>c.n==='SetViewSrc'&&c.a.Path==='/main/companion/motion'),'lost release cannot freeze the cat');
+act('faceCancel',240,300);
 console.log('Three clock faces: swipe/persistence, hands, sprite lifecycle, no per-frame writes, exact sunrise/sunset and next-day switch, weather cache and date/weather alignment passed');

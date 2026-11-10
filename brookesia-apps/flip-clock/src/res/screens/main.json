@@ -1915,9 +1915,9 @@
       "placement": {
         "mode": "absolute",
         "x": 0,
-        "y": 35,
+        "y": 0,
         "width": 480,
-        "height": 410
+        "height": 456
       },
       "commonProps": {
         "scrollable": false,
@@ -1935,12 +1935,20 @@
           "action": "facePress"
         },
         {
+          "type": "pressing",
+          "action": "faceMove"
+        },
+        {
           "type": "released",
           "action": "faceRelease"
         },
         {
           "type": "pressLost",
           "action": "faceCancel"
+        },
+        {
+          "type": "gesture",
+          "action": "faceGesture"
         }
       ]
     }
