@@ -21,7 +21,7 @@ function fixture(configured){
     if(timeout<15000)throw Error('timeout 1000ms');
     if(p.Pin!=='135790')return JSON.stringify({success:false,error_message:'PIN 不正确'});
     state.configured=true;data={token:'test-session'};
-   }else assert.equal(name,'Lock');
+   }else if(name==='Configure'){assert.equal(p.Token,'test-session');Object.assign(state,p.Settings);}else assert.equal(name,'Lock');
   }else{assert.equal(service,'SystemTimer');data=1;}
   return JSON.stringify({success:true,data});
  }};
@@ -42,3 +42,6 @@ existing.jumpClock();existing.app.on_timer();assert.equal(existing.bindings['/ma
 existing.app.on_pause();assert.equal(existing.bindings['/main/gate'],'false');
 assert.ok([...first.pinCalls,...existing.pinCalls].every(c=>c.timeout===15000));
 console.log('PASS: first setup, slow PIN verification, persistent wrong-PIN message, clock jump, pause lock');
+
+const limits=fixture(true);limits.enter('135790');for(let i=0;i<7;i++)limits.app.on_action('volume_plus');assert.equal(limits.text['/main/control/volume'],'音量上限 100%');limits.app.on_action('volume_plus');assert.equal(limits.text['/main/control/volume'],'音量上限 100%');for(let i=0;i<12;i++)limits.app.on_action('volume_minus');assert.equal(limits.text['/main/control/volume'],'音量上限 10%');
+console.log('PASS: parent volume limit reaches 100 and remains within 10..100');

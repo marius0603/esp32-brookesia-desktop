@@ -130,7 +130,7 @@ private:
             if(e==ESP_OK) {
                 size_t size=sizeof(prefs);e=nvs_get_blob(h,"policy",&prefs,&size);nvs_close(h);
                 if(e==ESP_ERR_NVS_NOT_FOUND){prefs=Preferences{};e=ESP_OK;size=sizeof(prefs);}
-                if(e!=ESP_OK || size!=sizeof(prefs) || prefs.version!=1 || prefs.volume>60 ||
+                if(e!=ESP_OK || size!=sizeof(prefs) || prefs.version!=1 || prefs.volume>child_policy::volume_limit_max ||
                         prefs.minutes>120 || prefs.start>23 || prefs.end>23 || !child_policy::valid_mask(prefs.mask) ||
                         (prefs.enabled && !prefs.has_pin))return false;
             } else if(e!=ESP_ERR_NVS_NOT_FOUND)return false;
@@ -240,7 +240,7 @@ private:
                 v=it->value().as_bool();return true;
             };
             if(!boolean("enabled",next.enabled) || !boolean("night_enabled",next.night) ||
-                    !number("max_volume",10,60,next.volume) || !number("daily_minutes",0,120,next.minutes) ||
+                    !number("max_volume",10,child_policy::volume_limit_max,next.volume) || !number("daily_minutes",0,120,next.minutes) ||
                     !number("night_start",0,23,next.start) || !number("night_end",0,23,next.end))return failed("设置数值无效");
             for(const auto &[key,bit]:std::initializer_list<std::pair<const char *,unsigned>>{
                     {"allow_audiobook",1},{"allow_weather",2},{"allow_clock",4},{"allow_assistant",8},{"allow_learning",16}}) {

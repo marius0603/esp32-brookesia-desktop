@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <string_view>
 namespace child_policy {
+constexpr int volume_limit_max=100;
 constexpr bool valid_mask(unsigned mask) {return mask<=31;}
 constexpr unsigned app_bit(std::string_view id) {
     if(id=="local.audiobook" || id=="local.nurserysongs" || id=="local.radio")return 1;

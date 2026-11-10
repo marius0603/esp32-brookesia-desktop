@@ -17,3 +17,5 @@ static_assert(visible(true,1,"local.radio") && !visible(true,0,"local.radio"));
 static_assert(app_bit("local.radio")==app_bit("local.audiobook") && app_bit("local.radio")==app_bit("local.nurserysongs"));
 static_assert(audio_allowed(true,true,1,false) && audio_allowed(true,false,0,true));
 static_assert(!audio_allowed(false,false,1,false) && !audio_allowed(true,true,0,false) && !audio_allowed(true,true,1,true));
+
+static_assert(volume_limit_max==100);

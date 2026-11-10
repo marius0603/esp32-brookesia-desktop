@@ -55,7 +55,7 @@ function action(name){
  else if(name==='change'){pin='';first='';purpose='change';show('gate');render();}
  else if(name==='reset'){call(policy,'ResetUsage',{Token:token});read();render();message('今日时长已重置');}
  else if(name==='night')save({night_enabled:!state.night_enabled});
- else if(name==='volume_minus'||name==='volume_plus')save({max_volume:Math.max(10,Math.min(60,state.max_volume+(name==='volume_plus'?10:-10)))});
+ else if(name==='volume_minus'||name==='volume_plus')save({max_volume:Math.max(10,Math.min(100,state.max_volume+(name==='volume_plus'?10:-10)))});
  else if(name==='limit_minus'||name==='limit_plus'){
   const choices=[0,10,20,30,45,60,90,120];let i=choices.indexOf(state.daily_minutes);if(i<0)i=3;
   save({daily_minutes:choices[(i+(name==='limit_plus'?1:choices.length-1))%choices.length]});
