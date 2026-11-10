@@ -1,11 +1,12 @@
 # 额度显示 App
 
-`local.codex.quota` 0.2.4，使用现有Storage服务，可独立安装；当前系统固件仍为s3.63，无需重刷。
+`local.codex.quota` 0.2.5，使用现有Storage服务，可独立安装；当前系统固件仍为s3.63，无需重刷。
 源码位于 `brookesia-apps/codex-quota`，桌面中文名称为“额度显示”。
 
-按参考图使用黑色背景与两张圆角渐变卡片：“5小时”和“每周”标题34号，
-右侧真实剩余百分比48号，下方重置倒计时30号。短周期为金色、每周为青色。
-顶部状态胶囊显示等待同步、已同步、已过期或需登录，并以绿/黄/红点区分。
+新版采用系统深浅配色的双卡片：左侧72号大数字（100%及小数自动缩小），小号百分号依据原生文字实测宽度紧跟数字；右侧27号重置倒计时，每周天数另行显示。顶部状态胶囊、底部精简吃豆人轨道，主数字与百分号分离，整页无滚动。屏幕480×480，卡片428×178，保留底边手势空间。
+
+额度显示至一位小数，原始额度和豆子计算不舍弃精度；未知额度显示--，不按100%或0%处理。背景读取SystemCore.GetEnvironment.theme_id，打开/恢复页面时应用浅色或深色主题；配色失败时保留深色回退。
+
 倒计时不重复显示“重置”，超过一天时保留天数。
 
 ![布局预览，73%和64%为演示数据](../brookesia-apps/codex-quota/assets/quota-cards-preview.png)
@@ -27,14 +28,14 @@ node brookesia-apps/codex-quota/tests/main.test.cjs
 ```
 
 构建直接打包JSON、JS和PNG资源，不需要Node打包工具；PNG由现有固件解码。
-发布包为 `packages/apps/local.codex.quota.debug.0.2.4.bpk`，SHA256见 `packages/SHA256.json`。
+发布包为 `packages/apps/local.codex.quota.debug.0.2.5.bpk`，SHA256见 `packages/SHA256.json`。
 安装前暂停占用同一USB接口的额度采集器，再执行：
 
 ```powershell
 codex-quota-monitor/.venv/Scripts/python.exe codex-quota-monitor/tools/deploy_quota_cards.py --port COM3
 ```
 
-已有SD应用建议使用 `tools/deploy_quota_requests.py --port COM5`：逐文件暂存并哈希验证JS/manifest/root三文件，切换前备份整个旧目录，保留当前安装的主题图标、额度文件和音量。完成后重启一次以登记版本。无需覆盖固件、PIN或系统偏好。
+已有SD应用建议使用 `tools/deploy_quota_requests.py --port COM5`：逐文件暂存并哈希验证JS/界面/manifest/root四文件，切换前备份整个旧目录，保留当前安装的主题图标、额度文件和音量。完成后重启一次以登记版本。无需覆盖固件、PIN或系统偏好。
 私有设备验证结果保存在 `codex-quota-monitor/runtime`，不纳入Git。
 
 ## 设备请求与Codex联动
@@ -51,3 +52,7 @@ codex-quota-monitor/.venv/Scripts/python.exe codex-quota-monitor/tools/deploy_qu
 2026-10-27实机验证：安装并重启后中文名称、图标索引及图标文件尺寸正确；
 真实额度、吃豆人位置和8帧以上动画一致，连续重新打开两次均无应用错误；
 原有10篇故事和90%音量保留。
+
+2026-11-10 / 0.2.5：已按用户认可的设计部署。72号数字加高至100像素避免原80号版本裁切，用户已确认两组数字完整；百分号再改为基于GetViewFrame的文字实际宽度定位，避免固定右列间距过大。JS回归涵盖深浅色、100%/小数、分行天数、百分号随数字定位及原60秒请求/15秒超时规则。设备重启登记0.2.5、应用运行及真实同步通过；浅色配色由JS回归验证，未临时修改设备的系统主题。
+
+0.2.5最终实屏确认：两组数字完整，百分号跟随数字后的间距合适、显示完整。

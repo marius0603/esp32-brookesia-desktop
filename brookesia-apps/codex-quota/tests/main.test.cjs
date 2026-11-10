@@ -4,12 +4,12 @@ const source=code.replace(/\n\}\)\(\);\s*$/,'\nglobalThis.__test = expression =>
 const screen=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/screens/main.json'),'utf8'));
 const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/manifest.json'),'utf8'));
 assert.equal(manifest.package.name.zh_CN,'额度显示');
-for(const card of screen.children.slice(1))assert.equal(card.children[0].style.fontSize,34);
+for(const card of screen.children.slice(1))assert.equal(card.children[0].style.fontSize,26);
 assert.deepEqual(fs.readFileSync(path.join(__dirname,'../src/res/images/launcher_icon.png')),fs.readFileSync(path.join(__dirname,'../../../themes/cartoon-q-v1/flash-fallback/quota.png')));
 const views=new Set();
 function indexViews(node,parent=''){const p=parent+'/'+node.id;views.add(p);for(const child of node.children||[])indexViews(child,p);}
 indexViews(screen);
-let now=1000000;const calls=[],texts={},files={};
+let mode='dark';let now=1000000;const calls=[],texts={},files={};
 const packet={type:'quota',v:1,sampled_at:1000,bridge_at:1000,status:'ok',stale_after:180,
   windows:[{kind:'primary',used:27,reset_at:2000},{kind:'secondary',used:36,reset_at:4000}]};
 class Clock extends Date{static now(){return now;}}
@@ -17,6 +17,8 @@ const ctx=vm.createContext({Date:Clock,console:{log(){}},brookesia:{start_servic
   call_function(handle,name,json){const p=JSON.parse(json);calls.push({name,p});let data=null;
     if(p.Path && handle==='SystemGui')assert.ok(views.has(p.Path),'Missing view: '+p.Path);
     if(name==='SetBindings')for(const update of p.Updates)assert.ok(views.has(update.Path),'Missing binding view: '+update.Path);
+    if(name==='GetViewFrame')data={width:(texts[p.Path]||'').length*36};
+    if(name==='GetEnvironment')data={theme_id:mode};
     if(name==='FSReadText')data=JSON.stringify(packet);
     if(name==='FSWriteText')files[p.Path]=JSON.parse(p.Data);
     if(name==='StartPeriodic')data=99;
@@ -31,8 +33,10 @@ assert.equal(initialRequest.type,'quota_request');
 packet.bridge_at=1001;ctx.brookesia_app.on_timer(98,'quota');
 assert.equal(texts['/main/sync/status'],'等待同步');
 packet.request_id=initialRequest.request_id;ctx.brookesia_app.on_timer(98,'quota');
-assert.equal(texts['/main/card_primary/primary'],'73%');
-assert.equal(texts['/main/card_secondary/secondary'],'64%');
+assert.equal(texts['/main/card_primary/primary'],'73');
+assert.equal(texts['/main/card_secondary/secondary'],'64');
+assert.equal(ctx.__test("cache.primaryUnitX"),94);
+assert.equal(ctx.__test("cache.secondaryUnitX"),94);
 assert.equal(texts['/main/sync/status'],'已同步');
 assert.equal(ctx.__test('reset(1000+2*3600+13*60+45,1000)'),'02:13:45');
 assert.equal(ctx.__test('reset(1000+3*86400+4*3600+20*60+11,1000)'),'3天 04:20:11');
@@ -43,6 +47,15 @@ assert.equal(ctx.__test('pellets(27).reduce((a,b)=>a+b,0)/255*5'),73);
 assert.equal(ctx.__test('usedValue({used:null})'),null);
 assert.equal(ctx.__test('usedValue({used:200})'),100);
 assert.equal(ctx.__test('usedValue({used:-2})'),0);
+ctx.__test("resetText('secondary',1000+3*86400+4*3600+20*60+11,1000)");
+assert.equal(texts['/main/card_secondary/days_secondary'],'3天');
+assert.equal(texts['/main/card_secondary/reset_secondary'],'04:20:11');
+ctx.__test("percent('primary',0)");assert.equal(texts['/main/card_primary/primary'],'100');
+ctx.__test("percent('primary',0.4)");assert.equal(texts['/main/card_primary/primary'],'99.6');
+ctx.__test("percent('primary',27)");
+mode='light';ctx.__test('applyTheme()');assert.equal(ctx.__test('theme'),'light');
+assert.ok(calls.some(c=>c.name==='SetBindings'&&c.p.Updates.some(u=>u.Path==='/main'&&u.Value==='#f5eddf')));
+mode='dark';ctx.__test('applyTheme()');assert.equal(ctx.__test('theme'),'dark');
 const beansBefore=ctx.__test('JSON.stringify(pellets(primaryUsed))');
 for(let i=0;i<8;i++){now+=240;ctx.brookesia_app.on_timer(99,'pacman');}
 assert.equal(files['/littlefs/quota-ui-state.json'].animation_frames,8);
@@ -55,14 +68,14 @@ assert.equal(texts['/main/sync/status'],'等待同步');
 now+=15000;packet.bridge_at=Math.floor(now/1000);ctx.brookesia_app.on_timer(98,'quota');const before=ctx.__test('frames');
 assert.equal(texts['/main/sync/status'],'已过期');
 ctx.brookesia_app.on_timer(99,'pacman');assert.equal(ctx.__test('frames'),before);
-assert.equal(texts['/main/card_primary/primary'],'73%');
+assert.equal(texts['/main/card_primary/primary'],'73');
 // A delayed answer for a previous request still cannot renew this sample.
 packet.sampled_at=packet.bridge_at;ctx.brookesia_app.on_timer(98,'quota');
 assert.equal(texts['/main/sync/status'],'已过期');
 packet.request_id=nextRequest.request_id;
 packet.bridge_at=Math.floor(now/1000);packet.sampled_at=packet.bridge_at;packet.status='auth_required';
 ctx.brookesia_app.on_timer(98,'quota');assert.equal(texts['/main/sync/status'],'需登录');
-assert.equal(texts['/main/card_primary/primary'],'73%'); // Retain the last real allowance.
+assert.equal(texts['/main/card_primary/primary'],'73'); // Retain the last real allowance.
 packet.status='ok';ctx.brookesia_app.on_timer(98,'quota');
 assert.equal(texts['/main/sync/status'],'已同步');
 ctx.brookesia_app.on_pause();assert.equal(ctx.__test('fxTimer'),0);

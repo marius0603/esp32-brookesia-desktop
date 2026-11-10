@@ -20,7 +20,7 @@ def main():
     package = ROOT/f'packages/apps/local.codex.quota.debug.{version}.bpk'
     with zipfile.ZipFile(package) as z:
         assert z.testzip() is None
-        files = {name:z.read(name) for name in ('app/main.js','res/root.json','manifest.json')}
+        files = {name:z.read(name) for name in ('app/main.js','res/screens/main.json','res/root.json','manifest.json')}
     stamp = str(time.time_ns())
     base = '/sdcard/resource-backups/quota-requests-'+stamp
     ready, backup, checked = base+'-ready', base+'-previous', base+'-check'

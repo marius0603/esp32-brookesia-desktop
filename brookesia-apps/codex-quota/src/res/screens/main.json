@@ -5,16 +5,9 @@
     "scrollable": false
   },
   "style": {
-    "bgColor": "#000000",
+    "bgColor": "#090e17",
     "padding": 0,
     "borderWidth": 0
-  },
-  "layout": {
-    "type": "flex",
-    "flexFlow": "column",
-    "mainAlign": "center",
-    "crossAlign": "center",
-    "gap": 10
   },
   "children": [
     {
@@ -25,14 +18,17 @@
         "clickable": false
       },
       "placement": {
-        "width": 170,
-        "height": 34
+        "mode": "absolute",
+        "x": 170,
+        "y": 25,
+        "width": 140,
+        "height": 30
       },
       "style": {
-        "bgColor": "#101a29",
+        "bgColor": "#172a28",
         "borderColor": "#263851",
-        "borderWidth": 1,
-        "radius": 17,
+        "borderWidth": 0,
+        "radius": 15,
         "padding": 0
       },
       "layout": {
@@ -72,16 +68,22 @@
             "height": "wrap"
           },
           "style": {
-            "textColor": "#cdd6e5",
+            "textColor": "#91dfbb",
             "font": "${font.zh_CN}",
-            "fontSize": 18,
+            "fontSize": 19,
             "textAlign": "center"
           },
           "labelProps": {
             "text": "待同步"
+          },
+          "bindings": {
+            "style.textColor": "themetextColor"
           }
         }
-      ]
+      ],
+      "bindings": {
+        "style.bgColor": "themebgColor"
+      }
     },
     {
       "type": "container",
@@ -91,16 +93,17 @@
         "clickable": false
       },
       "placement": {
+        "mode": "absolute",
+        "x": 26,
+        "y": 78,
         "width": 428,
-        "height": 184
+        "height": 178
       },
       "style": {
-        "bgColor": "#181609",
-        "bgGradientColor": "#0b1019",
-        "bgGradientDirection": "vertical",
-        "borderColor": "#263449",
+        "bgColor": "#151e2c",
+        "borderColor": "#2a3648",
         "borderWidth": 1,
-        "radius": 26,
+        "radius": 25,
         "padding": 0
       },
       "children": [
@@ -109,19 +112,22 @@
           "id": "label_primary",
           "placement": {
             "mode": "absolute",
-            "x": 18,
-            "y": 16,
-            "width": 170,
-            "height": 56
+            "x": 22,
+            "y": 19,
+            "width": 180,
+            "height": 36
           },
           "style": {
-            "textColor": "#dce2eb",
+            "textColor": "#edf2f8",
             "font": "${font.zh_CN}",
-            "fontSize": 34,
+            "fontSize": 26,
             "textAlign": "left"
           },
           "labelProps": {
             "text": "5小时"
+          },
+          "bindings": {
+            "style.textColor": "themetextColor"
           }
         },
         {
@@ -129,19 +135,190 @@
           "id": "primary",
           "placement": {
             "mode": "absolute",
-            "x": 192,
-            "y": 10,
-            "width": 216,
-            "height": 64
+            "x": 18,
+            "y": 36,
+            "width": "wrap",
+            "height": 100
           },
           "style": {
-            "textColor": "#ffd54a",
+            "textColor": "#ffd166",
             "font": "${font.zh_CN}",
-            "fontSize": 48,
-            "textAlign": "right"
+            "fontSize": 72,
+            "textAlign": "left"
           },
           "labelProps": {
-            "text": "--%"
+            "text": "--"
+          },
+          "bindings": {
+            "style.fontSize": "fontSize",
+            "style.textColor": "themetextColor"
+          }
+        },
+        {
+          "type": "label",
+          "id": "unit_primary",
+          "placement": {
+            "mode": "absolute",
+            "x": 179,
+            "y": 80,
+            "width": 34,
+            "height": 48
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 32,
+            "textAlign": "left",
+            "textColor": "#ffd166"
+          },
+          "labelProps": {
+            "text": "%"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "style.textColor": "themetextColor"
+          }
+        },
+        {
+          "type": "container",
+          "id": "divider",
+          "placement": {
+            "mode": "absolute",
+            "x": 214,
+            "y": 68,
+            "width": 1,
+            "height": 42
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgColor": "#2a3648"
+          },
+          "bindings": {
+            "style.bgColor": "themebgColor"
+          }
+        },
+        {
+          "type": "container",
+          "id": "clock",
+          "placement": {
+            "mode": "absolute",
+            "x": 236,
+            "y": 78,
+            "width": 16,
+            "height": 16
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 0,
+            "radius": 8,
+            "borderColor": "#a6b4c7"
+          },
+          "bindings": {
+            "style.borderColor": "themeborderColor"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "hour",
+              "placement": {
+                "mode": "absolute",
+                "x": 7,
+                "y": 3,
+                "width": 1,
+                "height": 5
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgColor": "#a6b4c7"
+              },
+              "bindings": {
+                "style.bgColor": "themebgColor"
+              }
+            },
+            {
+              "type": "container",
+              "id": "minute",
+              "placement": {
+                "mode": "absolute",
+                "x": 7,
+                "y": 7,
+                "width": 5,
+                "height": 1
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgColor": "#a6b4c7"
+              },
+              "bindings": {
+                "style.bgColor": "themebgColor"
+              }
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "days_primary",
+          "placement": {
+            "mode": "absolute",
+            "x": 264,
+            "y": 49,
+            "width": 148,
+            "height": 24
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 18,
+            "textAlign": "left",
+            "textColor": "#a6b4c7"
+          },
+          "labelProps": {
+            "text": ""
+          },
+          "bindings": {
+            "style.textColor": "themetextColor"
+          }
+        },
+        {
+          "type": "label",
+          "id": "reset_primary",
+          "placement": {
+            "mode": "absolute",
+            "x": 264,
+            "y": 73,
+            "width": 148,
+            "height": 58
+          },
+          "style": {
+            "textColor": "#edf2f8",
+            "font": "${font.zh_CN}",
+            "fontSize": 27,
+            "textAlign": "left"
+          },
+          "labelProps": {
+            "text": "等待同步"
+          },
+          "bindings": {
+            "style.fontSize": "fontSize",
+            "style.textColor": "themetextColor"
           }
         },
         {
@@ -154,15 +331,15 @@
           "placement": {
             "mode": "absolute",
             "x": 18,
-            "y": 80,
+            "y": 137,
             "width": 392,
-            "height": 40
+            "height": 32
           },
           "style": {
-            "bgColor": "#050a10",
+            "bgColor": "#0c1420",
             "borderColor": "#243248",
-            "borderWidth": 1,
-            "radius": 20,
+            "borderWidth": 0,
+            "radius": 16,
             "padding": 0
           },
           "children": [
@@ -176,12 +353,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 32,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -189,7 +366,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -202,12 +380,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 50,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -215,7 +393,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -228,12 +407,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 68,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -241,7 +420,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -254,12 +434,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 86,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -267,7 +447,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -280,12 +461,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 104,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -293,7 +474,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -306,12 +488,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 121,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -319,7 +501,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -332,12 +515,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 139,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -345,7 +528,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -358,12 +542,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 157,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -371,7 +555,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -384,12 +569,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 175,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -397,7 +582,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -410,12 +596,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 193,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -423,7 +609,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -436,12 +623,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 211,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -449,7 +636,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -462,12 +650,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 229,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -475,7 +663,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -488,12 +677,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 247,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -501,7 +690,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -514,12 +704,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 265,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -527,7 +717,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -540,12 +731,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 282,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -553,7 +744,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -566,12 +758,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 300,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -579,7 +771,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -592,12 +785,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 318,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -605,7 +798,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -618,12 +812,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 336,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -631,7 +825,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -644,12 +839,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 354,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -657,7 +852,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -670,12 +866,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 372,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#ffd54a",
+                "bgColor": "#ffd166",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -683,7 +879,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -695,7 +892,7 @@
               "placement": {
                 "mode": "absolute",
                 "x": 0,
-                "y": 4,
+                "y": 1,
                 "width": 30,
                 "height": 30
               },
@@ -707,29 +904,16 @@
                 "placement.x": "x"
               }
             }
-          ]
-        },
-        {
-          "type": "label",
-          "id": "reset_primary",
-          "placement": {
-            "mode": "absolute",
-            "x": 18,
-            "y": 128,
-            "width": 392,
-            "height": 46
-          },
-          "style": {
-            "textColor": "#d4dce8",
-            "font": "${font.zh_CN}",
-            "fontSize": 30,
-            "textAlign": "center"
-          },
-          "labelProps": {
-            "text": "等待首次同步"
+          ],
+          "bindings": {
+            "style.bgColor": "themebgColor"
           }
         }
-      ]
+      ],
+      "bindings": {
+        "style.bgColor": "themebgColor",
+        "style.borderColor": "themeborderColor"
+      }
     },
     {
       "type": "container",
@@ -739,16 +923,17 @@
         "clickable": false
       },
       "placement": {
+        "mode": "absolute",
+        "x": 26,
+        "y": 272,
         "width": 428,
-        "height": 184
+        "height": 178
       },
       "style": {
-        "bgColor": "#071c1b",
-        "bgGradientColor": "#0b1019",
-        "bgGradientDirection": "vertical",
-        "borderColor": "#263449",
+        "bgColor": "#151e2c",
+        "borderColor": "#2a3648",
         "borderWidth": 1,
-        "radius": 26,
+        "radius": 25,
         "padding": 0
       },
       "children": [
@@ -757,19 +942,22 @@
           "id": "label_secondary",
           "placement": {
             "mode": "absolute",
-            "x": 18,
-            "y": 16,
-            "width": 170,
-            "height": 56
+            "x": 22,
+            "y": 19,
+            "width": 180,
+            "height": 36
           },
           "style": {
-            "textColor": "#dce2eb",
+            "textColor": "#edf2f8",
             "font": "${font.zh_CN}",
-            "fontSize": 34,
+            "fontSize": 26,
             "textAlign": "left"
           },
           "labelProps": {
             "text": "每周"
+          },
+          "bindings": {
+            "style.textColor": "themetextColor"
           }
         },
         {
@@ -777,19 +965,190 @@
           "id": "secondary",
           "placement": {
             "mode": "absolute",
-            "x": 192,
-            "y": 10,
-            "width": 216,
-            "height": 64
+            "x": 18,
+            "y": 36,
+            "width": "wrap",
+            "height": 100
           },
           "style": {
-            "textColor": "#70e2db",
+            "textColor": "#71ddc9",
             "font": "${font.zh_CN}",
-            "fontSize": 48,
-            "textAlign": "right"
+            "fontSize": 72,
+            "textAlign": "left"
           },
           "labelProps": {
-            "text": "--%"
+            "text": "--"
+          },
+          "bindings": {
+            "style.fontSize": "fontSize",
+            "style.textColor": "themetextColor"
+          }
+        },
+        {
+          "type": "label",
+          "id": "unit_secondary",
+          "placement": {
+            "mode": "absolute",
+            "x": 179,
+            "y": 80,
+            "width": 34,
+            "height": 48
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 32,
+            "textAlign": "left",
+            "textColor": "#71ddc9"
+          },
+          "labelProps": {
+            "text": "%"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "style.textColor": "themetextColor"
+          }
+        },
+        {
+          "type": "container",
+          "id": "divider",
+          "placement": {
+            "mode": "absolute",
+            "x": 214,
+            "y": 68,
+            "width": 1,
+            "height": 42
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgColor": "#2a3648"
+          },
+          "bindings": {
+            "style.bgColor": "themebgColor"
+          }
+        },
+        {
+          "type": "container",
+          "id": "clock",
+          "placement": {
+            "mode": "absolute",
+            "x": 236,
+            "y": 78,
+            "width": 16,
+            "height": 16
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 1,
+            "bgOpacity": 0,
+            "radius": 8,
+            "borderColor": "#a6b4c7"
+          },
+          "bindings": {
+            "style.borderColor": "themeborderColor"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "hour",
+              "placement": {
+                "mode": "absolute",
+                "x": 7,
+                "y": 3,
+                "width": 1,
+                "height": 5
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgColor": "#a6b4c7"
+              },
+              "bindings": {
+                "style.bgColor": "themebgColor"
+              }
+            },
+            {
+              "type": "container",
+              "id": "minute",
+              "placement": {
+                "mode": "absolute",
+                "x": 7,
+                "y": 7,
+                "width": 5,
+                "height": 1
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "bgColor": "#a6b4c7"
+              },
+              "bindings": {
+                "style.bgColor": "themebgColor"
+              }
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "days_secondary",
+          "placement": {
+            "mode": "absolute",
+            "x": 264,
+            "y": 49,
+            "width": 148,
+            "height": 24
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 18,
+            "textAlign": "left",
+            "textColor": "#a6b4c7"
+          },
+          "labelProps": {
+            "text": ""
+          },
+          "bindings": {
+            "style.textColor": "themetextColor"
+          }
+        },
+        {
+          "type": "label",
+          "id": "reset_secondary",
+          "placement": {
+            "mode": "absolute",
+            "x": 264,
+            "y": 73,
+            "width": 148,
+            "height": 58
+          },
+          "style": {
+            "textColor": "#edf2f8",
+            "font": "${font.zh_CN}",
+            "fontSize": 27,
+            "textAlign": "left"
+          },
+          "labelProps": {
+            "text": "等待同步"
+          },
+          "bindings": {
+            "style.fontSize": "fontSize",
+            "style.textColor": "themetextColor"
           }
         },
         {
@@ -802,15 +1161,15 @@
           "placement": {
             "mode": "absolute",
             "x": 18,
-            "y": 80,
+            "y": 137,
             "width": 392,
-            "height": 40
+            "height": 32
           },
           "style": {
-            "bgColor": "#050a10",
+            "bgColor": "#0c1420",
             "borderColor": "#243248",
-            "borderWidth": 1,
-            "radius": 20,
+            "borderWidth": 0,
+            "radius": 16,
             "padding": 0
           },
           "children": [
@@ -824,12 +1183,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 32,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -837,7 +1196,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -850,12 +1210,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 50,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -863,7 +1223,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -876,12 +1237,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 68,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -889,7 +1250,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -902,12 +1264,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 86,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -915,7 +1277,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -928,12 +1291,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 104,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -941,7 +1304,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -954,12 +1318,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 121,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -967,7 +1331,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -980,12 +1345,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 139,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -993,7 +1358,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -1006,12 +1372,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 157,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -1019,7 +1385,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -1032,12 +1399,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 175,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -1045,7 +1412,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -1058,12 +1426,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 193,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -1071,7 +1439,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -1084,12 +1453,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 211,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -1097,7 +1466,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -1110,12 +1480,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 229,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -1123,7 +1493,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -1136,12 +1507,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 247,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -1149,7 +1520,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -1162,12 +1534,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 265,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -1175,7 +1547,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -1188,12 +1561,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 282,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -1201,7 +1574,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -1214,12 +1588,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 300,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -1227,7 +1601,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -1240,12 +1615,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 318,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -1253,7 +1628,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -1266,12 +1642,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 336,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -1279,7 +1655,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -1292,12 +1669,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 354,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -1305,7 +1682,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -1318,12 +1696,12 @@
               "placement": {
                 "mode": "absolute",
                 "x": 372,
-                "y": 17,
+                "y": 13,
                 "width": 6,
                 "height": 6
               },
               "style": {
-                "bgColor": "#70e2db",
+                "bgColor": "#71ddc9",
                 "bgOpacity": 255,
                 "radius": 3,
                 "padding": 0,
@@ -1331,7 +1709,8 @@
                 "opacity": 0
               },
               "bindings": {
-                "style.opacity": "opacity"
+                "style.opacity": "opacity",
+                "style.bgColor": "themebgColor"
               }
             },
             {
@@ -1343,7 +1722,7 @@
               "placement": {
                 "mode": "absolute",
                 "x": 0,
-                "y": 4,
+                "y": 1,
                 "width": 30,
                 "height": 30
               },
@@ -1355,29 +1734,19 @@
                 "placement.x": "x"
               }
             }
-          ]
-        },
-        {
-          "type": "label",
-          "id": "reset_secondary",
-          "placement": {
-            "mode": "absolute",
-            "x": 18,
-            "y": 128,
-            "width": 392,
-            "height": 46
-          },
-          "style": {
-            "textColor": "#d4dce8",
-            "font": "${font.zh_CN}",
-            "fontSize": 30,
-            "textAlign": "center"
-          },
-          "labelProps": {
-            "text": "等待首次同步"
+          ],
+          "bindings": {
+            "style.bgColor": "themebgColor"
           }
         }
-      ]
+      ],
+      "bindings": {
+        "style.bgColor": "themebgColor",
+        "style.borderColor": "themeborderColor"
+      }
     }
-  ]
+  ],
+  "bindings": {
+    "style.bgColor": "themebgColor"
+  }
 }

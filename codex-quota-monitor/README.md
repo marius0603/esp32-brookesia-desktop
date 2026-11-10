@@ -1,6 +1,6 @@
 # Codex 额度仪表盘
 
-当前额度 App **0.2.4**、系统固件s3.63（ESP-IDF 6.0.2）：设备额度页前台每60秒发请求，仅Codex桌面已运行时电脑才查询，15秒无有效回应显示已过期。电脑不再主动定时查询。先运行`launch-codex.ps1 -InstallShortcut`，以后通过桌面**Codex (device sync)**打开Codex，监听自动跟随启动/退出，无需单独手动运行同步程序，也不配置开机自启动。原来的Codex入口不会联动。使用及实机验证见 [PACMAN_QUOTA.md](PACMAN_QUOTA.md)，全部应用当前进度见[仓库说明](../README.md)。
+当前额度 App **0.2.5**、系统固件s3.63（ESP-IDF 6.0.2）：设备额度页前台每60秒发请求，仅Codex桌面已运行时电脑才查询，15秒无有效回应显示已过期。电脑不再主动定时查询。先运行`launch-codex.ps1 -InstallShortcut`，以后通过桌面**Codex (device sync)**打开Codex，监听自动跟随启动/退出，无需单独手动运行同步程序，也不配置开机自启动。原来的Codex入口不会联动。使用及实机验证见 [PACMAN_QUOTA.md](PACMAN_QUOTA.md)，全部应用当前进度见[仓库说明](../README.md)。
 
 天气 App 0.2.2 已独立安装，默认上海，由开发板联网获取天气，显示温度、湿度、天气状况和 24 小时预报，背景随天气变化；界面与部署记录见 [WEATHER.md](WEATHER.md)。
 
