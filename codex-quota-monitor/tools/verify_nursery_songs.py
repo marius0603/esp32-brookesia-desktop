@@ -32,7 +32,7 @@ def main():
         assert not book['active'] and not book['sleep_active']
         assert not f('Radio','GetState')['active'] and not f('VoiceAssistant','GetState').get('active',False)
         child=f('ChildMode','GetState');assert not child['enabled'],'Do not bypass parent limits for diagnostics'
-        stories=f('Audiobook','List')['tracks'];songs=f('Audiobook','ListSongs')['tracks']
+        stories=f('Audiobook','List')['tracks'];songs=[t for t in f('Audiobook','ListSongs')['tracks'] if not t['path'].startswith('/sdcard/audiobooks/songs/lullabies/')]
         assert len(songs)==20 and len(stories)==30
         assert not {t['path'] for t in stories}&{t['path'] for t in songs}
         assert {t['title'] for t in songs}=={r['title'] for r in manifest['songs']}

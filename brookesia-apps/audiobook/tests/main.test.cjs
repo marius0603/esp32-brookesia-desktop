@@ -6,8 +6,9 @@ const document=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/screen
 function indexViews(node,parent=''){const key=parent+'/'+node.id;views.add(key);for(const c of node.children||[])indexViews(c,key);}
 indexViews(document);
 class Clock extends Date{static now(){return now;}}
+let desktopTheme=0;
 const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>{bindings.push(n);return n;},call_function(h,n,s){
- const a=JSON.parse(s);calls.push({h,n,a});let data=null;
+ const a=JSON.parse(s);calls.push({h,n,a});let data=null;if(n==='GetEnvironment')data={theme_id:desktopTheme===1?'dark':'light'};
  if(h==='SystemGui'&&a.Path)assert(views.has(a.Path),'Missing GUI view: '+a.Path);
  if(n==='FSReadText'){if(!stored[a.Path])return JSON.stringify({success:false,error:'missing'});data=stored[a.Path];}
  if(n==='FSWriteText')stored[a.Path]=a.Data;
@@ -16,7 +17,7 @@ const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>{bindings.pus
  if(n==='SetSpeed')state={...state,speed:a.Speed};
  if(n==='GetVolume')data=volume;
  if(n==='List')data={mounted,tracks};
- if(n==='GetState')data=h==='DeviceModes'?{do_not_disturb:quiet,resume_volume:30}:h==='OfflineVoice'?{listening:offlineListening}:state;
+ if(n==='GetState')data=h==='DeviceModes'?{do_not_disturb:quiet,resume_volume:30,desktop_theme_index:desktopTheme}:h==='OfflineVoice'?{listening:offlineListening}:state;
  if(n==='ListenNow')offlineListening=true;
  if(n==='SetText')texts[a.Path]=a.Text;
  if(n==='SetBinding'&&a.Path==='/main/sleep/choice')selection=Number(a.Value);
@@ -181,3 +182,6 @@ for(const speed of [1.25,1.5,2,0.5,0.75,1]){
 assert.equal(calls.filter(c=>c.n==='Play').length,playsBeforeSpeed,'Speed changes must not restart the story');
 state={...state,speed:0.75};ctx.brookesia_app.on_timer();assert.equal(texts['/main/tools/speed/label'],'0.75x','Phone speed changes must reach the open device UI');
 console.log('Playback speed passed: default 1x, all six rates, cycling without restart and remote synchronization.');
+
+desktopTheme=1;ctx.brookesia_app.on_timer();assert(calls.some(c=>c.n==='SetBinding'&&c.a.Path==='/main'&&c.a.Value==='#101723'),'Dark desktop theme must reach the app background');
+desktopTheme=0;ctx.brookesia_app.on_timer();assert(calls.some(c=>c.n==='SetBinding'&&c.a.Path==='/main'&&c.a.Value==='#f4ebdd'),'Light desktop theme must reach the app background');

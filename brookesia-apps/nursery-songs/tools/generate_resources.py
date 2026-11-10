@@ -18,11 +18,24 @@ def panel(id,children):
     return dict(type='container',id=id,placement=place(0,54,400,340),commonProps=dict(scrollable=False,hidden=id!='player'),style=dict(bgOpacity=0,borderWidth=0,padding=0),bindings={'commonProps.hidden':'hidden'},children=children)
 
 def main():
-    write('manifest.json',{'package':{'id':'local.nurserysongs','name':{'en':'Nursery Songs','zh_CN':'儿歌'},'version':'0.1.1','visible':True,'systems':['super']},'runtime':{'type':'JavaScript','entry':'app/main.js','resource_dir':'res','arguments':[]},'services':[{'name':'Audiobook','version':'0.1.0'},{'name':'SystemCore','version':'0.8.3'},{'name':'DeviceModes','version':'0.1.0'}]})
-    write('res/root.json',{'version':'0.1.1','assets':['images/index.json','screens/main.json','flows/main.json']})
+    write('manifest.json',{'package':{'id':'local.nurserysongs','name':{'en':'Nursery Songs','zh_CN':'儿歌'},'version':'0.1.3','visible':True,'systems':['super']},'runtime':{'type':'JavaScript','entry':'app/main.js','resource_dir':'res','arguments':[]},'services':[{'name':'Audiobook','version':'0.1.0'},{'name':'SystemCore','version':'0.8.3'},{'name':'DeviceModes','version':'0.1.0'}]})
+    write('res/root.json',{'version':'0.1.3','assets':['images/index.json','screens/main.json','flows/main.json']})
     write('res/profile.json',{'root':'root.json','icon_id':'launcher_icon','screen_flows':[{'screen_flow':'main','layer':'AppDefault'}]})
     write('res/flows/main.json',{'type':'screenFlow','id':'main','screens':['main'],'initial':'main'})
     header=dict(type='container',id='header',placement=place(0,0,400,48),commonProps=dict(scrollable=False),style=dict(bgOpacity=0,borderWidth=0,padding=0),children=[label('volume','音量 --%',22,6,232,36,22),button('lock','锁屏',270,0,110,46,'lock',size=22)])
+    collections=panel('collections',[
+        label('title','音乐专区',20,10,360,46,32),
+        button('nursery','快乐儿歌 · 20首',24,76,352,82,size=30),
+        button('lullaby','摇篮曲 · 10首',24,180,352,82,color='#e4def3',size=30),
+        button('sources','音乐来源',132,292,136,42,'credits',size=21)])
+    credits=panel('credits',[
+        label('title','音乐来源',20,6,360,42,30),
+        label('artist','摇篮曲：Alexander Blu',0,62,400,36,22),
+        label('site','orangefreesounds.com',0,106,400,32,20),
+        label('license','CC BY / BY-NC 4.0',0,144,400,32,20),
+        label('changes','已作单声道和响度处理',0,186,400,32,21),
+        label('nursery','原儿歌：悟空教育公开音频',0,228,400,32,19),
+        button('back','返回',126,286,148,52,'creditsBack',size=24)])
     player=panel('player',[
         label('title','儿歌',12,4,376,50,34),label('count','暂无歌曲',10,58,380,30,20),
         label('progress','0:00 / 0:00',10,91,380,32,24),label('status','准备播放',10,128,380,30,22),
@@ -38,12 +51,13 @@ def main():
     # Paths must stay /main/header, /main/player etc. Avoid a nested content
     # container: absolute coordinates are centered against the 486px screen.
     screen=json.loads((SRC/'res/screens/main.json').read_text(encoding='utf-8'))
-    screen.pop('layout');screen['children']=[header,player,songs,timer]
+    screen.pop('layout');screen['children']=[header,collections,player,songs,timer,credits]
     for item in screen['children']:
         item['placement']['x']=43;item['placement']['y']+=40
     header['placement']=place(73,48,340,48)
-    header['children'][0]['placement']=place(0,6,220,36)
-    header['children'][1]['placement']=place(226,0,100,46)
+    header['children'][0]['placement']=place(0,6,160,36)
+    header['children'][1]['placement']=place(250,0,76,46)
+    header['children'].append(button('collections','专区',168,0,76,46,'collections',size=22))
     write('res/screens/main.json',screen)
     write('res/images/index.json',{'type':'imageSet','images':[{'id':'launcher_icon','src':'launcher_icon.png','width':96,'height':96}]})
     svg='''<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">

@@ -5,7 +5,7 @@
       "en": "Audiobook",
       "zh_CN": "听书"
     },
-    "version": "0.3.6",
+    "version": "0.3.7",
     "visible": true,
     "systems": [
       "super"
@@ -37,6 +37,10 @@
     {
       "name": "OfflineVoice",
       "version": "0.1.0"
+    },
+    {
+      "name": "SystemCore",
+      "version": "0.8.3"
     }
   ]
 }

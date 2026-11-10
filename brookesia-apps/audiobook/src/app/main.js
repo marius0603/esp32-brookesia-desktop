@@ -18,6 +18,26 @@ let speed=1;
 const playModes=['sequence','random','repeat_one'];
 let playMode='sequence';
 let gui, audio, storage, modes, timer, playback, localVoice, tracks=[], index=0, current=null, playing=null, hidden=false, cache={}, volume=20, bookmark=null, lastSaved=0,sleepSelected=-1;
+// AUDIO_THEME_BEGIN
+let audioThemeDark=false,audioThemeIndex=-1,audioThemeCore;
+const audioThemeNodes=[["/main","audioThemebgColor","root"],["/main/header","audioThemebgColor","panel"],["/main/header","audioThemeborderColor","border"],["/main/header/volume","audioThemetextColor","text"],["/main/header/lock","audioThemebgColor","button"],["/main/header/lock","audioThemeborderColor","border"],["/main/header/lock/label","audioThemetextColor","text"],["/main/player","audioThemebgColor","panel"],["/main/player","audioThemeborderColor","border"],["/main/player","audioThemebgGradientColor","panel"],["/main/player/chapter","audioThemetextColor","text"],["/main/player/progress","audioThemetextColor","text"],["/main/player/status","audioThemetextColor","text"],["/main/transport/previous","audioThemebgColor","button"],["/main/transport/previous/label","audioThemetextColor","text"],["/main/transport/toggle","audioThemebgColor","button"],["/main/transport/toggle/label","audioThemetextColor","text"],["/main/transport/next","audioThemebgColor","button"],["/main/transport/next/label","audioThemetextColor","text"],["/main/sleep","audioThemebgColor","panel"],["/main/sleep","audioThemeborderColor","border"],["/main/sleep/label","audioThemetextColor","text"],["/main/sleep/choice","audioThemebgColor","button"],["/main/sleep/choice","audioThemetextColor","text"],["/main/sleep/choice","audioThemeborderColor","border"],["/main/sleep/sleepStatus","audioThemetextColor","text"],["/main/tools","audioThemebgColor","panel"],["/main/tools","audioThemeborderColor","border"],["/main/tools/voice","audioThemebgColor","button"],["/main/tools/voice","audioThemeborderColor","border"],["/main/tools/voice/label","audioThemetextColor","text"],["/main/tools/speed","audioThemebgColor","button"],["/main/tools/speed","audioThemeborderColor","border"],["/main/tools/speed/label","audioThemetextColor","text"],["/main/tools/mode","audioThemebgColor","button"],["/main/tools/mode","audioThemeborderColor","border"]];
+function audioThemeColor(value){
+ const selected=['#e8c477','#e5ad70','#ffedcf','#ffebc7'].includes(value);
+ return selected?(audioThemeDark?'#715d3c':'#e8c477'):(audioThemeDark?'#27364b':'#fffaf1');
+}
+function applyAudioTheme(mode){
+ if(!audioThemeCore)audioThemeCore=brookesia.start_service('SystemCore');
+ const index=call(audioThemeCore,'GetEnvironment').theme_id==='dark'?1:0;
+ if(audioThemeIndex===index&&cache.__audioTheme)return;
+ audioThemeIndex=index;audioThemeDark=index===1;cache={};
+ const palette=audioThemeDark?{root:'#101723',panel:'#192436',button:'#27364b',text:'#f6ecd9',border:'#52647c',accent:'#b99b65'}:{root:'#f4ebdd',panel:'#fff5e6',button:'#fffaf1',text:'#60442f',border:'#c8b18c',accent:'#d6ad6e'};
+ for(const entry of audioThemeNodes)call(gui,'SetBinding',{Path:entry[0],Key:entry[1],Value:palette[entry[2]]});
+ cache.__audioTheme=true;
+ if(typeof view!=='undefined'&&view==='timer')renderTimer();
+ if(typeof screen!=='undefined'&&screen==='timer')renderTimer();
+ if(typeof screen!=='undefined'&&screen==='stations')renderList();
+}
+// AUDIO_THEME_END
 function call(handle,name,args){const r=JSON.parse(brookesia.call_function(handle,name,JSON.stringify(args||{})));if(!r.success)throw new Error(r.error||r.error_message||name);return r.data;}
 const textPaths={volume:'header/volume',chapter:'player/chapter',progress:'player/progress',status:'player/status',sleepStatus:'sleep/sleepStatus'};
 function text(id,value){value=String(value);if(cache[id]===value||hidden)return;call(gui,'SetText',{Path:'/main/'+(textPaths[id]||id),Text:value});cache[id]=value;}
@@ -69,7 +89,7 @@ function poll(){
   else if(next.state==='Ended')text('status',next.path==='@tone'?'测试音播放结束':'本章播放结束');
   const remaining=Math.max(0,Number(next.sleep_remaining_seconds)||0);
   text('sleepStatus',next.sleep_finishing?'晚安':next.sleep_active?String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):next.sleep_completed?'已结束':'');
-  try{const sound=call(modes,'GetState');volume=call(playback,'GetVolume');text('volume',sound.do_not_disturb?'音量 '+sound.resume_volume+'% · 静音':'音量 '+volume+'%');}catch(_){}
+  try{const sound=call(modes,'GetState');applyAudioTheme(sound);volume=call(playback,'GetVolume');text('volume',sound.do_not_disturb?'音量 '+sound.resume_volume+'% · 静音':'音量 '+volume+'%');}catch(_){}
   try{const local=call(localVoice,'GetState');text('tools/voice/label',local.listening?'正在听':'语音控制');if(local.error)text('status','离线语音：'+local.error);}catch(_){}
   if(sleepJustEnded&&actual>=0)save();
   text('progress',clock(next.position)+(next.duration?' / '+clock(next.duration):''));

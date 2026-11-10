@@ -28,7 +28,7 @@
     "phone-remote/tools/downloads.json": "f4dca27ac3cb2d5b30d308eafae0ae106e9108809f3d0d0f595664f98f0e8e1d",
     "phone-remote/tools/requirements-signing.txt": "8b5c18678b29b5e8e0fb586a35ac1dce3ccd9da321e8f12ace0e118350b4e568",
     "platform/super_s3_216/sdkconfig.reproducible": "00cba8885f30a1618c335b79945006bff45c019a38f0d2327b9aeff7f81209a1",
-    "versions.json": "546659a73e18cc200c1319baa2aecdbb072552e38f3309902c1eb1a05b316a5c",
+    "versions.json": "01533d0b8fa73e186bbe442143b204ba84da40185760875d0facb6e226b48791",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.c": "52a51002bd22aac5c2105187c27cd393a34f13143c8ae97b0964ad27dec1c1ea",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.h": "a2fc087b68c25141e2fb7ab56e71b111bee79cf311fcc850d492eb574c0eeffe",
     "patches/transparent-launcher.patch": "b9cbe446371691db2c9e4674b73293646b63ca003a24f59a5c0a2646ce871732",
@@ -47,6 +47,12 @@
     "platform/super_s3_216/main/modules/device_modes/device_modes.cpp": "533bc2d2df6fd4485592312be630d75c99a6fa13bb456352ce998855c5b4e2c4",
     "platform/super_s3_216/main/modules/device_modes/resource_monitor.cpp": "c756c10f98051347df0a11f80b520808a1afeed329cad45468259aa5b76835e5",
     "platform/super_s3_216/main/modules/device_modes/resource_monitor.hpp": "9c363df5ff41cf0e193d448e4af42224f242e3ad3047d67607f7b2c6082b1210",
-    "platform/super_s3_216/main/modules/device_modes/resource_math.hpp": "1c41257f73bc36729829e95ec5e3f419c8849be4583b79eabfa69af9539fb020"
+    "platform/super_s3_216/main/modules/device_modes/resource_math.hpp": "1c41257f73bc36729829e95ec5e3f419c8849be4583b79eabfa69af9539fb020",
+    "samples/songs/lullabies-20261109.json": "7d38adc61321c182e5b1f68c1647dc4dd2bf70ecb341e6507832d5f6eb5f1b0b",
+    "brookesia-apps/nursery-songs/src/app/main.js": "697b82f0bf321e3d5aea47a2d7badfc4f3f19067613caba7f179fb09be0208b6",
+    "brookesia-apps/nursery-songs/src/res/screens/main.json": "ea7853ee1ce984c494ea35b36db7d9ed9bdd67a6085a7876f5d60b8d557ae5b7",
+    "tools/apply_audio_themes.py": "2f5e1024e67e797320cc7994df0e1faf3cd8423bae648a6a8ba1bc3a421bcd6d",
+    "brookesia-apps/audiobook/src/app/main.js": "62890db3b05cf30e272ea0515c46cc9eb2eb6ed83deccd099cfcd80e347af5cf",
+    "brookesia-apps/radio/src/app/main.js": "afb5c7b18facbb1123fd599ad93ddabfdf3b57bdf846323ae80df0f3814f12f8"
   }
 }

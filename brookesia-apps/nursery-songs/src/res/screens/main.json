@@ -36,7 +36,7 @@
             "mode": "absolute",
             "x": 0,
             "y": 6,
-            "width": 220,
+            "width": 160,
             "height": 36
           },
           "style": {
@@ -47,6 +47,9 @@
           },
           "labelProps": {
             "text": "音量 --%"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -54,9 +57,9 @@
           "id": "lock",
           "placement": {
             "mode": "absolute",
-            "x": 226,
+            "x": 250,
             "y": 0,
-            "width": 100,
+            "width": 76,
             "height": 46
           },
           "commonProps": {
@@ -71,7 +74,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -100,6 +104,293 @@
               },
               "labelProps": {
                 "text": "锁屏"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "collections",
+          "placement": {
+            "mode": "absolute",
+            "x": 168,
+            "y": 0,
+            "width": 76,
+            "height": 46
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "collections"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 64,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 22,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "专区"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "collections",
+      "placement": {
+        "mode": "absolute",
+        "x": 43,
+        "y": 94,
+        "width": 400,
+        "height": 340
+      },
+      "commonProps": {
+        "scrollable": false,
+        "hidden": true
+      },
+      "style": {
+        "bgOpacity": 0,
+        "borderWidth": 0,
+        "padding": 0
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 20,
+            "y": 10,
+            "width": 360,
+            "height": 46
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 32,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "音乐专区"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
+          }
+        },
+        {
+          "type": "button",
+          "id": "nursery",
+          "placement": {
+            "mode": "absolute",
+            "x": 24,
+            "y": 76,
+            "width": 352,
+            "height": 82
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "nursery"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 340,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 30,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "快乐儿歌 · 20首"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "lullaby",
+          "placement": {
+            "mode": "absolute",
+            "x": 24,
+            "y": 180,
+            "width": 352,
+            "height": 82
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#e4def3",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "lullaby"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 340,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 30,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "摇篮曲 · 10首"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
+              }
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "sources",
+          "placement": {
+            "mode": "absolute",
+            "x": 132,
+            "y": 292,
+            "width": 136,
+            "height": 42
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "credits"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 124,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 21,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "音乐来源"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -147,6 +438,9 @@
           },
           "labelProps": {
             "text": "儿歌"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -167,6 +461,9 @@
           },
           "labelProps": {
             "text": "暂无歌曲"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -187,6 +484,9 @@
           },
           "labelProps": {
             "text": "0:00 / 0:00"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -207,6 +507,9 @@
           },
           "labelProps": {
             "text": "准备播放"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -231,7 +534,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -260,6 +564,9 @@
               },
               "labelProps": {
                 "text": "上一首"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -286,7 +593,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -315,6 +623,9 @@
               },
               "labelProps": {
                 "text": "播放"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -341,7 +652,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -370,6 +682,9 @@
               },
               "labelProps": {
                 "text": "下一首"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -396,7 +711,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -425,6 +741,9 @@
               },
               "labelProps": {
                 "text": "选歌"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -451,7 +770,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -480,6 +800,9 @@
               },
               "labelProps": {
                 "text": "顺序播放"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -506,7 +829,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -535,6 +859,9 @@
               },
               "labelProps": {
                 "text": "定时"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -557,6 +884,9 @@
           },
           "labelProps": {
             "text": ""
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         }
       ]
@@ -602,6 +932,9 @@
           },
           "labelProps": {
             "text": "儿歌列表"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -626,7 +959,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -655,6 +989,9 @@
               },
               "labelProps": {
                 "text": ""
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -681,7 +1018,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -710,6 +1048,9 @@
               },
               "labelProps": {
                 "text": ""
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -736,7 +1077,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -765,6 +1107,9 @@
               },
               "labelProps": {
                 "text": ""
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -791,7 +1136,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -820,6 +1166,9 @@
               },
               "labelProps": {
                 "text": ""
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -846,7 +1195,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -875,6 +1225,9 @@
               },
               "labelProps": {
                 "text": "上一页"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -897,6 +1250,9 @@
           },
           "labelProps": {
             "text": "1 / 5"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -921,7 +1277,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -950,6 +1307,9 @@
               },
               "labelProps": {
                 "text": "下一页"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -976,7 +1336,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -1005,6 +1366,9 @@
               },
               "labelProps": {
                 "text": "返回"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1052,6 +1416,9 @@
           },
           "labelProps": {
             "text": "睡眠定时"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -1076,7 +1443,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -1105,6 +1473,9 @@
               },
               "labelProps": {
                 "text": "关闭"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1131,7 +1502,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -1160,6 +1532,9 @@
               },
               "labelProps": {
                 "text": "15分钟"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1186,7 +1561,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -1215,6 +1591,9 @@
               },
               "labelProps": {
                 "text": "30分钟"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1241,7 +1620,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -1270,6 +1650,9 @@
               },
               "labelProps": {
                 "text": "45分钟"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1292,6 +1675,9 @@
           },
           "labelProps": {
             "text": "最后两分钟渐弱"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -1316,7 +1702,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -1345,6 +1732,9 @@
               },
               "labelProps": {
                 "text": "返回"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1371,7 +1761,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "layout": {
             "type": "flex",
@@ -1400,11 +1791,239 @@
               },
               "labelProps": {
                 "text": "确定"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "credits",
+      "placement": {
+        "mode": "absolute",
+        "x": 43,
+        "y": 94,
+        "width": 400,
+        "height": 340
+      },
+      "commonProps": {
+        "scrollable": false,
+        "hidden": true
+      },
+      "style": {
+        "bgOpacity": 0,
+        "borderWidth": 0,
+        "padding": 0
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 20,
+            "y": 6,
+            "width": 360,
+            "height": 42
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 30,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "音乐来源"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
+          }
+        },
+        {
+          "type": "label",
+          "id": "artist",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 62,
+            "width": 400,
+            "height": 36
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 22,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "摇篮曲：Alexander Blu"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
+          }
+        },
+        {
+          "type": "label",
+          "id": "site",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 106,
+            "width": 400,
+            "height": 32
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 20,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "orangefreesounds.com"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
+          }
+        },
+        {
+          "type": "label",
+          "id": "license",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 144,
+            "width": 400,
+            "height": 32
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 20,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "CC BY / BY-NC 4.0"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
+          }
+        },
+        {
+          "type": "label",
+          "id": "changes",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 186,
+            "width": 400,
+            "height": 32
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 21,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "已作单声道和响度处理"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
+          }
+        },
+        {
+          "type": "label",
+          "id": "nursery",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 228,
+            "width": 400,
+            "height": 32
+          },
+          "style": {
+            "font": "${font.audiobook_title}",
+            "fontSize": 19,
+            "textColor": "#60442f",
+            "textAlign": "center"
+          },
+          "labelProps": {
+            "text": "原儿歌：悟空教育公开音频"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
+          }
+        },
+        {
+          "type": "button",
+          "id": "back",
+          "placement": {
+            "mode": "absolute",
+            "x": 126,
+            "y": 286,
+            "width": 148,
+            "height": 52
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "bgColor": "#fff6e2",
+            "borderColor": "#c8b18c",
+            "borderWidth": 1,
+            "radius": 18,
+            "padding": 0
+          },
+          "bindings": {
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
+          },
+          "layout": {
+            "type": "flex",
+            "mainAlign": "center",
+            "crossAlign": "center"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "creditsBack"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "width": 136,
+                "height": 36
+              },
+              "style": {
+                "font": "${font.audiobook_title}",
+                "fontSize": 24,
+                "textColor": "#60442f",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "返回"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
         }
       ]
     }
-  ]
+  ],
+  "bindings": {
+    "style.bgColor": "audioThemebgColor"
+  }
 }

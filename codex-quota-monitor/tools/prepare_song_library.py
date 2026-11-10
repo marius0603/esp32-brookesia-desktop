@@ -34,8 +34,14 @@ def main():
     for r in m['songs']:
         assert Path(r['filename']).name == r['filename'] and r['filename'].endswith('.mp3')
         u = urllib.parse.urlsplit(r['download'])
-        assert u.scheme == 'https' and u.hostname == 'cdnwukong.com'
-        assert u.path.startswith('/public/blog/wp-content/uploads/2024/07/')
+        assert u.scheme == 'https'
+        if u.hostname == 'cdnwukong.com':
+            assert u.path.startswith('/public/blog/wp-content/uploads/2024/07/')
+        elif u.hostname in ('orangefreesounds.com','www.orangefreesounds.com'):
+            assert u.path.startswith('/wp-content/uploads/') and u.path.endswith('.mp3')
+            assert r['artist']=='Alexander Blu' and r['license'] in ('CC-BY-4.0','CC-BY-NC-4.0')
+        else:
+            raise AssertionError('Unreviewed audio host')
         raw = output/('raw-'+r['filename'])
         out = output/('normalized-'+r['filename'])
         if not raw.exists():

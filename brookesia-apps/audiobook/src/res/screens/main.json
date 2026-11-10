@@ -52,6 +52,9 @@
           },
           "labelProps": {
             "text": "音量 --%"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -90,9 +93,16 @@
               },
               "labelProps": {
                 "text": "锁屏"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
-          ]
+          ],
+          "bindings": {
+            "style.bgColor": "audioThemebgColor",
+            "style.borderColor": "audioThemeborderColor"
+          }
         }
       ],
       "layout": {
@@ -100,6 +110,10 @@
         "flexFlow": "row",
         "mainAlign": "spaceBetween",
         "crossAlign": "center"
+      },
+      "bindings": {
+        "style.bgColor": "audioThemebgColor",
+        "style.borderColor": "audioThemeborderColor"
       }
     },
     {
@@ -141,6 +155,9 @@
           },
           "labelProps": {
             "text": "暂无故事"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -161,6 +178,9 @@
           },
           "labelProps": {
             "text": "0:00:00"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -181,9 +201,17 @@
           },
           "labelProps": {
             "text": "未播放"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         }
-      ]
+      ],
+      "bindings": {
+        "style.bgColor": "audioThemebgColor",
+        "style.borderColor": "audioThemeborderColor",
+        "style.bgGradientColor": "audioThemebgGradientColor"
+      }
     },
     {
       "type": "container",
@@ -242,9 +270,15 @@
               },
               "labelProps": {
                 "text": "上一章"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
-          ]
+          ],
+          "bindings": {
+            "style.bgColor": "audioThemebgColor"
+          }
         },
         {
           "type": "button",
@@ -281,9 +315,15 @@
               },
               "labelProps": {
                 "text": "播放"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
-          ]
+          ],
+          "bindings": {
+            "style.bgColor": "audioThemebgColor"
+          }
         },
         {
           "type": "button",
@@ -320,9 +360,15 @@
               },
               "labelProps": {
                 "text": "下一章"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
-          ]
+          ],
+          "bindings": {
+            "style.bgColor": "audioThemebgColor"
+          }
         }
       ]
     },
@@ -364,6 +410,9 @@
           },
           "labelProps": {
             "text": "睡眠定时"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -396,7 +445,10 @@
             "selectedIndex": 0
           },
           "bindings": {
-            "dropdownProps.selectedIndex": "selected"
+            "dropdownProps.selectedIndex": "selected",
+            "style.bgColor": "audioThemebgColor",
+            "style.textColor": "audioThemetextColor",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -423,9 +475,16 @@
           },
           "labelProps": {
             "text": ""
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         }
-      ]
+      ],
+      "bindings": {
+        "style.bgColor": "audioThemebgColor",
+        "style.borderColor": "audioThemeborderColor"
+      }
     },
     {
       "type": "container",
@@ -483,9 +542,16 @@
               },
               "labelProps": {
                 "text": "语音控制"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
-          ]
+          ],
+          "bindings": {
+            "style.bgColor": "audioThemebgColor",
+            "style.borderColor": "audioThemeborderColor"
+          }
         },
         {
           "type": "button",
@@ -523,9 +589,16 @@
               },
               "labelProps": {
                 "text": "1x"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
-          ]
+          ],
+          "bindings": {
+            "style.bgColor": "audioThemebgColor",
+            "style.borderColor": "audioThemeborderColor"
+          }
         },
         {
           "type": "button",
@@ -567,7 +640,11 @@
                 "src": "${image.mode_sequence}"
               }
             }
-          ]
+          ],
+          "bindings": {
+            "style.bgColor": "audioThemebgColor",
+            "style.borderColor": "audioThemeborderColor"
+          }
         }
       ],
       "layout": {
@@ -575,7 +652,14 @@
         "flexFlow": "row",
         "mainAlign": "spaceBetween",
         "crossAlign": "center"
+      },
+      "bindings": {
+        "style.bgColor": "audioThemebgColor",
+        "style.borderColor": "audioThemeborderColor"
       }
     }
-  ]
+  ],
+  "bindings": {
+    "style.bgColor": "audioThemebgColor"
+  }
 }

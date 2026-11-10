@@ -57,6 +57,9 @@
           },
           "labelProps": {
             "text": "小马电台"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -83,6 +86,9 @@
           },
           "labelProps": {
             "text": "Wi-Fi"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -131,7 +137,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -164,6 +171,9 @@
               },
               "labelProps": {
                 "text": "锁屏"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -192,6 +202,9 @@
           },
           "labelProps": {
             "text": "苏州儿童广播"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -218,6 +231,9 @@
           },
           "labelProps": {
             "text": "中文 · 亲子广播，按节目表播出"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -243,7 +259,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -276,6 +293,9 @@
               },
               "labelProps": {
                 "text": "上一台"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -303,7 +323,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -336,6 +357,9 @@
               },
               "labelProps": {
                 "text": "播放"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -363,7 +387,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -396,6 +421,9 @@
               },
               "labelProps": {
                 "text": "下一台"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -424,6 +452,9 @@
           },
           "labelProps": {
             "text": "准备播放"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -450,6 +481,9 @@
           },
           "labelProps": {
             "text": "音量 --%"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -475,7 +509,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -508,6 +543,9 @@
               },
               "labelProps": {
                 "text": "选频道"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -535,7 +573,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -568,6 +607,9 @@
               },
               "labelProps": {
                 "text": "定时"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -621,6 +663,9 @@
           },
           "labelProps": {
             "text": "选频道"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -646,7 +691,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -679,6 +725,9 @@
               },
               "labelProps": {
                 "text": "返回"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -706,7 +755,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -739,6 +789,9 @@
               },
               "labelProps": {
                 "text": "儿童"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -766,7 +819,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -799,6 +853,9 @@
               },
               "labelProps": {
                 "text": "音乐"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -826,7 +883,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -859,6 +917,9 @@
               },
               "labelProps": {
                 "text": "资讯"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -886,7 +947,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -919,6 +981,9 @@
               },
               "labelProps": {
                 "text": "收藏"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -946,7 +1011,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -979,6 +1045,9 @@
               },
               "labelProps": {
                 "text": "童"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             },
             {
@@ -1005,6 +1074,9 @@
               },
               "labelProps": {
                 "text": "频道"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             },
             {
@@ -1031,6 +1103,9 @@
               },
               "labelProps": {
                 "text": "频道说明"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1058,7 +1133,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -1091,6 +1167,9 @@
               },
               "labelProps": {
                 "text": "童"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             },
             {
@@ -1117,6 +1196,9 @@
               },
               "labelProps": {
                 "text": "频道"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             },
             {
@@ -1143,6 +1225,9 @@
               },
               "labelProps": {
                 "text": "频道说明"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1170,7 +1255,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -1203,6 +1289,9 @@
               },
               "labelProps": {
                 "text": "童"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             },
             {
@@ -1229,6 +1318,9 @@
               },
               "labelProps": {
                 "text": "频道"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             },
             {
@@ -1255,6 +1347,9 @@
               },
               "labelProps": {
                 "text": "频道说明"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1282,7 +1377,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -1315,6 +1411,9 @@
               },
               "labelProps": {
                 "text": "中文优先 · 英语已标注"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1368,6 +1467,9 @@
           },
           "labelProps": {
             "text": "睡眠定时"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -1393,7 +1495,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -1426,6 +1529,9 @@
               },
               "labelProps": {
                 "text": "返回"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1454,6 +1560,9 @@
           },
           "labelProps": {
             "text": "到时停止播放，陪你安心入睡"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -1480,6 +1589,9 @@
           },
           "labelProps": {
             "text": "晚安电台"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -1505,7 +1617,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -1538,6 +1651,9 @@
               },
               "labelProps": {
                 "text": "关闭"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1565,7 +1681,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -1598,6 +1715,9 @@
               },
               "labelProps": {
                 "text": "15 分钟"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1625,7 +1745,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -1658,6 +1779,9 @@
               },
               "labelProps": {
                 "text": "30 分钟"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1685,7 +1809,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -1718,6 +1843,9 @@
               },
               "labelProps": {
                 "text": "45 分钟"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
@@ -1746,6 +1874,9 @@
           },
           "labelProps": {
             "text": "持续收听，不自动停止"
+          },
+          "bindings": {
+            "style.textColor": "audioThemetextColor"
           }
         },
         {
@@ -1771,7 +1902,8 @@
           },
           "bindings": {
             "style.bgColor": "bg",
-            "commonProps.hidden": "hidden"
+            "commonProps.hidden": "hidden",
+            "style.borderColor": "audioThemeborderColor"
           },
           "events": [
             {
@@ -1804,11 +1936,17 @@
               },
               "labelProps": {
                 "text": "确定"
+              },
+              "bindings": {
+                "style.textColor": "audioThemetextColor"
               }
             }
           ]
         }
       ]
     }
-  ]
+  ],
+  "bindings": {
+    "style.bgColor": "audioThemebgColor"
+  }
 }
