@@ -1,10 +1,10 @@
 # Codex 额度仪表盘
 
-当前部署：ESP-Brookesia 0.8 本地适配版 0.8.3-s3.3（ESP-IDF 6.0.2），额度 App 0.2.2 已通过 USB 独立安装，使用吃豆人和豆子显示真实剩余额度，用户确认显示和动画正常。额度、天气的重复打开错误已修复，各连续重开 6 次全部通过。电脑端使用 `device_protocol=brookesia`、`serial_port=COM5`。s3.2 已修正触摸约 90° 错位并优化绘图与缓存；用户实测确认点击位置正常、已基本流畅。部署、开发和回退见 [BROOKESIA.md](BROOKESIA.md)，验证记录见 [BROOKESIA_VERIFICATION.md](BROOKESIA_VERIFICATION.md)，额度动画说明见 [PACMAN_QUOTA.md](PACMAN_QUOTA.md)。
+当前额度 App **0.2.4**、系统固件s3.63（ESP-IDF 6.0.2）：设备额度页前台每60秒发请求，仅Codex桌面已运行时电脑才查询，15秒无有效回应显示已过期。电脑不再主动定时查询。先运行`launch-codex.ps1 -InstallShortcut`，以后通过桌面**Codex (device sync)**打开Codex，监听自动跟随启动/退出，无需单独手动运行同步程序，也不配置开机自启动。原来的Codex入口不会联动。使用及实机验证见 [PACMAN_QUOTA.md](PACMAN_QUOTA.md)，全部应用当前进度见[仓库说明](../README.md)。
 
 天气 App 0.2.2 已独立安装，默认上海，由开发板联网获取天气，显示温度、湿度、天气状况和 24 小时预报，背景随天气变化；界面与部署记录见 [WEATHER.md](WEATHER.md)。
 
-Windows 电脑端持续采集并推送额度。原厂系统及独立额度固件 0.3.0 的两份完整 16 MiB Flash 备份均保留，后者使用 ESP-IDF 5.5.5。`brookesia/components/codex_quota_app` 是旧出厂系统集成方案的参考组件，不用于当前 0.8 运行时 App。
+Windows电脑端监听设备请求后按需查询，不会主动打开Codex桌面。原厂系统及独立额度固件0.3.0的完整Flash备份仅在本机私有保存，后者使用ESP-IDF 5.5.5。`brookesia/components/codex_quota_app`是旧出厂系统集成参考，不用于当前0.8运行时App。以下独立固件界面和编译内容仅作历史说明。
 
 `firmware/` 是回退用的独立额度固件工程，0.1.0 固件包为旧原型。烧录入口会核对完整备份和设备身份。
 
@@ -16,7 +16,7 @@ Windows 电脑端持续采集并推送额度。原厂系统及独立额度固件
 
 项目目录：D:\chatgpt_data\codex-quota-monitor
 
-本机已安装好电脑端依赖。双击 start.cmd 可启动后台并打开实时预览，双击 stop.cmd 停止后台。关闭独立预览窗口不会停止后台采集。
+本机已安装好电脑端依赖。日常使用Codex联动快捷方式即可；`start.cmd/start.ps1`保留为Codex已打开时手动启动监听的入口，`stop.cmd/stop.ps1`停止监听。关闭预览窗口不停止监听，但实际退出Codex桌面会停止监听。
 
 首次安装依赖并验证当前账号：
 
@@ -48,9 +48,9 @@ powershell -ExecutionPolicy Bypass -File .\preview.ps1
 powershell -ExecutionPolicy Bypass -File .\stop.ps1
 ~~~
 
-需要登录 Windows 后自动启动时，执行 install-startup.ps1；使用 -Remove 删除该项目创建的启动项。
+按当前用户设置不安装Windows登录自启动；已有旧启动项可用`install-startup.ps1 -Remove`移除。新联动入口通过`launch-codex.ps1 -InstallShortcut`创建。
 
-config.json 可设置采集间隔、过期阈值、指定 USB 串口、提醒阈值和 Codex 路径。修改后重启后台。默认每 60 秒查询一次，每 2 秒推送到设备；电脑与设备之间仅发送额度数据。首次运行必须已在 Codex 中使用 ChatGPT 账号登录。API Key 登录不提供这里监控的订阅额度。
+config.json可指定USB串口、提醒阈值和Codex路径，修改后重启监听。当前Brookesia模式约每2秒读取设备请求，每个新请求查询一次并回复，不周期推送；设备前台每60秒请求、15秒无有效回应即过期。`poll_seconds/stale_seconds`保留用于旧独立固件和电脑预览，不控制新版设备的60/15秒规则。电脑与设备之间仅发送额度和请求ID；需在Codex中使用ChatGPT账号登录。
 
 运行数据位于 runtime/latest.json，滚动日志位于 runtime/monitor.log。采集通过官方 Codex app-server 的 account/rateLimits/read 完成，不发起模型对话。程序不会读取或复制 auth.json 的内容。
 

@@ -127,5 +127,6 @@
   "packages/apps/local.childmode.debug.0.1.3.bpk": "bc90665e7c12df89d1899befa0493112123378466b37a2e23865e13a8c8b0fa1",
   "packages/firmware/brookesia-s3.62.bin": "ad2e9debddc22467c1fa185d8f5e2d4dad9648c79956c1a6b881d6e6bfe00b8a",
   "packages/apps/local.childmode.debug.0.1.4.bpk": "8d1c35f307173b70406a7173dee0b297d723feb01994a00d12e3a3d8195e4d4b",
-  "packages/firmware/brookesia-s3.63.bin": "8a5b0236ceb9d71f380eeb6b3d8e78a902fb000763b3fcad7d4106dbe6838ad6"
+  "packages/firmware/brookesia-s3.63.bin": "8a5b0236ceb9d71f380eeb6b3d8e78a902fb000763b3fcad7d4106dbe6838ad6",
+  "packages/apps/local.codex.quota.debug.0.2.4.bpk": "abbb8776bbf5b3de4d5af2a20da4a06aa07e27013409c916b959c8dc0f5b9522"
 }

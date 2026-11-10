@@ -7,7 +7,7 @@
   "apps": {
     "local.radio": "0.1.3",
     "local.audiobook": "0.3.7",
-    "local.codex.quota": "0.2.3",
+    "local.codex.quota": "0.2.4",
     "local.flipclock": "0.2.5",
     "local.weather": "0.2.9",
     "local.voiceassistant": "0.2.3",

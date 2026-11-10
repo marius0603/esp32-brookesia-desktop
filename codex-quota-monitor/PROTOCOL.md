@@ -1,4 +1,22 @@
-# USB JSON Lines 协议 v1
+# 额度同步协议
+
+## 当前Brookesia模式：设备请求、电脑回应
+
+额度App0.2.4通过Storage文件交换数据，USB命令使用Brookesia原有协议。以下请求仅在额度页前台有效，启动/恢复立即发出，之后每60秒一个新ID：
+
+```json
+{"type":"quota_request","v":1,"request_id":"unique-session-sequence","active":true}
+```
+
+设备写`/littlefs/quota-request.json`，离开页面将`active`置false。Codex联动监听约每2秒检查，收到新的active请求且Codex桌面进程仍在运行，才调用官方app-server查询真实额度；不发起对话。查询后辅助进程关闭，回应写入`/littlefs/quota.json`，沿用下方额度帧字段并附带原`request_id`。
+
+只接受匹配当前请求的结果；15秒没有有效结果即显示已过期、保留旧数字并暂停动画。失败查询保留原`sampled_at/windows`，不能伪造新采样；登录失效单独提示需登录。晚到的当前请求成功结果允许恢复，旧请求响应不允许。电脑不定时查询、不发送保活缓存，已完成请求不重复写入设备Flash。
+
+监听随**Codex (device sync)**快捷方式启动，Codex桌面退出后结束；不注册开机自启动。识别桌面时排除查询app-server。`bridge_at`仅作为设备倒计时时间基准，不作为请求是否成功的依据。
+
+## 历史独立固件：USB JSON Lines v1
+
+下面的2秒推送、8秒断连等规则只适用于旧独立固件，不适用于上面的Brookesia请求模式。
 
 USB 使用 ESP32-S3 内置 USB Serial/JTAG，电脑端串口参数为 115200 8N1。物理 USB 链路不依赖波特率。每个消息为单行 UTF-8 JSON，以 LF 结束；额度包上限 2048 字节。固件日志输出到 UART0，避免混入 USB 协议。
 

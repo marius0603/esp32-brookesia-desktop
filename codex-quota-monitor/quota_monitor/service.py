@@ -8,6 +8,7 @@ import time
 from .bridge import SerialBridge
 from .model import normalize
 from .rpc import CodexClient
+from .desktop import is_codex_running
 
 ROOT = Path(__file__).resolve().parents[1]
 LOG = logging.getLogger(__name__)
@@ -37,6 +38,8 @@ class Monitor:
         self.stop = threading.Event()
         self.refresh = threading.Event()
         self.last_attempt = 0.0
+        self.pending_request = None
+        self.request_only = config.get('device_protocol') == 'brookesia'
         self.snapshot = {
             "type": "quota", "v": 1, "sampled_at": None, "status": "starting",
             "windows": [], "plan": "", "bucket": "codex",
@@ -71,18 +74,32 @@ class Monitor:
                 self.persist()
                 LOG.info("Display connection: %s", device)
 
-    def request_refresh(self):
+    def request_refresh(self, request_id=None):
+        if self.request_only:
+            if not isinstance(request_id, str) or not 1 <= len(request_id) <= 120:
+                return
+            with self.lock:
+                self.pending_request = request_id
+                self.refresh.set()
+            return
         # Shared throttle applies to both button and touch requests.
         if time.monotonic() - self.last_attempt >= 15:
             self.refresh.set()
 
-    def poll_once(self):
+    def poll_once(self, request_id=None):
+        if self.request_only and (not request_id or not is_codex_running()):
+            LOG.info('Quota query skipped: device request and running Codex desktop are required')
+            return False
         self.last_attempt = time.monotonic()
         try:
             if self.client is None:
                 self.client = CodexClient(self.config.get("codex_path", ""))
             result = self.client.read_quota()
+            if self.request_only and (self.stop.is_set() or not is_codex_running()):
+                return False
             packet = normalize(result)
+            if request_id:
+                packet['request_id'] = request_id
             with self.lock:
                 self.snapshot = packet
             LOG.info("Quota updated: %s", ", ".join(f"{w['minutes']}min {100-w['used']:g}% remaining" for w in packet["windows"]))
@@ -92,11 +109,19 @@ class Monitor:
             with self.lock:
                 self.snapshot["status"] = "auth_required" if error == "auth_required" else "error"
                 self.snapshot["error"] = error
+                if request_id:
+                    self.snapshot['request_id'] = request_id
             LOG.warning("Quota read failed: %s", error)
             if self.client:
                 self.client.close()
                 self.client = None
             success = False
+        finally:
+            # The desktop app must already exist. Its separate read-only query
+            # helper is short-lived and never keeps the listener alive itself.
+            if self.request_only and self.client:
+                self.client.close()
+                self.client = None
         self.persist()
         return success
 
@@ -108,9 +133,16 @@ class Monitor:
                 request.unlink(missing_ok=True)
                 self.stop.set()
                 break
-            if time.monotonic() >= next_poll or self.refresh.is_set():
-                self.refresh.clear()
-                self.poll_once()
+            if self.request_only and not is_codex_running():
+                LOG.info('Codex desktop exited; stopping USB request listener')
+                self.stop.set()
+                break
+            if (not self.request_only and time.monotonic() >= next_poll) or self.refresh.is_set():
+                with self.lock:
+                    request_id = self.pending_request
+                    self.pending_request = None
+                    self.refresh.clear()
+                self.poll_once(request_id)
                 next_poll = time.monotonic() + self.config.get("poll_seconds", 60)
             # File heartbeat lets an independently opened preview detect a stopped bridge.
             self.persist()
@@ -126,15 +158,28 @@ class Monitor:
             from .brookesia import BrookesiaBridge
             bridge_type = BrookesiaBridge
         bridge = bridge_type(self.config, self.get_snapshot, self.request_refresh, self.set_device, self.stop)
-        for target in (self._poll_loop, bridge.run):
+        targets = [self._poll_loop, bridge.run]
+        if self.request_only:
+            targets.append(self._lifecycle_loop)
+        for target in targets:
             thread = threading.Thread(target=target, daemon=True)
             self.threads.append(thread)
             thread.start()
 
+    def _lifecycle_loop(self):
+        # Separate from a potentially blocked cloud request so closing Codex
+        # also interrupts its short-lived query helper promptly.
+        while not self.stop.wait(1):
+            if not is_codex_running():
+                LOG.info('Codex desktop exited; stopping USB request listener')
+                self.stop.set()
+                break
+
     def close(self):
         self.stop.set()
         # Termination unblocks a pending RPC read before process shutdown.
-        if self.client and self.client.process.poll() is None:
-            self.client.process.terminate()
+        client = self.client
+        if client and client.process.poll() is None:
+            client.process.terminate()
         for thread in self.threads:
             thread.join(timeout=6)

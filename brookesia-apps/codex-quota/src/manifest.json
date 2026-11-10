@@ -5,7 +5,7 @@
       "en": "Quota Display",
       "zh_CN": "额度显示"
     },
-    "version": "0.2.3",
+    "version": "0.2.4",
     "visible": true,
     "systems": [
       "super"

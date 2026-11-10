@@ -90,22 +90,35 @@ class StableUsbClient(UsbClient):
 
 class BrookesiaBridge(SerialBridge):
     def _connect(self, port):
+        last_request, delivered = None, None
         while not self.stop.is_set():
             try:
                 with StableUsbClient(port, self.config.get('baudrate', 115200)) as client:
                     client.hello()
+                    exists = client.call('Storage', 'FSStat', {'Path': '/littlefs/quota-request.json'})['result']['exists']
+                    if exists:
+                        request = json.loads(client.call('Storage', 'FSReadText', {'Path': '/littlefs/quota-request.json'})['result'])
+                        request_id = request.get('request_id')
+                        if request.get('type') == 'quota_request' and request.get('v') == 1 and request.get('active') is True and isinstance(request_id, str) and 1 <= len(request_id) <= 120 and request_id != last_request:
+                            self.request_refresh(request_id)
+                            last_request = request_id
+                        if request.get('active') is not True:
+                            last_request = None
                     packet = self.get_snapshot()
-                    packet['bridge_at'] = int(time.time())
-                    response = client.call('Storage', 'FSWriteText', {
-                        'Path': '/littlefs/quota.json',
-                        'Data': json.dumps(packet, ensure_ascii=False, allow_nan=False),
-                    })
-                    # USB unwraps FunctionResult: void writes return result=null;
-                    # failed service calls use ok=false and UsbClient raises.
-                    if response.get('ok') is not True:
-                        raise RuntimeError('quota_write_failed')
+                    # Only deliver a completed query for this exact request.
+                    # Re-sending a cached heartbeat must not renew its validity.
+                    key = (packet.get('request_id'), packet.get('sampled_at'), packet.get('status'))
+                    if last_request and packet.get('request_id') == last_request and key != delivered:
+                        packet['bridge_at'] = int(time.time())
+                        response = client.call('Storage', 'FSWriteText', {
+                            'Path': '/littlefs/quota.json',
+                            'Data': json.dumps(packet, ensure_ascii=False, allow_nan=False),
+                        })
+                        if response.get('ok') is not True:
+                            raise RuntimeError('quota_write_failed')
+                        delivered = key
                 self.set_device(port)
             except (RuntimeError, TimeoutError) as exc:
                 raise serial.SerialException('Brookesia USB delivery failed') from exc
-            if self.stop.wait(15):
+            if self.stop.wait(2):
                 return

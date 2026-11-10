@@ -2,7 +2,15 @@
 'use strict';
 let gui, storage, timer, lastBridge = 0, received = 0, rendered = 0, data = null, paused = false;
 let fxTimer=0, frames=0, isStale=true, cache={}, primaryUsed=null, secondaryUsed=null;
+let requestId='', requestAt=0, responded=false, fresh=false, hasExpired=false, quotaTimer=0;
+const REQUEST_MS=60000, RESPONSE_MS=15000;
 const PAC_TRAVEL=358;
+function requestQuota(active=true){
+  if(active){requestId=String(Date.now())+'-'+String(Math.random()).slice(2);requestAt=Date.now();responded=false;}
+  try{call(storage,'FSWriteText',{Path:'/littlefs/quota-request.json',Data:JSON.stringify({
+    type:'quota_request',v:1,request_id:requestId,active:active
+  })});}catch(_){} // No successful response still expires locally.
+}
 function trackPath(name){return '/main/card_'+name.replace('track_','')+'/'+name;}
 function textPath(id){return id==='status'?'/main/sync/status':'/main/card_'+(id.endsWith('primary')?'primary':'secondary')+'/'+id;}
 function call(handle, name, args) {
@@ -28,7 +36,8 @@ function persistState(){
   try{call(storage,'FSWriteText',{Path:'/littlefs/quota-ui-state.json',Data:JSON.stringify({version:2,
     sampled_at:data?data.sampled_at:0,primary_remaining:primaryUsed===null?null:100-primaryUsed,
     secondary_remaining:secondaryUsed===null?null:100-secondaryUsed,stale:isStale,animation_frames:frames,
-    primary_x:pacX(primaryUsed),secondary_x:pacX(secondaryUsed)})});}catch(_){}
+    primary_x:pacX(primaryUsed),secondary_x:pacX(secondaryUsed),request_id:requestId,
+    responded:responded,status:cache.status})});}catch(_){}
 }
 function animate(){
   if(paused||!data||isStale||data.status!=='ok')return;
@@ -51,20 +60,28 @@ function reset(at, now) {
 }
 function tick() {
   if (paused) return;
+  if(!requestId || Date.now()<requestAt || Date.now()-requestAt>=REQUEST_MS)requestQuota();
   try {
     const packet = JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/quota.json'}));
     if (packet.v !== 1 || packet.type !== 'quota' || !Array.isArray(packet.windows)) throw new Error('quota format');
-    if (packet.bridge_at !== lastBridge) {lastBridge=packet.bridge_at; received=Date.now();}
-    data=packet;
+    // Cached samples and unrelated responses never acknowledge a new request.
+    if (!data || packet.request_id===requestId) {
+      if(!data || packet.bridge_at!==lastBridge || packet.request_id!==data.request_id){lastBridge=packet.bridge_at||0;received=Date.now();}
+      data=packet;
+      if(packet.request_id===requestId){responded=true;fresh=packet.status==='ok' && !!packet.sampled_at;hasExpired=!fresh;}
+    }
   } catch (_) { /* Keep the last valid sample when a file or transport is unavailable. */ }
-  if (!data) return;
-  const elapsed=(Date.now()-received)/1000, now=lastBridge+elapsed;
-  const stale=elapsed>45 || !data.sampled_at || now-data.sampled_at>(data.stale_after||180);
-  isStale=stale;
-  const status=data.status==='auth_required'?'需登录':stale?'已过期':data.status==='ok'?'已同步':'采集失败';
+  if(!responded && Date.now()-requestAt>=RESPONSE_MS){fresh=false;hasExpired=true;}
+  const waiting=!responded && Date.now()-requestAt<RESPONSE_MS;
+  const oldStatus=cache.status;
+  isStale=!fresh;
+  const status=data && data.request_id===requestId && data.status==='auth_required'?'需登录':
+    waiting && !hasExpired?'等待同步':fresh?'已同步':'已过期';
   text('status',status);
-  const dotColor=status==='已同步'?'#62e69b':status==='需登录'||status==='采集失败'?'#ef8991':'#e9b65d';
+  const dotColor=status==='已同步'?'#62e69b':status==='需登录'?'#ef8991':'#e9b65d';
   if(cache.dotColor!==dotColor){call(gui,'SetBindings',{Updates:[binding('/main/sync/dot','color',dotColor)]});cache.dotColor=dotColor;}
+  if (!data){text('primary','--%');text('secondary','--%');if(oldStatus!==status)persistState();return;}
+  const elapsed=(Date.now()-received)/1000, now=lastBridge+elapsed;
   const primary=data.windows.find(w=>w.kind==='primary')||data.windows[0];
   const secondary=data.windows.find(w=>w.kind==='secondary')||data.windows[1];
   primaryUsed=usedValue(primary);secondaryUsed=usedValue(secondary);
@@ -72,7 +89,7 @@ function tick() {
   text('secondary',(secondaryUsed===null?'--':100-secondaryUsed)+'%');
   showTrack('track_primary',primaryUsed);showTrack('track_secondary',secondaryUsed);
   text('reset_primary',reset(primary&&primary.reset_at,now));text('reset_secondary',reset(secondary&&secondary.reset_at,now));
-  if (data.sampled_at !== rendered) {
+  if (data.sampled_at !== rendered || oldStatus!==status) {
     console.log('Codex quota UI updated: '+data.sampled_at);
     rendered=data.sampled_at;
     persistState();
@@ -84,14 +101,15 @@ globalThis.brookesia_app = {
     storage=brookesia.start_service('Storage');
     timer=brookesia.start_service('SystemTimer');
     paused=false;
-    call(timer,'StartPeriodic',{Name:'quota',IntervalMs:2000});
+    if(!quotaTimer)quotaTimer=call(timer,'StartPeriodic',{Name:'quota',IntervalMs:1000});
+    fresh=false;hasExpired=false;requestQuota();
     tick();
     startFx();
     return true;
   },
   on_timer(id,name) {if(name==='pacman')animate();else tick(); return true;},
-  on_pause() {paused=true;stopFx();return true;},
-  on_resume() {paused=false;cache={};tick();startFx();return true;},
-  on_stop() {paused=true;stopFx();return true;}
+  on_pause() {paused=true;requestQuota(false);stopFx();return true;},
+  on_resume() {paused=false;cache={};fresh=false;requestQuota();tick();startFx();return true;},
+  on_stop() {paused=true;requestQuota(false);stopFx();if(quotaTimer){try{call(timer,'Stop',{TimerId:quotaTimer});}catch(_){}quotaTimer=0;}return true;}
 };
 })();

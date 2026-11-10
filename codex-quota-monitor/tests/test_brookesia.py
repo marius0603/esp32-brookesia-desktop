@@ -79,7 +79,7 @@ class BrookesiaTransportTests(unittest.TestCase):
             StableUsbClient('COM5')
         self.assertEqual(opened, [('COM5', False, False)])
 
-    def test_successful_storage_delivery_has_fresh_heartbeat(self):
+    def test_successful_storage_delivery_matches_device_request(self):
         stop = threading.Event()
         connected, calls = [], []
         class Client:
@@ -89,17 +89,62 @@ class BrookesiaTransportTests(unittest.TestCase):
             def hello(self): pass
             def call(self, service, function, args):
                 calls.append((service, function, args))
+                if function == 'FSStat': return {'result':{'exists':True}}
+                if function == 'FSReadText': return {'result':json.dumps({'type':'quota_request','v':1,'request_id':'test-1','active':True})}
                 stop.set()
                 return {'ok': True, 'result': None}
-        packet = {'type':'quota','v':1,'sampled_at':1000,'windows':[]}
-        bridge = BrookesiaBridge({}, lambda: packet.copy(), None, connected.append, stop)
+        packet = {'type':'quota','v':1,'request_id':'test-1','sampled_at':1000,'windows':[]}
+        requests = []
+        bridge = BrookesiaBridge({}, lambda: packet.copy(), requests.append, connected.append, stop)
         with patch('quota_monitor.brookesia.StableUsbClient', Client), patch('quota_monitor.brookesia.time.time',return_value=2000):
             bridge._connect('COM5')
         self.assertEqual(connected, ['COM5'])
-        service, function, args = calls[0]
+        self.assertEqual(requests,['test-1'])
+        service, function, args = calls[-1]
         self.assertEqual((service,function,args['Path']),('Storage','FSWriteText','/littlefs/quota.json'))
         self.assertEqual(json.loads(args['Data'])['bridge_at'],2000)
         self.assertNotIn('bridge_at',packet)
+
+    def test_no_request_means_no_write_and_no_cloud_query(self):
+        stop, requests, writes = threading.Event(), [], []
+        class Client:
+            def __init__(self,*args): pass
+            def __enter__(self): return self
+            def __exit__(self,*args): pass
+            def hello(self): pass
+            def call(self,service,function,args):
+                self.assertion = function
+                if function == 'FSStat':
+                    stop.set()
+                    return {'result':{'exists':False}}
+                writes.append(function)
+        bridge = BrookesiaBridge({}, lambda:{'status':'ok'},requests.append,lambda p:None,stop)
+        with patch('quota_monitor.brookesia.StableUsbClient',Client): bridge._connect('COM5')
+        self.assertEqual(requests,[])
+        self.assertEqual(writes,[])
+
+    def test_request_is_deduplicated_and_inactive_request_does_not_query(self):
+        from unittest.mock import Mock
+        requests, writes = [], []
+        stop = Mock()
+        stop.is_set.return_value = False
+        stop.wait.side_effect = [False,False,True]
+        packet = {'request_id':'test-1','status':'ok','sampled_at':1000}
+        active = iter([True,True,False])
+        class Client:
+            def __init__(self,*args): self.active=next(active)
+            def __enter__(self): return self
+            def __exit__(self,*args): pass
+            def hello(self): pass
+            def call(self,service,function,args):
+                if function == 'FSStat': return {'result':{'exists':True}}
+                if function == 'FSReadText': return {'result':json.dumps({'type':'quota_request','v':1,'request_id':'test-1','active':self.active})}
+                writes.append(args)
+                return {'ok':True}
+        bridge = BrookesiaBridge({},lambda:packet.copy(),requests.append,lambda p:None,stop)
+        with patch('quota_monitor.brookesia.StableUsbClient',Client):bridge._connect('COM5')
+        self.assertEqual(requests,['test-1'])
+        self.assertEqual(len(writes),1)
 
     def test_storage_failure_never_reports_connected(self):
         connected = []

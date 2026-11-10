@@ -23,6 +23,14 @@ const ctx=vm.createContext({Date:Clock,console:{log(){}},brookesia:{start_servic
     if(name==='SetText')texts[p.Path]=p.Text;
     return JSON.stringify({success:true,data});}}});
 vm.runInContext(source,ctx);ctx.brookesia_app.on_start();
+assert.equal(texts['/main/sync/status'],'等待同步');
+const initialRequest=files['/littlefs/quota-request.json'];
+assert.equal(initialRequest.active,true);
+assert.equal(initialRequest.type,'quota_request');
+// Fresh cache/heartbeats cannot satisfy a request without its exact ID.
+packet.bridge_at=1001;ctx.brookesia_app.on_timer(98,'quota');
+assert.equal(texts['/main/sync/status'],'等待同步');
+packet.request_id=initialRequest.request_id;ctx.brookesia_app.on_timer(98,'quota');
 assert.equal(texts['/main/card_primary/primary'],'73%');
 assert.equal(texts['/main/card_secondary/secondary'],'64%');
 assert.equal(texts['/main/sync/status'],'已同步');
@@ -40,16 +48,33 @@ for(let i=0;i<8;i++){now+=240;ctx.brookesia_app.on_timer(99,'pacman');}
 assert.equal(files['/littlefs/quota-ui-state.json'].animation_frames,8);
 assert.equal(files['/littlefs/quota-ui-state.json'].primary_remaining,73);
 assert.equal(ctx.__test('JSON.stringify(pellets(primaryUsed))'),beansBefore);
-now+=50000;ctx.brookesia_app.on_timer(98,'quota');const before=ctx.__test('frames');
+now=1060000;ctx.brookesia_app.on_timer(98,'quota');
+const nextRequest=files['/littlefs/quota-request.json'];
+assert.notEqual(nextRequest.request_id,initialRequest.request_id);
+assert.equal(texts['/main/sync/status'],'等待同步');
+now+=15000;packet.bridge_at=Math.floor(now/1000);ctx.brookesia_app.on_timer(98,'quota');const before=ctx.__test('frames');
 assert.equal(texts['/main/sync/status'],'已过期');
 ctx.brookesia_app.on_timer(99,'pacman');assert.equal(ctx.__test('frames'),before);
+assert.equal(texts['/main/card_primary/primary'],'73%');
+// A delayed answer for a previous request still cannot renew this sample.
+packet.sampled_at=packet.bridge_at;ctx.brookesia_app.on_timer(98,'quota');
+assert.equal(texts['/main/sync/status'],'已过期');
+packet.request_id=nextRequest.request_id;
 packet.bridge_at=Math.floor(now/1000);packet.sampled_at=packet.bridge_at;packet.status='auth_required';
 ctx.brookesia_app.on_timer(98,'quota');assert.equal(texts['/main/sync/status'],'需登录');
 assert.equal(texts['/main/card_primary/primary'],'73%'); // Retain the last real allowance.
 packet.status='ok';ctx.brookesia_app.on_timer(98,'quota');
 assert.equal(texts['/main/sync/status'],'已同步');
 ctx.brookesia_app.on_pause();assert.equal(ctx.__test('fxTimer'),0);
+assert.equal(files['/littlefs/quota-request.json'].active,false);
+ctx.brookesia_app.on_resume();
+assert.notEqual(files['/littlefs/quota-request.json'].request_id,nextRequest.request_id);
+assert.equal(texts['/main/sync/status'],'等待同步');
+// No packet at all still shows an expiry after 15s, rather than a blank page.
+ctx.__test('data=null');packet.type='invalid';now+=15000;ctx.brookesia_app.on_timer(98,'quota');
+assert.equal(texts['/main/sync/status'],'已过期');
+packet.type='quota';
 vm.runInContext(source,ctx);ctx.brookesia_app.on_start(); // Same retained VM: no global redeclaration.
 assert.equal(typeof ctx.brookesia_app.on_timer,'function');
 const original=ctx.brookesia.call_function;ctx.brookesia.call_function=(h,n,a)=>n==='Stop'?JSON.stringify({success:false,error:'timer already removed'}):original(h,n,a);assert.equal(ctx.brookesia_app.on_stop(),true);assert.equal(ctx.__test('fxTimer'),0);
-console.log('Quota regression passed: exact percentages, partial beans, bounded animation, stale/pause and repeated load');
+console.log('Quota regression passed: device requests every 60s, exact-ID acknowledgements, 15s timeout, cached values, animation and resume');
