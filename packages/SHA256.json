@@ -133,5 +133,6 @@
   "packages/apps/local.flipclock.debug.0.2.6.bpk": "03c71ff6abcb00e3049343cae89da23a246c33adde168681633dae76be19c183",
   "packages/apps/local.navigation.debug.0.1.0.bpk": "e4f23dc7bed40b2f62a0903d15ee9bd2775a4397b59bf96ed0ba6e56f5340d2d",
   "packages/android/xiaoma-remote-0.5.0.apk": "f0a3b6fe459f27c8de83690ec0e743200bcaa23a5af49a9a1853fdf5ad212d01",
-  "packages/firmware/brookesia-0.8.3-s3.64-app-only.zip": "a54f7935360e99198df35757e46928fdc9aa16cb51ee496c49b982a9530a982d"
+  "packages/firmware/brookesia-0.8.3-s3.64-app-only.zip": "a54f7935360e99198df35757e46928fdc9aa16cb51ee496c49b982a9530a982d",
+  "packages/android/xiaoma-remote-0.5.1.apk": "070789499261c1499088df9869c8f823767f44843b58ebea2846a8e5713d34aa"
 }

@@ -1,5 +1,6 @@
 package com.xiaoma.remote;
 import android.app.Notification;
+import android.content.Context;
 import android.os.*;
 import android.service.notification.*;
 import java.util.*;
@@ -8,18 +9,20 @@ import org.json.JSONObject;
 /** System-bound notification listener. Only the AMap package is inspected. RAM only. */
 public class NavigationNotificationService extends NotificationListenerService {
  static final String AMAP="com.autonavi.minimap";
- static volatile boolean listening=false,forwarding=false;
+ static volatile boolean listening=false,forwarding=true;
  static volatile String preview="尚未收到高德通知",status="未开启转发";
  static NavigationNotice latest;static long seenAt=0;static String noticeKey="";
  static NavigationNotificationService instance;
  final Handler ui=new Handler(Looper.getMainLooper());String session="";int sequence=0;boolean waiting=false;
  final Runnable heartbeat=new Runnable(){public void run(){if(forwarding){send(false);ui.postDelayed(this,2000);}}};
- static void enable(boolean value){
+ static boolean savedEnabled(Context context){return context.getSharedPreferences("navigation-notification-settings",0).getBoolean("enabled",true);}
+ static void enable(Context context,boolean value){
+  context.getSharedPreferences("navigation-notification-settings",0).edit().putBoolean("enabled",value).apply();
   forwarding=value;
   if(instance!=null){instance.ui.removeCallbacks(instance.heartbeat);if(value){instance.session="";instance.sequence=0;instance.ui.post(instance.heartbeat);}else instance.send(true);}
   status=value?"等待新鲜的高德导航通知":"转发已关闭";
  }
- @Override public void onListenerConnected(){listening=true;instance=this;try{for(StatusBarNotification n:getActiveNotifications())accept(n,false);}catch(Exception ignored){}if(forwarding)ui.post(heartbeat);}
+ @Override public void onListenerConnected(){listening=true;instance=this;forwarding=savedEnabled(this);try{for(StatusBarNotification n:getActiveNotifications())accept(n,false);}catch(Exception ignored){}if(forwarding)ui.post(heartbeat);}
  @Override public void onListenerDisconnected(){listening=false;forwarding=false;ui.removeCallbacks(heartbeat);send(true);latest=null;seenAt=0;noticeKey="";preview="通知服务已断开，内容已清除";status="通知服务断开，请重新授权或打开遥控";instance=null;}
  @Override public void onNotificationPosted(StatusBarNotification n){accept(n,true);}
  void accept(StatusBarNotification n,boolean fresh){
