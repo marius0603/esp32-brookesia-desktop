@@ -3,20 +3,21 @@ import android.app.Notification;import android.content.Context;import android.os
 /** Only AMap notifications are inspected; all guidance stays in RAM. */
 public class NavigationNotificationService extends NotificationListenerService {
  static final String AMAP="com.autonavi.minimap";
- static volatile boolean listening=false,forwarding=true;
+ static volatile boolean listening=false,forwarding=true,deliveryIssue=false;
  static volatile String preview="尚未收到高德通知",status="未开启转发";
  static NavigationNotice latest;static long seenAt=0,checkedAt=0;static int activeChecks=0;static String noticeKey="";
  static NavigationNotificationService instance;
  final Handler ui=new Handler(Looper.getMainLooper());String session="";int sequence=0;boolean waiting=false,stopRequested=false,awaitingGuidance=false;NavigationNotice stopFrame;
+ final NavigationRetry recovery=new NavigationRetry();
  final Runnable stopRetry=()->send(true);
  final Runnable heartbeat=new Runnable(){public void run(){if(forwarding){refreshActive();send(false);ui.postDelayed(this,2000);}}};
  static boolean savedEnabled(Context c){return c.getSharedPreferences("navigation-notification-settings",0).getBoolean("enabled",true);}
  static void enable(Context c,boolean value){c.getSharedPreferences("navigation-notification-settings",0).edit().putBoolean("enabled",value).apply();forwarding=value;
   if(value)NavigationKeepAliveService.ensure(c);else NavigationKeepAliveService.stop(c);
-  if(instance!=null){instance.ui.removeCallbacks(instance.heartbeat);if(value)instance.ui.post(instance.heartbeat);else instance.send(true);}
+  if(instance!=null){instance.recovery.reset();deliveryIssue=false;instance.ui.removeCallbacks(instance.heartbeat);if(value)instance.ui.post(instance.heartbeat);else instance.send(true);}
   status=value?"正在核对系统中的导航通知":"转发已关闭";
  }
- public void onListenerConnected(){listening=true;instance=this;forwarding=savedEnabled(this);refreshActive();ui.removeCallbacks(heartbeat);if(forwarding)ui.post(heartbeat);}
+ public void onListenerConnected(){listening=true;instance=this;forwarding=savedEnabled(this);recovery.reset();deliveryIssue=false;refreshActive();ui.removeCallbacks(heartbeat);if(forwarding)ui.post(heartbeat);}
  public void onListenerDisconnected(){listening=false;forwarding=false;ui.removeCallbacks(heartbeat);send(true);latest=null;checkedAt=seenAt=0;noticeKey="";preview="通知服务已断开，内容已清除";status="通知服务断开，请重新授权或打开遥控";instance=null;}
  public void onNotificationPosted(StatusBarNotification n){if(n!=null&&AMAP.equals(n.getPackageName())){refreshActive();if(forwarding)send(false);}}
  public void onNotificationRemoved(StatusBarNotification n){if(n!=null&&AMAP.equals(n.getPackageName())){if(n.getKey().equals(noticeKey))awaitingGuidance=true;refreshActive();if(forwarding)send(false);}}
@@ -34,7 +35,7 @@ public class NavigationNotificationService extends NotificationListenerService {
   StatusBarNotification[] active=getActiveNotifications();if(active==null){status="系统通知暂不可读取，等待恢复";return;}
   ArrayList<NavigationNoticePolicy.Candidate> candidates=new ArrayList<>();for(StatusBarNotification n:active){NavigationNoticePolicy.Candidate c=decode(n);if(c!=null)candidates.add(c);}
   activeChecks++;NavigationNoticePolicy.Candidate best=NavigationNoticePolicy.best(candidates,noticeKey,awaitingGuidance);
-  if(best==null){awaitingGuidance=true;send(true);latest=null;noticeKey="";checkedAt=0;preview="当前没有有效的高德导航通知";status="导航通知已移除或结束";return;}
+  if(best==null){awaitingGuidance=true;send(true);latest=null;noticeKey="";checkedAt=0;recovery.reset();deliveryIssue=false;preview="当前没有有效的高德导航通知";status="导航通知已移除或结束";return;}
   if(NavigationNoticePolicy.quality(best.notice)>0)awaitingGuidance=false;
   long now=SystemClock.elapsedRealtime();
   if(latest==null||!best.key.equals(noticeKey)||!best.notice.text.equals(latest.text))seenAt=now;
@@ -49,14 +50,17 @@ public class NavigationNotificationService extends NotificationListenerService {
   if(stop&&!stopRequested&&!session.isEmpty()){stopRequested=true;stopFrame=latest;}
   if(waiting)return;final boolean terminal=stopRequested;NavigationNotice frame=terminal?stopFrame:latest;if(frame==null)return;
   if(!terminal&&!fresh()){status="无法核对当前导航通知，设备指引将过期";return;}
+  if(!terminal&&!recovery.ready(SystemClock.elapsedRealtime()))return;
   NavigationLink.Transport link=NavigationLink.transport;if(link==null||!link.available()){status="请在遥控首页连接支持导航的设备";return;}
   if(session.isEmpty()){if(terminal)return;session=UUID.randomUUID().toString().replace("-","").substring(0,16);sequence=0;}
   final String owner=session;final int next=sequence+1;
   JSONObject packet=MainActivity.json("cmd","nav","s",owner,"q",next,"m",2,"t",frame.turn,"d",frame.distance,"r",frame.remaining,"e",frame.seconds,"n",NavigationFields.road(frame.text),"z",terminal?2:next==1?0:frame.turn==6?1:0);
   if(packet.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length>256){status="通知文字过长，未发送";return;}
   waiting=true;boolean accepted=link.send(packet,error->{waiting=false;if(!session.equals(owner))return;
-   if(error!=null){session="";stopRequested=false;stopFrame=null;forwarding=false;ui.removeCallbacks(heartbeat);status="转发停止："+error;return;}
-   sequence=next;if(terminal){session="";sequence=0;stopRequested=false;stopFrame=null;ui.removeCallbacks(stopRetry);status="设备指引已停止";}
+   if(error!=null){session="";sequence=0;stopRequested=false;stopFrame=null;ui.removeCallbacks(stopRetry);recovery.failed(SystemClock.elapsedRealtime());deliveryIssue=true;
+    status=(recovery.blocked()?"同步暂停，请重新开始导航或关闭再开启同步：":"等待新会话重试：")+error;return;}
+   recovery.reset();deliveryIssue=false;
+   sequence=next;if(terminal){session="";sequence=0;stopRequested=false;stopFrame=null;ui.removeCallbacks(stopRetry);status="设备指引已停止";if(forwarding&&fresh())send(false);}
    else{status=SystemClock.elapsedRealtime()-seenAt>=15000?"蓝牙同步正常 · 系统通知仍有效，指引未变化":"已同步系统中的高德导航通知";if(stopRequested)send(true);}
   });if(!accepted){waiting=false;status="等待蓝牙通道空闲";if(terminal){ui.removeCallbacks(stopRetry);ui.postDelayed(stopRetry,500);}}
  }
