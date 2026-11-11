@@ -19,6 +19,7 @@ public class NavigationNotificationService extends NotificationListenerService {
  static void enable(Context context,boolean value){
   context.getSharedPreferences("navigation-notification-settings",0).edit().putBoolean("enabled",value).apply();
   forwarding=value;
+  if(value)NavigationKeepAliveService.ensure(context);else NavigationKeepAliveService.stop(context);
   if(instance!=null){instance.ui.removeCallbacks(instance.heartbeat);if(value){instance.session="";instance.sequence=0;instance.ui.post(instance.heartbeat);}else instance.send(true);}
   status=value?"等待新鲜的高德导航通知":"转发已关闭";
  }

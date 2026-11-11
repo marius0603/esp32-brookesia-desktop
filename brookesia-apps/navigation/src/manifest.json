@@ -5,7 +5,7 @@
       "en": "Navigation",
       "zh_CN": "小马导航"
     },
-    "version": "0.1.0",
+    "version": "0.2.0",
     "visible": true,
     "systems": [
       "super"
@@ -18,6 +18,10 @@
     "arguments": []
   },
   "services": [
+    {
+      "name": "AudioPlayback",
+      "version": "0.8.2"
+    },
     {
       "name": "DeviceModes",
       "version": "0.1.0"

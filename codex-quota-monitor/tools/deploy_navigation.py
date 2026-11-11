@@ -10,7 +10,8 @@ def tree_hash(files):
  return h.hexdigest()
 def main():
  p=argparse.ArgumentParser();p.add_argument('--port',default='COM5');p.add_argument('--manifest-only',action='store_true',help='Clone known old tree and replace only manifest; require full target hash');p.add_argument('--text-only',action='store_true',help='Clone tree and replace JS/JSON; require full target hash');a=p.parse_args();partial=a.manifest_only or a.text_only
- package=ROOT/'packages/apps/local.navigation.debug.0.1.0.bpk'
+ version=json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))['apps']['local.navigation']
+ package=ROOT/('packages/apps/local.navigation.debug.'+version+'.bpk')
  with zipfile.ZipFile(package) as z:
   assert z.testzip() is None;files={n:z.read(n) for n in z.namelist()}
  for name in files:

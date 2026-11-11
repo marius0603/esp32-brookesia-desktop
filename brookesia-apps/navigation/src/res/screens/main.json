@@ -24,7 +24,8 @@
         "height": 30
       },
       "commonProps": {
-        "scrollable": false
+        "scrollable": false,
+        "hidden": true
       },
       "style": {
         "padding": 0,
@@ -54,7 +55,8 @@
         "height": 25
       },
       "commonProps": {
-        "scrollable": false
+        "scrollable": false,
+        "hidden": true
       },
       "style": {
         "padding": 0,
@@ -78,10 +80,10 @@
       "id": "status",
       "placement": {
         "mode": "absolute",
-        "x": 52,
-        "y": 76,
-        "width": 376,
-        "height": 28
+        "x": 78,
+        "y": 151,
+        "width": 324,
+        "height": 52
       },
       "commonProps": {
         "scrollable": false
@@ -91,16 +93,17 @@
         "borderWidth": 0,
         "bgOpacity": 0,
         "font": "${font.zh_CN}",
-        "fontSize": 21,
+        "fontSize": 26,
         "textColor": "#edf2f8",
-        "textAlign": "left"
+        "textAlign": "center"
       },
       "labelProps": {
         "text": "等待手机连接"
       },
       "bindings": {
         "style.textColor": "ink",
-        "style.fontSize": "size"
+        "style.fontSize": "size",
+        "commonProps.hidden": "hidden"
       }
     },
     {
@@ -108,8 +111,8 @@
       "id": "arrow",
       "placement": {
         "mode": "absolute",
-        "x": 48,
-        "y": 113,
+        "x": 160,
+        "y": 94,
         "width": 160,
         "height": 160
       },
@@ -129,10 +132,10 @@
       "id": "distance",
       "placement": {
         "mode": "absolute",
-        "x": 224,
-        "y": 130,
-        "width": 220,
-        "height": 82
+        "x": 65,
+        "y": 251,
+        "width": 350,
+        "height": 83
       },
       "commonProps": {
         "scrollable": false
@@ -144,7 +147,7 @@
         "font": "${font.zh_CN}",
         "fontSize": 52,
         "textColor": "#edf2f8",
-        "textAlign": "left"
+        "textAlign": "center"
       },
       "labelProps": {
         "text": "--"
@@ -165,7 +168,8 @@
         "height": 38
       },
       "commonProps": {
-        "scrollable": false
+        "scrollable": false,
+        "hidden": true
       },
       "style": {
         "padding": 0,
@@ -190,9 +194,9 @@
       "placement": {
         "mode": "absolute",
         "x": 52,
-        "y": 285,
+        "y": 339,
         "width": 376,
-        "height": 74
+        "height": 37
       },
       "commonProps": {
         "scrollable": false
@@ -202,9 +206,9 @@
         "borderWidth": 0,
         "bgOpacity": 0,
         "font": "${font.zh_CN}",
-        "fontSize": 28,
+        "fontSize": 22,
         "textColor": "#edf2f8",
-        "textAlign": "left"
+        "textAlign": "center"
       },
       "labelProps": {
         "text": "在小马遥控中开启导航同步"
@@ -231,6 +235,9 @@
       },
       "bindings": {
         "style.bgColor": "background"
+      },
+      "commonProps": {
+        "hidden": true
       }
     },
     {
@@ -241,7 +248,7 @@
         "x": 52,
         "y": 382,
         "width": 376,
-        "height": 32
+        "height": 29
       },
       "commonProps": {
         "scrollable": false
@@ -251,9 +258,9 @@
         "borderWidth": 0,
         "bgOpacity": 0,
         "font": "${font.zh_CN}",
-        "fontSize": 23,
+        "fontSize": 20,
         "textColor": "#edf2f8",
-        "textAlign": "left"
+        "textAlign": "center"
       },
       "labelProps": {
         "text": "不使用设备定位，不独立算路"
@@ -269,9 +276,9 @@
       "placement": {
         "mode": "absolute",
         "x": 52,
-        "y": 423,
-        "width": 190,
-        "height": 32
+        "y": 416,
+        "width": 166,
+        "height": 38
       },
       "style": {
         "bgColor": "#172a28",
@@ -295,9 +302,9 @@
           "placement": {
             "mode": "absolute",
             "x": 0,
-            "y": 3,
-            "width": 190,
-            "height": 26
+            "y": 5,
+            "width": 166,
+            "height": 28
           },
           "commonProps": {
             "scrollable": false
@@ -307,9 +314,9 @@
             "borderWidth": 0,
             "bgOpacity": 0,
             "font": "${font.zh_CN}",
-            "fontSize": 19,
+            "fontSize": 20,
             "textColor": "#edf2f8",
-            "textAlign": "left"
+            "textAlign": "center"
           },
           "labelProps": {
             "text": "语音提示：开"
@@ -332,7 +339,8 @@
         "height": 25
       },
       "commonProps": {
-        "scrollable": false
+        "scrollable": false,
+        "hidden": true
       },
       "style": {
         "padding": 0,
@@ -350,6 +358,379 @@
         "style.textColor": "ink",
         "style.fontSize": "size"
       }
+    },
+    {
+      "type": "label",
+      "id": "volume",
+      "placement": {
+        "mode": "absolute",
+        "x": 205,
+        "y": 30,
+        "width": 140,
+        "height": 29
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0,
+        "font": "${font.zh_CN}",
+        "fontSize": 22,
+        "textColor": "#edf2f8",
+        "textAlign": "left"
+      },
+      "labelProps": {
+        "text": "70%"
+      },
+      "bindings": {
+        "style.textColor": "ink",
+        "style.fontSize": "size"
+      }
+    },
+    {
+      "type": "container",
+      "id": "bluetooth",
+      "placement": {
+        "mode": "absolute",
+        "x": 57,
+        "y": 35,
+        "width": 17,
+        "height": 24
+      },
+      "style": {
+        "bgOpacity": 0,
+        "borderWidth": 0,
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "stem",
+          "placement": {
+            "mode": "absolute",
+            "x": 7,
+            "y": 0,
+            "width": 3,
+            "height": 24
+          },
+          "style": {
+            "bgColor": "#edf2f8",
+            "borderWidth": 0,
+            "padding": 0,
+            "radius": 2
+          },
+          "bindings": {
+            "style.bgColor": "foreground",
+            "placement.width": "width"
+          }
+        },
+        {
+          "type": "container",
+          "id": "top",
+          "placement": {
+            "mode": "absolute",
+            "x": 9,
+            "y": 3,
+            "width": 7,
+            "height": 3
+          },
+          "style": {
+            "bgColor": "#edf2f8",
+            "borderWidth": 0,
+            "padding": 0,
+            "radius": 2
+          },
+          "bindings": {
+            "style.bgColor": "foreground",
+            "placement.width": "width"
+          }
+        },
+        {
+          "type": "container",
+          "id": "middle",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 10,
+            "width": 16,
+            "height": 3
+          },
+          "style": {
+            "bgColor": "#edf2f8",
+            "borderWidth": 0,
+            "padding": 0,
+            "radius": 2
+          },
+          "bindings": {
+            "style.bgColor": "foreground",
+            "placement.width": "width"
+          }
+        },
+        {
+          "type": "container",
+          "id": "bottom",
+          "placement": {
+            "mode": "absolute",
+            "x": 9,
+            "y": 19,
+            "width": 7,
+            "height": 3
+          },
+          "style": {
+            "bgColor": "#edf2f8",
+            "borderWidth": 0,
+            "padding": 0,
+            "radius": 2
+          },
+          "bindings": {
+            "style.bgColor": "foreground",
+            "placement.width": "width"
+          }
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "speaker",
+      "placement": {
+        "mode": "absolute",
+        "x": 176,
+        "y": 34,
+        "width": 22,
+        "height": 23
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "body",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 7,
+            "width": 8,
+            "height": 10
+          },
+          "style": {
+            "bgColor": "#edf2f8",
+            "borderWidth": 0,
+            "padding": 0,
+            "radius": 2
+          },
+          "bindings": {
+            "style.bgColor": "foreground",
+            "placement.width": "width"
+          }
+        },
+        {
+          "type": "container",
+          "id": "cone",
+          "placement": {
+            "mode": "absolute",
+            "x": 8,
+            "y": 3,
+            "width": 6,
+            "height": 18
+          },
+          "style": {
+            "bgColor": "#edf2f8",
+            "borderWidth": 0,
+            "padding": 0,
+            "radius": 2
+          },
+          "bindings": {
+            "style.bgColor": "foreground",
+            "placement.width": "width"
+          }
+        },
+        {
+          "type": "container",
+          "id": "wave",
+          "placement": {
+            "mode": "absolute",
+            "x": 18,
+            "y": 6,
+            "width": 3,
+            "height": 12
+          },
+          "style": {
+            "bgColor": "#edf2f8",
+            "borderWidth": 0,
+            "padding": 0,
+            "radius": 2
+          },
+          "bindings": {
+            "style.bgColor": "foreground",
+            "placement.width": "width"
+          }
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "battery",
+      "placement": {
+        "mode": "absolute",
+        "x": 375,
+        "y": 37,
+        "width": 29,
+        "height": 15
+      },
+      "style": {
+        "bgOpacity": 0,
+        "borderWidth": 2,
+        "borderColor": "#a6b4c7",
+        "radius": 4,
+        "padding": 2
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "fill",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 0,
+            "width": 21,
+            "height": 7
+          },
+          "style": {
+            "bgColor": "#edf2f8",
+            "borderWidth": 0,
+            "padding": 0,
+            "radius": 2
+          },
+          "bindings": {
+            "style.bgColor": "foreground",
+            "placement.width": "width"
+          }
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "id": "minus",
+      "placement": {
+        "mode": "absolute",
+        "x": 262,
+        "y": 416,
+        "width": 64,
+        "height": 38
+      },
+      "style": {
+        "bgColor": "#162431",
+        "radius": 14,
+        "borderWidth": 0,
+        "padding": 0
+      },
+      "bindings": {
+        "style.bgColor": "background"
+      },
+      "events": [
+        {
+          "type": "clicked",
+          "action": "minus"
+        }
+      ],
+      "children": [
+        {
+          "type": "container",
+          "id": "h",
+          "placement": {
+            "mode": "absolute",
+            "x": 21,
+            "y": 18,
+            "width": 22,
+            "height": 3
+          },
+          "style": {
+            "bgColor": "#edf2f8",
+            "borderWidth": 0,
+            "padding": 0,
+            "radius": 2
+          },
+          "bindings": {
+            "style.bgColor": "foreground",
+            "placement.width": "width"
+          }
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "id": "plus",
+      "placement": {
+        "mode": "absolute",
+        "x": 340,
+        "y": 416,
+        "width": 64,
+        "height": 38
+      },
+      "style": {
+        "bgColor": "#162431",
+        "radius": 14,
+        "borderWidth": 0,
+        "padding": 0
+      },
+      "bindings": {
+        "style.bgColor": "background"
+      },
+      "events": [
+        {
+          "type": "clicked",
+          "action": "plus"
+        }
+      ],
+      "children": [
+        {
+          "type": "container",
+          "id": "h",
+          "placement": {
+            "mode": "absolute",
+            "x": 21,
+            "y": 18,
+            "width": 22,
+            "height": 3
+          },
+          "style": {
+            "bgColor": "#edf2f8",
+            "borderWidth": 0,
+            "padding": 0,
+            "radius": 2
+          },
+          "bindings": {
+            "style.bgColor": "foreground",
+            "placement.width": "width"
+          }
+        },
+        {
+          "type": "container",
+          "id": "v",
+          "placement": {
+            "mode": "absolute",
+            "x": 31,
+            "y": 9,
+            "width": 3,
+            "height": 22
+          },
+          "style": {
+            "bgColor": "#edf2f8",
+            "borderWidth": 0,
+            "padding": 0,
+            "radius": 2
+          },
+          "bindings": {
+            "style.bgColor": "foreground",
+            "placement.width": "width"
+          }
+        }
+      ]
     }
   ]
 }

@@ -3,7 +3,7 @@
 Only synthetic directions. No AMap/Internet/location calls and no audio changes.
 Requires an idle, unlocked device outside child mode. Never print pairing secrets.
 """
-import argparse,asyncio,base64,json,os,subprocess,sys,time
+import argparse,asyncio,base64,json,os,subprocess,sys,time,uuid
 from pathlib import Path
 from bleak import BleakClient,BleakScanner
 ROOT=Path(__file__).resolve().parents[2]
@@ -28,7 +28,7 @@ def main():
    if len(apps)>=15 and any(x['manifest']['id']=='brookesia.system.super.shell' and x['state']=='Running' for x in apps):break
    assert time.monotonic()<deadline,'Wait for complete desktop startup';time.sleep(1)
   ids={x['manifest']['id']:x['app_id'] for x in apps};assert 'local.navigation' in ids
-  assert not f('DeviceModes','GetNavigationState')['received']
+  assert not f('DeviceModes','GetNavigationState')['active']
   try:
    f('DeviceModes','Wake');f('SystemCore','StartApp',{'AppId':ids['brookesia.general.settings']});f('PhoneProvisioning','StartRemote')
    deadline=time.monotonic()+25
@@ -36,6 +36,7 @@ def main():
     setup=f('PhoneProvisioning','GetSetup')
     if setup['active']:break
     assert time.monotonic()<deadline,setup.get('status');time.sleep(.2)
+   print('BLE window ready; connecting test client.',flush=True)
    env=os.environ.copy();env['XIAOMA_TEST_POP']=setup.pop('pop')
    java=subprocess.Popen([tools['java'],'-cp',str(a.classes)+os.pathsep+tools['bc'],'com.xiaoma.remote.ProtocolHarness'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,text=True,env=env)
    def protocol(command,data=None):
@@ -45,18 +46,19 @@ def main():
     device=await BleakScanner.find_device_by_filter(lambda d,ad:ad.local_name==setup['device_name'],timeout=25);assert device,'BLE device not found'
     async with BleakClient(device,timeout=30) as ble:
      async def exchange(ep,data):
-      await ble.write_gatt_char(ep,data,response=True);await asyncio.sleep(.08);return bytes(await ble.read_gatt_char(ep))
+      await asyncio.wait_for(ble.write_gatt_char(ep,data,response=True),15);await asyncio.sleep(.08);return bytes(await asyncio.wait_for(ble.read_gatt_char(ep),15))
      ep='1775ff51-6b43-439b-877c-060f2d9bed07'
      response=await exchange(ep,protocol('hello'));response=await exchange(ep,protocol('prove',response));assert protocol('verify',response)=='OK'
      async def send(packet):
       raw=json.dumps(packet,ensure_ascii=False,separators=(',',':')).encode();assert len(raw)<=256
       result=await exchange('1775ff55-6b43-439b-877c-060f2d9bed07',protocol('crypt',raw));return json.loads(protocol('crypt',result))
      assert (await send({'cmd':'status'}))['navigation_supported']
-     frame={'cmd':'nav','s':'1234567890abcdef','q':1,'m':0,'t':0,'d':200,'r':1500,'e':900,'n':'示例道路','z':0}
+     frame={'cmd':'nav','s':uuid.uuid4().hex[:16],'q':1,'m':0,'t':0,'d':200,'r':1500,'e':900,'n':'示例道路','z':0}
      for change in [{'q':2},{'t':99},{'d':-2},{'q':1.5},{'n':'路'*25},{'n':'路\n名'},{'s':'not-a-session'}]:
       assert not (await send(dict(frame,**change)))['ok']
      assert f('SystemCore','GetActiveApp')['app_id']==ids['brookesia.general.settings']
      assert (await send(frame))['ok']
+     print('First navigation frame acknowledged.',flush=True)
      await asyncio.sleep(1.5)
      active=f('SystemCore','GetActiveApp');assert active['app_id']==ids['local.navigation'] and active['state']=='Running' and not active['last_error'],active
      current=f('DeviceModes','GetNavigationState');assert current['active'] and current['road']=='示例道路' and current['distance']==200
@@ -93,6 +95,9 @@ def main():
   finally:
    if java:
     java.stdin.close();java.wait(timeout=10)
+   for diagnostic in usb.diagnostic_lines:
+    line=diagnostic.decode('utf-8',errors='replace') if isinstance(diagnostic,bytes) else str(diagnostic)
+    if 'Navigation render:' in line or 'Navigation audio:' in line:print(line,flush=True)
    f('LearningAudio','StopNavigationPrompt');f('PhoneProvisioning','Stop')
    # Return to navigation for the physical display check; does not start audio.
    f('SystemCore','StartApp',{'AppId':ids['local.navigation']})
