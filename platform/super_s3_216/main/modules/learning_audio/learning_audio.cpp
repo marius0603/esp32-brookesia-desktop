@@ -12,6 +12,7 @@
 #include "esp_heap_caps.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/idf_additions.h"
 #include "freertos/semphr.h"
 #include <algorithm>
 #include <atomic>
@@ -26,7 +27,7 @@ namespace {
 constexpr size_t samples=480,block_bytes=samples*2,max_bytes=learning_media::sample_rate*2*learning_media::max_record_seconds;
 class LearningAudio final:public ServiceBase {
 public:
-    LearningAudio():ServiceBase({.name="LearningAudio",.description="Offline learning sounds and volatile recording replay",.version="0.1.0",.dependencies={"AudioPlayback"}}){}
+    LearningAudio():ServiceBase({.name="LearningAudio",.description="Offline learning sounds and volatile recording replay",.version="0.1.1",.dependencies={"AudioPlayback"}}){}
 private:
     static bool repair_font() {
         // Repair only the learning font entry written by the early installer.
@@ -85,8 +86,9 @@ private:
         return phone_navigation::usable();
     }
     std::expected<void,std::string> navigation_prompt(double turn,double stage){
-        if(!std::isfinite(turn)||!std::isfinite(stage)||turn<0||turn>7||stage<0||stage>2||std::floor(turn)!=turn||std::floor(stage)!=stage)return std::unexpected("Invalid navigation prompt");
-        char path[100];snprintf(path,sizeof(path),"/sdcard/apps/local.navigation/res/audio/turn-%d-%d.wav",int(turn),int(stage));
+        if(!std::isfinite(turn)||!std::isfinite(stage)||turn<0||turn>7||stage<0||stage>3||std::floor(turn)!=turn||std::floor(stage)!=stage)return std::unexpected("Invalid navigation prompt");
+        char path[100];if(stage==3){if(turn!=7)return std::unexpected("Next segment prompt must be neutral");snprintf(path,sizeof(path),"/sdcard/apps/local.navigation/res/audio/passed.wav");}
+        else snprintf(path,sizeof(path),"/sdcard/apps/local.navigation/res/audio/turn-%d-%d.wav",int(turn),int(stage));
         return launch(4,path);
     }
     void state(const char *name){std::lock_guard lock(state_mutex_);state_=name;}
@@ -94,7 +96,7 @@ private:
     boost::json::object snapshot(){std::lock_guard lock(state_mutex_);return {
         {"state",state_},{"error",error_},{"active",live_.load()},{"recorded_bytes",recorded_.load()},
         {"recorded_ms",recorded_.load()*1000/32000},{"played_bytes",played_.load()},{"level",level_.load()},
-        {"output_channels",job_==4?2:1},{"navigation_prompt",job_==4},{"max_record_seconds",learning_media::max_record_seconds},{"stack_free_min_bytes",stack_min_.load()}};}
+        {"output_channels",job_==4?2:1},{"navigation_prompt",job_==4},{"navigation_stack_external",job_==4},{"max_record_seconds",learning_media::max_record_seconds},{"stack_free_min_bytes",stack_min_.load()}};}
     void discard(){
         std::lock_guard lock(operation_);forget_=true;cancel_=true;
         if(!live_){if(recording_){memset(recording_,0,max_bytes);heap_caps_free(recording_);recording_=nullptr;}recorded_=0;state("Idle");}
@@ -116,14 +118,22 @@ private:
         cancel_=finish_=forget_=false;played_=level_=0;stack_min_=16384;job_=mode;limit_=unsigned(seconds);path_=path;
         {std::lock_guard lock(state_mutex_);error_.clear();state_="Starting";}
         live_=true;local_audio::learning_busy=true;
-        if(xTaskCreatePinnedToCore([](void *p){static_cast<LearningAudio *>(p)->run();vTaskDelete(nullptr);},"learning_audio",16384,this,4,nullptr,0)!=pdPASS){
+        auto worker=[](void *p){auto *self=static_cast<LearningAudio *>(p);const bool external=self->job_.load()==4;
+            self->run();if(external)vTaskDeleteWithCaps(nullptr);else vTaskDelete(nullptr);};
+        // Navigation only reads the SD WAV and drives the codec. Its worker
+        // performs no NVS/Flash writes; leave recording/learning stacks internal.
+        const auto created=mode==4?xTaskCreatePinnedToCoreWithCaps(worker,"navigation_audio",16384,this,4,nullptr,0,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT):
+            xTaskCreatePinnedToCore(worker,"learning_audio",16384,this,4,nullptr,0);
+        if(created!=pdPASS){
             live_=false;local_audio::release(local_audio::Learning);fail("音频任务内存不足");return std::unexpected("Audio task allocation failed");}
         return {};
     }
     void run(){
         const auto mode=job_.load();
         auto players=hal::acquire_interfaces<hal::audio::CodecPlayerIface>();
-        auto recorders=hal::acquire_interfaces<hal::audio::CodecRecorderIface>();
+        // Avoid initializing RX DMA / microphone hardware for speaker-only jobs.
+        auto recorders=mode==3?hal::acquire_interfaces<hal::audio::CodecRecorderIface>():
+            decltype(hal::acquire_interfaces<hal::audio::CodecRecorderIface>()){};
         auto player=players.empty()?hal::InterfaceHandle<hal::audio::CodecPlayerIface>{}:std::move(players.front());
         auto recorder=recorders.empty()?hal::InterfaceHandle<hal::audio::CodecRecorderIface>{}:std::move(recorders.front());
         auto *pcm=static_cast<int16_t *>(heap_caps_malloc(block_bytes,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT));
@@ -185,7 +195,7 @@ private:
     void on_stop() override{cancel_=true;while(live_)vTaskDelay(pdMS_TO_TICKS(10));discard();}
     std::vector<FunctionSchema> get_function_schemas() override{return {
         {"PlayFile","Play a local learning WAV",{{"Path","Pack WAV path",FunctionValueType::String}}},
-        {"PlayNavigationPrompt","Play a whitelisted local navigation phrase",{{"Turn","0-7",FunctionValueType::Number},{"Stage","0 generic, 1 hundred meters, 2 imminent",FunctionValueType::Number}}},
+        {"PlayNavigationPrompt","Play a whitelisted local navigation phrase",{{"Turn","0-7",FunctionValueType::Number},{"Stage","0 generic, 1 hundred meters, 2 imminent, 3 next segment",FunctionValueType::Number}}},
         {"StopNavigationPrompt","Cancel only a navigation phrase",{}},
         {"StartRecording","Record locally in volatile memory",{{"Seconds","1 to 8",FunctionValueType::Number,5.0}}},
         {"StopRecording","Finish current recording",{}},{"Replay","Replay last recording",{}},

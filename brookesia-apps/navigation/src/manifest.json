@@ -5,7 +5,7 @@
       "en": "Navigation",
       "zh_CN": "小马导航"
     },
-    "version": "0.2.1",
+    "version": "0.2.2",
     "visible": true,
     "systems": [
       "super"
@@ -28,7 +28,7 @@
     },
     {
       "name": "LearningAudio",
-      "version": "0.1.0"
+      "version": "0.1.1"
     }
   ]
 }

@@ -9,7 +9,7 @@ def tree_hash(files):
  for name,data in sorted(files.items()):h.update(name.encode()+b'\0'+struct.pack('<Q',len(data))+data)
  return h.hexdigest()
 def main():
- p=argparse.ArgumentParser();p.add_argument('--port',default='COM5');p.add_argument('--manifest-only',action='store_true',help='Clone known old tree and replace only manifest; require full target hash');p.add_argument('--text-only',action='store_true',help='Clone tree and replace JS/JSON; require full target hash');a=p.parse_args();partial=a.manifest_only or a.text_only
+ p=argparse.ArgumentParser();p.add_argument('--port',default='COM5');p.add_argument('--manifest-only',action='store_true',help='Clone known old tree and replace only manifest; require full target hash');p.add_argument('--text-only',action='store_true',help='Clone tree and replace JS/JSON; require full target hash');p.add_argument('--include',action='append',default=[],help='Additional archive file for a partial update');a=p.parse_args();partial=a.manifest_only or a.text_only
  version=json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))['apps']['local.navigation']
  package=ROOT/('packages/apps/local.navigation.debug.'+version+'.bpk')
  with zipfile.ZipFile(package) as z:
@@ -40,6 +40,7 @@ def main():
     f('Storage','FSCopyTree',{'From':BASE,'To':ready,'Overwrite':False})
    else:f('Storage','FSMkdir',{'Path':ready})
    changed={n:d for n,d in files.items() if n.endswith(('.js','.json'))} if a.text_only else {'manifest.json':files['manifest.json']} if a.manifest_only else files
+   for name in a.include:changed[name]=files[name]
    for i,(name,data) in enumerate(sorted(changed.items(),key=lambda p:(p[0]=='manifest.json',p[0]))):
     file=ROOT/'codex-quota-monitor/runtime/navigation-stage.bin';file.write_bytes(data);temp='nav-'+stamp+'.bin'
     r=c.transfer('put',file,'sd-themes/'+temp,False);assert r['ok'] and r['sha256']==hashlib.sha256(data).hexdigest()

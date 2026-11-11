@@ -18,6 +18,9 @@ def main():
  with SharedPowerDiagnosticClient(a.port,timeout=35) as usb:
   usb.hello()
   def f(s,n,args=None):return usb.call_timeout(s,n,args or {})['result']
+  def memory(stage):
+   b=f('PhoneProvisioning','GetState');report.setdefault('memory',[]).append(dict(stage=stage,**{k:b[k] for k in ['largest_dma_block','dma_free_bytes']}))
+   print('Navigation memory: '+json.dumps(report['memory'][-1]),flush=True)
   original=f('DeviceModes','GetState');assert not original['screen_locked']
   assert not f('ChildMode','GetState')['enabled'],'Exit child mode on device; do not change PIN'
   for s in ['Audiobook','Radio','VoiceAssistant','LocalVoice']:assert not f(s,'GetState')['active'],'Finish listening first'
@@ -49,11 +52,12 @@ def main():
       await asyncio.wait_for(ble.write_gatt_char(ep,data,response=True),15);await asyncio.sleep(.08);return bytes(await asyncio.wait_for(ble.read_gatt_char(ep),15))
      ep='1775ff51-6b43-439b-877c-060f2d9bed07'
      response=await exchange(ep,protocol('hello'));response=await exchange(ep,protocol('prove',response));assert protocol('verify',response)=='OK'
+     memory('authenticated')
      async def send(packet):
       raw=json.dumps(packet,ensure_ascii=False,separators=(',',':')).encode();assert len(raw)<=256
       result=await exchange('1775ff55-6b43-439b-877c-060f2d9bed07',protocol('crypt',raw));return json.loads(protocol('crypt',result))
      assert (await send({'cmd':'status'}))['navigation_supported']
-     frame={'cmd':'nav','s':uuid.uuid4().hex[:16],'q':1,'m':0,'t':0,'d':200,'r':1500,'e':900,'n':'示例道路','z':0}
+     frame={'cmd':'nav','s':uuid.uuid4().hex[:16],'q':1,'m':0,'t':0,'d':80,'r':1500,'e':900,'n':'示例道路','z':0}
      for change in [{'q':2},{'t':99},{'d':-2},{'q':1.5},{'n':'路'*25},{'n':'路\n名'},{'s':'not-a-session'}]:
       assert not (await send(dict(frame,**change)))['ok']
      assert f('SystemCore','GetActiveApp')['app_id']==ids['brookesia.general.settings']
@@ -61,19 +65,28 @@ def main():
      print('First navigation frame acknowledged.',flush=True)
      await asyncio.sleep(1.5)
      active=f('SystemCore','GetActiveApp');assert active['app_id']==ids['local.navigation'] and active['state']=='Running' and not active['last_error'],active
-     current=f('DeviceModes','GetNavigationState');assert current['active'] and current['road']=='示例道路' and current['distance']==200
+     current=f('DeviceModes','GetNavigationState');assert current['active'] and current['road']=='示例道路' and current['distance']==80
+     memory('foreground')
+     if original['resume_volume']==0:f('LearningAudio','PlayNavigationPrompt',{'Turn':0,'Stage':1})
      deadline=time.monotonic()+7
      while True:
       sound=f('LearningAudio','GetState');assert not sound['error'],sound
       if sound['played_bytes']>0:
-       assert sound['output_channels']==2,'Navigation must use stereo I2S';break
+       assert sound['output_channels']==2 and sound['navigation_stack_external'],'Navigation must use stereo I2S on a PSRAM stack';break
       assert time.monotonic()<deadline,'Local prompt did not write PCM';await asyncio.sleep(.2)
      deadline=time.monotonic()+6
      while f('LearningAudio','GetState')['active']:
       assert time.monotonic()<deadline;await asyncio.sleep(.2)
      f('LearningAudio','PlayNavigationPrompt',{'Turn':1,'Stage':2})
      await asyncio.sleep(.6);sound=f('LearningAudio','GetState');assert sound['played_bytes']>0 and not sound['error'],sound
-     report['local_voice_pcm_written']=True;report['stereo_navigation_output']=sound['output_channels']==2
+     report['navigation_stack_external']=sound['navigation_stack_external'];report['local_voice_pcm_written']=True;report['stereo_navigation_output']=sound['output_channels']==2
+     memory('audio')
+     deadline=time.monotonic()+6
+     while f('LearningAudio','GetState')['active']:
+      assert time.monotonic()<deadline;await asyncio.sleep(.2)
+     f('LearningAudio','PlayNavigationPrompt',{'Turn':7,'Stage':3})
+     await asyncio.sleep(.6);sound=f('LearningAudio','GetState');assert sound['played_bytes']>0 and not sound['error'],sound
+     report['next_segment_voice_pcm_written']=True
      assert not (await send(frame))['ok'];assert not (await send(dict(frame,q=2,m=1)))['ok']
      for q,t in enumerate([1,2,3,4,5,6,7],2):
       frame.update(q=q,t=t,d=150);assert (await send(frame))['ok'];await asyncio.sleep(1.1)

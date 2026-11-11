@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-let gui,modes,timer,core,audio,playback,period=0,paused=false,cache={},voice=true,lastPrompt='',lastStage=-1,lastSpeech=0,lastTurn=-1,lastDistance=-1;
+let gui,modes,timer,core,audio,playback,period=0,paused=false,cache={},voice=true,nearKey='',nearStage=0,lastSpeech=0,wasClose=false,arrivedKey='';
 const turns=['继续直行','向左转','向右转','向左前方','向右前方','前方掉头','到达终点','按手机提示'];
 function call(h,n,args){const r=JSON.parse(brookesia.call_function(h,n,JSON.stringify(args||{})));if(!r.success)throw new Error(r.error||n);return r.data;}
 function text(id,value){value=String(value);if(cache[id]===value)return;call(gui,'SetText',{Path:'/main/'+id,Text:value});cache[id]=value;}
@@ -19,27 +19,39 @@ function theme(){
  bind('voice','background',dark?'#172a28':'#e1eddb');bind('voice/label','ink',dark?'#71ddc9':'#197e70');
 }
 function stopSpeech(){try{call(audio,'StopNavigationPrompt');}catch(_){} }
+function resetPrompts(){nearKey='';nearStage=0;lastSpeech=0;wasClose=false;arrivedKey='';}
 function speak(s,t,force){
  if(!voice&&!force)return;
- if(t===7&&!force){stopSpeech();return;}
- // Notification prose changes with every distance update: it is not a road ID.
- const key=s.source+'|'+t+(s.source===2?'':'|'+s.road);
- if(lastTurn!==-1&&lastTurn!==t){stopSpeech();lastPrompt='';lastStage=-1;lastSpeech=0;}
- if(key===lastPrompt&&lastDistance>=0&&lastDistance<=100&&s.distance>=200){lastPrompt='';lastStage=-1;}
- lastTurn=t;lastDistance=s.distance;
- const stage=t>=6||s.distance<0?0:s.distance<=30?2:s.distance<=100?1:0;
- if(!force&&(key===lastPrompt&&stage<=lastStage||lastSpeech&&Date.now()-lastSpeech<8000))return;
+ if(t===7&&!force){wasClose=false;stopSpeech();return;}
+ // Notification prose can change every few metres. Do not turn text changes
+ // into repeated reminders; a completed near-to-far segment resets the key.
+ const key=s.source+'|'+t;
+ let prompt=t,stage=t>=6||s.distance<0?0:s.distance<=30?2:s.distance<=100?1:0,event='manual';
+ if(!force){
+  if(t===6){if(arrivedKey===key)return;event='arrived';}
+  else if(t<6&&s.distance>=0&&s.distance<=100){
+   if(key!==nearKey){stopSpeech();nearKey=key;nearStage=0;wasClose=false;}
+   if(s.distance<=30&&t>0)wasClose=true;
+   if(stage<=nearStage)return;
+   if(stage<2&&lastSpeech&&Date.now()-lastSpeech<4000)return;
+   event='near';
+  }else if(wasClose&&s.distance>=150){prompt=7;stage=3;event='next';}
+  else return; // Far-away and unchanged instructions never auto-play.
+ }
  try{
   const mode=call(modes,'GetState');if(mode.do_not_disturb||mode.resume_volume===0)return;
-  call(audio,'PlayNavigationPrompt',{Turn:t,Stage:stage});lastPrompt=key;lastStage=stage;lastSpeech=Date.now();
- }catch(_){} // A busy codec is left alone; no interruption or unbounded queue.
+  call(audio,'PlayNavigationPrompt',{Turn:prompt,Stage:stage});lastSpeech=Date.now();
+  if(event==='near')nearStage=stage;
+  else if(event==='next'){wasClose=false;nearKey='';nearStage=0;}
+  else if(event==='arrived')arrivedKey=key;
+ }catch(_){} // Busy audio is not interrupted; retry only a still-current event.
 }
 function render(s){
  const fresh=!!s.received&&!s.stale&&s.phase!==2;
  text('source',s.received?(['离线演示','高德模拟','高德通知'][s.source]||'手机同步'):'手机蓝牙同步');
  text('status',!s.received?'等待手机连接':s.phase===2?'导航已停止':s.stale?'数据已过期':'蓝牙同步中');
  bind('arrow','hidden',!fresh);bind('status','hidden',fresh);
- if(!fresh){stopSpeech();text('distance','--');text('turn',s.stale&&s.received?'请查看手机':'等待导航');text('road','在小马遥控中开启导航同步');text('details','不使用设备定位，不独立算路');return;}
+ if(!fresh){stopSpeech();resetPrompts();text('distance','--');text('turn',s.stale&&s.received?'请查看手机':'等待导航');text('road','在小马遥控中开启导航同步');text('details','不使用设备定位，不独立算路');return;}
  const t=Number.isInteger(s.turn)&&s.turn>=0&&s.turn<8?s.turn:7;
  if(cache.arrow!==t){call(gui,'SetViewSrc',{Path:'/main/arrow',Src:'turn_'+t});cache.arrow=t;}
  text('distance',s.phase===1||t===6?'已到达':meters(s.distance));
@@ -51,7 +63,7 @@ function render(s){
 function tick(){if(paused)return;try{const m=call(modes,'GetState');text('volume',m.resume_volume+'%'+(m.do_not_disturb?' · 静音':''));const battery=m.battery_status&255;bind('battery/fill','width',battery<=100?Math.max(1,Math.round(21*battery/100)):1); }catch(_){}try{render(call(modes,'GetNavigationState'));}catch(_){render({});text('status','服务暂不可用');}}
 globalThis.brookesia_app={
  on_start(){gui=brookesia.start_service('SystemGui');modes=brookesia.start_service('DeviceModes');timer=brookesia.start_service('SystemTimer');core=brookesia.start_service('SystemCore');audio=brookesia.start_service('LearningAudio');playback=brookesia.start_service('AudioPlayback');paused=false;cache={};theme();text('voice/label',voice?'语音提示：开':'语音提示：关');for(const action of ['voice','replay','minus','plus'])call(gui,'SubscribeAction',{Action:action});tick();period=call(timer,'StartPeriodic',{Name:'navigation',IntervalMs:1000});return true;},
- on_action(name){if(name==='replay'){const s=call(modes,'GetNavigationState');if(s.received&&!s.stale&&s.phase!==2)speak(s,Number.isInteger(s.turn)&&s.turn>=0&&s.turn<8?s.turn:7,true);return true;}if(name==='minus'||name==='plus'){const m=call(modes,'GetState');call(playback,'SetVolume',{Volume:Math.max(0,Math.min(100,m.resume_volume+(name==='plus'?5:-5)))});tick();return true;}if(name==='voice'){voice=!voice;text('voice/label',voice?'语音提示：开':'语音提示：关');if(!voice)stopSpeech();else{lastPrompt='';lastStage=-1;lastSpeech=0;tick();}}return true;},
+ on_action(name){if(name==='replay'){const s=call(modes,'GetNavigationState');if(s.received&&!s.stale&&s.phase!==2)speak(s,Number.isInteger(s.turn)&&s.turn>=0&&s.turn<8?s.turn:7,true);return true;}if(name==='minus'||name==='plus'){const m=call(modes,'GetState');call(playback,'SetVolume',{Volume:Math.max(0,Math.min(100,m.resume_volume+(name==='plus'?5:-5)))});tick();return true;}if(name==='voice'){voice=!voice;text('voice/label',voice?'语音提示：开':'语音提示：关');if(!voice)stopSpeech();else{resetPrompts();tick();}}return true;},
  on_timer(){tick();return true;},
  on_pause(){paused=true;stopSpeech();return true;},
  on_resume(){paused=false;cache={};theme();tick();return true;},

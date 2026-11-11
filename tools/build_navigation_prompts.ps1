@@ -16,6 +16,7 @@ try {
    $texts[$name]=$words
   }
  }
+ $synth.SetOutputToWaveFile((Join-Path $Output 'passed.wav'),$format);$synth.Speak('请继续按导航行驶。');$synth.SetOutputToNull();$texts['passed.wav']='请继续按导航行驶。'
 } finally {$synth.Dispose()}
 $manifest=[ordered]@{voice='Microsoft Huihui Desktop';synthesis='Windows System.Speech, offline';format='16000 Hz signed 16-bit mono WAV';phrases=$texts}
 [IO.File]::WriteAllText((Join-Path $Output 'sources.json'),($manifest | ConvertTo-Json -Depth 6),[Text.UTF8Encoding]::new($false))

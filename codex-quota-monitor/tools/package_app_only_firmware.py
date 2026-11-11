@@ -28,12 +28,14 @@ def main():
         'app_only': True, 'files': {}}
     sdkconfig = json.loads((build / 'config/sdkconfig.json').read_text(encoding='utf-8'))
     manifest['features'] = {'separate_websocket_tx_lock': bool(sdkconfig.get('ESP_WS_CLIENT_SEPARATE_TX_LOCK'))}
-    if desc['project_version'] in ('0.8.3-s3.64','0.8.3-s3.65'):
+    if desc['project_version'] in ('0.8.3-s3.64','0.8.3-s3.65','0.8.3-s3.66'):
         manifest['features'].update(phone_ble_remote=bool(sdkconfig.get('BT_NIMBLE_ENABLED') and sdkconfig.get('ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_1')),
             ble_controller_flash_code=bool(sdkconfig.get('BT_CTRL_RUN_IN_FLASH_ONLY')),phone_navigation=True,
             navigation_packet_bytes=256,navigation_stale_seconds=15,navigation_unknown_value=-1,
             navigation_sources=['offline_demo','sdk_simulation','amap_notification'],navigation_local_voice=True)
         assert manifest['features']['phone_ble_remote'] and manifest['features']['ble_controller_flash_code']
+    if desc['project_version']=='0.8.3-s3.66':
+        manifest['features'].update(navigation_psram_stack=True,internal_dma_reserve_bytes=sdkconfig['SPIRAM_MALLOC_RESERVE_INTERNAL'])
     if desc['project_version'] in ('0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44','0.8.3-s3.45','0.8.3-s3.46','0.8.3-s3.47','0.8.3-s3.48','0.8.3-s3.49','0.8.3-s3.50','0.8.3-s3.51','0.8.3-s3.53','0.8.3-s3.54','0.8.3-s3.55','0.8.3-s3.56','0.8.3-s3.57','0.8.3-s3.58'):
         manifest['features'].update(buffered_story_pcm=True,pitch_preserving_story_speed=True,default_story_speed=1.0)
     if desc['project_version'] in ('0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44','0.8.3-s3.45','0.8.3-s3.46','0.8.3-s3.47','0.8.3-s3.48','0.8.3-s3.49','0.8.3-s3.50','0.8.3-s3.51','0.8.3-s3.53','0.8.3-s3.54','0.8.3-s3.55','0.8.3-s3.56','0.8.3-s3.57','0.8.3-s3.58'):
@@ -131,8 +133,13 @@ def main():
     with zipfile.ZipFile(temporary) as archive:
         assert archive.testzip() is None
     temporary.replace(output)
+    digest = hashlib.sha256(output.read_bytes()).hexdigest()
+    hash_path = ROOT / 'packages/SHA256.json'
+    hashes = json.loads(hash_path.read_text(encoding='utf-8'))
+    hashes[output.relative_to(ROOT).as_posix()] = digest
+    hash_path.write_text(json.dumps(hashes, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(output)
-    print('SHA256:', hashlib.sha256(output.read_bytes()).hexdigest())
+    print('SHA256:', digest)
 
 if __name__ == '__main__':
     main()
