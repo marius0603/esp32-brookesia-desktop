@@ -38,6 +38,8 @@ python phone-remote/tools/build_navigation_trial.py --tools D:/chatgpt_data/tmp/
 
 构建/签名/ZIP完整性、固定SDK哈希、对应SDK API编译检查通过。Java限次测试覆盖五次边界、确认/忙碌状态、新一天和时间回拨；Python覆盖Key不回显、私有路径约束及定位权限仅注入试验Manifest。编译和测试没有使用用户Key调用高德服务器。
 
-尚待手机安装后核对单次定位、算路、模拟回调及控制台实付金额；不能把构建成功当作实际免费导航已经验证。手机权限和实际账单确认后，再推进设备端蓝牙导航显示。
+2026-11-11用户已安装私有试验包，确认单次定位成功并显示精度；随后确认固定路线算路成功，模拟转向、道路名和距离信息正常更新。Key鉴权、手机定位权限及SDK导航数据回调的核心链路已通过实机确认。
+
+控制台本次实际用量/学习减免/实付金额仍待确认；不能把调用成功或尚无明细时的零金额当作本次免费已验证。下一阶段为设备端蓝牙显示，当前尚未接入。
 
 官方参考：[计费说明](https://lbs.amap.com/pages/base_service_price)、[导航SDK下载](https://developer.amap.com/api/android-navi-sdk/download)、[步行/骑行算路](https://developer.amap.com/api/android-navi-sdk/guide/route-plan/ride-route-plan)、[模拟导航](https://developer.amap.com/api/android-navi-sdk/guide/navigation-map/gps-navi)、[定位隐私及初始化](https://lbs.amap.com/api/location-sdk-for-android/guide/create-project/dev-attention)。
