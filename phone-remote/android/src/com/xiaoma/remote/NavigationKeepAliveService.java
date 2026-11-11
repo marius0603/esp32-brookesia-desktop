@@ -3,9 +3,9 @@ import android.app.*;import android.content.*;import android.content.pm.ServiceI
 /** Retain foreground importance for the existing serialized BLE session. */
 public class NavigationKeepAliveService extends Service {
  static volatile boolean running=false;
- static void ensure(Context c){NavigationLink.Transport t=NavigationLink.transport;if(running||!NavigationNotificationService.forwarding||t==null||!t.available())return;try{c.startForegroundService(new Intent(c,NavigationKeepAliveService.class));}catch(RuntimeException e){NavigationNotificationService.status="后台运行受限，请保持遥控在前台";}}
+ static void ensure(Context c){NavigationListenerRecovery.request(c,false);NavigationLink.Transport t=NavigationLink.transport;if(running||!NavigationNotificationService.forwarding||t==null||!t.available())return;try{c.startForegroundService(new Intent(c,NavigationKeepAliveService.class));}catch(RuntimeException e){NavigationNotificationService.status="后台运行受限，请保持遥控在前台";}}
  static void stop(Context c){c.stopService(new Intent(c,NavigationKeepAliveService.class));}
- final Handler ui=new Handler(Looper.getMainLooper());final Runnable check=new Runnable(){public void run(){NavigationLink.Transport t=NavigationLink.transport;if(!NavigationNotificationService.forwarding||t==null||!t.available()){stopSelf();return;}ui.postDelayed(this,5000);}};
+ final Handler ui=new Handler(Looper.getMainLooper());final Runnable check=new Runnable(){public void run(){NavigationLink.Transport t=NavigationLink.transport;if(!NavigationNotificationService.forwarding||t==null||!t.available()){stopSelf();return;}NavigationListenerRecovery.request(NavigationKeepAliveService.this,false);ui.postDelayed(this,5000);}};
  public void onCreate(){super.onCreate();getSystemService(NotificationManager.class).createNotificationChannel(new NotificationChannel("navigation_sync","导航后台同步",NotificationManager.IMPORTANCE_LOW));
  PendingIntent open=PendingIntent.getActivity(this,0,new Intent(this,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
  PendingIntent stop=PendingIntent.getService(this,1,new Intent(this,NavigationKeepAliveService.class).setAction("stop"),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
