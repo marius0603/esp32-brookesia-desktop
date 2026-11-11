@@ -44,9 +44,9 @@ def artwork():
 
 def main():
  artwork()
- write('manifest.json',{'package':{'id':'local.navigation','name':{'en':'Navigation','zh_CN':'小马导航'},'version':'0.2.0','visible':True,'systems':['super']},'runtime':{'type':'JavaScript','entry':'app/main.js','resource_dir':'res','arguments':[]},'services':[{'name':'AudioPlayback','version':'0.8.2'},{'name':'DeviceModes','version':'0.1.0'},{'name':'LearningAudio','version':'0.1.0'}]})
+ write('manifest.json',{'package':{'id':'local.navigation','name':{'en':'Navigation','zh_CN':'小马导航'},'version':'0.2.1','visible':True,'systems':['super']},'runtime':{'type':'JavaScript','entry':'app/main.js','resource_dir':'res','arguments':[]},'services':[{'name':'AudioPlayback','version':'0.8.2'},{'name':'DeviceModes','version':'0.1.0'},{'name':'LearningAudio','version':'0.1.0'}]})
  write('res/profile.json',{'root':'root.json','icon_id':'launcher_icon','screen_flows':[{'screen_flow':'main','layer':'AppDefault'}]})
- write('res/root.json',{'version':'0.2.0','assets':['images/index.json','screens/main.json','flows/main.json']})
+ write('res/root.json',{'version':'0.2.1','assets':['images/index.json','screens/main.json','flows/main.json']})
  write('res/images/index.json',{'type':'imageSet','images':[{'id':'launcher_icon','src':'launcher_icon.png','width':92,'height':92}]+[{'id':f'turn_{t}','src':f'turn_{t}.png','width':160,'height':160} for t in range(8)]})
  write('res/flows/main.json',{'type':'screenFlow','id':'main','screens':['main'],'initial':'main'})
  def label(id,text,x,y,w,h,size,ink='#edf2f8'):
@@ -68,7 +68,8 @@ def main():
  place('road',52,339,376,37);by['road']['style'].update(fontSize=22,textAlign='center')
  place('details',52,382,376,29);by['details']['style'].update(fontSize=20,textAlign='center')
  place('status',78,151,324,52);by['status']['style'].update(fontSize=26,textAlign='center');by['status']['bindings']['commonProps.hidden']='hidden'
- place('voice',52,416,166,38);by['voice']['children'][0]['placement'].update(x=0,y=5,width=166,height=28);by['voice']['children'][0]['style'].update(fontSize=20,textAlign='center')
+ place('voice',52,416,144,38);by['voice']['children'][0]['placement'].update(x=0,y=5,width=144,height=28);by['voice']['children'][0]['style'].update(fontSize=20,textAlign='center')
+ children.append({'type':'button','id':'replay','placement':{'mode':'absolute','x':204,'y':416,'width':50,'height':38},'style':{'bgColor':'#172a28','radius':12,'borderWidth':0,'padding':0},'bindings':{'style.bgColor':'background'},'events':[{'type':'clicked','action':'replay'}],'children':[label('label','重播',0,7,50,25,18)]})
  children.append(label('volume','70%',205,30,140,29,22))
  def bar(id,x,y,w,h):return {'type':'container','id':id,'placement':{'mode':'absolute','x':x,'y':y,'width':w,'height':h},'style':{'bgColor':'#edf2f8','borderWidth':0,'padding':0,'radius':2},'bindings':{'style.bgColor':'foreground','placement.width':'width'}}
  # Original geometric speaker and Bluetooth marks: no dependency on missing font glyphs.
@@ -87,7 +88,7 @@ def main():
    meta['files'][p.name]={'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
  (audio/'sources.json').write_text(json.dumps(meta,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
  files={p.relative_to(SRC).as_posix():p.read_bytes() for p in SRC.rglob('*') if p.is_file()}
- name='packages/apps/local.navigation.debug.0.2.0.bpk';digest=archive(ROOT/name,files)
+ name='packages/apps/local.navigation.debug.0.2.1.bpk';digest=archive(ROOT/name,files)
  p=ROOT/'packages/SHA256.json';hashes=json.loads(p.read_text(encoding='utf-8'));hashes[name]=digest;p.write_text(json.dumps(hashes,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
  print(name,digest)
 if __name__=='__main__':main()

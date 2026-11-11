@@ -13,10 +13,14 @@ final class NavigationFields {
  }
  static String road(String input) {
   if(input==null||input.equals("null"))return "按手机提示";
+  int entered=input.indexOf("进入");if(entered>=0)input=input.substring(entered);
+  int cut=input.length();for(char separator:new char[]{'｜','|','·','\r','\n'}){int at=input.indexOf(separator);if(at>=0)cut=Math.min(cut,at);}input=input.substring(0,cut).trim();
+  input=input.replaceAll("[，,；;。]+$","").trim();
   StringBuilder result=new StringBuilder();int bytes=0;
   for(int at=0;at<input.length();) {
    int cp=input.codePointAt(at);at+=Character.charCount(cp);
-   if(cp<32||cp==127||cp>=0xd800&&cp<=0xdfff)continue;
+   int type=Character.getType(cp);
+   if(cp<32||cp==127||cp>=0xd800&&cp<=0xdfff||type==Character.PRIVATE_USE||type==Character.FORMAT||type==Character.UNASSIGNED||type==Character.OTHER_SYMBOL||cp==0xfffd||cp>=0xfe00&&cp<=0xfe0f)continue;
    if(cp==34)cp=0xff02;if(cp==92)cp=0xff3c; // Bound JSON escaping as well as UTF-8 bytes.
    String piece=new String(Character.toChars(cp));int size=piece.getBytes(StandardCharsets.UTF_8).length;
    if(bytes+size>72)break;result.append(piece);bytes+=size;

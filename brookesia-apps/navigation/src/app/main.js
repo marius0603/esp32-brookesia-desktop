@@ -15,19 +15,20 @@ function theme(){
  for(const id of ['minus','plus'])bind(id,'background',dark?'#162431':'#fffaf1');
  bind('turn','ink',dark?'#71ddc9':'#197e70');
  bind('divider','background',dark?'#2a3648':'#dfd0b7');
+ bind('replay','background',dark?'#172a28':'#e1eddb');bind('replay/label','ink',dark?'#71ddc9':'#197e70');
  bind('voice','background',dark?'#172a28':'#e1eddb');bind('voice/label','ink',dark?'#71ddc9':'#197e70');
 }
 function stopSpeech(){try{call(audio,'StopNavigationPrompt');}catch(_){} }
-function speak(s,t){
- if(!voice)return;
- if(t===7){stopSpeech();return;}
+function speak(s,t,force){
+ if(!voice&&!force)return;
+ if(t===7&&!force){stopSpeech();return;}
  // Notification prose changes with every distance update: it is not a road ID.
  const key=s.source+'|'+t+(s.source===2?'':'|'+s.road);
  if(lastTurn!==-1&&lastTurn!==t){stopSpeech();lastPrompt='';lastStage=-1;lastSpeech=0;}
  if(key===lastPrompt&&lastDistance>=0&&lastDistance<=100&&s.distance>=200){lastPrompt='';lastStage=-1;}
  lastTurn=t;lastDistance=s.distance;
- const stage=t===6||s.distance<0?0:s.distance<=30?2:s.distance<=100?1:0;
- if(key===lastPrompt&&stage<=lastStage||lastSpeech&&Date.now()-lastSpeech<8000)return;
+ const stage=t>=6||s.distance<0?0:s.distance<=30?2:s.distance<=100?1:0;
+ if(!force&&(key===lastPrompt&&stage<=lastStage||lastSpeech&&Date.now()-lastSpeech<8000))return;
  try{
   const mode=call(modes,'GetState');if(mode.do_not_disturb||mode.resume_volume===0)return;
   call(audio,'PlayNavigationPrompt',{Turn:t,Stage:stage});lastPrompt=key;lastStage=stage;lastSpeech=Date.now();
@@ -43,14 +44,14 @@ function render(s){
  if(cache.arrow!==t){call(gui,'SetViewSrc',{Path:'/main/arrow',Src:'turn_'+t});cache.arrow=t;}
  text('distance',s.phase===1||t===6?'已到达':meters(s.distance));
  bind('distance','size',s.distance>=1000?48:72);
- text('turn',turns[t]);const words=String(s.road||'按手机提示');let end=Math.min(16,words.length);if(end<words.length&&words.charCodeAt(end-1)>=0xd800&&words.charCodeAt(end-1)<=0xdbff)--end;text('road',words.slice(0,end)+(words.length>end?'…':''));
+ text('turn',turns[t]);let words=String(s.road||'按手机提示');const entered=words.indexOf('进入');if(entered>=0)words=words.slice(entered);words=words.split(/[｜|·\r\n]/)[0].replace(/[\uE000-\uF8FF\u200B-\u200F\u202A-\u202E\uFE00-\uFE0F\uFFFD]/g,'').replace(/[，,；;。\s]+$/g,'');let end=Math.min(16,words.length);if(end<words.length&&words.charCodeAt(end-1)>=0xd800&&words.charCodeAt(end-1)<=0xdbff)--end;text('road',words.slice(0,end)+(words.length>end?'…':''));
  text('details','剩余 '+meters(s.remaining)+'  ·  '+(s.seconds<0?'--':Math.max(1,Math.ceil(s.seconds/60)))+' 分钟');
  speak(s,t);
 }
 function tick(){if(paused)return;try{const m=call(modes,'GetState');text('volume',m.resume_volume+'%'+(m.do_not_disturb?' · 静音':''));const battery=m.battery_status&255;bind('battery/fill','width',battery<=100?Math.max(1,Math.round(21*battery/100)):1); }catch(_){}try{render(call(modes,'GetNavigationState'));}catch(_){render({});text('status','服务暂不可用');}}
 globalThis.brookesia_app={
- on_start(){gui=brookesia.start_service('SystemGui');modes=brookesia.start_service('DeviceModes');timer=brookesia.start_service('SystemTimer');core=brookesia.start_service('SystemCore');audio=brookesia.start_service('LearningAudio');playback=brookesia.start_service('AudioPlayback');paused=false;cache={};theme();text('voice/label',voice?'语音提示：开':'语音提示：关');for(const action of ['voice','minus','plus'])call(gui,'SubscribeAction',{Action:action});tick();period=call(timer,'StartPeriodic',{Name:'navigation',IntervalMs:1000});return true;},
- on_action(name){if(name==='minus'||name==='plus'){const m=call(modes,'GetState');call(playback,'SetVolume',{Volume:Math.max(0,Math.min(100,m.resume_volume+(name==='plus'?5:-5)))});tick();return true;}if(name==='voice'){voice=!voice;text('voice/label',voice?'语音提示：开':'语音提示：关');if(!voice)stopSpeech();}return true;},
+ on_start(){gui=brookesia.start_service('SystemGui');modes=brookesia.start_service('DeviceModes');timer=brookesia.start_service('SystemTimer');core=brookesia.start_service('SystemCore');audio=brookesia.start_service('LearningAudio');playback=brookesia.start_service('AudioPlayback');paused=false;cache={};theme();text('voice/label',voice?'语音提示：开':'语音提示：关');for(const action of ['voice','replay','minus','plus'])call(gui,'SubscribeAction',{Action:action});tick();period=call(timer,'StartPeriodic',{Name:'navigation',IntervalMs:1000});return true;},
+ on_action(name){if(name==='replay'){const s=call(modes,'GetNavigationState');if(s.received&&!s.stale&&s.phase!==2)speak(s,Number.isInteger(s.turn)&&s.turn>=0&&s.turn<8?s.turn:7,true);return true;}if(name==='minus'||name==='plus'){const m=call(modes,'GetState');call(playback,'SetVolume',{Volume:Math.max(0,Math.min(100,m.resume_volume+(name==='plus'?5:-5)))});tick();return true;}if(name==='voice'){voice=!voice;text('voice/label',voice?'语音提示：开':'语音提示：关');if(!voice)stopSpeech();else{lastPrompt='';lastStage=-1;lastSpeech=0;tick();}}return true;},
  on_timer(){tick();return true;},
  on_pause(){paused=true;stopSpeech();return true;},
  on_resume(){paused=false;cache={};theme();tick();return true;},

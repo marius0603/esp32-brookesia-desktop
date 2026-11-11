@@ -94,7 +94,7 @@ private:
     boost::json::object snapshot(){std::lock_guard lock(state_mutex_);return {
         {"state",state_},{"error",error_},{"active",live_.load()},{"recorded_bytes",recorded_.load()},
         {"recorded_ms",recorded_.load()*1000/32000},{"played_bytes",played_.load()},{"level",level_.load()},
-        {"max_record_seconds",learning_media::max_record_seconds},{"stack_free_min_bytes",stack_min_.load()}};}
+        {"output_channels",job_==4?2:1},{"navigation_prompt",job_==4},{"max_record_seconds",learning_media::max_record_seconds},{"stack_free_min_bytes",stack_min_.load()}};}
     void discard(){
         std::lock_guard lock(operation_);forget_=true;cancel_=true;
         if(!live_){if(recording_){memset(recording_,0,max_bytes);heap_caps_free(recording_);recording_=nullptr;}recorded_=0;state("Idle");}
@@ -151,8 +151,8 @@ private:
                     wav_open=drwav_init_file(wav,path_.c_str(),nullptr);
                     if(!wav_open||wav->sampleRate!=16000||wav->channels!=1||wav->bitsPerSample!=16||wav->totalPCMFrameCount>16000*20){error("音频需为16kHz单声道16位WAV，最长20秒");break;}
                 }
-                player->close();if(!player->open({.bits=16,.channels=1,.sample_rate=16000})){error("无法打开喇叭");break;}
-                play_open=true;if(player->is_pa_on_off_supported())player->set_pa_on_off(true);state("Playing");
+                player->close();if(!player->open({.bits=16,.channels=uint8_t(mode==4?2:1),.sample_rate=16000})){error("无法打开喇叭");break;}
+                play_open=true;if(player->is_pa_on_off_supported()){if(mode==4)player->set_pa_on_off(false);player->set_pa_on_off(true);}if(mode==4)vTaskDelay(pdMS_TO_TICKS(30));state("Playing");
                 if(mode==4){const int volume=brookesia_board_user_volume();if(volume>=0)player->set_volume(uint8_t(volume));}
                 size_t offset=0;
                 while(!cancel_&&permitted(mode)){
@@ -160,8 +160,15 @@ private:
                     if(mode==1||mode==4)count=drwav_read_pcm_frames_s16(wav,samples,pcm);
                     else {count=std::min(size_t(recorded_)-offset,block_bytes)/2;if(count)memcpy(pcm,recording_+offset,count*2);offset+=count*2;}
                     if(!count)break;
-                    if(!player->write_data(reinterpret_cast<uint8_t *>(pcm),count*2)){error("音频播放失败");break;}
-                    played_+=count*2;stack_min_=std::min(stack_min_.load(),unsigned(uxTaskGetStackHighWaterMark(nullptr)));vTaskDelay(1);
+                    uint8_t *output=reinterpret_cast<uint8_t *>(pcm);size_t bytes=count*2;
+                    if(mode==4){
+                        // Match the proven story player: identical PCM on both I2S slots.
+                        auto *stereo=reinterpret_cast<int16_t *>(raw);
+                        for(size_t i=0;i<count;++i)stereo[2*i]=stereo[2*i+1]=pcm[i];
+                        output=raw;bytes=count*4;
+                    }
+                    if(!player->write_data(output,bytes)){error("音频播放失败");break;}
+                    played_+=bytes;stack_min_=std::min(stack_min_.load(),unsigned(uxTaskGetStackHighWaterMark(nullptr)));vTaskDelay(1);
                 }
             }
         }while(false);

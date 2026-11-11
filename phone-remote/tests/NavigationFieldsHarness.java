@@ -10,6 +10,8 @@ public class NavigationFieldsHarness {
   String road=NavigationFields.road("南京东路😀南京东路😀南京东路😀南京东路😀南京东路😀南京东路😀");
   check(road.getBytes(StandardCharsets.UTF_8).length<=72);check(!road.endsWith("\ud83d"));
   check(!NavigationFields.road("路\n名\"\\").contains("\n"));check(!NavigationFields.road("路\"\\").contains("\""));
+  check(NavigationFields.road("前方左转，进入示例路｜附加乱码").equals("进入示例路"));
+  check(NavigationFields.road("进入示例路\ue123\u200b").equals("进入示例路"));
   System.out.println("Navigation fields: known/unknown turns and bounded UTF-8 roads passed.");
  }
 }

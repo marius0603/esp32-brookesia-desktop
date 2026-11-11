@@ -277,7 +277,7 @@
         "mode": "absolute",
         "x": 52,
         "y": 416,
-        "width": 166,
+        "width": 144,
         "height": 38
       },
       "style": {
@@ -303,7 +303,7 @@
             "mode": "absolute",
             "x": 0,
             "y": 5,
-            "width": 166,
+            "width": 144,
             "height": 28
           },
           "commonProps": {
@@ -358,6 +358,64 @@
         "style.textColor": "ink",
         "style.fontSize": "size"
       }
+    },
+    {
+      "type": "button",
+      "id": "replay",
+      "placement": {
+        "mode": "absolute",
+        "x": 204,
+        "y": 416,
+        "width": 50,
+        "height": 38
+      },
+      "style": {
+        "bgColor": "#172a28",
+        "radius": 12,
+        "borderWidth": 0,
+        "padding": 0
+      },
+      "bindings": {
+        "style.bgColor": "background"
+      },
+      "events": [
+        {
+          "type": "clicked",
+          "action": "replay"
+        }
+      ],
+      "children": [
+        {
+          "type": "label",
+          "id": "label",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 7,
+            "width": 50,
+            "height": 25
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 18,
+            "textColor": "#edf2f8",
+            "textAlign": "left"
+          },
+          "labelProps": {
+            "text": "重播"
+          },
+          "bindings": {
+            "style.textColor": "ink",
+            "style.fontSize": "size"
+          }
+        }
+      ]
     },
     {
       "type": "label",

@@ -65,14 +65,15 @@ def main():
      deadline=time.monotonic()+7
      while True:
       sound=f('LearningAudio','GetState');assert not sound['error'],sound
-      if sound['played_bytes']>0:break
+      if sound['played_bytes']>0:
+       assert sound['output_channels']==2,'Navigation must use stereo I2S';break
       assert time.monotonic()<deadline,'Local prompt did not write PCM';await asyncio.sleep(.2)
      deadline=time.monotonic()+6
      while f('LearningAudio','GetState')['active']:
       assert time.monotonic()<deadline;await asyncio.sleep(.2)
      f('LearningAudio','PlayNavigationPrompt',{'Turn':1,'Stage':2})
      await asyncio.sleep(.6);sound=f('LearningAudio','GetState');assert sound['played_bytes']>0 and not sound['error'],sound
-     report['local_voice_pcm_written']=True
+     report['local_voice_pcm_written']=True;report['stereo_navigation_output']=sound['output_channels']==2
      assert not (await send(frame))['ok'];assert not (await send(dict(frame,q=2,m=1)))['ok']
      for q,t in enumerate([1,2,3,4,5,6,7],2):
       frame.update(q=q,t=t,d=150);assert (await send(frame))['ok'];await asyncio.sleep(1.1)

@@ -25,7 +25,9 @@ now+=9000;sample.turn=1;sample.distance=50;sample.road='前方50米左转';app.o
 now+=9000;sample.distance=49;sample.road='前方49米左转';app.on_timer();assert.equal(prompts(),4,'Changing notification distance must not replay the same stage');
 now+=500;sample.turn=2;sample.road='前方49米右转';app.on_timer();assert.equal(prompts(),5,'A changed direction cancels old speech promptly');
 app.on_action('voice');now+=9000;sample.turn=1;app.on_timer();assert.equal(prompts(),5);
-app.on_action('voice');modes.do_not_disturb=true;app.on_timer();assert.equal(prompts(),5);modes.do_not_disturb=false;modes.resume_volume=0;app.on_timer();assert.equal(prompts(),5);
+modes.do_not_disturb=true;app.on_action('voice');app.on_timer();assert.equal(prompts(),5);modes.do_not_disturb=false;modes.resume_volume=0;app.on_timer();assert.equal(prompts(),5);
+app.on_action('voice');modes.resume_volume=70;app.on_action('replay');assert.equal(prompts(),6,'Manual replay speaks even when automatic prompts are off');now+=9000;sample.turn=2;app.on_timer();assert.equal(prompts(),6);modes.do_not_disturb=true;app.on_action('replay');assert.equal(prompts(),6);app.on_action('voice');modes.do_not_disturb=false;modes.resume_volume=0;
+sample.road='前方左转，进入示例路｜额外乱码';app.on_timer();assert.equal(texts['/main/road'],'进入示例路');
 sample.road='路'.repeat(15)+'😀再';app.on_timer();assert.equal(texts['/main/road'],'路'.repeat(15)+'…');
 sample.phase=2;app.on_timer();assert.equal(texts['/main/status'],'导航已停止');assert.equal(bindings['/main/arrow:hidden'],'true');
 app.on_pause();sample.phase=0;app.on_timer();assert.equal(texts['/main/status'],'导航已停止');

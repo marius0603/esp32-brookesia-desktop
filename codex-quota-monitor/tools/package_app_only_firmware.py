@@ -28,7 +28,7 @@ def main():
         'app_only': True, 'files': {}}
     sdkconfig = json.loads((build / 'config/sdkconfig.json').read_text(encoding='utf-8'))
     manifest['features'] = {'separate_websocket_tx_lock': bool(sdkconfig.get('ESP_WS_CLIENT_SEPARATE_TX_LOCK'))}
-    if desc['project_version']=='0.8.3-s3.64':
+    if desc['project_version'] in ('0.8.3-s3.64','0.8.3-s3.65'):
         manifest['features'].update(phone_ble_remote=bool(sdkconfig.get('BT_NIMBLE_ENABLED') and sdkconfig.get('ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_1')),
             ble_controller_flash_code=bool(sdkconfig.get('BT_CTRL_RUN_IN_FLASH_ONLY')),phone_navigation=True,
             navigation_packet_bytes=256,navigation_stale_seconds=15,navigation_unknown_value=-1,

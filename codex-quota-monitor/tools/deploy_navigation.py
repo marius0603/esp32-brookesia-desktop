@@ -23,7 +23,7 @@ def main():
  with SharedPowerDiagnosticClient(a.port,timeout=35) as c:
   c.hello()
   def f(s,n,a=None):return c.call_timeout(s,n,a or {})['result']
-  assert f('DeviceModes','GetState')['firmware_version']=='0.8.3-s3.64'
+  assert f('DeviceModes','GetState')['firmware_version']==json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))['firmware']
   for s in ['Audiobook','Radio','VoiceAssistant','LocalVoice']:assert not f(s,'GetState')['active'],'Finish active audio first'
   apps=f('SystemCore','ListApps');report['other_apps']={x['manifest']['id']:x['manifest']['version'] for x in apps if x['manifest']['id']!='local.navigation'}
   exists=f('Storage','FSStat',{'Path':BASE})['exists']
