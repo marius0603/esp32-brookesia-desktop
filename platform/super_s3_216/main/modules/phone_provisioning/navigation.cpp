@@ -4,6 +4,15 @@
 namespace phone_remote {
 namespace {std::atomic<esp_brookesia::system::super::System *> owner{nullptr};}
 void attach_system(esp_brookesia::system::super::System *system){owner=system;}
+esp_brookesia::service::FunctionResult open_navigation(){
+ auto *system=owner.load();if(!system)return {.success=false,.error_message="桌面尚未就绪"};
+ const auto apps=system->list_apps();bool ready=false;
+ for(const auto &app:apps)if(app.manifest.id=="brookesia.system.super.shell"&&app.state==esp_brookesia::system::core::AppState::Running)ready=true;
+ if(!ready)return {.success=false,.error_message="请等待桌面启动完成"};
+ for(const auto &app:apps)
+  if(app.manifest.id=="local.navigation")return open_app(app.app_id);
+ return {.success=false,.error_message="导航应用尚未安装，请插入 SD 卡"};
+}
 esp_brookesia::service::FunctionResult open_audiobook(){
  auto *system=owner.load();if(!system)return {.success=false,.error_message="桌面尚未就绪"};
  for(const auto &app:system->list_apps())

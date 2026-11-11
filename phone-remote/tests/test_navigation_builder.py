@@ -11,7 +11,7 @@ class TrialBuilderTests(unittest.TestCase):
    with self.assertRaises(ValueError):builder.external(path)
  def test_real_location_permissions_only_in_generated_trial_manifest(self):
   tree=builder.trial_manifest('0'*32);root=tree.getroot();a=builder.ANDROID
-  self.assertEqual(root.get(a+'versionName'),'0.4.1-trial')
+  self.assertEqual(root.get(a+'versionName'),'0.4.2-trial')
   permissions={n.get(a+'name'):n for n in root.findall('uses-permission')}
   self.assertNotIn(a+'maxSdkVersion',permissions['android.permission.ACCESS_FINE_LOCATION'].attrib)
   self.assertIn('android.permission.ACCESS_COARSE_LOCATION',permissions)

@@ -1,0 +1,59 @@
+{
+  "type": "imageSet",
+  "images": [
+    {
+      "id": "launcher_icon",
+      "src": "launcher_icon.png",
+      "width": 92,
+      "height": 92
+    },
+    {
+      "id": "turn_0",
+      "src": "turn_0.png",
+      "width": 160,
+      "height": 160
+    },
+    {
+      "id": "turn_1",
+      "src": "turn_1.png",
+      "width": 160,
+      "height": 160
+    },
+    {
+      "id": "turn_2",
+      "src": "turn_2.png",
+      "width": 160,
+      "height": 160
+    },
+    {
+      "id": "turn_3",
+      "src": "turn_3.png",
+      "width": 160,
+      "height": 160
+    },
+    {
+      "id": "turn_4",
+      "src": "turn_4.png",
+      "width": 160,
+      "height": 160
+    },
+    {
+      "id": "turn_5",
+      "src": "turn_5.png",
+      "width": 160,
+      "height": 160
+    },
+    {
+      "id": "turn_6",
+      "src": "turn_6.png",
+      "width": 160,
+      "height": 160
+    },
+    {
+      "id": "turn_7",
+      "src": "turn_7.png",
+      "width": 160,
+      "height": 160
+    }
+  ]
+}

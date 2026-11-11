@@ -56,6 +56,7 @@ std::mutex remote_mutex;
 std::optional<boost::json::object> remote_command;
 std::shared_ptr<std::promise<boost::json::object>> remote_reply;
 void process_remote_command(bool stopping=false) {
+    if(stopping)phone_navigation::disconnect();
     std::optional<boost::json::object> command;
     std::shared_ptr<std::promise<boost::json::object>> reply;
     {std::lock_guard<std::mutex> lock(remote_mutex);command=std::move(remote_command);remote_command.reset();reply=std::move(remote_reply);}

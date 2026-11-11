@@ -7,4 +7,5 @@ esp_brookesia::service::FunctionResult open_app(int id);
 esp_brookesia::service::FunctionResult open_audiobook();
 esp_brookesia::service::FunctionResult open_radio();
 esp_brookesia::service::FunctionResult open_songs();
+esp_brookesia::service::FunctionResult open_navigation();
 }

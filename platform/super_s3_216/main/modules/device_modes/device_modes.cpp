@@ -21,6 +21,7 @@
 #include "idle_deep_sleep.hpp"
 #include "screen_lock.hpp"
 #include "resource_monitor.hpp"
+#include "../phone_provisioning/navigation_data.hpp"
 #include "../audio_ownership.hpp"
 #include "../audiobook/audiobook.hpp"
 #include "driver/gpio.h"
@@ -184,6 +185,7 @@ private:
                 {"GetWeatherLayers","Read visible native layer opacity for weather diagnostics",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Visible surfaces"}},
                 {"GetState","Get screen and sound mode state",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Modes"}},
                 {"GetResourceUsage","Read cached per-second CPU and heap RAM use",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"CPU and memory"}},
+                {"GetNavigationState","Read volatile phone navigation; expires after 15 seconds",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Navigation"}},
                 {"SetAutoSleep","Enable ten minute inactivity timeout",{{"Enabled","Enabled",FunctionValueType::Boolean}}},
                 {"SetDoNotDisturb","Mute speaker while retaining its volume",{{"Enabled","Enabled",FunctionValueType::Boolean}}},
                 {"SetQuietHours","Set daily quiet hours in Beijing time",{{"Enabled","Schedule enabled",FunctionValueType::Boolean},{"StartMinute","0-1439 inclusive",FunctionValueType::Number},{"EndMinute","0-1439 exclusive; equal means all day",FunctionValueType::Number}}},
@@ -205,6 +207,7 @@ private:
                 {"GetWeatherLayers",[this](FunctionParameterMap &&)->FunctionResult{return visual_layers();}},
                 {"GetState",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(state())};}},
                 {"GetResourceUsage",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(resource_usage())};}},
+                {"GetNavigationState",[](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(phone_navigation::snapshot())};}},
                 {"SetAutoSleep",[](FunctionParameterMap &&p)->FunctionResult{brookesia_board_set_auto_sleep(std::get<bool>(p.at("Enabled")));return {.success=true};}},
                 {"SetDoNotDisturb",[](FunctionParameterMap &&p)->FunctionResult{brookesia_board_set_do_not_disturb(std::get<bool>(p.at("Enabled")));return {.success=true};}},
                 {"SetQuietHours",[](FunctionParameterMap &&p)->FunctionResult{

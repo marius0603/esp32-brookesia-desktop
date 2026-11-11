@@ -22,6 +22,20 @@ public class MainActivity extends Activity {
  final Object gate=new Object();byte[] reply;boolean finished;int ioStatus;
  BluetoothAdapter adapter;BluetoothLeScanner scanner;BluetoothGatt gatt,workerGatt;Protocol protocol;
  volatile boolean connected=false,busy=false,destroyed=false;boolean resumed=false,tracking=false;int selectedTab=0;
+ boolean navigationSupported=false;
+ final NavigationLink.Transport navigationTransport=new NavigationLink.Transport(){
+  public boolean available(){return connected&&!destroyed&&navigationSupported;}
+  public boolean send(JSONObject packet,NavigationLink.Reply callback){
+   if(!available()||busy)return false;
+   busy=true;BluetoothGatt owner=gatt;
+   jobs.execute(()->{workerGatt=owner;String problem=null;
+    try{sendRequest(packet);}catch(IllegalArgumentException e){problem=e.getMessage();}
+    catch(Exception e){problem="蓝牙连接中断";if(gatt==owner)disconnect();}
+    final String error=problem;
+    ui.post(()->{busy=false;callback.done(gatt==owner?error:"蓝牙连接已断开");});
+   });return true;
+  }
+ };
  LinearLayout root,devices,apps,stories,connectionForm,pairedRow;TextView status,storyTitle,storyState,storyTime,appPages,storyPages;EditText code;
  Button speedButton,radioToggle,radioTimer;TextView radioTitle,radioState,radioDetail,radioNetwork,radioEmpty;
  LinearLayout radioStations;SeekBar radioVolume;Button[] radioCategories=new Button[3];
@@ -43,8 +57,10 @@ public class MainActivity extends Activity {
  Button cell(LinearLayout parent,String title,Runnable action){Button b=button(parent,title,action);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(54),1);p.setMargins(dp(3),dp(5),dp(3),dp(5));b.setLayoutParams(p);return b;}
  LinearLayout card(LinearLayout parent){LinearLayout v=column();v.setPadding(dp(16),dp(12),dp(16),dp(14));v.setBackground(shape(panel,20));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.setMargins(0,dp(7),0,dp(7));parent.addView(v,p);return v;}
  public void onCreate(Bundle state){super.onCreate(state);getWindow().setStatusBarColor(back);getWindow().setNavigationBarColor(back);
+  NavigationLink.transport=navigationTransport;
   root=column();root.setFitsSystemWindows(true);root.setBackgroundColor(back);root.setPadding(dp(16),dp(10),dp(16),dp(10));setContentView(root);
   TextView heading=label("小马遥控",28);heading.setTypeface(null,1);root.addView(heading);status=label("未连接设备",14);status.setTextColor(muted);root.addView(status);
+  button(root,"导航通知转发",()->startActivity(new android.content.Intent(this,NavigationNotificationActivity.class)));
   if(NavigationTrialActivity.enabled(this))button(root,"导航免费试验",()->startActivity(new android.content.Intent(this,NavigationTrialActivity.class)));
   LinearLayout connection=card(root);connectionForm=column();connection.addView(connectionForm);LinearLayout input=row();connectionForm.addView(input);
   code=new EditText(this);code.setSingleLine(true);code.setTextSize(21);code.setHint("4 位配对码");code.setHintTextColor(muted);code.setTextColor(ink);code.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);code.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(4)});input.addView(code,new LinearLayout.LayoutParams(0,dp(54),1));
@@ -97,7 +113,7 @@ public class MainActivity extends Activity {
  void refreshStatus(){final int tab=selectedTab;runCommand(()->{JSONObject r=sendRequest(json("cmd","status"));if(tab==3&&r.optBoolean("radio_supported"))r.put("radio",sendRequest(json("cmd","radio_status")));if(tab==2&&r.optBoolean("songs_supported"))r.put("song",sendRequest(json("cmd","song_status")));return r;},r->{update(r);if(r.has("song"))updateSong(r.getJSONObject("song"));if(r.has("radio"))updateRadio(r.getJSONObject("radio"));ui.post(()->{if(selectedTab==1&&storyPage<0)loadStoriesPage(0);else if(selectedTab==2&&songsSupported&&songPage<0)loadSongsPage(0);else if(selectedTab==3&&radioSupported&&!radioReady)loadRadioStations();else if(selectedTab==4&&appPage<0)loadAppsPage(0);});});}
  void selectMode(String value){for(int i=0;i<3;i++){boolean chosen=modes[i].equals(value);modeButtons[i].setTextColor(chosen?accent:muted);modeButtons[i].setBackground(shape(chosen?Color.rgb(25,66,62):Color.rgb(30,46,65),13));}}
  String clock(int value){return String.format(Locale.ROOT,"%02d:%02d",Math.max(0,value)/60,Math.max(0,value)%60);}
- void update(JSONObject r){songsSupported=r.optBoolean("songs_supported");if(!songsSupported)songState.setText("儿歌遥控需开发板 s3.48 或更新固件");radioSupported=r.optBoolean("radio_supported");if(!radioSupported){radioState.setText("电台遥控需开发板 s3.45 或更新固件");radioNetwork.setText("请先更新开发板，再重新连接");}if(!tracking){volume.setProgress(r.optInt("volume",75));radioVolume.setProgress(r.optInt("volume",75));songVolume.setProgress(r.optInt("volume",75));brightness.setProgress(r.optInt("brightness",80));}selectMode(r.optString("play_mode","sequence"));speedButton.setText("播放速度  "+r.optDouble("story_speed",1)+"x");String title=r.optString("story_title","");if(!title.isEmpty())storyTitle.setText(title);storyTime.setText(clock(r.optInt("story_position",0)));String state=r.optString("story_state","");storyState.setText(state.equals("Paused")?"已暂停":r.optBoolean("story_active")?"正在播放":"已停止");if(r.optBoolean("locked"))text("设备已锁屏，需双按设备音量＋解锁");}
+ void update(JSONObject r){navigationSupported=r.optBoolean("navigation_supported");songsSupported=r.optBoolean("songs_supported");if(!songsSupported)songState.setText("儿歌遥控需开发板 s3.48 或更新固件");radioSupported=r.optBoolean("radio_supported");if(!radioSupported){radioState.setText("电台遥控需开发板 s3.45 或更新固件");radioNetwork.setText("请先更新开发板，再重新连接");}if(!tracking){volume.setProgress(r.optInt("volume",75));radioVolume.setProgress(r.optInt("volume",75));songVolume.setProgress(r.optInt("volume",75));brightness.setProgress(r.optInt("brightness",80));}selectMode(r.optString("play_mode","sequence"));speedButton.setText("播放速度  "+r.optDouble("story_speed",1)+"x");String title=r.optString("story_title","");if(!title.isEmpty())storyTitle.setText(title);storyTime.setText(clock(r.optInt("story_position",0)));String state=r.optString("story_state","");storyState.setText(state.equals("Paused")?"已暂停":r.optBoolean("story_active")?"正在播放":"已停止");if(r.optBoolean("locked"))text("设备已锁屏，需双按设备音量＋解锁");}
  void loadAppsPage(int page){command(json("cmd","apps","page",page),r->{appPage=page;appTotal=r.optInt("total",page*3+r.getJSONArray("items").length());apps.removeAllViews();JSONArray items=r.getJSONArray("items");for(int i=0;i<items.length();i++){JSONObject item=items.getJSONObject(i);int id=item.getInt("id");button(apps,item.getString("name"),()->command(json("cmd","open","id",id),v->{}));}appPages.setText("第 "+(page+1)+" / "+Math.max(1,(appTotal+2)/3)+" 页");});}
  void loadStoriesPage(int page){command(json("cmd","stories","page",page),r->{storyPage=page;storyTotal=r.optInt("total",page*3+r.getJSONArray("items").length());stories.removeAllViews();JSONArray items=r.getJSONArray("items");for(int i=0;i<items.length();i++){JSONObject item=items.getJSONObject(i);int id=item.getInt("id");button(stories,String.format(Locale.ROOT,"%02d  %s",id+1,item.getString("name")),()->command(json("cmd","play","id",id),v->{storyTitle.setText(item.optString("name"));laterRefresh();}));}storyPages.setText("第 "+(page+1)+" / "+Math.max(1,(storyTotal+2)/3)+" 页");});}
  void createSongsPage(LinearLayout parent){
@@ -209,6 +225,6 @@ public class MainActivity extends Activity {
  void signal(byte[] value,int status){synchronized(gate){reply=value;ioStatus=status;finished=true;gate.notifyAll();}}
  @SuppressWarnings("deprecation") byte[] exchange(int ep,byte[] data)throws Exception{synchronized(gate){finished=false;reply=null;BluetoothGatt g=workerGatt;if(g==null||g!=gatt)throw new Exception();BluetoothGattCharacteristic c=g.getService(SERVICE).getCharacteristic(endpoint(ep));c.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);c.setValue(data);if(!g.writeCharacteristic(c))throw new Exception();long deadline=SystemClock.elapsedRealtime()+15000;while(!finished){long left=deadline-SystemClock.elapsedRealtime();if(left<=0)throw new Exception("timeout");gate.wait(left);}if(ioStatus!=0||reply==null)throw new Exception("GATT");return reply;}}
  void disconnect(){stopScan();connected=false;BluetoothGatt g=gatt;gatt=null;if(g!=null){try{g.disconnect();g.close();}catch(Exception e){}}signal(null,-1);if(!destroyed){text("已断开连接");ui.post(()->setConnectedUi(false));}}
- protected void onDestroy(){destroyed=true;ui.removeCallbacks(poller);disconnect();jobs.shutdownNow();super.onDestroy();}
+ protected void onDestroy(){destroyed=true;if(NavigationLink.transport==navigationTransport)NavigationLink.transport=null;ui.removeCallbacks(poller);disconnect();jobs.shutdownNow();super.onDestroy();}
  public void onRequestPermissionsResult(int request,String[] permissions,int[] results){super.onRequestPermissionsResult(request,permissions,results);if(request==7&&results.length>0&&Arrays.stream(results).allMatch(v->v==PackageManager.PERMISSION_GRANTED))scan();else text("请允许附近设备权限后重新扫描");}
 }

@@ -4,6 +4,8 @@
 #include "../audio_ownership.hpp"
 #include "../child_mode/child_mode.hpp"
 #include "../offline_voice/offline_voice.hpp"
+#include "../phone_provisioning/navigation_data.hpp"
+#include "../device_modes/device_modes.hpp"
 #include "brookesia/hal_interface/interface.hpp"
 #include "brookesia/hal_interface/interfaces/audio/codec_recorder.hpp"
 #include "brookesia/hal_interface/interfaces/audio/codec_player.hpp"
@@ -19,6 +21,7 @@
 #include <mutex>
 using namespace esp_brookesia;
 using namespace esp_brookesia::service;
+extern "C" const char *brookesia_child_launch_error(const char *);
 namespace {
 constexpr size_t samples=480,block_bytes=samples*2,max_bytes=learning_media::sample_rate*2*learning_media::max_record_seconds;
 class LearningAudio final:public ServiceBase {
@@ -76,6 +79,16 @@ private:
     uint8_t *recording_=nullptr;
     std::string state_="Idle",error_,path_;
     unsigned limit_=5;
+    bool permitted(unsigned mode){
+        if(mode!=4)return child_mode_learning_allowed();
+        if(brookesia_child_launch_error("local.navigation") || brookesia_board_do_not_disturb())return false;
+        return phone_navigation::usable();
+    }
+    std::expected<void,std::string> navigation_prompt(double turn,double stage){
+        if(!std::isfinite(turn)||!std::isfinite(stage)||turn<0||turn>7||stage<0||stage>2||std::floor(turn)!=turn||std::floor(stage)!=stage)return std::unexpected("Invalid navigation prompt");
+        char path[100];snprintf(path,sizeof(path),"/sdcard/apps/local.navigation/res/audio/turn-%d-%d.wav",int(turn),int(stage));
+        return launch(4,path);
+    }
     void state(const char *name){std::lock_guard lock(state_mutex_);state_=name;}
     void fail(const char *message){std::lock_guard lock(state_mutex_);state_="Error";error_=message;}
     boost::json::object snapshot(){std::lock_guard lock(state_mutex_);return {
@@ -88,7 +101,7 @@ private:
     }
     std::expected<void,std::string> launch(unsigned mode,const std::string &path="",double seconds=5){
         std::lock_guard lock(operation_);
-        if(!child_mode_learning_allowed())return std::unexpected("轻学习未获家长授权，或已到休息时间");
+        if(!permitted(mode))return std::unexpected("当前音频未获授权、导航已停止或处于勿扰时段");
         if(live_)return std::unexpected("音频正在处理，请稍候");
         if(mode==1&&!learning_media::allowed_path(path))return std::unexpected("请选择内容包内的WAV音频");
         if(mode==2&&(!recording_||!recorded_))return std::unexpected("请先录一段跟读");
@@ -119,7 +132,7 @@ private:
         bool rec_open=false,play_open=false,wav_open=false,failed=false;
         auto error=[&](const char *text){fail(text);failed=true;};
         do {
-            if(!pcm||!raw||!wav||!player||!recorder){error("音频设备或内存不可用");break;}
+            if(!pcm||!raw||!wav||!player||(mode==3&&!recorder)){error("音频设备或内存不可用");break;}
             if(mode==3){
                 if(!recorder->open()){error("无法打开麦克风");break;}rec_open=true;
                 const auto info=recorder->get_info();
@@ -134,16 +147,17 @@ private:
                     stack_min_=std::min(stack_min_.load(),unsigned(uxTaskGetStackHighWaterMark(nullptr)));vTaskDelay(1);
                 }
             }else{
-                if(mode==1){
+                if(mode==1||mode==4){
                     wav_open=drwav_init_file(wav,path_.c_str(),nullptr);
                     if(!wav_open||wav->sampleRate!=16000||wav->channels!=1||wav->bitsPerSample!=16||wav->totalPCMFrameCount>16000*20){error("音频需为16kHz单声道16位WAV，最长20秒");break;}
                 }
                 player->close();if(!player->open({.bits=16,.channels=1,.sample_rate=16000})){error("无法打开喇叭");break;}
                 play_open=true;if(player->is_pa_on_off_supported())player->set_pa_on_off(true);state("Playing");
+                if(mode==4){const int volume=brookesia_board_user_volume();if(volume>=0)player->set_volume(uint8_t(volume));}
                 size_t offset=0;
-                while(!cancel_&&child_mode_learning_allowed()){
+                while(!cancel_&&permitted(mode)){
                     size_t count=0;
-                    if(mode==1)count=drwav_read_pcm_frames_s16(wav,samples,pcm);
+                    if(mode==1||mode==4)count=drwav_read_pcm_frames_s16(wav,samples,pcm);
                     else {count=std::min(size_t(recorded_)-offset,block_bytes)/2;if(count)memcpy(pcm,recording_+offset,count*2);offset+=count*2;}
                     if(!count)break;
                     if(!player->write_data(reinterpret_cast<uint8_t *>(pcm),count*2)){error("音频播放失败");break;}
@@ -164,12 +178,16 @@ private:
     void on_stop() override{cancel_=true;while(live_)vTaskDelay(pdMS_TO_TICKS(10));discard();}
     std::vector<FunctionSchema> get_function_schemas() override{return {
         {"PlayFile","Play a local learning WAV",{{"Path","Pack WAV path",FunctionValueType::String}}},
+        {"PlayNavigationPrompt","Play a whitelisted local navigation phrase",{{"Turn","0-7",FunctionValueType::Number},{"Stage","0 generic, 1 hundred meters, 2 imminent",FunctionValueType::Number}}},
+        {"StopNavigationPrompt","Cancel only a navigation phrase",{}},
         {"StartRecording","Record locally in volatile memory",{{"Seconds","1 to 8",FunctionValueType::Number,5.0}}},
         {"StopRecording","Finish current recording",{}},{"Replay","Replay last recording",{}},
         {"Stop","Cancel active audio",{}},{"Discard","Erase the volatile recording",{}},
         {"GetState","Read learning audio state",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Learning audio"}}};}
     FunctionHandlerList get_function_handlers() override{return {
         BROOKESIA_SERVICE_FUNC_HANDLER_1("PlayFile","Path",std::string,launch(1,PARAM)),
+        {"PlayNavigationPrompt",[this](FunctionParameterMap &&p)->FunctionResult{auto r=navigation_prompt(std::get<double>(p.at("Turn")),std::get<double>(p.at("Stage")));return {.success=bool(r),.error_message=r?"":r.error()};}},
+        {"StopNavigationPrompt",[this](FunctionParameterMap &&)->FunctionResult{std::lock_guard lock(operation_);if(job_==4)cancel_=true;return {.success=true};}},
         BROOKESIA_SERVICE_FUNC_HANDLER_1("StartRecording","Seconds",double,launch(3,"",PARAM)),
         {"StopRecording",[this](FunctionParameterMap &&)->FunctionResult{finish_=true;return {.success=true};}},
         BROOKESIA_SERVICE_FUNC_HANDLER_0("Replay",launch(2)),

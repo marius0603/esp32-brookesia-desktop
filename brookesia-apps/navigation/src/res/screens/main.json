@@ -1,0 +1,355 @@
+{
+  "type": "viewScreen",
+  "id": "main",
+  "commonProps": {
+    "scrollable": false
+  },
+  "style": {
+    "bgColor": "#090e17",
+    "padding": 0,
+    "borderWidth": 0
+  },
+  "bindings": {
+    "style.bgColor": "background"
+  },
+  "children": [
+    {
+      "type": "label",
+      "id": "brand",
+      "placement": {
+        "mode": "absolute",
+        "x": 52,
+        "y": 32,
+        "width": 200,
+        "height": 30
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0,
+        "font": "${font.zh_CN}",
+        "fontSize": 26,
+        "textColor": "#edf2f8",
+        "textAlign": "left"
+      },
+      "labelProps": {
+        "text": "小马导航"
+      },
+      "bindings": {
+        "style.textColor": "ink",
+        "style.fontSize": "size"
+      }
+    },
+    {
+      "type": "label",
+      "id": "source",
+      "placement": {
+        "mode": "absolute",
+        "x": 270,
+        "y": 36,
+        "width": 160,
+        "height": 25
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0,
+        "font": "${font.zh_CN}",
+        "fontSize": 18,
+        "textColor": "#edf2f8",
+        "textAlign": "left"
+      },
+      "labelProps": {
+        "text": "手机蓝牙同步"
+      },
+      "bindings": {
+        "style.textColor": "ink",
+        "style.fontSize": "size"
+      }
+    },
+    {
+      "type": "label",
+      "id": "status",
+      "placement": {
+        "mode": "absolute",
+        "x": 52,
+        "y": 76,
+        "width": 376,
+        "height": 28
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0,
+        "font": "${font.zh_CN}",
+        "fontSize": 21,
+        "textColor": "#edf2f8",
+        "textAlign": "left"
+      },
+      "labelProps": {
+        "text": "等待手机连接"
+      },
+      "bindings": {
+        "style.textColor": "ink",
+        "style.fontSize": "size"
+      }
+    },
+    {
+      "type": "image",
+      "id": "arrow",
+      "placement": {
+        "mode": "absolute",
+        "x": 48,
+        "y": 113,
+        "width": 160,
+        "height": 160
+      },
+      "commonProps": {
+        "hidden": true,
+        "scrollable": false
+      },
+      "imageProps": {
+        "src": "${image.turn_0}"
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      }
+    },
+    {
+      "type": "label",
+      "id": "distance",
+      "placement": {
+        "mode": "absolute",
+        "x": 224,
+        "y": 130,
+        "width": 220,
+        "height": 82
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0,
+        "font": "${font.zh_CN}",
+        "fontSize": 52,
+        "textColor": "#edf2f8",
+        "textAlign": "left"
+      },
+      "labelProps": {
+        "text": "--"
+      },
+      "bindings": {
+        "style.textColor": "ink",
+        "style.fontSize": "size"
+      }
+    },
+    {
+      "type": "label",
+      "id": "turn",
+      "placement": {
+        "mode": "absolute",
+        "x": 224,
+        "y": 222,
+        "width": 220,
+        "height": 38
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0,
+        "font": "${font.zh_CN}",
+        "fontSize": 28,
+        "textColor": "#71ddc9",
+        "textAlign": "left"
+      },
+      "labelProps": {
+        "text": "等待导航"
+      },
+      "bindings": {
+        "style.textColor": "ink",
+        "style.fontSize": "size"
+      }
+    },
+    {
+      "type": "label",
+      "id": "road",
+      "placement": {
+        "mode": "absolute",
+        "x": 52,
+        "y": 285,
+        "width": 376,
+        "height": 74
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0,
+        "font": "${font.zh_CN}",
+        "fontSize": 28,
+        "textColor": "#edf2f8",
+        "textAlign": "left"
+      },
+      "labelProps": {
+        "text": "在小马遥控中开启导航同步"
+      },
+      "bindings": {
+        "style.textColor": "ink",
+        "style.fontSize": "size"
+      }
+    },
+    {
+      "type": "container",
+      "id": "divider",
+      "placement": {
+        "mode": "absolute",
+        "x": 52,
+        "y": 368,
+        "width": 376,
+        "height": 1
+      },
+      "style": {
+        "bgColor": "#2a3648",
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "bindings": {
+        "style.bgColor": "background"
+      }
+    },
+    {
+      "type": "label",
+      "id": "details",
+      "placement": {
+        "mode": "absolute",
+        "x": 52,
+        "y": 382,
+        "width": 376,
+        "height": 32
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0,
+        "font": "${font.zh_CN}",
+        "fontSize": 23,
+        "textColor": "#edf2f8",
+        "textAlign": "left"
+      },
+      "labelProps": {
+        "text": "不使用设备定位，不独立算路"
+      },
+      "bindings": {
+        "style.textColor": "ink",
+        "style.fontSize": "size"
+      }
+    },
+    {
+      "type": "button",
+      "id": "voice",
+      "placement": {
+        "mode": "absolute",
+        "x": 52,
+        "y": 423,
+        "width": 190,
+        "height": 32
+      },
+      "style": {
+        "bgColor": "#172a28",
+        "radius": 12,
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "bindings": {
+        "style.bgColor": "background"
+      },
+      "events": [
+        {
+          "type": "clicked",
+          "action": "voice"
+        }
+      ],
+      "children": [
+        {
+          "type": "label",
+          "id": "label",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 3,
+            "width": 190,
+            "height": 26
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "bgOpacity": 0,
+            "font": "${font.zh_CN}",
+            "fontSize": 19,
+            "textColor": "#edf2f8",
+            "textAlign": "left"
+          },
+          "labelProps": {
+            "text": "语音提示：开"
+          },
+          "bindings": {
+            "style.textColor": "ink",
+            "style.fontSize": "size"
+          }
+        }
+      ]
+    },
+    {
+      "type": "label",
+      "id": "note",
+      "placement": {
+        "mode": "absolute",
+        "x": 266,
+        "y": 429,
+        "width": 164,
+        "height": 25
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "bgOpacity": 0,
+        "font": "${font.zh_CN}",
+        "fontSize": 17,
+        "textColor": "#edf2f8",
+        "textAlign": "left"
+      },
+      "labelProps": {
+        "text": "请以手机为准"
+      },
+      "bindings": {
+        "style.textColor": "ink",
+        "style.fontSize": "size"
+      }
+    }
+  ]
+}

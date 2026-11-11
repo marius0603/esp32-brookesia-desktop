@@ -1,0 +1,30 @@
+{
+  "package": {
+    "id": "local.navigation",
+    "name": {
+      "en": "Navigation",
+      "zh_CN": "小马导航"
+    },
+    "version": "0.1.0",
+    "visible": true,
+    "systems": [
+      "super"
+    ]
+  },
+  "runtime": {
+    "type": "JavaScript",
+    "entry": "app/main.js",
+    "resource_dir": "res",
+    "arguments": []
+  },
+  "services": [
+    {
+      "name": "DeviceModes",
+      "version": "0.1.0"
+    },
+    {
+      "name": "LearningAudio",
+      "version": "0.1.0"
+    }
+  ]
+}

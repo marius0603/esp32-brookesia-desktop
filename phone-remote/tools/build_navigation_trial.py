@@ -23,7 +23,7 @@ def external(path):
 def trial_manifest(key):
  if not re.fullmatch(r'[0-9a-fA-F]{32}',key):raise ValueError('Invalid Android Key format')
  tree=ET.parse(ROOT/'phone-remote/android/AndroidManifest.xml');root=tree.getroot()
- root.set(ANDROID+'versionCode','9');root.set(ANDROID+'versionName','0.4.1-trial')
+ root.set(ANDROID+'versionCode','10');root.set(ANDROID+'versionName','0.4.2-trial')
  permissions={n.get(ANDROID+'name'):n for n in root.findall('uses-permission')}
  for name in ('INTERNET','ACCESS_NETWORK_STATE','ACCESS_WIFI_STATE','ACCESS_FINE_LOCATION','ACCESS_COARSE_LOCATION'):
   full='android.permission.'+name
@@ -76,7 +76,7 @@ def main():
  with zipfile.ZipFile(output) as z:
   assert z.testzip() is None
   assert any(n.startswith('lib/arm64-v8a/') for n in z.namelist())
- (work/'build-report.json').write_text(json.dumps({'passed':True,'version':'0.4.1-trial','certificate_matches':True,'bytes':output.stat().st_size,'sha256':hashlib.sha256(output.read_bytes()).hexdigest(),'private_output':str(output)},indent=2),encoding='utf-8')
+ (work/'build-report.json').write_text(json.dumps({'passed':True,'version':'0.4.2-trial','certificate_matches':True,'bytes':output.stat().st_size,'sha256':hashlib.sha256(output.read_bytes()).hexdigest(),'private_output':str(output)},indent=2),encoding='utf-8')
  print('Private trial APK built; original signing certificate verified. Key not printed.')
  print(output)
 

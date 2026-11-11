@@ -10,11 +10,15 @@ import android.widget.*;
 import java.lang.reflect.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import org.json.JSONObject;
 
-/** Foreground-only fixed-route and single-location trial. No device forwarding. */
+/** Foreground-only fixed-route trial. Optional BLE forwarding contains no coordinates. */
 public class NavigationTrialActivity extends Activity {
  final Handler ui=new Handler(Looper.getMainLooper());
  TextView state,road,distance,remaining;CheckBox freeConfirmed;Button online;
+ TextView relayStatus;CheckBox relayEnabled;String relaySession="";int relaySequence=0,relaySource=0,relayTurn=0,relayDistance=0,relayRemaining=0,relaySeconds=0,relayPhase=0;
+ String relayRoad="";boolean relayValid=false,relayWaiting=false,foreground=true;
+ final Runnable heartbeat=new Runnable(){public void run(){if(foreground){sendRelay();ui.postDelayed(this,2000);}}};
  Arrow arrow;Object engine,listener,locationClient,locationListener;Class<?> sdk;boolean busy=false,routeSent=false,navigating=false,closed=false,pendingLocation=false;int generation=0;
  static final int INK=0xffedf2f8,MUTED=0xffa6b4c7;
  static boolean enabled(Context context){try{return context.getPackageManager().getApplicationInfo(context.getPackageName(),PackageManager.GET_META_DATA).metaData.getBoolean("xiaoma.navigation_trial",false);}catch(Exception e){return false;}}
@@ -27,12 +31,15 @@ public class NavigationTrialActivity extends Activity {
   label(root,"小马导航 · 免费试验",25);state=label(root,"未连接高德服务",17);state.setTextColor(0xffffd166);
   arrow=new Arrow(this);root.addView(arrow,new LinearLayout.LayoutParams(-1,dp(170)));
   distance=label(root,"-- 米",38);road=label(root,"固定示例路线，不使用当前位置",19);remaining=label(root,"先用离线演示检查界面",16);
-  button(root,"离线演示（不请求网络）",()->offline());
+  relayEnabled=new CheckBox(this);relayEnabled.setText("通过已连接的蓝牙同步到设备");relayEnabled.setTextColor(INK);root.addView(relayEnabled);
+  relayStatus=label(root,"先在遥控首页连接蓝牙，再勾选同步",14);relayStatus.setTextColor(MUTED);
+  relayEnabled.setOnCheckedChangeListener((b,checked)->{if(!checked)endRelay();else sendRelay();});
+  button(root,"离线演示 60 秒（不请求网络）",()->offline());
   freeConfirmed=new CheckBox(this);freeConfirmed.setText("已核对本月个人学习免费配额仍有余量");freeConfirmed.setTextColor(INK);root.addView(freeConfirmed);
   online=button(root,"算路并模拟 60 秒",()->consent());
   button(root,"在线定位一次",()->locationConsent());
   button(root,"停止并断开导航",()->stop("已停止，高德导航未连接"));
-  TextView note=label(root,"本试验不购买服务。每个北京时间自然日最多5次主动在线尝试，算路与定位共享此上限，失败也计次；无自动重试。配额外高德仍可能收费，本地限次不代表账户硬限额。\n算路使用固定示例坐标；单次在线定位需另行授权，不反查详细地址、不持续后台定位。不使用智能硬件定位、搜索或车载功能。当前阶段只验证手机，尚未向ESP32发送数据。",14);note.setTextColor(MUTED);
+  TextView note=label(root,"本试验不购买服务。每个北京时间自然日最多5次主动在线尝试，算路与定位共享此上限，失败也计次；无自动重试。配额外高德仍可能收费，本地限次不代表账户硬限额。\n算路使用固定示例坐标；单次在线定位需另行授权，不反查详细地址、不持续后台定位。不使用智能硬件定位、搜索或车载功能。设备只接收方向、距离、道路名与剩余时间，不接收坐标或Key。蓝牙同步不增加高德请求；设备15秒未收到数据即过期。当前仅支持演示和模拟导航。",14);note.setTextColor(MUTED);
   button(root,"高德隐私政策",()->startActivity(new Intent(Intent.ACTION_VIEW,android.net.Uri.parse("https://lbs.amap.com/pages/privacy/"))));
   button(root,"返回遥控",()->finish());updateBudget();
  }
@@ -86,6 +93,7 @@ public class NavigationTrialActivity extends Activity {
   }else if(name.equals("onNaviInfoUpdate")&&args!=null&&args.length>0){
    Object info=args[0];distance.setText(invoke(info,"getCurStepRetainDistance")+" 米");road.setText(String.valueOf(invoke(info,"getNextRoadName")));remaining.setText("剩余 "+invoke(info,"getPathRetainDistance")+" 米 · "+invoke(info,"getPathRetainTime")+" 秒");
    int icon=((Number)invoke(info,"getIconType")).intValue();arrow.direction=icon==2?-1:icon==3?1:0;arrow.invalidate();
+   frame(1,NavigationFields.turn(icon),((Number)invoke(info,"getCurStepRetainDistance")).intValue(),((Number)invoke(info,"getPathRetainDistance")).intValue(),((Number)invoke(info,"getPathRetainTime")).intValue(),String.valueOf(invoke(info,"getNextRoadName")));
   }else if(name.equals("onEndEmulatorNavi")||name.equals("onArriveDestination"))stop("模拟已到达终点，服务已停止");
  }catch(Throwable error){stop("导航回调处理失败，服务已停止（"+error.getClass().getSimpleName()+"）");}}
  Object invoke(Object object,String method)throws Exception{return object.getClass().getMethod(method).invoke(object);}
@@ -117,6 +125,7 @@ public class NavigationTrialActivity extends Activity {
   }catch(Throwable error){stop("定位初始化失败（"+error.getClass().getSimpleName()+"），未重试");}
  }
  void stop(String message){
+  endRelay();
   ++generation;closed=true;busy=false;Object previous=engine;Class<?> previousSdk=sdk;engine=null;
   if(locationClient!=null){Object location=locationClient;locationClient=null;try{location.getClass().getMethod("stopLocation").invoke(location);}catch(Throwable ignored){}try{location.getClass().getMethod("onDestroy").invoke(location);}catch(Throwable ignored){}locationListener=null;}
   if(previous!=null){try{previousSdk.getMethod("stopNavi").invoke(previous);}catch(Throwable ignored){}
@@ -124,9 +133,34 @@ public class NavigationTrialActivity extends Activity {
    try{previousSdk.getMethod("destroy").invoke(previous);}catch(Throwable ignored){}}
   listener=null;if(state!=null&&!message.isEmpty())state.setText(message);if(online!=null)updateBudget();
  }
+ void frame(int source,int turn,int meters,int remain,int seconds,String name){
+  if(relayPhase==2){relaySession="";relaySequence=0;}
+  relaySource=source;relayTurn=turn;relayDistance=Math.max(0,Math.min(100000,meters));relayRemaining=Math.max(0,Math.min(1000000,remain));relaySeconds=Math.max(0,Math.min(604800,seconds));relayRoad=NavigationFields.road(name);relayPhase=0;relayValid=true;sendRelay();
+ }
+ void sendRelay(){
+  if(!relayValid||relayWaiting||relayEnabled==null||!relayEnabled.isChecked()&&relayPhase!=2)return;
+  NavigationLink.Transport link=NavigationLink.transport;
+  if(link==null||!link.available()){relayStatus.setText("未连接可同步设备，请先连接蓝牙（需 s3.64）");return;}
+  if(relaySession.isEmpty()){if(relayPhase==2){relayValid=false;return;}relaySession=UUID.randomUUID().toString().replace("-","").substring(0,16);relaySequence=0;}
+  final String session=relaySession;final int next=relaySequence+1,phase=relayPhase;
+  JSONObject packet=MainActivity.json("cmd","nav","s",session,"q",next,"m",relaySource,"t",relayTurn,"d",relayDistance,"r",relayRemaining,"e",relaySeconds,"n",relayRoad,"z",phase);
+  if(packet.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length>256){relayStatus.setText("道路数据过长，未发送");return;}
+  relayWaiting=true;
+  boolean accepted=link.send(packet,error->{
+   relayWaiting=false;
+   if(!relaySession.equals(session))return;
+   if(error!=null){relayValid=false;relaySession="";relayStatus.setText("同步停止："+error+"；请重新开始演示");return;}
+   relaySequence=next;relayStatus.setText(phase==2?"设备已停止显示指引":"设备已同步 · "+(relaySource==0?"离线演示":"高德模拟"));
+   if(phase==2){relayValid=false;relaySession="";}else if(relayPhase==2)sendRelay();
+  });
+  if(!accepted){relayWaiting=false;relayStatus.setText("等待蓝牙通道空闲");}
+ }
+ void endRelay(){relayPhase=2;if(relayValid&&!relaySession.isEmpty())sendRelay();else relayValid=false;}
  void offline(){stop("离线演示 · 未连接高德服务器");closed=false;int token=++generation;int[] turns={0,-1,0,1,0};
-  for(int i=0;i<turns.length;i++){final int step=i;ui.postDelayed(()->{if(token!=generation)return;arrow.direction=turns[step];arrow.invalidate();distance.setText((200-step*35)+" 米");road.setText("示例道路 "+(step+1)+" · 模拟数据");remaining.setText("仅验证界面，不代表真实导航");},i*3000L);}}
- protected void onStop(){pendingLocation=false;stop("页面已离开，导航停止");super.onStop();}
+  for(int i=0;i<turns.length;i++){final int step=i;ui.postDelayed(()->{if(token!=generation)return;arrow.direction=turns[step];arrow.invalidate();distance.setText((200-step*35)+" 米");road.setText("示例道路 "+(step+1)+" · 模拟数据");remaining.setText("仅验证界面，不代表真实导航");frame(0,turns[step]<0?1:turns[step]>0?2:0,200-step*35,1500-step*250,900-step*150,"示例道路 "+(step+1));},i*10000L);}
+  ui.postDelayed(()->{if(token==generation)stop("60秒离线演示结束");},60000);}
+ protected void onResume(){super.onResume();foreground=true;ui.removeCallbacks(heartbeat);ui.post(heartbeat);}
+ protected void onStop(){foreground=false;ui.removeCallbacks(heartbeat);pendingLocation=false;stop("页面已离开，导航停止");super.onStop();}
  protected void onDestroy(){stop("");ui.removeCallbacksAndMessages(null);super.onDestroy();}
  static class Arrow extends View{int direction=0;Paint paint=new Paint(3);Arrow(Context c){super(c);}protected void onDraw(Canvas c){super.onDraw(c);c.save();c.translate(getWidth()/2f,getHeight()/2f);float k=Math.min(getWidth(),getHeight())/180f;c.scale(k,k);if(direction!=0)c.rotate(direction*90);paint.setColor(0xff71ddc9);paint.setStrokeWidth(15);paint.setStrokeCap(Paint.Cap.ROUND);paint.setStyle(Paint.Style.STROKE);Path path=new Path();path.moveTo(0,60);path.lineTo(0,-60);path.moveTo(-40,-20);path.lineTo(0,-60);path.lineTo(40,-20);c.drawPath(path,paint);c.restore();}}
 }

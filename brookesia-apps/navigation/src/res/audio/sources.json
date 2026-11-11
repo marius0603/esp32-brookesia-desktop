@@ -1,0 +1,129 @@
+{
+  "voice": "Microsoft Huihui Desktop",
+  "synthesis": "Windows System.Speech, offline",
+  "format": "16000 Hz signed 16-bit mono WAV",
+  "phrases": {
+    "turn-0-0.wav": "请继续直行。",
+    "turn-0-1.wav": "前方一百米，请继续直行。",
+    "turn-0-2.wav": "即将到达路口，请继续直行。",
+    "turn-1-0.wav": "请向左转。",
+    "turn-1-1.wav": "前方一百米，请向左转。",
+    "turn-1-2.wav": "即将到达路口，请向左转。",
+    "turn-2-0.wav": "请向右转。",
+    "turn-2-1.wav": "前方一百米，请向右转。",
+    "turn-2-2.wav": "即将到达路口，请向右转。",
+    "turn-3-0.wav": "请向左前方行进。",
+    "turn-3-1.wav": "前方一百米，请向左前方行进。",
+    "turn-3-2.wav": "即将到达路口，请向左前方行进。",
+    "turn-4-0.wav": "请向右前方行进。",
+    "turn-4-1.wav": "前方一百米，请向右前方行进。",
+    "turn-4-2.wav": "即将到达路口，请向右前方行进。",
+    "turn-5-0.wav": "请掉头。",
+    "turn-5-1.wav": "前方一百米，请掉头。",
+    "turn-5-2.wav": "即将到达路口，请掉头。",
+    "turn-6-0.wav": "已到达目的地。",
+    "turn-6-1.wav": "已到达目的地。",
+    "turn-6-2.wav": "已到达目的地。",
+    "turn-7-0.wav": "请按照手机导航提示行进。",
+    "turn-7-1.wav": "请按照手机导航提示行进。",
+    "turn-7-2.wav": "请按照手机导航提示行进。"
+  },
+  "files": {
+    "turn-0-0.wav": {
+      "bytes": 67246,
+      "sha256": "e5476fb561b4fe9c6ca66813c07f8e300271b1869048bb4a6dd2fb5bea1ac506"
+    },
+    "turn-0-1.wav": {
+      "bytes": 115406,
+      "sha256": "7fee02ee9a7e752bedcb7f6fa15b8bc12e6016ee15529fe1524bc49320e9c20f"
+    },
+    "turn-0-2.wav": {
+      "bytes": 123086,
+      "sha256": "7b0ace85aa5d663038c8298cd6ec5c08a5bdea17d98c54c56fd4fca969ff1ec5"
+    },
+    "turn-1-0.wav": {
+      "bytes": 58766,
+      "sha256": "147cffbc410b93003aa6566cf06d4edd08b31bad13ad1bd7891e14869b71c776"
+    },
+    "turn-1-1.wav": {
+      "bytes": 107406,
+      "sha256": "48652509abeefbe01c6838c7d675b9918ea0bc722914e9aa58d0dc480947932f"
+    },
+    "turn-1-2.wav": {
+      "bytes": 115406,
+      "sha256": "6246c769fcaa72256a9faf7d8a3ea55db697f7817823bbe2e0b13d94c677d363"
+    },
+    "turn-2-0.wav": {
+      "bytes": 58286,
+      "sha256": "9be2d93e4a239655e14c1f52ebb562758b3a1bee1f66d9c65a35e1dde6296204"
+    },
+    "turn-2-1.wav": {
+      "bytes": 107086,
+      "sha256": "f479277f53764e5050ce8a04c527daba342c3a35484604902269e02b6aca4b68"
+    },
+    "turn-2-2.wav": {
+      "bytes": 115086,
+      "sha256": "183d56066c8082ed649b51f17c3c3909a1826795858f6bfee26514914bd292cb"
+    },
+    "turn-3-0.wav": {
+      "bytes": 86606,
+      "sha256": "1d3e175192577f5d08ee6a8abf1336a85d28e14ab673cb889c36142d2582afdc"
+    },
+    "turn-3-1.wav": {
+      "bytes": 135246,
+      "sha256": "24ab5e26eb1a34138e6fa2937a47544e59d12cdb805747e26ff350065b19fe95"
+    },
+    "turn-3-2.wav": {
+      "bytes": 143086,
+      "sha256": "adacb09dfd803ef0f96bae45eea1e2dfa0090f0743c145ccfc6e2f7173bd4879"
+    },
+    "turn-4-0.wav": {
+      "bytes": 84526,
+      "sha256": "a67db8189a2d028d07616f591ee929124e212ae624f817cf7f3f25736c95adb1"
+    },
+    "turn-4-1.wav": {
+      "bytes": 133166,
+      "sha256": "9508c2f5abc3320fbe0540bda40f2e1a337ed630971a0d523cbf2de1bc73bbf5"
+    },
+    "turn-4-2.wav": {
+      "bytes": 140846,
+      "sha256": "52f009612b3d47d88e2bcd199cf268de81d5efada66dd1ab1c512ae6cf210081"
+    },
+    "turn-5-0.wav": {
+      "bytes": 54126,
+      "sha256": "9235b6a371ad3f5206fa76c344259634795c44a5f93bbcf4ce45af379c9b70a0"
+    },
+    "turn-5-1.wav": {
+      "bytes": 102606,
+      "sha256": "5bd97441a987d0970fd5ce67794c6cbaf28681b07ed95c56c3b06b1b01c9ab42"
+    },
+    "turn-5-2.wav": {
+      "bytes": 110446,
+      "sha256": "c1da1f943b31e808277e40223a359a7936eb0051bb785647713c41ff6871f7bc"
+    },
+    "turn-6-0.wav": {
+      "bytes": 65966,
+      "sha256": "57052b5ea6922e2dc134faca97f3b59419ce32deff73f64ac62ea5da24b8a31a"
+    },
+    "turn-6-1.wav": {
+      "bytes": 65966,
+      "sha256": "57052b5ea6922e2dc134faca97f3b59419ce32deff73f64ac62ea5da24b8a31a"
+    },
+    "turn-6-2.wav": {
+      "bytes": 65966,
+      "sha256": "57052b5ea6922e2dc134faca97f3b59419ce32deff73f64ac62ea5da24b8a31a"
+    },
+    "turn-7-0.wav": {
+      "bytes": 113006,
+      "sha256": "49e4997364fbe3ddc6230a517c2110abd7070c2157fa6d554829406d38ec859a"
+    },
+    "turn-7-1.wav": {
+      "bytes": 113006,
+      "sha256": "49e4997364fbe3ddc6230a517c2110abd7070c2157fa6d554829406d38ec859a"
+    },
+    "turn-7-2.wav": {
+      "bytes": 113006,
+      "sha256": "49e4997364fbe3ddc6230a517c2110abd7070c2157fa6d554829406d38ec859a"
+    }
+  }
+}

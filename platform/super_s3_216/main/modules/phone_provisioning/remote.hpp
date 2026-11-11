@@ -3,6 +3,7 @@
 #include "brookesia/hal_interface.hpp"
 #include "../child_mode/child_mode.hpp"
 #include "navigation.hpp"
+#include "navigation_data.hpp"
 #include "radio_catalog.hpp"
 #include <cmath>
 #include "esp_random.h"
@@ -27,6 +28,12 @@ inline boost::json::object execute(const boost::json::object &request) {
   if(book.is_object())if(auto *mode=book.as_object().if_contains("play_mode");mode&&mode->is_string())return std::string(mode->as_string());
   return "sequence";
  };
+ if(command=="nav") {
+  auto child=data(call("ChildMode","GetState"));
+  const bool allowed=!locked&&child.is_object()&&!child.as_object().at("enabled").as_bool();
+  const auto result=phone_navigation::receive(request,allowed);
+  return {{"ok",result.success},{"error",result.error_message}};
+ }
  if(command=="status") {
   boost::json::object answer{{"ok",true},{"locked",locked},{"volume",modes.as_object().at("resume_volume")},{"radio_supported",true},{"songs_supported",true},{"brightness",modes.as_object().at("brightness_percent")},{"play_mode",play_mode()}};
   auto book=data(call("Audiobook","GetState"));if(book.is_object()){
@@ -36,6 +43,7 @@ inline boost::json::object execute(const boost::json::object &request) {
     answer["story_title"]="";answer["story_state"]="Idle";answer["story_active"]=false;answer["story_position"]=0;
    }
   }
+  answer["navigation_supported"]=true;
   return answer;
  }
  if(command=="radio_status") {

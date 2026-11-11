@@ -130,5 +130,8 @@
   "packages/firmware/brookesia-s3.63.bin": "8a5b0236ceb9d71f380eeb6b3d8e78a902fb000763b3fcad7d4106dbe6838ad6",
   "packages/apps/local.codex.quota.debug.0.2.4.bpk": "abbb8776bbf5b3de4d5af2a20da4a06aa07e27013409c916b959c8dc0f5b9522",
   "packages/apps/local.codex.quota.debug.0.2.5.bpk": "a194216405d82510ae38e9e3fc97baf187d797419348de6f0c147deeff279557",
-  "packages/apps/local.flipclock.debug.0.2.6.bpk": "03c71ff6abcb00e3049343cae89da23a246c33adde168681633dae76be19c183"
+  "packages/apps/local.flipclock.debug.0.2.6.bpk": "03c71ff6abcb00e3049343cae89da23a246c33adde168681633dae76be19c183",
+  "packages/apps/local.navigation.debug.0.1.0.bpk": "e4f23dc7bed40b2f62a0903d15ee9bd2775a4397b59bf96ed0ba6e56f5340d2d",
+  "packages/android/xiaoma-remote-0.5.0.apk": "f0a3b6fe459f27c8de83690ec0e743200bcaa23a5af49a9a1853fdf5ad212d01",
+  "packages/firmware/brookesia-0.8.3-s3.64-app-only.zip": "a54f7935360e99198df35757e46928fdc9aa16cb51ee496c49b982a9530a982d"
 }
