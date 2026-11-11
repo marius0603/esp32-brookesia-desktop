@@ -45,6 +45,7 @@ public class MainActivity extends Activity {
  public void onCreate(Bundle state){super.onCreate(state);getWindow().setStatusBarColor(back);getWindow().setNavigationBarColor(back);
   root=column();root.setFitsSystemWindows(true);root.setBackgroundColor(back);root.setPadding(dp(16),dp(10),dp(16),dp(10));setContentView(root);
   TextView heading=label("小马遥控",28);heading.setTypeface(null,1);root.addView(heading);status=label("未连接设备",14);status.setTextColor(muted);root.addView(status);
+  if(NavigationTrialActivity.enabled(this))button(root,"导航免费试验",()->startActivity(new android.content.Intent(this,NavigationTrialActivity.class)));
   LinearLayout connection=card(root);connectionForm=column();connection.addView(connectionForm);LinearLayout input=row();connectionForm.addView(input);
   code=new EditText(this);code.setSingleLine(true);code.setTextSize(21);code.setHint("4 位配对码");code.setHintTextColor(muted);code.setTextColor(ink);code.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);code.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(4)});input.addView(code,new LinearLayout.LayoutParams(0,dp(54),1));
   Button scan=cell(input,"扫描",()->scan());scan.setTextColor(accent);devices=column();connectionForm.addView(devices);

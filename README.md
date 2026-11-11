@@ -21,6 +21,8 @@
 本仓库不含 Codex 登录凭据、Wi-Fi 密码、设备完整 Flash 备份、运行额度数据或下载的书籍。
 自动息屏和定时勿扰见 [DEVICE_MODES.md](codex-quota-monitor/DEVICE_MODES.md)。
 安卓手机安装官方ESP BLE Prov后，在“设置 → Wi-Fi → 手机配网”开启入口；配对码和使用步骤见 [手机配网](codex-quota-monitor/PHONE_PROVISIONING.md)。
+手机导航/单次在线定位的个人学习配额试验见[导航试验](phone-remote/NAVIGATION_TRIAL.md)。私有0.4.1-trial用于先验证手机SDK和账号权限，含Key安装包不上传GitHub；当前还没有设备端导航转发，不替换公开稳定版。
+
 手机直接蓝牙遥控见 [小马遥控](phone-remote/README.md)，提供[0.4.0安卓安装包](packages/android/xiaoma-remote-0.4.0.apk)，使用暖橙小马图标与原签名，可覆盖安装；底部为遥控/听书/儿歌/电台/应用五页。新增独立20首儿歌曲库、进度、上下首、播放模式、音量和淡出睡眠定时，需要s3.48与儿歌0.1.1，当前设备已配套更新；原电台八台、听书30篇和倍速保留。遥控入口位于“设置 → 蓝牙”，配网仍在“设置 → Wi-Fi → 手机配网”。
 壁纸微移的行为与已有设备更新步骤见 [WALLPAPER_SHIFT.md](codex-quota-monitor/WALLPAPER_SHIFT.md)。
 重力感应开关、校准与已有设备安装步骤见 [AUTO_ROTATION.md](codex-quota-monitor/AUTO_ROTATION.md)。

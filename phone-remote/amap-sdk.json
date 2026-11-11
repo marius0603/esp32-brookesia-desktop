@@ -1,0 +1,17 @@
+{
+  "version": "11.3.100",
+  "location_version": "11.3.101",
+  "download_url": "https://amappc.cn-hangzhou.oss-pub.aliyun-inc.com/lbs/static/zip/AMap_Android_Navi_SDK_All.zip",
+  "bundle_sha256": "7a877997cd432bfeed0c821087792bc49ed3ca22151d7f4dbca17c98ce539f59",
+  "inner_zip_md5": "20f6b0bf1b008ecd8d50459a86d0ef34",
+  "files": {
+    "AMap3DMap_11.3.100_AMapNavi_11.3.100_AMapSearch_9.8.1_AMapLocation_11.3.101_20260924.jar": "eaadfb70e0d281bfa7c76fbe39186d21ed1994a47c4a657d9f04462484b1f5ad",
+    "arm64-v8a/libAMapSDK_NAVI_v11_3_100.so": "a24d535ee4909c8882788a1d79948f04380d57d2c1789f00838ae4bedc553e7f",
+    "arm64-v8a/libapssdk.so": "a94c9e6c8750dd752c87f4ef97a1553e6980020b3b1a9dc6a775b7b695786a82",
+    "arm64-v8a/libc++_shared.so": "d523468d62d9b603cb3354294d70d4b2feabf2c3f1e43b0c96c9aabf32813708",
+    "arm64-v8a/libneonui_shared.so": "84904980bebd8a6a3e3e25c432d5baef7c6e07662cb0af7e9b24557b25c4d045",
+    "arm64-v8a/libneonuijni_public.so": "d03f99f09a22f44ab8ab0a4a8f034916cec745a143351d4deda5e3c7456e8496",
+    "arm64-v8a/libnui.so": "3a6d9841cefb5293d1d0dcf387f156c02673c8ad7db5ef0c321956b6ce991dca",
+    "arm64-v8a/libopenssl.so": "d83ee2bfb4fe2282dcd3db7275e370a04139729494ebf51f0e4e59edf43386cb"
+  }
+}
