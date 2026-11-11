@@ -136,5 +136,6 @@
   "packages/firmware/brookesia-0.8.3-s3.64-app-only.zip": "a54f7935360e99198df35757e46928fdc9aa16cb51ee496c49b982a9530a982d",
   "packages/android/xiaoma-remote-0.5.1.apk": "070789499261c1499088df9869c8f823767f44843b58ebea2846a8e5713d34aa",
   "packages/android/xiaoma-remote-0.5.2.apk": "763c5733e692a6fd7b8591f454a2644b2072363be9048e3438eb9c1d1c19d397",
-  "packages/apps/local.navigation.debug.0.2.0.bpk": "840cd8ba2a724d47604e6e49672d46d8c3fc7ab743a707f535672bc16c46ef1c"
+  "packages/apps/local.navigation.debug.0.2.0.bpk": "840cd8ba2a724d47604e6e49672d46d8c3fc7ab743a707f535672bc16c46ef1c",
+  "packages/android/xiaoma-remote-0.5.3.apk": "6cb45f51c94debea9eedd38196e9d47b559668292216464ac519b36e962ad151"
 }
