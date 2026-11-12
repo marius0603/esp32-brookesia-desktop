@@ -8,6 +8,14 @@ for(let level=1;level<=10;level++){
   for(const [a,b] of edges){assert.equal(Math.abs(a%n-b%n)+Math.abs(Math.floor(a/n)-Math.floor(b/n)),1);graph[a].push(b);graph[b].push(a);}
   const seen=new Set([0]),q=[0];for(let i=0;i<q.length;i++)for(const b of graph[q[i]])if(!seen.has(b)){seen.add(b);q.push(b);}assert.equal(seen.size,n*n);
   assert(p.route.length>=M.bounds[level-1][0]&&p.route.length<=M.bounds[level-1][1]);assert.equal(new Set(p.stars).size,3);p.stars.forEach(i=>assert(p.route.slice(1,-1).includes(i)));
+  if(round<=3){
+   const brute=Object.assign({},m,{collisionBuckets:null});let seed=level*917+round;
+   const next=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+   for(let i=0;i<1000;i++){const x=next()*m.world,y=next()*m.world;assert.equal(M.valid(m,x,y),M.valid(brute,x,y),'Spatial collision index matches full wall scan');}
+   for(const w of m.walls)for(const x of [w[0],w[2]])for(const y of [w[1],w[3]])for(const delta of [-m.radius-4,-.001,0,.001,m.radius+4]){
+    const px=Math.max(0,Math.min(m.world,x+delta)),py=Math.max(0,Math.min(m.world,y+delta));assert.equal(M.valid(m,px,py),M.valid(brute,px,py),'Wall endpoints and clearance boundaries match');}
+   assert(Math.max(...m.collisionBuckets.map(b=>b.length))<=16,'Collision work stays local as maps grow');
+  }
   if(round===1){
    for(let i=0;i<300;i++)M.step(m,-1,0,.05);assert(m.x>=m.radius+4-.01,'Outer wall is solid');
    for(const at of p.route){const gx=(at%n+.5)*m.cell,gy=(Math.floor(at/n)+.5)*m.cell;let reached=false;
@@ -32,6 +40,18 @@ const field=()=>({won:false,x:0,y:0,vx:0,vy:0,walls:[],radius:18,stars:[{x:999,y
 const quick=field();M.step(quick,1,0,.033);assert(quick.vx>50&&quick.x>1.5,'Prompt start');M.step(quick,0,0,.033);assert(quick.vx<35,'Prompt stop');
 const delayed=field();M.step(delayed,1,0,.1);assert(delayed.x>10&&delayed.x<=12,'A short render delay retains elapsed movement');
 const gap=field();M.step(gap,1,0,5);assert(gap.x<=12,'A long pause never becomes an uncontrolled jump');
+for(let level=1;level<=10;level++){
+ const m=M.build(level,7781,'');m.y=m.radius+4;let moves=0,previous=0;
+ for(let x=m.radius+4;x<=m.world-m.radius-4;x++){
+  m.x=x;M.camera(m);if(m.cameraX!==previous)moves++;previous=m.cameraX;
+  assert(m.cameraX>=0&&m.cameraX<=Math.max(0,m.world-324));
+  assert(m.x-m.cameraX>=m.radius&&m.x-m.cameraX<=324-m.radius,'Pony remains fully visible');
+ }
+ if(m.n>6){assert(moves>0&&moves<6,'Scene shifts by overlapping pages, not every pixel');const cx=m.cameraX;M.camera(m);assert.equal(m.cameraX,cx,'Stationary camera does not oscillate');}
+ else assert.equal(moves,0);
+ for(let x=m.world-m.radius-4;x>=m.radius+4;x--){m.x=x;M.camera(m);assert(m.x-m.cameraX>=m.radius&&m.x-m.cameraX<=324-m.radius,'Reverse keeps pony visible');}
+ assert.equal(m.cameraX,0);
+}
 // Saved board mounting offsets and live panel rotation must both participate.
 // Transform the same physical screen-space tilt back to each factory IMU pose.
 for(const degrees of [0,90,180,270])for(const offset_degrees of [0,90,180,270]){

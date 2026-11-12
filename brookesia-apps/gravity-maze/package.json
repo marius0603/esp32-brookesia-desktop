@@ -1,6 +1,6 @@
 {
   "name": "local.gravitymaze",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "private": true,
   "scripts": {
     "test": "node tests/engine.test.cjs && node tests/controller.test.cjs"

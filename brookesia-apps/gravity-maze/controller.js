@@ -8,7 +8,7 @@ function flush(){if(!queue.length)return;const q=queue;queue=[];try{for(let i=0;
 function text(id,value){const k='text:'+id;if(cache[k]===value)return;call(gui,'SetText',{Path:'/main/'+id,Text:value});cache[k]=value;}
 function xy(path,x,y){bind(path,'x',Math.round(x));bind(path,'y',Math.round(y));}
 function box(path,x,y,w,h){xy(path,x,y);bind(path,'w',Math.max(1,Math.round(w)));bind(path,'h',Math.max(1,Math.round(h)));}
-function report(){try{call(storage,'FSWriteText',{Path:ROOT+'state.json',Data:JSON.stringify({version:'0.1.3',level,unlocked,mode,frames,elapsed_ms:Date.now()-startMs,wall_count:wallCount,lease:!!token,error,x:m?m.x:0,y:m?m.y:0,stars:m?m.stars.filter(s=>s.got).length:0,signature:m?m.signature:'',camera_follow:!!m&&m.n>6})});lastReport=Date.now();}catch(_){} }
+function report(){try{call(storage,'FSWriteText',{Path:ROOT+'state.json',Data:JSON.stringify({version:'0.1.5',level,unlocked,mode,frames,elapsed_ms:Date.now()-startMs,wall_count:wallCount,lease:!!token,error,x:m?m.x:0,y:m?m.y:0,stars:m?m.stars.filter(s=>s.got).length:0,signature:m?m.signature:'',camera_follow:!!m&&m.n>6,camera_x:m?m.cameraX:0,camera_y:m?m.cameraY:0})});lastReport=Date.now();}catch(_){} }
 function checkpoint(){try{call(storage,'FSWriteText',{Path:ROOT+'progress.json',Data:JSON.stringify({schema:1,level,unlocked,last_level:m?m.level:level,last_signature:m?m.signature:''})});}catch(_){} }
 function cue(which){try{call(audio,'PlayGameCue',{Cue:which});}catch(_){} }
 function release(){if(token){try{call(sensor,'ReleaseMotion',{Token:token});}catch(_){}token=0;}try{call(audio,'StopGameCue');}catch(_){} }
@@ -46,7 +46,7 @@ function buildStep(){
 }
 function route(at){const graph=[];for(let i=0;i<m.n*m.n;i++)graph.push([]);const pairs=m.plan.branches.slice();for(let i=1;i<m.plan.route.length;i++)pairs.push([m.plan.route[i-1],m.plan.route[i]]);pairs.forEach(e=>{graph[e[0]].push(e[1]);graph[e[1]].push(e[0]);});const q=[at],prev={};prev[at]=-1;for(let i=0;i<q.length;i++)for(const b of graph[q[i]])if(prev[b]===undefined){prev[b]=q[i];q.push(b);}const path=[];for(let k=m.n*m.n-1;k!==-1;k=prev[k])path.unshift(k);return path.slice(0,4);}
 function render(){
- if(!m)return;const cx=Math.max(0,Math.min(m.world-324,m.x-162)),cy=Math.max(0,Math.min(m.world-324,m.y-162));xy('/viewport/world',-cx,-cy);xy('/viewport/world/pony',m.x-m.radius,m.y-m.radius);xy('/viewport/map/marker',4+m.x*68/m.world-3,4+m.y*68/m.world-3);
+ if(!m)return;MazeCore.camera(m);xy('/viewport/world',-m.cameraX,-m.cameraY);xy('/viewport/world/pony',m.x-m.radius,m.y-m.radius);xy('/viewport/map/marker',4+m.x*68/m.world-3,4+m.y*68/m.world-3);
  for(let i=0;i<3;i++)bind('/viewport/world/star'+i,'hidden',m.stars[i].got);for(let i=0;i<4;i++){const at=hintCells[i],show=at!==undefined&&Date.now()<hintEnd;bind('/viewport/world/dot'+i,'hidden',!show);if(show)xy('/viewport/world/dot'+i,(at%m.n+.5)*m.cell-5,(Math.floor(at/m.n)+.5)*m.cell-5);}
  text('count','星星 '+m.stars.filter(s=>s.got).length+' / 3');flush();
 }

@@ -38,9 +38,24 @@ const plans=[{"n":3,"route":[0,1,4,3,6,7,8],"branches":[[1,2],[2,5]],"stars":[1,
   const walls=[[0,0,world,0],[0,0,0,world],[world,0,world,world],[0,world,world,world]];
   for(let r=0;r<n;r++)for(let c=0;c<n;c++){const a=r*n+c;if(c<n-1&&!edge[a+':'+(a+1)])walls.push([(c+1)*cell,r*cell,(c+1)*cell,(r+1)*cell]);if(r<n-1&&!edge[a+':'+(a+n)])walls.push([c*cell,(r+1)*cell,(c+1)*cell,(r+1)*cell]);}
   const center=i=>({x:(i%n+.5)*cell,y:(Math.floor(i/n)+.5)*cell});
-  return {level,plan,n,cell,world,radius,walls,signature:signature(plan),x:cell/2,y:cell/2,vx:0,vy:0,stars:plan.stars.map(i=>Object.assign(center(i),{got:false})),goal:center(n*n-1),won:false};
+  // Broad phase: each cell stores only walls within the collision clearance.
+  // Exact circle/segment tests below remain unchanged; no per-frame allocation.
+  const collisionBounds=walls.map(w=>[Math.min(w[0],w[2]),Math.min(w[1],w[3]),Math.max(w[0],w[2]),Math.max(w[1],w[3])]),collisionBuckets=emptyGraph(n*n),clearance=radius+4;
+  for(let i=0;i<collisionBounds.length;i++){
+   const w=collisionBounds[i],c0=Math.max(0,Math.floor((w[0]-clearance)/cell)),c1=Math.min(n-1,Math.floor((w[2]+clearance)/cell)),r0=Math.max(0,Math.floor((w[1]-clearance)/cell)),r1=Math.min(n-1,Math.floor((w[3]+clearance)/cell));
+   for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)collisionBuckets[r*n+c].push(i);
+  }
+  return {level,plan,n,cell,world,radius,walls,collisionBounds,collisionBuckets,clearanceSquared:clearance*clearance-.001,cameraX:0,cameraY:0,signature:signature(plan),x:cell/2,y:cell/2,vx:0,vy:0,stars:plan.stars.map(i=>Object.assign(center(i),{got:false})),goal:center(n*n-1),won:false};
  }
- function valid(m,x,y){for(let i=0;i<m.walls.length;i++){const w=m.walls[i],qx=Math.max(Math.min(w[0],w[2]),Math.min(Math.max(w[0],w[2]),x)),qy=Math.max(Math.min(w[1],w[3]),Math.min(Math.max(w[1],w[3]),y));if((x-qx)*(x-qx)+(y-qy)*(y-qy)<(m.radius+4)*(m.radius+4)-.001)return false;}return true;}
+ function valid(m,x,y){
+  if(m.collisionBuckets){
+   if(x<0||y<0||x>m.world||y>m.world)return false;
+   const list=m.collisionBuckets[Math.min(m.n-1,Math.floor(y/m.cell))*m.n+Math.min(m.n-1,Math.floor(x/m.cell))];
+   for(let i=0;i<list.length;i++){const w=m.collisionBounds[list[i]],qx=x<w[0]?w[0]:x>w[2]?w[2]:x,qy=y<w[1]?w[1]:y>w[3]?w[3]:y,dx=x-qx,dy=y-qy;if(dx*dx+dy*dy<m.clearanceSquared)return false;}
+   return true;
+  }
+  for(let i=0;i<m.walls.length;i++){const w=m.walls[i],qx=Math.max(Math.min(w[0],w[2]),Math.min(Math.max(w[0],w[2]),x)),qy=Math.max(Math.min(w[1],w[3]),Math.min(Math.max(w[1],w[3]),y));if((x-qx)*(x-qx)+(y-qy)*(y-qy)<(m.radius+4)*(m.radius+4)-.001)return false;}return true;
+ }
  function step(m,tx,ty,dt){
   // Keep short render delays from slowing the simulation to a crawl. Long
   // pauses remain capped, and collision travel is still split into <=2px steps.
@@ -59,7 +74,15 @@ const plans=[{"n":3,"route":[0,1,4,3,6,7,8],"branches":[[1,2],[2,5]],"stars":[1,
   return {roll:Math.atan2(x,Math.sqrt(y*y+z*z)),pitch:Math.atan2(y,z)};
  }
  function tilt(s,b){const a=angles(s),wrap=v=>Math.atan2(Math.sin(v),Math.cos(v)),axis=v=>{v=wrap(v)*180/Math.PI;return Math.abs(v)<=1.5?0:Math.max(-1,Math.min(1,(v-Math.sign(v)*1.5)/10.5));};return {x:axis(a.roll-b.roll),y:axis(a.pitch-b.pitch)};}
- return {generate,build,valid,step,angles,tilt,bounds,signature};
+ function camera(m){
+  if(m.world<=324){m.cameraX=m.cameraY=0;return;}
+  const limit=m.world-324,low=m.radius+30,high=324-low,stride=m.cell*3;
+  // Keep the scene still while the pony is safely inside it. Overlapping
+  // pages avoid a large dirty rectangle on every sample and give reversal room.
+  function axis(position,current){const local=position-current;if(local>high)return Math.min(limit,current+stride);if(local<low)return Math.max(0,current-stride);return current;}
+  m.cameraX=axis(m.x,m.cameraX);m.cameraY=axis(m.y,m.cameraY);
+ }
+ return {generate,build,valid,step,angles,tilt,camera,bounds,signature};
 })();
 if(typeof module!=='undefined')module.exports=MazeCore;
 
@@ -73,7 +96,7 @@ function flush(){if(!queue.length)return;const q=queue;queue=[];try{for(let i=0;
 function text(id,value){const k='text:'+id;if(cache[k]===value)return;call(gui,'SetText',{Path:'/main/'+id,Text:value});cache[k]=value;}
 function xy(path,x,y){bind(path,'x',Math.round(x));bind(path,'y',Math.round(y));}
 function box(path,x,y,w,h){xy(path,x,y);bind(path,'w',Math.max(1,Math.round(w)));bind(path,'h',Math.max(1,Math.round(h)));}
-function report(){try{call(storage,'FSWriteText',{Path:ROOT+'state.json',Data:JSON.stringify({version:'0.1.3',level,unlocked,mode,frames,elapsed_ms:Date.now()-startMs,wall_count:wallCount,lease:!!token,error,x:m?m.x:0,y:m?m.y:0,stars:m?m.stars.filter(s=>s.got).length:0,signature:m?m.signature:'',camera_follow:!!m&&m.n>6})});lastReport=Date.now();}catch(_){} }
+function report(){try{call(storage,'FSWriteText',{Path:ROOT+'state.json',Data:JSON.stringify({version:'0.1.5',level,unlocked,mode,frames,elapsed_ms:Date.now()-startMs,wall_count:wallCount,lease:!!token,error,x:m?m.x:0,y:m?m.y:0,stars:m?m.stars.filter(s=>s.got).length:0,signature:m?m.signature:'',camera_follow:!!m&&m.n>6,camera_x:m?m.cameraX:0,camera_y:m?m.cameraY:0})});lastReport=Date.now();}catch(_){} }
 function checkpoint(){try{call(storage,'FSWriteText',{Path:ROOT+'progress.json',Data:JSON.stringify({schema:1,level,unlocked,last_level:m?m.level:level,last_signature:m?m.signature:''})});}catch(_){} }
 function cue(which){try{call(audio,'PlayGameCue',{Cue:which});}catch(_){} }
 function release(){if(token){try{call(sensor,'ReleaseMotion',{Token:token});}catch(_){}token=0;}try{call(audio,'StopGameCue');}catch(_){} }
@@ -111,7 +134,7 @@ function buildStep(){
 }
 function route(at){const graph=[];for(let i=0;i<m.n*m.n;i++)graph.push([]);const pairs=m.plan.branches.slice();for(let i=1;i<m.plan.route.length;i++)pairs.push([m.plan.route[i-1],m.plan.route[i]]);pairs.forEach(e=>{graph[e[0]].push(e[1]);graph[e[1]].push(e[0]);});const q=[at],prev={};prev[at]=-1;for(let i=0;i<q.length;i++)for(const b of graph[q[i]])if(prev[b]===undefined){prev[b]=q[i];q.push(b);}const path=[];for(let k=m.n*m.n-1;k!==-1;k=prev[k])path.unshift(k);return path.slice(0,4);}
 function render(){
- if(!m)return;const cx=Math.max(0,Math.min(m.world-324,m.x-162)),cy=Math.max(0,Math.min(m.world-324,m.y-162));xy('/viewport/world',-cx,-cy);xy('/viewport/world/pony',m.x-m.radius,m.y-m.radius);xy('/viewport/map/marker',4+m.x*68/m.world-3,4+m.y*68/m.world-3);
+ if(!m)return;MazeCore.camera(m);xy('/viewport/world',-m.cameraX,-m.cameraY);xy('/viewport/world/pony',m.x-m.radius,m.y-m.radius);xy('/viewport/map/marker',4+m.x*68/m.world-3,4+m.y*68/m.world-3);
  for(let i=0;i<3;i++)bind('/viewport/world/star'+i,'hidden',m.stars[i].got);for(let i=0;i<4;i++){const at=hintCells[i],show=at!==undefined&&Date.now()<hintEnd;bind('/viewport/world/dot'+i,'hidden',!show);if(show)xy('/viewport/world/dot'+i,(at%m.n+.5)*m.cell-5,(Math.floor(at/m.n)+.5)*m.cell-5);}
  text('count','星星 '+m.stars.filter(s=>s.got).length+' / 3');flush();
 }

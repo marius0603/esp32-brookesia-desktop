@@ -38,9 +38,24 @@ const plans=[{"n":3,"route":[0,1,4,3,6,7,8],"branches":[[1,2],[2,5]],"stars":[1,
   const walls=[[0,0,world,0],[0,0,0,world],[world,0,world,world],[0,world,world,world]];
   for(let r=0;r<n;r++)for(let c=0;c<n;c++){const a=r*n+c;if(c<n-1&&!edge[a+':'+(a+1)])walls.push([(c+1)*cell,r*cell,(c+1)*cell,(r+1)*cell]);if(r<n-1&&!edge[a+':'+(a+n)])walls.push([c*cell,(r+1)*cell,(c+1)*cell,(r+1)*cell]);}
   const center=i=>({x:(i%n+.5)*cell,y:(Math.floor(i/n)+.5)*cell});
-  return {level,plan,n,cell,world,radius,walls,signature:signature(plan),x:cell/2,y:cell/2,vx:0,vy:0,stars:plan.stars.map(i=>Object.assign(center(i),{got:false})),goal:center(n*n-1),won:false};
+  // Broad phase: each cell stores only walls within the collision clearance.
+  // Exact circle/segment tests below remain unchanged; no per-frame allocation.
+  const collisionBounds=walls.map(w=>[Math.min(w[0],w[2]),Math.min(w[1],w[3]),Math.max(w[0],w[2]),Math.max(w[1],w[3])]),collisionBuckets=emptyGraph(n*n),clearance=radius+4;
+  for(let i=0;i<collisionBounds.length;i++){
+   const w=collisionBounds[i],c0=Math.max(0,Math.floor((w[0]-clearance)/cell)),c1=Math.min(n-1,Math.floor((w[2]+clearance)/cell)),r0=Math.max(0,Math.floor((w[1]-clearance)/cell)),r1=Math.min(n-1,Math.floor((w[3]+clearance)/cell));
+   for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)collisionBuckets[r*n+c].push(i);
+  }
+  return {level,plan,n,cell,world,radius,walls,collisionBounds,collisionBuckets,clearanceSquared:clearance*clearance-.001,cameraX:0,cameraY:0,signature:signature(plan),x:cell/2,y:cell/2,vx:0,vy:0,stars:plan.stars.map(i=>Object.assign(center(i),{got:false})),goal:center(n*n-1),won:false};
  }
- function valid(m,x,y){for(let i=0;i<m.walls.length;i++){const w=m.walls[i],qx=Math.max(Math.min(w[0],w[2]),Math.min(Math.max(w[0],w[2]),x)),qy=Math.max(Math.min(w[1],w[3]),Math.min(Math.max(w[1],w[3]),y));if((x-qx)*(x-qx)+(y-qy)*(y-qy)<(m.radius+4)*(m.radius+4)-.001)return false;}return true;}
+ function valid(m,x,y){
+  if(m.collisionBuckets){
+   if(x<0||y<0||x>m.world||y>m.world)return false;
+   const list=m.collisionBuckets[Math.min(m.n-1,Math.floor(y/m.cell))*m.n+Math.min(m.n-1,Math.floor(x/m.cell))];
+   for(let i=0;i<list.length;i++){const w=m.collisionBounds[list[i]],qx=x<w[0]?w[0]:x>w[2]?w[2]:x,qy=y<w[1]?w[1]:y>w[3]?w[3]:y,dx=x-qx,dy=y-qy;if(dx*dx+dy*dy<m.clearanceSquared)return false;}
+   return true;
+  }
+  for(let i=0;i<m.walls.length;i++){const w=m.walls[i],qx=Math.max(Math.min(w[0],w[2]),Math.min(Math.max(w[0],w[2]),x)),qy=Math.max(Math.min(w[1],w[3]),Math.min(Math.max(w[1],w[3]),y));if((x-qx)*(x-qx)+(y-qy)*(y-qy)<(m.radius+4)*(m.radius+4)-.001)return false;}return true;
+ }
  function step(m,tx,ty,dt){
   // Keep short render delays from slowing the simulation to a crawl. Long
   // pauses remain capped, and collision travel is still split into <=2px steps.
@@ -59,6 +74,14 @@ const plans=[{"n":3,"route":[0,1,4,3,6,7,8],"branches":[[1,2],[2,5]],"stars":[1,
   return {roll:Math.atan2(x,Math.sqrt(y*y+z*z)),pitch:Math.atan2(y,z)};
  }
  function tilt(s,b){const a=angles(s),wrap=v=>Math.atan2(Math.sin(v),Math.cos(v)),axis=v=>{v=wrap(v)*180/Math.PI;return Math.abs(v)<=1.5?0:Math.max(-1,Math.min(1,(v-Math.sign(v)*1.5)/10.5));};return {x:axis(a.roll-b.roll),y:axis(a.pitch-b.pitch)};}
- return {generate,build,valid,step,angles,tilt,bounds,signature};
+ function camera(m){
+  if(m.world<=324){m.cameraX=m.cameraY=0;return;}
+  const limit=m.world-324,low=m.radius+30,high=324-low,stride=m.cell*3;
+  // Keep the scene still while the pony is safely inside it. Overlapping
+  // pages avoid a large dirty rectangle on every sample and give reversal room.
+  function axis(position,current){const local=position-current;if(local>high)return Math.min(limit,current+stride);if(local<low)return Math.max(0,current-stride);return current;}
+  m.cameraX=axis(m.x,m.cameraX);m.cameraY=axis(m.y,m.cameraY);
+ }
+ return {generate,build,valid,step,angles,tilt,camera,bounds,signature};
 })();
 if(typeof module!=='undefined')module.exports=MazeCore;

@@ -148,5 +148,7 @@
   "packages/firmware/brookesia-0.8.3-s3.67-app-only.zip": "6eb78eb223411890588955e969b6016887a0e8b6d50271f62f8f86f72649d2a3",
   "packages/apps/local.childmode.debug.0.1.5.bpk": "ca55a69ce458d162052d8b8d86b6798f462ae7ee21ceae85422703df6da5cbbe",
   "packages/apps/local.gravitymaze.debug.0.1.2.bpk": "972b778d4f7ccd89b7d81da0d2825c19a74b497ceec0c96429899b7f0af89e1e",
-  "packages/apps/local.gravitymaze.debug.0.1.3.bpk": "e9051310d41182bc5988b45ab87565a922bfa7adf6d2552a818e1e61bd0524d5"
+  "packages/apps/local.gravitymaze.debug.0.1.3.bpk": "e9051310d41182bc5988b45ab87565a922bfa7adf6d2552a818e1e61bd0524d5",
+  "packages/apps/local.gravitymaze.debug.0.1.4.bpk": "26c2fe04306a9cf2caa913f6f3313f2fa9cff5118589b8decb185e4cd642607e",
+  "packages/apps/local.gravitymaze.debug.0.1.5.bpk": "235f63b79ee5f8f1b4ecd6b1a6670a02ca03dad19b49cdbe211c916ff66ba4d4"
 }
