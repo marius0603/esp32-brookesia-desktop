@@ -70,8 +70,10 @@ def main():
    if physics:
     report['physics_average_ms']=physics['ms']/physics['calls']
     if tuple(map(int,version.split('.'))) >= (0,1,4):assert report['physics_average_ms']<25,'Local collision calculation regressed'
-   if tuple(map(int,version.split('.'))) >= (0,1,5):
+   if tuple(map(int,version.split('.'))) == (0,1,5):
     changes=state['profile']['CameraMoves']['calls'];assert 1<changes<state['frames']/5,'Camera must turn pages without continuously scrolling';report['camera_moves']=changes
+   elif tuple(map(int,version.split('.'))) >= (0,1,6):
+    changes=state['profile']['CameraMoves']['calls'];assert changes>1,'Continuous camera follow was not exercised';report['camera_moves']=changes
    report.update(passed=True,state=state,cpu_percent_max=max(s['cpu_percent'] for s in samples),internal_free_min=min(s['internal_free_bytes'] for s in samples),psram_free_min=min(s['psram_free_bytes'] for s in samples))
   except BaseException as e:
    report['error']=str(e);raise

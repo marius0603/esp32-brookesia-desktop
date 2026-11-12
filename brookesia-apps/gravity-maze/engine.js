@@ -76,11 +76,10 @@ const plans=[{"n":3,"route":[0,1,4,3,6,7,8],"branches":[[1,2],[2,5]],"stars":[1,
  function tilt(s,b){const a=angles(s),wrap=v=>Math.atan2(Math.sin(v),Math.cos(v)),axis=v=>{v=wrap(v)*180/Math.PI;return Math.abs(v)<=1.5?0:Math.max(-1,Math.min(1,(v-Math.sign(v)*1.5)/10.5));};return {x:axis(a.roll-b.roll),y:axis(a.pitch-b.pitch)};}
  function camera(m){
   if(m.world<=324){m.cameraX=m.cameraY=0;return;}
-  const limit=m.world-324,low=m.radius+30,high=324-low,stride=m.cell*3;
-  // Keep the scene still while the pony is safely inside it. Overlapping
-  // pages avoid a large dirty rectangle on every sample and give reversal room.
-  function axis(position,current){const local=position-current;if(local>high)return Math.min(limit,current+stride);if(local<low)return Math.max(0,current-stride);return current;}
-  m.cameraX=axis(m.x,m.cameraX);m.cameraY=axis(m.y,m.cameraY);
+  // Restore continuous following: page jumps were less comfortable on screen.
+  const limit=m.world-324;
+  m.cameraX=Math.max(0,Math.min(limit,m.x-162));
+  m.cameraY=Math.max(0,Math.min(limit,m.y-162));
  }
  return {generate,build,valid,step,angles,tilt,camera,bounds,signature};
 })();

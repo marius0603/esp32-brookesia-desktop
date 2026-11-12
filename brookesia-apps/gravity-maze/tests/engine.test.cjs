@@ -43,11 +43,11 @@ const gap=field();M.step(gap,1,0,5);assert(gap.x<=12,'A long pause never becomes
 for(let level=1;level<=10;level++){
  const m=M.build(level,7781,'');m.y=m.radius+4;let moves=0,previous=0;
  for(let x=m.radius+4;x<=m.world-m.radius-4;x++){
-  m.x=x;M.camera(m);if(m.cameraX!==previous)moves++;previous=m.cameraX;
+  m.x=x;M.camera(m);if(m.cameraX!==previous)moves++;assert(Math.abs(m.cameraX-previous)<=1,'One-pixel movement never causes a page jump');previous=m.cameraX;
   assert(m.cameraX>=0&&m.cameraX<=Math.max(0,m.world-324));
   assert(m.x-m.cameraX>=m.radius&&m.x-m.cameraX<=324-m.radius,'Pony remains fully visible');
  }
- if(m.n>6){assert(moves>0&&moves<6,'Scene shifts by overlapping pages, not every pixel');const cx=m.cameraX;M.camera(m);assert.equal(m.cameraX,cx,'Stationary camera does not oscillate');}
+ if(m.n>6){assert(moves>0,'Continuous camera follows large maps');const cx=m.cameraX;M.camera(m);assert.equal(m.cameraX,cx,'Stationary camera does not oscillate');}
  else assert.equal(moves,0);
  for(let x=m.world-m.radius-4;x>=m.radius+4;x--){m.x=x;M.camera(m);assert(m.x-m.cameraX>=m.radius&&m.x-m.cameraX<=324-m.radius,'Reverse keeps pony visible');}
  assert.equal(m.cameraX,0);

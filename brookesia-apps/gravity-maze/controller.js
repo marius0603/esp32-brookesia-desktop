@@ -8,7 +8,7 @@ function flush(){if(!queue.length)return;const q=queue;queue=[];try{for(let i=0;
 function text(id,value){const k='text:'+id;if(cache[k]===value)return;call(gui,'SetText',{Path:'/main/'+id,Text:value});cache[k]=value;}
 function xy(path,x,y){bind(path,'x',Math.round(x));bind(path,'y',Math.round(y));}
 function box(path,x,y,w,h){xy(path,x,y);bind(path,'w',Math.max(1,Math.round(w)));bind(path,'h',Math.max(1,Math.round(h)));}
-function report(){try{call(storage,'FSWriteText',{Path:ROOT+'state.json',Data:JSON.stringify({version:'0.1.5',level,unlocked,mode,frames,elapsed_ms:Date.now()-startMs,wall_count:wallCount,lease:!!token,error,x:m?m.x:0,y:m?m.y:0,stars:m?m.stars.filter(s=>s.got).length:0,signature:m?m.signature:'',camera_follow:!!m&&m.n>6,camera_x:m?m.cameraX:0,camera_y:m?m.cameraY:0})});lastReport=Date.now();}catch(_){} }
+function report(){try{call(storage,'FSWriteText',{Path:ROOT+'state.json',Data:JSON.stringify({version:'0.1.6',level,unlocked,mode,frames,elapsed_ms:Date.now()-startMs,wall_count:wallCount,lease:!!token,error,x:m?m.x:0,y:m?m.y:0,stars:m?m.stars.filter(s=>s.got).length:0,signature:m?m.signature:'',camera_follow:!!m&&m.n>6,camera_x:m?m.cameraX:0,camera_y:m?m.cameraY:0})});lastReport=Date.now();}catch(_){} }
 function checkpoint(){try{call(storage,'FSWriteText',{Path:ROOT+'progress.json',Data:JSON.stringify({schema:1,level,unlocked,last_level:m?m.level:level,last_signature:m?m.signature:''})});}catch(_){} }
 function cue(which){try{call(audio,'PlayGameCue',{Cue:which});}catch(_){} }
 function release(){if(token){try{call(sensor,'ReleaseMotion',{Token:token});}catch(_){}token=0;}try{call(audio,'StopGameCue');}catch(_){} }
