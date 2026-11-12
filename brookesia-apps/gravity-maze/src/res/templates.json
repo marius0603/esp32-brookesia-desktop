@@ -1,0 +1,33 @@
+{
+  "type": "viewTemplate",
+  "id": "maze_wall",
+  "node": {
+    "type": "container",
+    "placement": {
+      "mode": "absolute",
+      "x": 0,
+      "y": 0,
+      "width": 8,
+      "height": 8
+    },
+    "commonProps": {
+      "scrollable": false,
+      "clickable": false,
+      "hidden": false
+    },
+    "style": {
+      "padding": 0,
+      "borderWidth": 0,
+      "radius": 3,
+      "bgColor": "#94b181"
+    },
+    "bindings": {
+      "placement.x": "x",
+      "placement.y": "y",
+      "placement.width": "w",
+      "placement.height": "h",
+      "style.bgColor": "bg",
+      "commonProps.hidden": "hidden"
+    }
+  }
+}

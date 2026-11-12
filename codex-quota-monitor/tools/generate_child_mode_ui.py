@@ -24,12 +24,12 @@ def group(id,children,hidden=True):
 def stepper(prefix,title,y):
     return [button(prefix+'_minus','-',104,y,48),label(prefix,title,158,y+5,164,38),button(prefix+'_plus','+',328,y,48)]
 
-write('package.json',{'name':'local.childmode','version':'0.1.4','private':True,'scripts':{'build':'brookesia build'}})
+write('package.json',{'name':'local.childmode','version':'0.1.5','private':True,'scripts':{'build':'brookesia build'}})
 (APP/'brookesia.config.js').write_text("module.exports={cli:{sourceRoot:'src',outputPath:'build',releasePath:'dist',signRoot:'sign'},convertImages:false};\n",encoding='utf-8')
-write('src/manifest.json',{'package':{'id':'local.childmode','name':{'en':'Child Mode','zh_CN':'儿童模式'},'version':'0.1.4','visible':True,'systems':['super']},
+write('src/manifest.json',{'package':{'id':'local.childmode','name':{'en':'Child Mode','zh_CN':'儿童模式'},'version':'0.1.5','visible':True,'systems':['super']},
     'runtime':{'type':'JavaScript','entry':'app/main.js','resource_dir':'res','arguments':[]},'services':[{'name':'ChildMode','version':'0.1.0'}]})
 write('src/res/profile.json',{'root':'root.json','icon_id':'launcher_icon','screen_flows':[{'screen_flow':'main','layer':'AppDefault'}]})
-write('src/res/root.json',{'version':'0.1.4','assets':['images/index.json','screens/main.json','flows/main.json']})
+write('src/res/root.json',{'version':'0.1.5','assets':['images/index.json','screens/main.json','flows/main.json']})
 write('src/res/flows/main.json',{'type':'screenFlow','id':'main','screens':['main'],'initial':'main'})
 gate=[label('dots','',120,137,240,40,32)]
 for i,char in enumerate('123456789'):

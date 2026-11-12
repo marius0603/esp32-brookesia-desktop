@@ -21,7 +21,7 @@ function render(){
  text('control/mode/label',state.enabled?'关闭儿童模式':'开启儿童模式');
  text('control/volume','音量上限 '+state.max_volume+'%');
  text('control/limit',state.daily_minutes?'每日 '+state.daily_minutes+' 分钟':'时长不限制');
- for(const pair of [['book','听书/儿歌/电台','allow_audiobook'],['weather','天气','allow_weather'],['clock','时钟','allow_clock'],['assistant','小马助手','allow_assistant'],['learning','轻学习','allow_learning']])
+ for(const pair of [['book','听书/儿歌/电台','allow_audiobook'],['weather','天气','allow_weather'],['clock','时钟','allow_clock'],['assistant','小马助手','allow_assistant'],['learning','学习/迷宫','allow_learning']])
    text('apps/'+pair[0]+'/label',pair[1]+'：'+(state[pair[2]]?'允许':'关闭'));
  text('times/night/label','夜间休息：'+(state.night_enabled?'开启':'关闭'));
  text('times/start','开始 '+('0'+state.night_start).slice(-2)+':00');

@@ -9,7 +9,7 @@ constexpr unsigned app_bit(std::string_view id) {
     if(id=="local.weather")return 2;
     if(id=="local.flipclock")return 4;
     if(id=="local.voiceassistant")return 8;
-    if(id=="local.lightlearning")return 16;
+    if(id=="local.lightlearning" || id=="local.gravitymaze")return 16;
     return 0;
 }
 constexpr bool audio_allowed(bool ready,bool enabled,unsigned mask,bool resting) {

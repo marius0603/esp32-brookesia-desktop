@@ -1,0 +1,65 @@
+"""Exercise the largest map with temporary steering; restore release code and progress."""
+import hashlib,json,time,zipfile
+from pathlib import Path
+from maintenance_client import SharedPowerDiagnosticClient
+ROOT=Path(__file__).resolve().parents[2]
+BASE='/sdcard/apps/local.gravitymaze'
+
+def main():
+ version=json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))['apps']['local.gravitymaze']
+ with zipfile.ZipFile(ROOT/f'packages/apps/local.gravitymaze.debug.{version}.bpk') as z:release=z.read('app/main.js')
+ source=release.decode('utf-8')
+ assert source.count('on_timer(){tick();return true;},')==1 and source.count('const tilt=MazeCore.tilt(sample,base)')==1
+ # Only this private temporary file drives real rendering/physics automatically.
+ steering="""let testAt=1,testStarted=false;function testTilt(){
+ const at=m.plan.route[Math.min(testAt,m.plan.route.length-1)],x=(at%m.n+.5)*m.cell,y=(Math.floor(at/m.n)+.5)*m.cell;
+ if(Math.hypot(x-m.x,y-m.y)<3&&testAt<m.plan.route.length-1)testAt++;
+ return {x:Math.max(-1,Math.min(1,(x-m.x)/25)),y:Math.max(-1,Math.min(1,(y-m.y)/25))};}
+ function tick(){"""
+ hook=source.replace('on_timer(){tick();return true;},',"on_timer(){tick();if(mode==='ready'&&!testStarted){testStarted=true;calibrate();}return true;},").replace('const tilt=MazeCore.tilt(sample,base)','const tilt=testTilt()').replace('function tick(){',steering)
+ runtime=ROOT/'codex-quota-monitor/runtime';runtime.mkdir(exist_ok=True);stamp=str(time.time_ns())
+ report={'passed':False,'version':version,'level':10,'synthetic_steering':True}
+ with SharedPowerDiagnosticClient('COM5',timeout=35) as c:
+  c.hello()
+  def f(s,n,a=None):return c.call_timeout(s,n,a or {})['result']
+  def upload(data,tag):
+   file=runtime/('maze-load-'+tag+'.js');file.write_bytes(data);name='maze-load-'+stamp+'-'+tag+'.bin'
+   r=c.transfer('put',file,'sd-themes/'+name,False);assert r['ok'] and r['sha256']==hashlib.sha256(data).hexdigest()
+   f('Storage','FSCopyTree',{'From':'/sdcard/themes/'+name,'To':BASE+'/app/main.js','Overwrite':True});f('Storage','FSRemove',{'Path':'/sdcard/themes/'+name})
+  assert not f('ChildMode','GetState')['enabled'],'Never bypass parent policy'
+  for s in ['Audiobook','Radio','VoiceAssistant','LocalVoice','LearningAudio']:assert not f(s,'GetState')['active']
+  modes=f('DeviceModes','GetState');volume=modes['resume_volume'];rotation=f('AutoRotation','GetState')
+  app=next(a for a in f('SystemCore','ListApps') if a['manifest']['id']=='local.gravitymaze');id=app['app_id']
+  f('SystemCore','StopApp',{'AppId':id})
+  assert f('Storage','FSReadText',{'Path':BASE+'/app/main.js'}).encode()==release
+  progress=f('Storage','FSReadText',{'Path':BASE+'/data/progress.json'})
+  backup='/sdcard/resource-backups/maze-load-'+stamp
+  f('Storage','FSCopyTree',{'From':BASE+'/app/main.js','To':backup+'/main.js','Overwrite':False})
+  f('Storage','FSCopyTree',{'From':BASE+'/data/progress.json','To':backup+'/progress.json','Overwrite':False})
+  (runtime/'maze-load-recovery.json').write_text(json.dumps({'backup':backup,'volume':volume,'progress':progress,'version':version},indent=2),encoding='utf-8')
+  try:
+   upload(hook.encode(),'test');f('Storage','FSWriteText',{'Path':BASE+'/data/progress.json','Data':json.dumps({'schema':1,'level':10,'unlocked':10})})
+   f('AudioPlayback','SetVolume',{'Volume':0});f('DeviceModes','Wake');f('SystemCore','StartApp',{'AppId':id})
+   samples=[];start=time.monotonic()
+   while time.monotonic()-start<35:
+    time.sleep(1);samples.append(f('DeviceModes','GetResourceUsage'))
+   state=json.loads(f('Storage','FSReadText',{'Path':BASE+'/data/state.json'}));active=f('SystemCore','GetActiveApp')
+   report.update(state=state,cpu_percent_max=max(s['cpu_percent'] for s in samples),internal_free_min=min(s['internal_free_bytes'] for s in samples),psram_free_min=min(s['psram_free_bytes'] for s in samples))
+   assert active['app_id']==id and active['state']=='Running' and not active['last_error'],active
+   assert state['level']==10 and state['camera_follow'] and state['wall_count']==125 and state['frames']>100 and state['mode']=='playing' and not state['error'],state
+   assert state['x']>162 or state['y']>162,'Camera-follow region was not exercised'
+   report.update(passed=True,state=state,cpu_percent_max=max(s['cpu_percent'] for s in samples),internal_free_min=min(s['internal_free_bytes'] for s in samples),psram_free_min=min(s['psram_free_bytes'] for s in samples))
+  except BaseException as e:
+   report['error']=str(e);raise
+  finally:
+   try:f('SystemCore','StopApp',{'AppId':id})
+   except BaseException as e:report['stop_error']=str(e)
+   upload(release,'release');f('Storage','FSWriteText',{'Path':BASE+'/data/progress.json','Data':progress})
+   f('AudioPlayback','SetVolume',{'Volume':volume})
+   assert f('Storage','FSReadText',{'Path':BASE+'/app/main.js'}).encode()==release
+   assert not f('AutoRotation','GetState')['motion_active'] and f('AutoRotation','GetState')['enabled']==rotation['enabled']
+   report.update(release_restored=True,progress_restored=True,volume_restored=True)
+   f('DeviceModes','Wake');f('SystemCore','StartApp',{'AppId':id})
+   (runtime/'maze-load-verification.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
+ print(json.dumps(report))
+if __name__=='__main__':main()

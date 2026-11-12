@@ -1,0 +1,929 @@
+{
+  "type": "viewScreen",
+  "id": "main",
+  "placement": {
+    "mode": "absolute",
+    "x": 0,
+    "y": 0,
+    "width": 480,
+    "height": 480
+  },
+  "commonProps": {
+    "scrollable": false,
+    "clickable": false,
+    "hidden": false
+  },
+  "style": {
+    "padding": 0,
+    "borderWidth": 0,
+    "radius": 0,
+    "bgColor": "#fbf3e1"
+  },
+  "bindings": {
+    "placement.x": "x",
+    "placement.y": "y",
+    "placement.width": "w",
+    "placement.height": "h",
+    "style.bgColor": "bg",
+    "commonProps.hidden": "hidden"
+  },
+  "children": [
+    {
+      "type": "label",
+      "id": "title",
+      "placement": {
+        "mode": "absolute",
+        "x": 36,
+        "y": 22,
+        "width": 230,
+        "height": 32
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "font": "${font.zh_CN}",
+        "fontSize": 25,
+        "textColor": "#584734",
+        "textAlign": "center",
+        "padding": 0,
+        "bgOpacity": 0,
+        "borderWidth": 0
+      },
+      "labelProps": {
+        "text": "小马迷宫"
+      },
+      "bindings": {
+        "style.textColor": "ink"
+      }
+    },
+    {
+      "type": "label",
+      "id": "count",
+      "placement": {
+        "mode": "absolute",
+        "x": 266,
+        "y": 28,
+        "width": 130,
+        "height": 28
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "font": "${font.zh_CN}",
+        "fontSize": 19,
+        "textColor": "#584734",
+        "textAlign": "center",
+        "padding": 0,
+        "bgOpacity": 0,
+        "borderWidth": 0
+      },
+      "labelProps": {
+        "text": "星星 0 / 3"
+      },
+      "bindings": {
+        "style.textColor": "ink"
+      }
+    },
+    {
+      "type": "button",
+      "id": "pause",
+      "placement": {
+        "mode": "absolute",
+        "x": 394,
+        "y": 22,
+        "width": 62,
+        "height": 38
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": true,
+        "hidden": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "radius": 16,
+        "bgColor": "#e4ebcf"
+      },
+      "bindings": {
+        "placement.x": "x",
+        "placement.y": "y",
+        "placement.width": "w",
+        "placement.height": "h",
+        "style.bgColor": "bg",
+        "commonProps.hidden": "hidden"
+      },
+      "events": [
+        {
+          "type": "clicked",
+          "action": "pause"
+        }
+      ],
+      "children": [
+        {
+          "type": "label",
+          "id": "label",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 5,
+            "width": 62,
+            "height": 28
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 21,
+            "textColor": "#584734",
+            "textAlign": "center",
+            "padding": 0,
+            "bgOpacity": 0,
+            "borderWidth": 0
+          },
+          "labelProps": {
+            "text": "暂停"
+          },
+          "bindings": {
+            "style.textColor": "ink"
+          }
+        }
+      ]
+    },
+    {
+      "type": "label",
+      "id": "status",
+      "placement": {
+        "mode": "absolute",
+        "x": 42,
+        "y": 57,
+        "width": 396,
+        "height": 24
+      },
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "font": "${font.zh_CN}",
+        "fontSize": 17,
+        "textColor": "#584734",
+        "textAlign": "center",
+        "padding": 0,
+        "bgOpacity": 0,
+        "borderWidth": 0
+      },
+      "labelProps": {
+        "text": "轻轻倾斜，带小马回家"
+      },
+      "bindings": {
+        "style.textColor": "ink"
+      }
+    },
+    {
+      "type": "container",
+      "id": "viewport",
+      "placement": {
+        "mode": "absolute",
+        "x": 78,
+        "y": 82,
+        "width": 324,
+        "height": 324
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false,
+        "hidden": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "radius": 3,
+        "bgColor": "#eff1d7"
+      },
+      "bindings": {
+        "placement.x": "x",
+        "placement.y": "y",
+        "placement.width": "w",
+        "placement.height": "h",
+        "style.bgColor": "bg",
+        "commonProps.hidden": "hidden"
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "world",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 0,
+            "width": 324,
+            "height": 324
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false,
+            "hidden": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "radius": 3,
+            "bgColor": "#94b181",
+            "bgOpacity": 0
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y",
+            "placement.width": "w",
+            "placement.height": "h",
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "children": [
+            {
+              "type": "image",
+              "id": "home",
+              "placement": {
+                "mode": "absolute",
+                "x": 260,
+                "y": 260,
+                "width": 40,
+                "height": 40
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "radius": 3,
+                "bgColor": "#94b181",
+                "bgOpacity": 0
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.y": "y",
+                "placement.width": "w",
+                "placement.height": "h",
+                "style.bgColor": "bg",
+                "commonProps.hidden": "hidden"
+              },
+              "imageProps": {
+                "src": "${image.home}",
+                "innerAlign": "contain"
+              }
+            },
+            {
+              "type": "image",
+              "id": "star0",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 34,
+                "height": 34
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "radius": 3,
+                "bgColor": "#94b181",
+                "bgOpacity": 0
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.y": "y",
+                "placement.width": "w",
+                "placement.height": "h",
+                "style.bgColor": "bg",
+                "commonProps.hidden": "hidden"
+              },
+              "imageProps": {
+                "src": "${image.star}",
+                "innerAlign": "contain"
+              }
+            },
+            {
+              "type": "image",
+              "id": "star1",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 34,
+                "height": 34
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "radius": 3,
+                "bgColor": "#94b181",
+                "bgOpacity": 0
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.y": "y",
+                "placement.width": "w",
+                "placement.height": "h",
+                "style.bgColor": "bg",
+                "commonProps.hidden": "hidden"
+              },
+              "imageProps": {
+                "src": "${image.star}",
+                "innerAlign": "contain"
+              }
+            },
+            {
+              "type": "image",
+              "id": "star2",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 34,
+                "height": 34
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "radius": 3,
+                "bgColor": "#94b181",
+                "bgOpacity": 0
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.y": "y",
+                "placement.width": "w",
+                "placement.height": "h",
+                "style.bgColor": "bg",
+                "commonProps.hidden": "hidden"
+              },
+              "imageProps": {
+                "src": "${image.star}",
+                "innerAlign": "contain"
+              }
+            },
+            {
+              "type": "container",
+              "id": "dot0",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 10,
+                "height": 10
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "radius": 3,
+                "bgColor": "#efb948"
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.y": "y",
+                "placement.width": "w",
+                "placement.height": "h",
+                "style.bgColor": "bg",
+                "commonProps.hidden": "hidden"
+              }
+            },
+            {
+              "type": "container",
+              "id": "dot1",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 10,
+                "height": 10
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "radius": 3,
+                "bgColor": "#efb948"
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.y": "y",
+                "placement.width": "w",
+                "placement.height": "h",
+                "style.bgColor": "bg",
+                "commonProps.hidden": "hidden"
+              }
+            },
+            {
+              "type": "container",
+              "id": "dot2",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 10,
+                "height": 10
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "radius": 3,
+                "bgColor": "#efb948"
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.y": "y",
+                "placement.width": "w",
+                "placement.height": "h",
+                "style.bgColor": "bg",
+                "commonProps.hidden": "hidden"
+              }
+            },
+            {
+              "type": "container",
+              "id": "dot3",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 10,
+                "height": 10
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": true
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "radius": 3,
+                "bgColor": "#efb948"
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.y": "y",
+                "placement.width": "w",
+                "placement.height": "h",
+                "style.bgColor": "bg",
+                "commonProps.hidden": "hidden"
+              }
+            },
+            {
+              "type": "image",
+              "id": "pony",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 44,
+                "height": 44
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "radius": 3,
+                "bgColor": "#94b181",
+                "bgOpacity": 0
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.y": "y",
+                "placement.width": "w",
+                "placement.height": "h",
+                "style.bgColor": "bg",
+                "commonProps.hidden": "hidden"
+              },
+              "imageProps": {
+                "src": "${image.pony}",
+                "innerAlign": "contain"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "map",
+          "placement": {
+            "mode": "absolute",
+            "x": 242,
+            "y": 8,
+            "width": 76,
+            "height": 76
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false,
+            "hidden": true
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "radius": 3,
+            "bgColor": "#e4ebcf"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y",
+            "placement.width": "w",
+            "placement.height": "h",
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "goal",
+              "placement": {
+                "mode": "absolute",
+                "x": 60,
+                "y": 60,
+                "width": 4,
+                "height": 4
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "radius": 3,
+                "bgColor": "#584734"
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.y": "y",
+                "placement.width": "w",
+                "placement.height": "h",
+                "style.bgColor": "bg",
+                "commonProps.hidden": "hidden"
+              }
+            },
+            {
+              "type": "container",
+              "id": "marker",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 4,
+                "width": 6,
+                "height": 6
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "radius": 3,
+                "bgColor": "#efb948"
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.y": "y",
+                "placement.width": "w",
+                "placement.height": "h",
+                "style.bgColor": "bg",
+                "commonProps.hidden": "hidden"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "id": "hint",
+      "placement": {
+        "mode": "absolute",
+        "x": 78,
+        "y": 416,
+        "width": 148,
+        "height": 42
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": true,
+        "hidden": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "radius": 16,
+        "bgColor": "#e4ebcf"
+      },
+      "bindings": {
+        "placement.x": "x",
+        "placement.y": "y",
+        "placement.width": "w",
+        "placement.height": "h",
+        "style.bgColor": "bg",
+        "commonProps.hidden": "hidden"
+      },
+      "events": [
+        {
+          "type": "clicked",
+          "action": "hint"
+        }
+      ],
+      "children": [
+        {
+          "type": "label",
+          "id": "label",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 7,
+            "width": 148,
+            "height": 28
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 21,
+            "textColor": "#584734",
+            "textAlign": "center",
+            "padding": 0,
+            "bgOpacity": 0,
+            "borderWidth": 0
+          },
+          "labelProps": {
+            "text": "提示"
+          },
+          "bindings": {
+            "style.textColor": "ink"
+          }
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "id": "start",
+      "placement": {
+        "mode": "absolute",
+        "x": 254,
+        "y": 416,
+        "width": 148,
+        "height": 42
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": true,
+        "hidden": false
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "radius": 16,
+        "bgColor": "#e4ebcf"
+      },
+      "bindings": {
+        "placement.x": "x",
+        "placement.y": "y",
+        "placement.width": "w",
+        "placement.height": "h",
+        "style.bgColor": "bg",
+        "commonProps.hidden": "hidden"
+      },
+      "events": [
+        {
+          "type": "clicked",
+          "action": "start"
+        }
+      ],
+      "children": [
+        {
+          "type": "label",
+          "id": "label",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 7,
+            "width": 148,
+            "height": 28
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 21,
+            "textColor": "#584734",
+            "textAlign": "center",
+            "padding": 0,
+            "bgOpacity": 0,
+            "borderWidth": 0
+          },
+          "labelProps": {
+            "text": "开始找家"
+          },
+          "bindings": {
+            "style.textColor": "ink"
+          }
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "finish",
+      "placement": {
+        "mode": "absolute",
+        "x": 30,
+        "y": 90,
+        "width": 420,
+        "height": 300
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false,
+        "hidden": true
+      },
+      "style": {
+        "padding": 0,
+        "borderWidth": 0,
+        "radius": 24,
+        "bgColor": "#fbf3e1"
+      },
+      "bindings": {
+        "placement.x": "x",
+        "placement.y": "y",
+        "placement.width": "w",
+        "placement.height": "h",
+        "style.bgColor": "bg",
+        "commonProps.hidden": "hidden"
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 20,
+            "y": 48,
+            "width": 380,
+            "height": 44
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 32,
+            "textColor": "#584734",
+            "textAlign": "center",
+            "padding": 0,
+            "bgOpacity": 0,
+            "borderWidth": 0
+          },
+          "labelProps": {
+            "text": "小马到家了！"
+          },
+          "bindings": {
+            "style.textColor": "ink"
+          }
+        },
+        {
+          "type": "label",
+          "id": "note",
+          "placement": {
+            "mode": "absolute",
+            "x": 20,
+            "y": 116,
+            "width": 380,
+            "height": 36
+          },
+          "commonProps": {
+            "scrollable": false
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 22,
+            "textColor": "#584734",
+            "textAlign": "center",
+            "padding": 0,
+            "bgOpacity": 0,
+            "borderWidth": 0
+          },
+          "labelProps": {
+            "text": "谢谢你陪它慢慢探索"
+          },
+          "bindings": {
+            "style.textColor": "ink"
+          }
+        },
+        {
+          "type": "button",
+          "id": "next",
+          "placement": {
+            "mode": "absolute",
+            "x": 74,
+            "y": 190,
+            "width": 272,
+            "height": 54
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true,
+            "hidden": false
+          },
+          "style": {
+            "padding": 0,
+            "borderWidth": 0,
+            "radius": 16,
+            "bgColor": "#e4ebcf"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y",
+            "placement.width": "w",
+            "placement.height": "h",
+            "style.bgColor": "bg",
+            "commonProps.hidden": "hidden"
+          },
+          "events": [
+            {
+              "type": "clicked",
+              "action": "next"
+            }
+          ],
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 13,
+                "width": 272,
+                "height": 28
+              },
+              "commonProps": {
+                "scrollable": false
+              },
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 21,
+                "textColor": "#584734",
+                "textAlign": "center",
+                "padding": 0,
+                "bgOpacity": 0,
+                "borderWidth": 0
+              },
+              "labelProps": {
+                "text": "下一关"
+              },
+              "bindings": {
+                "style.textColor": "ink"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

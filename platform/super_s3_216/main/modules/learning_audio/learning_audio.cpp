@@ -81,6 +81,7 @@ private:
     std::string state_="Idle",error_,path_;
     unsigned limit_=5;
     bool permitted(unsigned mode){
+        if(mode==5)return child_mode_learning_allowed() && !brookesia_board_do_not_disturb() && !brookesia_child_launch_error("local.gravitymaze");
         if(mode!=4)return child_mode_learning_allowed();
         if(brookesia_child_launch_error("local.navigation") || brookesia_board_do_not_disturb())return false;
         return phone_navigation::usable();
@@ -96,7 +97,7 @@ private:
     boost::json::object snapshot(){std::lock_guard lock(state_mutex_);return {
         {"state",state_},{"error",error_},{"active",live_.load()},{"recorded_bytes",recorded_.load()},
         {"recorded_ms",recorded_.load()*1000/32000},{"played_bytes",played_.load()},{"level",level_.load()},
-        {"output_channels",job_==4?2:1},{"navigation_prompt",job_==4},{"navigation_stack_external",job_==4},{"max_record_seconds",learning_media::max_record_seconds},{"stack_free_min_bytes",stack_min_.load()}};}
+        {"output_channels",job_>=4?2:1},{"navigation_prompt",job_==4},{"navigation_stack_external",job_==4},{"external_stack",job_>=4},{"max_record_seconds",learning_media::max_record_seconds},{"stack_free_min_bytes",stack_min_.load()}};}
     void discard(){
         std::lock_guard lock(operation_);forget_=true;cancel_=true;
         if(!live_){if(recording_){memset(recording_,0,max_bytes);heap_caps_free(recording_);recording_=nullptr;}recorded_=0;state("Idle");}
@@ -118,11 +119,11 @@ private:
         cancel_=finish_=forget_=false;played_=level_=0;stack_min_=16384;job_=mode;limit_=unsigned(seconds);path_=path;
         {std::lock_guard lock(state_mutex_);error_.clear();state_="Starting";}
         live_=true;local_audio::learning_busy=true;
-        auto worker=[](void *p){auto *self=static_cast<LearningAudio *>(p);const bool external=self->job_.load()==4;
+        auto worker=[](void *p){auto *self=static_cast<LearningAudio *>(p);const bool external=self->job_.load()>=4;
             self->run();if(external)vTaskDeleteWithCaps(nullptr);else vTaskDelete(nullptr);};
         // Navigation only reads the SD WAV and drives the codec. Its worker
         // performs no NVS/Flash writes; leave recording/learning stacks internal.
-        const auto created=mode==4?xTaskCreatePinnedToCoreWithCaps(worker,"navigation_audio",16384,this,4,nullptr,0,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT):
+        const auto created=mode>=4?xTaskCreatePinnedToCoreWithCaps(worker,"navigation_audio",16384,this,4,nullptr,0,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT):
             xTaskCreatePinnedToCore(worker,"learning_audio",16384,this,4,nullptr,0);
         if(created!=pdPASS){
             live_=false;local_audio::release(local_audio::Learning);fail("音频任务内存不足");return std::unexpected("Audio task allocation failed");}
@@ -157,21 +158,21 @@ private:
                     stack_min_=std::min(stack_min_.load(),unsigned(uxTaskGetStackHighWaterMark(nullptr)));vTaskDelay(1);
                 }
             }else{
-                if(mode==1||mode==4){
+                if(mode==1||mode>=4){
                     wav_open=drwav_init_file(wav,path_.c_str(),nullptr);
                     if(!wav_open||wav->sampleRate!=16000||wav->channels!=1||wav->bitsPerSample!=16||wav->totalPCMFrameCount>16000*20){error("音频需为16kHz单声道16位WAV，最长20秒");break;}
                 }
-                player->close();if(!player->open({.bits=16,.channels=uint8_t(mode==4?2:1),.sample_rate=16000})){error("无法打开喇叭");break;}
-                play_open=true;if(player->is_pa_on_off_supported()){if(mode==4)player->set_pa_on_off(false);player->set_pa_on_off(true);}if(mode==4)vTaskDelay(pdMS_TO_TICKS(30));state("Playing");
-                if(mode==4){const int volume=brookesia_board_user_volume();if(volume>=0)player->set_volume(uint8_t(volume));}
+                player->close();if(!player->open({.bits=16,.channels=uint8_t(mode>=4?2:1),.sample_rate=16000})){error("无法打开喇叭");break;}
+                play_open=true;if(player->is_pa_on_off_supported()){if(mode>=4)player->set_pa_on_off(false);player->set_pa_on_off(true);}if(mode>=4)vTaskDelay(pdMS_TO_TICKS(30));state("Playing");
+                if(mode>=4){const int volume=brookesia_board_user_volume();if(volume>=0)player->set_volume(uint8_t(volume));}
                 size_t offset=0;
                 while(!cancel_&&permitted(mode)){
                     size_t count=0;
-                    if(mode==1||mode==4)count=drwav_read_pcm_frames_s16(wav,samples,pcm);
+                    if(mode==1||mode>=4)count=drwav_read_pcm_frames_s16(wav,samples,pcm);
                     else {count=std::min(size_t(recorded_)-offset,block_bytes)/2;if(count)memcpy(pcm,recording_+offset,count*2);offset+=count*2;}
                     if(!count)break;
                     uint8_t *output=reinterpret_cast<uint8_t *>(pcm);size_t bytes=count*2;
-                    if(mode==4){
+                    if(mode>=4){
                         // Match the proven story player: identical PCM on both I2S slots.
                         auto *stereo=reinterpret_cast<int16_t *>(raw);
                         for(size_t i=0;i<count;++i)stereo[2*i]=stereo[2*i+1]=pcm[i];
@@ -194,6 +195,8 @@ private:
     }
     void on_stop() override{cancel_=true;while(live_)vTaskDelay(pdMS_TO_TICKS(10));discard();}
     std::vector<FunctionSchema> get_function_schemas() override{return {
+        {"PlayGameCue","Play a fixed local maze cue",{{"Cue","0 star, 1 finish",FunctionValueType::Number}}},
+        {"StopGameCue","Stop only a maze cue",{}},
         {"PlayFile","Play a local learning WAV",{{"Path","Pack WAV path",FunctionValueType::String}}},
         {"PlayNavigationPrompt","Play a whitelisted local navigation phrase",{{"Turn","0-7",FunctionValueType::Number},{"Stage","0 generic, 1 hundred meters, 2 imminent, 3 next segment",FunctionValueType::Number}}},
         {"StopNavigationPrompt","Cancel only a navigation phrase",{}},
@@ -202,6 +205,8 @@ private:
         {"Stop","Cancel active audio",{}},{"Discard","Erase the volatile recording",{}},
         {"GetState","Read learning audio state",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Learning audio"}}};}
     FunctionHandlerList get_function_handlers() override{return {
+        {"PlayGameCue",[this](FunctionParameterMap&& p)->FunctionResult{const double cue=std::get<double>(p.at("Cue"));if(cue!=0&&cue!=1)return {.success=false,.error_message="Invalid game cue"};return to_function_result(launch(5,cue==0?"/sdcard/apps/local.gravitymaze/res/audio/star.wav":"/sdcard/apps/local.gravitymaze/res/audio/win.wav"));}},
+        {"StopGameCue",[this](FunctionParameterMap&&)->FunctionResult{if(job_==5)cancel_=true;return {.success=true};}},
         BROOKESIA_SERVICE_FUNC_HANDLER_1("PlayFile","Path",std::string,launch(1,PARAM)),
         {"PlayNavigationPrompt",[this](FunctionParameterMap &&p)->FunctionResult{auto r=navigation_prompt(std::get<double>(p.at("Turn")),std::get<double>(p.at("Stage")));return {.success=bool(r),.error_message=r?"":r.error()};}},
         {"StopNavigationPrompt",[this](FunctionParameterMap &&)->FunctionResult{std::lock_guard lock(operation_);if(job_==4)cancel_=true;return {.success=true};}},

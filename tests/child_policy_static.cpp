@@ -19,3 +19,6 @@ static_assert(audio_allowed(true,true,1,false) && audio_allowed(true,false,0,tru
 static_assert(!audio_allowed(false,false,1,false) && !audio_allowed(true,true,0,false) && !audio_allowed(true,true,1,true));
 
 static_assert(volume_limit_max==100);
+
+static_assert(app_bit("local.gravitymaze")==16);
+static_assert(visible(true,16,"local.gravitymaze") && !visible(true,7,"local.gravitymaze"));

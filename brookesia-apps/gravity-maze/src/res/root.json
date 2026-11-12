@@ -1,0 +1,9 @@
+{
+  "version": "0.1.2",
+  "assets": [
+    "images/index.json",
+    "templates.json",
+    "screens/main.json",
+    "flows/main.json"
+  ]
+}

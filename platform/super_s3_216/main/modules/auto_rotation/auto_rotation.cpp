@@ -11,6 +11,7 @@
 #include "esp_lv_adapter.h"
 #include "esp_log.h"
 #include "esp_timer.h"
+#include "esp_random.h"
 #include "nvs.h"
 #include "lvgl.h"
 #include "freertos/FreeRTOS.h"
@@ -29,12 +30,15 @@ const char *TAG = "AutoRotate";
 class AutoRotation final : public ServiceBase {
 public:
     AutoRotation() : ServiceBase({.name="AutoRotation", .description="QMI8658 gravity screen orientation",
-                                  .version="0.1.1", .dependencies={}}) {}
+                                  .version="0.1.2", .dependencies={}}) {}
 private:
     std::atomic<bool> live_{false}, stop_{false};
     std::atomic<uint32_t> samples_{0}, changes_{0}, failures_{0}, stack_free_{STACK_BYTES};
     std::mutex mutex_;
     float x_=0, y_=0, z_=0;
+    std::atomic<int64_t> sampled_us_{0},motion_until_{0};
+    std::atomic<uint32_t> motion_token_{0};
+    bool motion_active() const {return motion_token_.load()!=0 && esp_timer_get_time()<motion_until_.load();}
     std::string error_;
     i2c_master_dev_handle_t imu_=nullptr;
     dev_display_lcd_handles_t *lcd_=nullptr;
@@ -145,15 +149,16 @@ private:
                     const auto sample=[&](int at){return static_cast<int16_t>(bytes[at] | (bytes[at+1]<<8))/8192.F;};
                     float x=sample(0),y=sample(2),z=sample(4);
                     {std::lock_guard<std::mutex> lock(mutex_);x_=x;y_=y;z_=z;}
+                    sampled_us_=esp_timer_get_time();
                     ++samples_;
                     if(!filtered) {fx=x;fy=y;fz=z;filtered=true;}
                     else {fx+=.25F*(x-fx);fy+=.25F*(y-fy);fz+=.25F*(z-fz);}
                     const int64_t now=esp_timer_get_time();
                     int requested=pending.load();
-                    if(requested>=0 && apply(requested)) {
+                    if(requested>=0 && !motion_active() && apply(requested)) {
                         pending.compare_exchange_strong(requested,-1);last=now;
                     }
-                    if(enabled && pending<0) {
+                    if(enabled && pending<0 && !motion_active()) {
                         const int raw=board_orientation::classify(fx,fy,fz);
                         const int next=raw<0?-1:board_orientation::screen_angle(raw,offset);
                         if(next<0 || next==angle) {candidate=-1;since=0;}
@@ -168,7 +173,7 @@ private:
                 }
                 persist();
                 stack_free_=std::min(stack_free_.load(),static_cast<uint32_t>(uxTaskGetStackHighWaterMark(nullptr)));
-                vTaskDelay(pdMS_TO_TICKS(100));
+                vTaskDelay(pdMS_TO_TICKS(motion_active()?20:100));
             }
         }
         available=false;
@@ -188,11 +193,15 @@ private:
         std::lock_guard<std::mutex> lock(mutex_);
         return {{"enabled",enabled.load()},{"available",available.load()},{"degrees",angle.load()},
                 {"offset_degrees",offset.load()},{"address",address_.load()},{"ax_g",x_},{"ay_g",y_},{"az_g",z_},
+                {"sample_age_ms",sampled_us_?int64_t((esp_timer_get_time()-sampled_us_.load())/1000):-1},{"motion_active",motion_active()},
                 {"samples",samples_.load()},{"changes",changes_.load()},{"read_failures",failures_.load()},
                 {"pending_save",dirty.load()},{"error",error_},{"stack_free_min_bytes",stack_free_.load()}};
     }
     std::vector<FunctionSchema> get_function_schemas() override {
         return {{"GetState","Get gravity and orientation state",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Orientation"}},
+                {"AcquireMotion","Temporarily hold orientation; lease expires after 2500ms",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Motion lease"}},
+                {"ReadMotion","Read gravity and renew motion lease",{{"Token","Lease token",FunctionValueType::Number}},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Gravity"}},
+                {"ReleaseMotion","Release orientation hold without changing saved settings",{{"Token","Lease token",FunctionValueType::Number}}},
                 {"SetEnabled","Enable automatic orientation",{{"Enabled","Automatic rotation",FunctionValueType::Boolean}}},
                 {"SetRotation","Set locked orientation",{{"Degrees","0,90,180,270",FunctionValueType::Number}}},
                 {"CalibrateUpright","Use the current upright pose as the normal screen direction",{}}};
@@ -200,6 +209,20 @@ private:
     FunctionHandlerList get_function_handlers() override {
         return {
             {"GetState",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(snapshot())};}},
+            {"AcquireMotion",[this](FunctionParameterMap&&)->FunctionResult{
+                if(!available || motion_active())return {.success=false,.error_message="Motion unavailable or busy"};
+                uint32_t token;do{token=esp_random()&0x7fffffff;}while(!token);motion_until_=esp_timer_get_time()+2500000;motion_token_=token;
+                return {.success=true,.data=FunctionValue(boost::json::object{{"token",token}})};
+            }},
+            {"ReadMotion",[this](FunctionParameterMap&& p)->FunctionResult{
+                const double token=std::get<double>(p.at("Token"));
+                if(!motion_active() || token!=motion_token_.load())return {.success=false,.error_message="Motion lease expired"};
+                motion_until_=esp_timer_get_time()+2500000;return {.success=true,.data=FunctionValue(snapshot())};
+            }},
+            {"ReleaseMotion",[this](FunctionParameterMap&& p)->FunctionResult{
+                if(std::get<double>(p.at("Token"))!=motion_token_.load())return {.success=false,.error_message="Motion lease mismatch"};
+                motion_until_=0;motion_token_=0;return {.success=true};
+            }},
             {"SetEnabled",[](FunctionParameterMap &&p)->FunctionResult{enabled=std::get<bool>(p.at("Enabled"));dirty=true;return {.success=true};}},
             {"SetRotation",[](FunctionParameterMap &&p)->FunctionResult{
                 const double value=std::get<double>(p.at("Degrees"));

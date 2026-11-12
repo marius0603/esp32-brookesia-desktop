@@ -144,5 +144,8 @@
   "packages/apps/local.navigation.debug.0.2.2.bpk": "c5097b3bee2f220932dbf7a194a2ea584618e8e57971db9f93d5f817947ba999",
   "packages/firmware/brookesia-0.8.3-s3.66-app-only.zip": "d774a8edc67e22e4812dd173543ef156d8c327888ac50dacde0d89db934035da",
   "packages/android/xiaoma-remote-0.5.5.apk": "36afc6db07408765d247c879751b4bb16286b180dd75e766cb1f683628464560",
-  "packages/android/xiaoma-remote-0.5.6.apk": "6d04f2724181d1857c723e23b325ede7efa5e628d78ef17baca927cb6acc990b"
+  "packages/android/xiaoma-remote-0.5.6.apk": "6d04f2724181d1857c723e23b325ede7efa5e628d78ef17baca927cb6acc990b",
+  "packages/firmware/brookesia-0.8.3-s3.67-app-only.zip": "6eb78eb223411890588955e969b6016887a0e8b6d50271f62f8f86f72649d2a3",
+  "packages/apps/local.childmode.debug.0.1.5.bpk": "ca55a69ce458d162052d8b8d86b6798f462ae7ee21ceae85422703df6da5cbbe",
+  "packages/apps/local.gravitymaze.debug.0.1.2.bpk": "972b778d4f7ccd89b7d81da0d2825c19a74b497ceec0c96429899b7f0af89e1e"
 }
