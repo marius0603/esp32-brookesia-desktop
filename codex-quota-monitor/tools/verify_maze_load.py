@@ -2,6 +2,7 @@
 import hashlib,json,time,zipfile
 from pathlib import Path
 from maintenance_client import SharedPowerDiagnosticClient
+from deploy_gravity_maze import tree_hash
 ROOT=Path(__file__).resolve().parents[2]
 BASE='/sdcard/apps/local.gravitymaze'
 
@@ -26,12 +27,18 @@ def main():
    file=runtime/('maze-load-'+tag+'.js');file.write_bytes(data);name='maze-load-'+stamp+'-'+tag+'.bin'
    r=c.transfer('put',file,'sd-themes/'+name,False);assert r['ok'] and r['sha256']==hashlib.sha256(data).hexdigest()
    f('Storage','FSCopyTree',{'From':'/sdcard/themes/'+name,'To':BASE+'/app/main.js','Overwrite':True});f('Storage','FSRemove',{'Path':'/sdcard/themes/'+name})
+  def verify_release():
+   # A long CDC JSON string can lose bytes while retaining valid JSON. Hash
+   # inside the device instead of trusting a large FSReadText reply as bytes.
+   check='/sdcard/resource-backups/maze-load-'+stamp+'-check'
+   f('Storage','FSCopyTree',{'From':BASE+'/app/main.js','To':check+'/main.js','Overwrite':True})
+   assert f('SdResources','InspectTree',{'Path':check})['sha256']==tree_hash({'main.js':release})
   assert not f('ChildMode','GetState')['enabled'],'Never bypass parent policy'
   for s in ['Audiobook','Radio','VoiceAssistant','LocalVoice','LearningAudio']:assert not f(s,'GetState')['active']
   modes=f('DeviceModes','GetState');volume=modes['resume_volume'];rotation=f('AutoRotation','GetState')
   app=next(a for a in f('SystemCore','ListApps') if a['manifest']['id']=='local.gravitymaze');id=app['app_id']
   f('SystemCore','StopApp',{'AppId':id})
-  assert f('Storage','FSReadText',{'Path':BASE+'/app/main.js'}).encode()==release
+  verify_release()
   progress=f('Storage','FSReadText',{'Path':BASE+'/data/progress.json'})
   backup='/sdcard/resource-backups/maze-load-'+stamp
   f('Storage','FSCopyTree',{'From':BASE+'/app/main.js','To':backup+'/main.js','Overwrite':False})
@@ -56,7 +63,7 @@ def main():
    except BaseException as e:report['stop_error']=str(e)
    upload(release,'release');f('Storage','FSWriteText',{'Path':BASE+'/data/progress.json','Data':progress})
    f('AudioPlayback','SetVolume',{'Volume':volume})
-   assert f('Storage','FSReadText',{'Path':BASE+'/app/main.js'}).encode()==release
+   verify_release()
    assert not f('AutoRotation','GetState')['motion_active'] and f('AutoRotation','GetState')['enabled']==rotation['enabled']
    report.update(release_restored=True,progress_restored=True,volume_restored=True)
    f('DeviceModes','Wake');f('SystemCore','StartApp',{'AppId':id})

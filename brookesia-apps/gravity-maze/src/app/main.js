@@ -42,8 +42,10 @@ const plans=[{"n":3,"route":[0,1,4,3,6,7,8],"branches":[[1,2],[2,5]],"stars":[1,
  }
  function valid(m,x,y){for(let i=0;i<m.walls.length;i++){const w=m.walls[i],qx=Math.max(Math.min(w[0],w[2]),Math.min(Math.max(w[0],w[2]),x)),qy=Math.max(Math.min(w[1],w[3]),Math.min(Math.max(w[1],w[3]),y));if((x-qx)*(x-qx)+(y-qy)*(y-qy)<(m.radius+4)*(m.radius+4)-.001)return false;}return true;}
  function step(m,tx,ty,dt){
-  if(m.won)return;dt=Math.max(0,Math.min(.05,dt));tx=Math.max(-1,Math.min(1,tx));ty=Math.max(-1,Math.min(1,ty));
-  m.vx+=(tx*110-m.vx)*Math.min(1,dt*9);m.vy+=(ty*110-m.vy)*Math.min(1,dt*9);
+  // Keep short render delays from slowing the simulation to a crawl. Long
+  // pauses remain capped, and collision travel is still split into <=2px steps.
+  if(m.won)return;dt=Math.max(0,Math.min(.10,dt));tx=Math.max(-1,Math.min(1,tx));ty=Math.max(-1,Math.min(1,ty));
+  m.vx+=(tx*120-m.vx)*Math.min(1,dt*16);m.vy+=(ty*120-m.vy)*Math.min(1,dt*16);
   const steps=Math.max(1,Math.ceil(Math.max(Math.abs(m.vx*dt),Math.abs(m.vy*dt))/2));
   for(let i=0;i<steps;i++){const x=m.x+m.vx*dt/steps,y=m.y+m.vy*dt/steps;if(valid(m,x,m.y))m.x=x;else m.vx=0;if(valid(m,m.x,y))m.y=y;else m.vy=0;}
   for(let i=0;i<3;i++)if(Math.hypot(m.x-m.stars[i].x,m.y-m.stars[i].y)<32)m.stars[i].got=true;
@@ -56,7 +58,7 @@ const plans=[{"n":3,"route":[0,1,4,3,6,7,8],"branches":[[1,2],[2,5]],"stars":[1,
   if(degrees===90){x=y;y=-t;}else if(degrees===180){x=-x;y=-y;}else if(degrees===270){x=-y;y=t;}
   return {roll:Math.atan2(x,Math.sqrt(y*y+z*z)),pitch:Math.atan2(y,z)};
  }
- function tilt(s,b){const a=angles(s),wrap=v=>Math.atan2(Math.sin(v),Math.cos(v)),axis=v=>{v=wrap(v)*180/Math.PI;return Math.abs(v)<3?0:Math.max(-1,Math.min(1,(v-Math.sign(v)*3)/17));};return {x:axis(a.roll-b.roll),y:axis(a.pitch-b.pitch)};}
+ function tilt(s,b){const a=angles(s),wrap=v=>Math.atan2(Math.sin(v),Math.cos(v)),axis=v=>{v=wrap(v)*180/Math.PI;return Math.abs(v)<=1.5?0:Math.max(-1,Math.min(1,(v-Math.sign(v)*1.5)/10.5));};return {x:axis(a.roll-b.roll),y:axis(a.pitch-b.pitch)};}
  return {generate,build,valid,step,angles,tilt,bounds,signature};
 })();
 if(typeof module!=='undefined')module.exports=MazeCore;
@@ -71,7 +73,7 @@ function flush(){if(!queue.length)return;const q=queue;queue=[];try{for(let i=0;
 function text(id,value){const k='text:'+id;if(cache[k]===value)return;call(gui,'SetText',{Path:'/main/'+id,Text:value});cache[k]=value;}
 function xy(path,x,y){bind(path,'x',Math.round(x));bind(path,'y',Math.round(y));}
 function box(path,x,y,w,h){xy(path,x,y);bind(path,'w',Math.max(1,Math.round(w)));bind(path,'h',Math.max(1,Math.round(h)));}
-function report(){try{call(storage,'FSWriteText',{Path:ROOT+'state.json',Data:JSON.stringify({version:'0.1.2',level,unlocked,mode,frames,elapsed_ms:Date.now()-startMs,wall_count:wallCount,lease:!!token,error,x:m?m.x:0,y:m?m.y:0,stars:m?m.stars.filter(s=>s.got).length:0,signature:m?m.signature:'',camera_follow:!!m&&m.n>6})});lastReport=Date.now();}catch(_){} }
+function report(){try{call(storage,'FSWriteText',{Path:ROOT+'state.json',Data:JSON.stringify({version:'0.1.3',level,unlocked,mode,frames,elapsed_ms:Date.now()-startMs,wall_count:wallCount,lease:!!token,error,x:m?m.x:0,y:m?m.y:0,stars:m?m.stars.filter(s=>s.got).length:0,signature:m?m.signature:'',camera_follow:!!m&&m.n>6})});lastReport=Date.now();}catch(_){} }
 function checkpoint(){try{call(storage,'FSWriteText',{Path:ROOT+'progress.json',Data:JSON.stringify({schema:1,level,unlocked,last_level:m?m.level:level,last_signature:m?m.signature:''})});}catch(_){} }
 function cue(which){try{call(audio,'PlayGameCue',{Cue:which});}catch(_){} }
 function release(){if(token){try{call(sensor,'ReleaseMotion',{Token:token});}catch(_){}token=0;}try{call(audio,'StopGameCue');}catch(_){} }

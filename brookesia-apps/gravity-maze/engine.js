@@ -42,8 +42,10 @@ const plans=[{"n":3,"route":[0,1,4,3,6,7,8],"branches":[[1,2],[2,5]],"stars":[1,
  }
  function valid(m,x,y){for(let i=0;i<m.walls.length;i++){const w=m.walls[i],qx=Math.max(Math.min(w[0],w[2]),Math.min(Math.max(w[0],w[2]),x)),qy=Math.max(Math.min(w[1],w[3]),Math.min(Math.max(w[1],w[3]),y));if((x-qx)*(x-qx)+(y-qy)*(y-qy)<(m.radius+4)*(m.radius+4)-.001)return false;}return true;}
  function step(m,tx,ty,dt){
-  if(m.won)return;dt=Math.max(0,Math.min(.05,dt));tx=Math.max(-1,Math.min(1,tx));ty=Math.max(-1,Math.min(1,ty));
-  m.vx+=(tx*110-m.vx)*Math.min(1,dt*9);m.vy+=(ty*110-m.vy)*Math.min(1,dt*9);
+  // Keep short render delays from slowing the simulation to a crawl. Long
+  // pauses remain capped, and collision travel is still split into <=2px steps.
+  if(m.won)return;dt=Math.max(0,Math.min(.10,dt));tx=Math.max(-1,Math.min(1,tx));ty=Math.max(-1,Math.min(1,ty));
+  m.vx+=(tx*120-m.vx)*Math.min(1,dt*16);m.vy+=(ty*120-m.vy)*Math.min(1,dt*16);
   const steps=Math.max(1,Math.ceil(Math.max(Math.abs(m.vx*dt),Math.abs(m.vy*dt))/2));
   for(let i=0;i<steps;i++){const x=m.x+m.vx*dt/steps,y=m.y+m.vy*dt/steps;if(valid(m,x,m.y))m.x=x;else m.vx=0;if(valid(m,m.x,y))m.y=y;else m.vy=0;}
   for(let i=0;i<3;i++)if(Math.hypot(m.x-m.stars[i].x,m.y-m.stars[i].y)<32)m.stars[i].got=true;
@@ -56,7 +58,7 @@ const plans=[{"n":3,"route":[0,1,4,3,6,7,8],"branches":[[1,2],[2,5]],"stars":[1,
   if(degrees===90){x=y;y=-t;}else if(degrees===180){x=-x;y=-y;}else if(degrees===270){x=-y;y=t;}
   return {roll:Math.atan2(x,Math.sqrt(y*y+z*z)),pitch:Math.atan2(y,z)};
  }
- function tilt(s,b){const a=angles(s),wrap=v=>Math.atan2(Math.sin(v),Math.cos(v)),axis=v=>{v=wrap(v)*180/Math.PI;return Math.abs(v)<3?0:Math.max(-1,Math.min(1,(v-Math.sign(v)*3)/17));};return {x:axis(a.roll-b.roll),y:axis(a.pitch-b.pitch)};}
+ function tilt(s,b){const a=angles(s),wrap=v=>Math.atan2(Math.sin(v),Math.cos(v)),axis=v=>{v=wrap(v)*180/Math.PI;return Math.abs(v)<=1.5?0:Math.max(-1,Math.min(1,(v-Math.sign(v)*1.5)/10.5));};return {x:axis(a.roll-b.roll),y:axis(a.pitch-b.pitch)};}
  return {generate,build,valid,step,angles,tilt,bounds,signature};
 })();
 if(typeof module!=='undefined')module.exports=MazeCore;
