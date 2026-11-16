@@ -1,0 +1,71 @@
+--- a/gui/brookesia_gui_lvgl/src/props_common.cpp
++++ b/gui/brookesia_gui_lvgl/src/props_common.cpp
+@@ -154,7 +154,8 @@
+ 
+     auto &canvas = record.ensure_type_payload<Record::CanvasPayload>();
+     auto &buffer = canvas.buffer;
+-    buffer.assign(static_cast<size_t>(width) * static_cast<size_t>(height), lv_color_hex(0xffffff));
++    const auto stride = lv_draw_buf_width_to_stride(width, LV_COLOR_FORMAT_NATIVE);
++    buffer.assign(static_cast<size_t>(stride) * static_cast<size_t>(height), 0);
+     lv_canvas_set_buffer(record.object, buffer.data(), width, height, LV_COLOR_FORMAT_NATIVE);
+     lv_canvas_fill_bg(record.object, lv_color_hex(0xffffff), LV_OPA_COVER);
+     for (const auto &command : node.canvas_props.commands) {
+@@ -163,6 +164,27 @@
+             if (color.has_value()) {
+                 lv_canvas_fill_bg(record.object, lv_color_hex(*color), LV_OPA_COVER);
+             }
++        } else if ((command.type == "rect" || command.type == "roundRect") &&
++                   command.width > 0 && command.height > 0) {
++            const auto color = parse_color(command.color);
++            if (color.has_value()) {
++                const int64_t right = int64_t(command.x) + command.width - 1;
++                const int64_t bottom = int64_t(command.y) + command.height - 1;
++                if (right > INT32_MAX || bottom > INT32_MAX) {
++                    continue;
++                }
++                lv_layer_t layer;
++                lv_canvas_init_layer(record.object, &layer);
++                lv_draw_rect_dsc_t descriptor;
++                lv_draw_rect_dsc_init(&descriptor);
++                descriptor.bg_color = lv_color_hex(*color);
++                descriptor.bg_opa = LV_OPA_COVER;
++                descriptor.radius = command.type == "roundRect" ? 3 : 0;
++                const lv_area_t area = {command.x, command.y,
++                    static_cast<int32_t>(right), static_cast<int32_t>(bottom)};
++                lv_draw_rect(&layer, &descriptor, &area);
++                lv_canvas_finish_layer(record.object, &layer);
++            }
+         } else if (command.type == "pixel") {
+             auto color = parse_color(command.color);
+             if (color.has_value()) {
+--- a/gui/brookesia_gui_lvgl/src/private/types.hpp
++++ b/gui/brookesia_gui_lvgl/src/private/types.hpp
+@@ -164,7 +164,7 @@
+     };
+     std::unique_ptr<GridPayload> grid_payload;
+     struct CanvasPayload {
+-        std::vector<lv_color_t> buffer;
++        std::vector<uint8_t> buffer;
+     };
+     struct FrameViewPayload {
+         FrameViewProps props;
+--- a/gui/brookesia_gui_interface/src/runtime_view_properties.cpp
++++ b/gui/brookesia_gui_interface/src/runtime_view_properties.cpp
+@@ -31,6 +31,17 @@
+ void Runtime::Impl::apply_record_props(NodeRecord &record, PropsApplyMask mask)
+ {
+     if (backend == nullptr) {
++        return;
++    }
++    if (record.node().type == NodeType::Canvas) {
++        // Canvas storage depends on the resolved size, not the immutable
++        // definition's startup placeholder or an empty props snapshot.
++        Node snapshot;
++        snapshot.type = NodeType::Canvas;
++        snapshot.common_props = record.common_props();
++        snapshot.placement = record.placement();
++        snapshot.canvas_props = record.canvas_props();
++        backend->apply_props(record.handle, snapshot, mask);
+         return;
+     }
+     if (record.transient_mutable_definition || record.compact_props_state == nullptr) {

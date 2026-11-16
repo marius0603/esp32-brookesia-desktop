@@ -1,8 +1,7 @@
 {
-  "version": "0.1.6",
+  "version": "0.1.7",
   "assets": [
     "images/index.json",
-    "templates.json",
     "screens/main.json",
     "flows/main.json"
   ]

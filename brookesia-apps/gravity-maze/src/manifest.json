@@ -5,7 +5,7 @@
       "en": "Pony Maze",
       "zh_CN": "小马迷宫"
     },
-    "version": "0.1.6",
+    "version": "0.1.7",
     "visible": true,
     "systems": [
       "super"

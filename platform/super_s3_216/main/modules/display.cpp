@@ -187,9 +187,32 @@ boost::json::object board_display_profile(bool force_refresh)
         lv_refr_now(display);
         forced_us = esp_timer_get_time()-started;
     }
+    boost::json::array canvases;
+    const auto inspect = [&](auto &&self, lv_obj_t *object) -> void {
+        if (!object) return;
+        if (lv_obj_check_type(object, &lv_canvas_class)) {
+            const auto *buffer = lv_canvas_get_draw_buf(object);
+            if (buffer && buffer->data && buffer->header.w > 26 && buffer->header.h > 26) {
+                const auto corner = lv_canvas_get_px(object, 0, 0);
+                const auto inside = lv_canvas_get_px(object, 26, 26);
+                canvases.push_back(boost::json::object{
+                    {"width",buffer->header.w},{"height",buffer->header.h},
+                    {"bytes",uint64_t(buffer->header.stride)*buffer->header.h},
+                    {"corner_rgb",uint32_t(corner.red)<<16 | uint32_t(corner.green)<<8 | corner.blue},
+                    {"inside_rgb",uint32_t(inside.red)<<16 | uint32_t(inside.green)<<8 | inside.blue}});
+            }
+        }
+        for (uint32_t i=0; i<lv_obj_get_child_count(object); ++i) self(self,lv_obj_get_child(object,i));
+    };
+    if (display) {
+        inspect(inspect,lv_display_get_layer_bottom(display));
+        inspect(inspect,lv_display_get_screen_active(display));
+        inspect(inspect,lv_display_get_layer_top(display));
+        inspect(inspect,lv_display_get_layer_sys(display));
+    }
     return {{"refresh_count",refresh_stats.count},{"last_refresh_us",refresh_stats.last_us},
             {"max_refresh_us",refresh_stats.max_us},{"last_strips",refresh_stats.last_strips},
-            {"flush_wait_us",refresh_stats.wait_us},{"forced_refresh_us",forced_us}};
+            {"flush_wait_us",refresh_stats.wait_us},{"forced_refresh_us",forced_us},{"canvases",std::move(canvases)}};
 }
 
 bool Display::start(const Config &config)

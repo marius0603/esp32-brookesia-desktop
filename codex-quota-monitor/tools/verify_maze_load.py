@@ -13,9 +13,9 @@ def main():
  # Aggregate on-device synchronous call times without extra per-frame I/O.
  needle="const r=JSON.parse(brookesia.call_function(h,n,JSON.stringify(a||{})));"
  assert source.count(needle)==1
- source='var mazeBench={};\n'+source.replace(needle,"const begin=Date.now();"+needle+"const ms=Date.now()-begin,p=mazeBench[n]||(mazeBench[n]={calls:0,ms:0,max:0});p.calls++;p.ms+=ms;p.max=Math.max(p.max,ms);")
+ source='var mazeBench={},mazeDebug={};\n'+source.replace(needle,"const begin=Date.now();"+needle+"const ms=Date.now()-begin,p=mazeBench[n]||(mazeBench[n]={calls:0,ms:0,max:0});p.calls++;p.ms+=ms;p.max=Math.max(p.max,ms);")
  source=source.replace('const begin=Date.now();',"if(n==='SetBindings'&&a.Updates.some(u=>u.Path==='/main/viewport/world'&&(u.Key==='x'||u.Key==='y'))){const camera=mazeBench.CameraMoves||(mazeBench.CameraMoves={calls:0,ms:0,max:0});camera.calls++;}const begin=Date.now();")
- source=source.replace('Data:JSON.stringify({version:', 'Data:JSON.stringify({profile:mazeBench,version:')
+ source=source.replace('Data:JSON.stringify({version:', 'Data:JSON.stringify({debug:mazeDebug,profile:mazeBench,version:')
  step='MazeCore.step(m,tilt.x,tilt.y,(now-lastTick)/1000);'
  assert source.count(step)==1
  source=source.replace(step,"const physicsBegin=Date.now();"+step+"const physicsMs=Date.now()-physicsBegin,physics=mazeBench.Physics||(mazeBench.Physics={calls:0,ms:0,max:0});physics.calls++;physics.ms+=physicsMs;physics.max=Math.max(physics.max,physicsMs);")
@@ -26,7 +26,7 @@ def main():
  if(Math.hypot(x-m.x,y-m.y)<3&&testAt<m.plan.route.length-1)testAt++;
  return {x:Math.max(-1,Math.min(1,(x-m.x)/25)),y:Math.max(-1,Math.min(1,(y-m.y)/25))};}
  function tick(){"""
- hook=source.replace('on_timer(){tick();return true;},',"on_timer(){tick();if(mode==='ready'&&!testStarted){testStarted=true;calibrate();}return true;},").replace('const tilt=MazeCore.tilt(sample,base)','const tilt=testTilt()').replace('function tick(){',steering)
+ hook=source.replace('on_timer(){tick();return true;},',"on_timer(){tick();if(mode==='ready'&&!testStarted){testStarted=true;try{mazeDebug.frame=call(gui,'GetViewFrame',{Path:'/main/viewport/world/walls'});mazeDebug.drawChars=JSON.stringify(call(gui,'GetBinding',{Path:'/main/viewport/world/walls',Key:'draw'})).length;}catch(e){mazeDebug.error=String(e);}calibrate();}return true;},").replace('const tilt=MazeCore.tilt(sample,base)','const tilt=testTilt()').replace('function tick(){',steering)
  runtime=ROOT/'codex-quota-monitor/runtime';runtime.mkdir(exist_ok=True);stamp=str(time.time_ns())
  report={'passed':False,'version':version,'level':10,'synthetic_steering':True}
  with SharedPowerDiagnosticClient('COM5',timeout=35) as c:
@@ -56,13 +56,29 @@ def main():
   try:
    upload(hook.encode(),'test');f('Storage','FSWriteText',{'Path':BASE+'/data/progress.json','Data':json.dumps({'schema':1,'level':10,'unlocked':10})})
    f('AudioPlayback','SetVolume',{'Volume':0});f('DeviceModes','Wake');f('SystemCore','StartApp',{'AppId':id})
-   samples=[];refresh=[];start=time.monotonic()
+   samples=[];refresh=[];busy=0;start=time.monotonic()
    while time.monotonic()-start<35:
     time.sleep(1);samples.append(f('DeviceModes','GetResourceUsage'))
-    if time.monotonic()-start>18:refresh.append(f('DeviceModes','ProfileRefresh',{'Force':False}))
+    if time.monotonic()-start>18:
+     try:refresh.append(f('DeviceModes','ProfileRefresh',{'Force':False}))
+     except RuntimeError as e:
+      # Profiling is opportunistic: do not stop the game for a missed GUI lock.
+      if str(e)!='call_failed: GUI busy':raise
+      busy+=1
    state=json.loads(f('Storage','FSReadText',{'Path':BASE+'/data/state.json'}));active=f('SystemCore','GetActiveApp')
    report.update(state=state,cpu_percent_max=max(s['cpu_percent'] for s in samples),internal_free_min=min(s['internal_free_bytes'] for s in samples),psram_free_min=min(s['psram_free_bytes'] for s in samples))
+   report['profile_gui_busy']=busy;report['refresh_samples']=len(refresh)
+   assert refresh,'No native refresh sample could be acquired'
    if refresh:report['refresh_sample_mean_us']=sum(s['last_refresh_us'] for s in refresh)/len(refresh);report['refresh_sample_max_us']=max(s['last_refresh_us'] for s in refresh)
+   if tuple(map(int,version.split('.'))) >= (0,1,7):
+    canvases=refresh[-1]['canvases'];assert sorted((s['width'],s['height']) for s in canvases)==[(76,76),(720,720)],canvases
+    assert sum(s['bytes'] for s in canvases)==state['cache_bytes']==1048352
+    assert state['wall_views']==2 and 'CreateView' not in state['profile']
+    world=next(s for s in canvases if s['width']==720);dark=f('SystemCore','GetEnvironment')['theme_id']=='dark'
+    def near(value,expected):return all(abs(((value>>shift)&255)-((expected>>shift)&255))<=8 for shift in (16,8,0))
+    assert near(world['corner_rgb'],0x68927a if dark else 0x94b181),world
+    assert near(world['inside_rgb'],0x2e4542 if dark else 0xeff1d7),world
+    report['cache_canvases']=canvases
    assert active['app_id']==id and active['state']=='Running' and not active['last_error'],active
    assert state['level']==10 and state['camera_follow'] and state['wall_count']==125 and state['frames']>100 and state['mode']=='playing' and not state['error'],state
    assert state['x']>162 or state['y']>162,'Camera-follow region was not exercised'

@@ -8,7 +8,8 @@ def main():
  with SharedPowerDiagnosticClient('COM5',timeout=35) as c:
   c.hello()
   def f(s,n,a=None):return c.call_timeout(s,n,a or {})['result']
-  mode=f('DeviceModes','GetState');assert mode['firmware_version']=='0.8.3-s3.67' and not mode['screen_locked']
+  expected=json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))['firmware']
+  mode=f('DeviceModes','GetState');assert mode['firmware_version']==expected and not mode['screen_locked']
   assert not f('ChildMode','GetState')['enabled'],'Test requires ordinary mode; do not bypass parent PIN'
   for s in ['Audiobook','Radio','VoiceAssistant','LocalVoice','LearningAudio']:assert not f(s,'GetState')['active']
   apps=f('SystemCore','ListApps');ids={a['manifest']['id']:a['app_id'] for a in apps};assert len(apps)==16 and 'local.gravitymaze' in ids

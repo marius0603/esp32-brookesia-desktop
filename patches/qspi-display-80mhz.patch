@@ -1,0 +1,10 @@
+--- a/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_devices.yaml
++++ b/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_devices.yaml
+@@ -78,6 +78,7 @@
+       io_spi_config:
+         cs_gpio_num: 12                   # GPIO14 - LCD_CS (BSP_LCD_CS)
+         spi_mode: 0                       # Traditional SPI mode (0~3)
++        pclk_hz: 80000000                  # Waveshare-supported QSPI performance setting
+         trans_queue_depth: 1             # Bound in-flight DMA bounce allocation
+         lcd_cmd_bits: 32                   # Bit-width of LCD command
+         flags:

@@ -244,6 +244,41 @@
           },
           "children": [
             {
+              "type": "canvas",
+              "id": "walls",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 720,
+                "height": 720
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "radius": 0,
+                "bgColor": "#94b181",
+                "bgOpacity": 0
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.y": "y",
+                "placement.width": "w",
+                "placement.height": "h",
+                "style.bgColor": "bg",
+                "commonProps.hidden": "hidden",
+                "canvasProps.commands": "draw"
+              },
+              "canvasProps": {
+                "commands": []
+              }
+            },
+            {
               "type": "image",
               "id": "home",
               "placement": {
@@ -570,6 +605,41 @@
             "commonProps.hidden": "hidden"
           },
           "children": [
+            {
+              "type": "canvas",
+              "id": "walls",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 76,
+                "height": 76
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false,
+                "hidden": false
+              },
+              "style": {
+                "padding": 0,
+                "borderWidth": 0,
+                "radius": 0,
+                "bgColor": "#94b181",
+                "bgOpacity": 0
+              },
+              "bindings": {
+                "placement.x": "x",
+                "placement.y": "y",
+                "placement.width": "w",
+                "placement.height": "h",
+                "style.bgColor": "bg",
+                "commonProps.hidden": "hidden",
+                "canvasProps.commands": "draw"
+              },
+              "canvasProps": {
+                "commands": []
+              }
+            },
             {
               "type": "container",
               "id": "goal",
