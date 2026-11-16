@@ -23,8 +23,18 @@ python tools/wechat_brief.py --body-file codex-quota-monitor/runtime/work-brief.
 
 微信收到消息后由OpenClaw会话调用Codex，不是自动续接当前Codex桌面对话。项目上下文以本仓库文档和AGENTS.md为准，不同时发起相互冲突的修改。OpenClaw生成的本机IDENTITY.md、SOUL.md、USER.md通过本地Git排除规则保留，不提交个人资料。
 
-该电脑目前直连模型服务超时，通过已有本机代理可访问。网关需使用可用的HTTPS代理，并保留localhost/微信服务的合适直连规则；代理地址是本机部署条件，不是其他电脑的通用设置。Tailscale未安装，本次网关以`--tailscale off`启动；前台启动窗口需要保持打开，没有为此添加系统自启动。
+该电脑目前直连模型服务超时，通过已有本机代理可访问。网关需使用可用的HTTPS代理，并保留localhost/微信服务的合适直连规则；代理地址是本机部署条件，不是其他电脑的通用设置。Tailscale未安装，已持久设置为off。初版通过手动前台窗口运行，后续按用户要求配置了下面的登录自启动，不再需要保留该手动窗口。
 
-曾出现模型未登录、模型列表请求超时以及微信端DNS/请求超时，不能仅凭扫码或网关running认定对话可用。后续已核对网关与原生Codex子进程均继承本机代理；独立app-server账号读取及8个模型列表约3秒内返回。通过OpenClaw调用gpt-6.1-sol的文字诊断约19.4秒完成，实际返回“连接成功”，状态ok。微信真实消息→Codex→微信完整往返仍待现场复测，暂不保证长期稳定。
+曾出现模型未登录、模型列表请求超时以及微信端DNS/请求超时，不能仅凭扫码或网关running认定对话可用。后续已核对网关与原生Codex子进程均继承本机代理；独立app-server账号读取及8个模型列表约3秒内返回。通过OpenClaw调用gpt-6.1-sol的文字诊断约19.4秒完成，实际返回“连接成功”，状态ok。用户随后在微信发送7加8，明确确认收到15，完整往返通过；不保证长期稳定。
+
+## Windows登录自启动与自动重连
+
+检查时未发现已有OpenClaw任务、服务或启动项。使用OpenClaw官方`gateway install`安装，当前账号采用原生Startup-folder回退：启动文件夹的`OpenClaw Gateway.vbs`以隐藏窗口调用用户目录下`gateway.cmd`。服务状态可能标为Scheduled Task，但runtime.detail明确为Startup-folder login item；不要因此声称安装了开机前运行的系统服务。
+
+本机最终入口通过`gateway-with-proxy.exe`运行，固定Node.js 24.22.3、OpenClaw 2026.11.3、已有本机代理与NO_PROXY；源代码见[Windows启动包装器](tools/windows/GatewayProxyWrapper.cs)，重建见[说明](tools/windows/README.md)。仅设置config.env.vars的首轮启动测试没有把代理传给实际Codex子进程，因此未计作成功；批处理wrapper被Windows直接spawn拒绝后，改用原生exe并重新完成安装。旧手动进程与服务命令不匹配，迁移时验证了进程身份后结束旧实例，未停止Codex桌面。
+
+最终核对：启动项存在并隐藏运行、官方service.loaded=true、RPC健康通过；新PID替代旧手动网关，实际网关和Codex子进程均继承代理；微信configured/running且lastError为空，未重新扫码。通过新网关调用gpt-6.1-sol约13.6秒返回“自启动验证：微信已自动重连，Codex回复正常。”，根级deliveryStatus.status=sent且succeeded=true。不能把CLI的sourceReplyDeliveryState=missing单独当作投递失败，它针对源会话，显式reply目标的投递以deliveryStatus为准。
+
+已验证启动项调用路径、网关重新启动后的自动连接和实际消息投递；没有重启整机或执行真实注销/再登录，不能声称整机重启现场验收通过。需Windows登录、电脑联网、本机代理可用；网络或代理未就绪时消息仍可能超时。凭证过期时仍可能需要重新扫码。机器特定启动器、二进制、用户配置、凭证和日志均留在本机，不随Git上传。
 
 官方流程：https://github.com/Tencent/openclaw-weixin
