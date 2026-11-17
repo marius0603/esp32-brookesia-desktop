@@ -42,7 +42,10 @@ def main():
   p=SRC/'res/images'/f'{id}.png';im=Image.open(p);imgs.append({'id':id,'src':p.name,'width':im.width,'height':im.height})
  write('res/images/index.json',{'type':'imageSet','images':imgs});node=rect('wall',0,0,8,8);node.pop('id');write('res/templates.json',{'type':'viewTemplate','id':'maze_wall','node':node})
  world=rect('world',0,0,324,324);world['style']['bgOpacity']=0
- world['children']=[canvas('walls',720),image('home','home',260,260,40,40)]+[image('star'+str(i),'star',0,0,34,34) for i in range(3)]+[rect('dot'+str(i),0,0,10,10,'#efb948',True) for i in range(4)]+[image('pony','pony',0,0,44,44)]
+ wallCache=rect('walls',0,0,720,720);wallCache['style'].update(bgOpacity=0,radius=0);wallCache['children']=[]
+ for i in range(4):
+  tile=canvas('tile'+str(i),360);tile['placement'].update(x=(i%2)*360,y=(i//2)*360);wallCache['children'].append(tile)
+ world['children']=[wallCache,image('home','home',260,260,40,40)]+[image('star'+str(i),'star',0,0,34,34) for i in range(3)]+[rect('dot'+str(i),0,0,10,10,'#efb948',True) for i in range(4)]+[image('pony','pony',0,0,44,44)]
  mini=rect('map',242,8,76,76,'#e4ebcf',True);mini['children']=[canvas('walls',76),rect('goal',60,60,4,4,'#584734'),rect('marker',4,4,6,6,'#efb948')]
  viewport=rect('viewport',78,82,324,324,'#eff1d7');viewport['children']=[world,mini]
  finish=rect('finish',30,90,420,300,'#fbf3e1',True);finish['style']['radius']=24;finish['children']=[label('title','小马到家了！',20,48,380,44,32),label('note','谢谢你陪它慢慢探索',20,116,380,36,22),button('next','下一关',74,190,272,54)]

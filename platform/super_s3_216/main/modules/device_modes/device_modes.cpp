@@ -14,6 +14,7 @@
 #include "esp_lv_adapter.h"
 #include "esp_timer.h"
 #include "esp_app_desc.h"
+#include "esp_heap_caps.h"
 #include "nvs.h"
 #include "lvgl.h"
 #include "../display.hpp"
@@ -31,6 +32,7 @@
 #include "brookesia/hal_interface/interfaces/power/battery.hpp"
 
 extern "C" int brookesia_child_cap_volume(int);
+extern "C" unsigned brookesia_canvas_retries(),brookesia_canvas_before(),brookesia_canvas_after(),brookesia_canvas_request();
 
 using namespace esp_brookesia;
 using namespace esp_brookesia::service;
@@ -98,7 +100,11 @@ private:
         const auto v=resource_monitor::snapshot();
         return {{"cpu_percent",v.cpu_basis_points<0?-1.0:v.cpu_basis_points/100.0},{"cpu_core0_percent",v.core_basis_points[0]<0?-1.0:v.core_basis_points[0]/100.0},
                 {"cpu_core1_percent",v.core_basis_points[1]<0?-1.0:v.core_basis_points[1]/100.0},{"cpu_cores",v.cores},
-                {"ram_percent",v.ram_basis_points<0?-1.0:v.ram_basis_points/100.0},{"ram_total_bytes",v.ram_total},{"ram_free_bytes",v.ram_free},
+            {"ram_percent",v.ram_basis_points<0?-1.0:v.ram_basis_points/100.0},{"ram_total_bytes",v.ram_total},{"ram_free_bytes",v.ram_free},
+            {"psram_largest_free_bytes",heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)},
+            {"allocation_failures",v.failed_count},{"failed_allocation_bytes",v.failed_bytes},{"failed_allocation_caps",v.failed_caps},
+            {"canvas_retries",brookesia_canvas_retries()},{"canvas_largest_before",brookesia_canvas_before()},{"canvas_largest_after",brookesia_canvas_after()},{"canvas_requested_bytes",brookesia_canvas_request()},
+            {"internal_largest_free_bytes",heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT)},
                 {"internal_total_bytes",v.internal_total},{"internal_free_bytes",v.internal_free},
                 {"psram_total_bytes",v.psram_total},{"psram_free_bytes",v.psram_free},
                 {"sample_count",v.samples},{"sampled_at_us",v.sampled_us},{"interval_ms",1000},{"ram_scope","byte_addressable_heap_including_psram"}};

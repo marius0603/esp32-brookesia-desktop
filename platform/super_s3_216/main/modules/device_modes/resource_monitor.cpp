@@ -2,6 +2,7 @@
 #include "resource_math.hpp"
 #include "esp_heap_caps.h"
 #include "esp_timer.h"
+#include <atomic>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -9,18 +10,21 @@ namespace resource_monitor {
 namespace {
 portMUX_TYPE mutex=portMUX_INITIALIZER_UNLOCKED;
 Snapshot cached;
+std::atomic<uint32_t> failed_bytes{0},failed_caps{0},failed_count{0};
+void allocation_failed(size_t bytes,uint32_t caps,const char*){failed_bytes=bytes;failed_caps=caps;++failed_count;}
 using Counter=configRUN_TIME_COUNTER_TYPE;
 resource_math::CpuWindow<Counter,portNUM_PROCESSORS> cpu;
 int64_t last=-1000000;
 }
 void poll() {
+    static const auto registration=heap_caps_register_failed_alloc_callback(allocation_failed);(void)registration;
     const auto now=esp_timer_get_time();
     if(now-last<1000000)return;
     last=now;
     std::array<Counter,portNUM_PROCESSORS> idle{};
     for(unsigned i=0;i<portNUM_PROCESSORS;++i)idle[i]=ulTaskGetIdleRunTimeCounterForCore(i);
     const auto usage=cpu.sample(uint64_t(now),idle);
-    Snapshot next;next.sampled_us=now;next.cores=portNUM_PROCESSORS;
+    Snapshot next;next.failed_bytes=failed_bytes;next.failed_caps=failed_caps;next.failed_count=failed_count;next.sampled_us=now;next.cores=portNUM_PROCESSORS;
     next.cpu_basis_points=usage.valid?usage.total:-1;
     for(unsigned i=0;i<portNUM_PROCESSORS && i<next.core_basis_points.size();++i)
         next.core_basis_points[i]=usage.valid?usage.cores[i]:-1;

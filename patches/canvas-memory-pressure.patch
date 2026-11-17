@@ -1,0 +1,53 @@
+--- a/gui/brookesia_gui_lvgl/src/props_common.cpp
++++ b/gui/brookesia_gui_lvgl/src/props_common.cpp
+@@ -4,6 +4,22 @@
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ #include "private/props_impl.hpp"
++#include <new>
++#include <atomic>
++static std::atomic<unsigned> canvas_retries{0},canvas_before{0},canvas_after{0},canvas_request{0};
++extern "C" unsigned brookesia_canvas_retries(){return canvas_retries.load();}
++extern "C" unsigned brookesia_canvas_before(){return canvas_before.load();}
++extern "C" unsigned brookesia_canvas_after(){return canvas_after.load();}
++extern "C" unsigned brookesia_canvas_request(){return canvas_request.load();}
++#if __has_include("lvgl/src/misc/cache/instance/lv_image_cache.h")
++#include "lvgl/src/misc/cache/instance/lv_image_cache.h"
++#else
++#include "src/misc/cache/instance/lv_image_cache.h"
++#endif
++#ifdef ESP_PLATFORM
++#include "esp_heap_caps.h"
++#include "esp_log.h"
++#endif
+ 
+ namespace esp_brookesia::gui::lvgl::props_detail {
+ 
+@@ -155,7 +171,26 @@
+     auto &canvas = record.ensure_type_payload<Record::CanvasPayload>();
+     auto &buffer = canvas.buffer;
+     const auto stride = lv_draw_buf_width_to_stride(width, LV_COLOR_FORMAT_NATIVE);
+-    buffer.assign(static_cast<size_t>(stride) * static_cast<size_t>(height), 0);
++    const auto bytes = static_cast<size_t>(stride) * static_cast<size_t>(height);
++    try {
++        buffer.assign(bytes, 0);
++    } catch (const std::bad_alloc &) {
++        // Decoded images are disposable; canvas pixels are live view storage.
++        // Reclaim only on allocation failure, under the existing GUI lock.
++#ifdef ESP_PLATFORM
++        const auto before = heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);canvas_before=before;
++#endif
++        ++canvas_retries;canvas_request=bytes;
++        lv_image_cache_drop(nullptr);
++#ifdef ESP_PLATFORM
++        canvas_after=heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
++        ESP_LOGI("CanvasMemory", "retry bytes=%u largest_before=%u largest_after=%u free=%u",
++                 unsigned(bytes), unsigned(before),
++                 unsigned(heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)),
++                 unsigned(heap_caps_get_free_size(MALLOC_CAP_SPIRAM)));
++#endif
++        buffer.assign(bytes, 0); // One retry; persistent failure propagates.
++    }
+     lv_canvas_set_buffer(record.object, buffer.data(), width, height, LV_COLOR_FORMAT_NATIVE);
+     lv_canvas_fill_bg(record.object, lv_color_hex(0xffffff), LV_OPA_COVER);
+     for (const auto &command : node.canvas_props.commands) {

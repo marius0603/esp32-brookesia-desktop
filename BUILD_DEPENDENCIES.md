@@ -1,11 +1,11 @@
 # 构建依赖与补丁
 
-本仓库提供源码、十四份上游补丁、固定下载清单、重建脚本、已发布安装包，以及原安卓签名的加密备份。工具链、下载缓存、明文签名、加密密码、账号凭据、运行日志、完整Flash备份和下载录音继续保存在仓库外。
+本仓库提供源码、十七份上游补丁、固定下载清单、重建脚本、已发布安装包，以及原安卓签名的加密备份。工具链、下载缓存、明文签名、加密密码、账号凭据、运行日志、完整Flash备份和下载录音继续保存在仓库外。
 
 | 内容 | 仓库位置 / 恢复入口 |
 | --- | --- |
 | 上游提交、固件、应用、30篇书库及20首儿歌版本 | `versions.json` |
-| ESP-Brookesia十四份适配补丁 | `patches/`，按`tools/build-inputs.json`顺序应用 |
+| ESP-Brookesia十七份适配补丁 | `patches/`，按`tools/build-inputs.json`顺序应用 |
 | 固件源码覆盖层与完整配置 | `platform/super_s3_216/`、`sdkconfig.reproducible` |
 | 上游重建及补丁验证 | `tools/prepare_workspace.py`、`tools/check_patch_chain.py` |
 | ESP-IDF工具链准备 | `codex-quota-monitor/tools/bootstrap_idf6.py`，详见主README |
@@ -21,9 +21,11 @@
 
 1. 克隆本仓库。若使用稀疏检出，确保包含`phone-remote`、`patches`、`platform`、`tools`、`codex-quota-monitor`及需要的`packages`目录。
 2. 应用层开发按主README安装Python/Node依赖；安卓工具用下载脚本准备。继续更新现有手机应用前先恢复原签名。
-3. 固件开发使用`python tools/prepare_workspace.py`恢复固定上游与十四份补丁，再按主README准备ESP-IDF和编译。
+3. 固件开发使用`python tools/prepare_workspace.py`恢复固定上游与十七份补丁，再按主README准备ESP-IDF和编译。
 4. 已有其他上游修改时不要直接覆盖；重建脚本遇到内容差异会停止，先核对修改。设备更新仍需本地私有备份，不能把出厂完整Flash参数直接用于已有设备。
 
 2026-11-09验证：新增显示DMA边界补丁后，十四份补丁按顺序应用成功，共还原62份上游源码，且与实际固件构建目录逐文件一致。此前签名解密和使用恢复签名重新构建安卓APK通过。`tools/build-inputs.json`记录公开输入文件的SHA256，便于换电脑核对。
 
 2026-11-10音频应用更新：儿歌0.1.3、听书0.3.7、电台0.1.3共用`tools/apply_audio_themes.py`生成系统深浅绑定；额外10首摇篮曲来源、许可、编码器及音量哈希在`samples/songs/lullabies-20261109.json`，录音在私有目录/SD，不进入Git。UI生成后补充主题绑定再打包；沿用s3.61，无新增工具链或上游补丁。
+
+2026-11-17：新增第十七份`canvas-memory-pressure.patch`，完整编译及64文件逐项重建校验通过；s3.69增加连续块与失败分配诊断。迷宫0.1.8分块缓存由原有打包脚本重建，不增加工具链依赖。

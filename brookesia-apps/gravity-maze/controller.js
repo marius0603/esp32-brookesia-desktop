@@ -1,3 +1,11 @@
+function tileCommands(commands,x,y,size){
+ const result=[{type:'fill',x:0,y:0,width:size,height:size,color:commands[0].color}];
+ for(const c of commands.slice(1)){
+  const left=Math.max(x,c.x),top=Math.max(y,c.y),right=Math.min(x+size,c.x+c.width),bottom=Math.min(y+size,c.y+c.height);
+  if(right>left&&bottom>top)result.push({type:'rect',x:left-x,y:top-y,width:right-left,height:bottom-top,color:c.color});
+ }
+ return result;
+}
 (function(){
 'use strict';
 const ROOT='/sdcard/apps/local.gravitymaze/data/';
@@ -8,7 +16,7 @@ function flush(){if(!queue.length)return;const q=queue;queue=[];try{for(let i=0;
 function text(id,value){const k='text:'+id;if(cache[k]===value)return;call(gui,'SetText',{Path:'/main/'+id,Text:value});cache[k]=value;}
 function xy(path,x,y){bind(path,'x',Math.round(x));bind(path,'y',Math.round(y));}
 function box(path,x,y,w,h){xy(path,x,y);bind(path,'w',Math.max(1,Math.round(w)));bind(path,'h',Math.max(1,Math.round(h)));}
-function report(){try{call(storage,'FSWriteText',{Path:ROOT+'state.json',Data:JSON.stringify({version:'0.1.7',level,unlocked,mode,frames,elapsed_ms:Date.now()-startMs,wall_count:wallCount,wall_views:2,cache_bytes:m?1048352:0,lease:!!token,error,x:m?m.x:0,y:m?m.y:0,stars:m?m.stars.filter(s=>s.got).length:0,signature:m?m.signature:'',camera_follow:!!m&&m.n>6,camera_x:m?m.cameraX:0,camera_y:m?m.cameraY:0})});lastReport=Date.now();}catch(_){} }
+function report(){try{call(storage,'FSWriteText',{Path:ROOT+'state.json',Data:JSON.stringify({version:'0.1.8',level,unlocked,mode,frames,elapsed_ms:Date.now()-startMs,wall_count:wallCount,wall_views:5,cache_bytes:m?1048352:0,lease:!!token,error,x:m?m.x:0,y:m?m.y:0,stars:m?m.stars.filter(s=>s.got).length:0,signature:m?m.signature:'',camera_follow:!!m&&m.n>6,camera_x:m?m.cameraX:0,camera_y:m?m.cameraY:0})});lastReport=Date.now();}catch(_){} }
 function checkpoint(){try{call(storage,'FSWriteText',{Path:ROOT+'progress.json',Data:JSON.stringify({schema:1,level,unlocked,last_level:m?m.level:level,last_signature:m?m.signature:''})});}catch(_){} }
 function cue(which){try{call(audio,'PlayGameCue',{Cue:which});}catch(_){} }
 function release(){if(token){try{call(sensor,'ReleaseMotion',{Token:token});}catch(_){}token=0;}try{call(audio,'StopGameCue');}catch(_){} }
@@ -32,7 +40,8 @@ function cacheScene(){
   const mini=parent==='map',size=mini?76:720,scale=mini?68/m.world:1,pad=mini?4:0,width=mini?1:8,path='/viewport/'+parent+'/walls';
   box(path,0,0,size,size);const commands=[{type:'fill',x:0,y:0,width:size,height:size,color:mini?(dark?'#35544a':'#e4ebcf'):(dark?'#2e4542':'#eff1d7')}];
   for(let i=0;i<m.walls.length;i++){const w=m.walls[i];commands.push({type:'rect',x:Math.round(Math.min(w[0],w[2])*scale-width/2+pad),y:Math.round(Math.min(w[1],w[3])*scale-width/2+pad),width:Math.max(1,Math.round(Math.abs(w[2]-w[0])*scale+width)),height:Math.max(1,Math.round(Math.abs(w[3]-w[1])*scale+width)),color:dark?'#68927a':'#94b181'});}
-  bind(path,'draw',JSON.stringify(commands));
+  if(mini)bind(path,'draw',JSON.stringify(commands));
+  else for(let t=0;t<4;t++)bind(path+'/tile'+t,'draw',JSON.stringify(tileCommands(commands,(t%2)*360,Math.floor(t/2)*360,360)));
  }
  cachedScene=key;
 }

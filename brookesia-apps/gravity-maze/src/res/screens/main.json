@@ -244,7 +244,7 @@
           },
           "children": [
             {
-              "type": "canvas",
+              "type": "container",
               "id": "walls",
               "placement": {
                 "mode": "absolute",
@@ -271,12 +271,150 @@
                 "placement.width": "w",
                 "placement.height": "h",
                 "style.bgColor": "bg",
-                "commonProps.hidden": "hidden",
-                "canvasProps.commands": "draw"
+                "commonProps.hidden": "hidden"
               },
-              "canvasProps": {
-                "commands": []
-              }
+              "children": [
+                {
+                  "type": "canvas",
+                  "id": "tile0",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 0,
+                    "y": 0,
+                    "width": 360,
+                    "height": 360
+                  },
+                  "commonProps": {
+                    "scrollable": false,
+                    "clickable": false,
+                    "hidden": false
+                  },
+                  "style": {
+                    "padding": 0,
+                    "borderWidth": 0,
+                    "radius": 0,
+                    "bgColor": "#94b181",
+                    "bgOpacity": 0
+                  },
+                  "bindings": {
+                    "placement.x": "x",
+                    "placement.y": "y",
+                    "placement.width": "w",
+                    "placement.height": "h",
+                    "style.bgColor": "bg",
+                    "commonProps.hidden": "hidden",
+                    "canvasProps.commands": "draw"
+                  },
+                  "canvasProps": {
+                    "commands": []
+                  }
+                },
+                {
+                  "type": "canvas",
+                  "id": "tile1",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 360,
+                    "y": 0,
+                    "width": 360,
+                    "height": 360
+                  },
+                  "commonProps": {
+                    "scrollable": false,
+                    "clickable": false,
+                    "hidden": false
+                  },
+                  "style": {
+                    "padding": 0,
+                    "borderWidth": 0,
+                    "radius": 0,
+                    "bgColor": "#94b181",
+                    "bgOpacity": 0
+                  },
+                  "bindings": {
+                    "placement.x": "x",
+                    "placement.y": "y",
+                    "placement.width": "w",
+                    "placement.height": "h",
+                    "style.bgColor": "bg",
+                    "commonProps.hidden": "hidden",
+                    "canvasProps.commands": "draw"
+                  },
+                  "canvasProps": {
+                    "commands": []
+                  }
+                },
+                {
+                  "type": "canvas",
+                  "id": "tile2",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 0,
+                    "y": 360,
+                    "width": 360,
+                    "height": 360
+                  },
+                  "commonProps": {
+                    "scrollable": false,
+                    "clickable": false,
+                    "hidden": false
+                  },
+                  "style": {
+                    "padding": 0,
+                    "borderWidth": 0,
+                    "radius": 0,
+                    "bgColor": "#94b181",
+                    "bgOpacity": 0
+                  },
+                  "bindings": {
+                    "placement.x": "x",
+                    "placement.y": "y",
+                    "placement.width": "w",
+                    "placement.height": "h",
+                    "style.bgColor": "bg",
+                    "commonProps.hidden": "hidden",
+                    "canvasProps.commands": "draw"
+                  },
+                  "canvasProps": {
+                    "commands": []
+                  }
+                },
+                {
+                  "type": "canvas",
+                  "id": "tile3",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 360,
+                    "y": 360,
+                    "width": 360,
+                    "height": 360
+                  },
+                  "commonProps": {
+                    "scrollable": false,
+                    "clickable": false,
+                    "hidden": false
+                  },
+                  "style": {
+                    "padding": 0,
+                    "borderWidth": 0,
+                    "radius": 0,
+                    "bgColor": "#94b181",
+                    "bgOpacity": 0
+                  },
+                  "bindings": {
+                    "placement.x": "x",
+                    "placement.y": "y",
+                    "placement.width": "w",
+                    "placement.height": "h",
+                    "style.bgColor": "bg",
+                    "commonProps.hidden": "hidden",
+                    "canvasProps.commands": "draw"
+                  },
+                  "canvasProps": {
+                    "commands": []
+                  }
+                }
+              ]
             },
             {
               "type": "image",

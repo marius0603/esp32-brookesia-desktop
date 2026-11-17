@@ -26,7 +26,7 @@ def main():
  if(Math.hypot(x-m.x,y-m.y)<3&&testAt<m.plan.route.length-1)testAt++;
  return {x:Math.max(-1,Math.min(1,(x-m.x)/25)),y:Math.max(-1,Math.min(1,(y-m.y)/25))};}
  function tick(){"""
- hook=source.replace('on_timer(){tick();return true;},',"on_timer(){tick();if(mode==='ready'&&!testStarted){testStarted=true;try{mazeDebug.frame=call(gui,'GetViewFrame',{Path:'/main/viewport/world/walls'});mazeDebug.drawChars=JSON.stringify(call(gui,'GetBinding',{Path:'/main/viewport/world/walls',Key:'draw'})).length;}catch(e){mazeDebug.error=String(e);}calibrate();}return true;},").replace('const tilt=MazeCore.tilt(sample,base)','const tilt=testTilt()').replace('function tick(){',steering)
+ hook=source.replace('on_timer(){tick();return true;},',"on_timer(){tick();if(mode==='ready'&&!testStarted){testStarted=true;try{mazeDebug.frame=call(gui,'GetViewFrame',{Path:'/main/viewport/world/walls/tile0'});mazeDebug.drawChars=JSON.stringify(call(gui,'GetBinding',{Path:'/main/viewport/world/walls/tile0',Key:'draw'})).length;}catch(e){mazeDebug.error=String(e);}calibrate();}return true;},").replace('const tilt=MazeCore.tilt(sample,base)','const tilt=testTilt()').replace('function tick(){',steering)
  runtime=ROOT/'codex-quota-monitor/runtime';runtime.mkdir(exist_ok=True);stamp=str(time.time_ns())
  report={'passed':False,'version':version,'level':10,'synthetic_steering':True}
  with SharedPowerDiagnosticClient('COM5',timeout=35) as c:
@@ -71,10 +71,12 @@ def main():
    assert refresh,'No native refresh sample could be acquired'
    if refresh:report['refresh_sample_mean_us']=sum(s['last_refresh_us'] for s in refresh)/len(refresh);report['refresh_sample_max_us']=max(s['last_refresh_us'] for s in refresh)
    if tuple(map(int,version.split('.'))) >= (0,1,7):
-    canvases=refresh[-1]['canvases'];assert sorted((s['width'],s['height']) for s in canvases)==[(76,76),(720,720)],canvases
+    canvases=refresh[-1]['canvases'];tiled=tuple(map(int,version.split('.'))) >= (0,1,8)
+    expected=[(76,76)]+([(360,360)]*4 if tiled else [(720,720)])
+    assert sorted((s['width'],s['height']) for s in canvases)==expected,canvases
     assert sum(s['bytes'] for s in canvases)==state['cache_bytes']==1048352
-    assert state['wall_views']==2 and 'CreateView' not in state['profile']
-    world=next(s for s in canvases if s['width']==720);dark=f('SystemCore','GetEnvironment')['theme_id']=='dark'
+    assert state['wall_views']==(5 if tiled else 2) and 'CreateView' not in state['profile']
+    world=next(s for s in canvases if s['width']==(360 if tiled else 720));dark=f('SystemCore','GetEnvironment')['theme_id']=='dark'
     def near(value,expected):return all(abs(((value>>shift)&255)-((expected>>shift)&255))<=8 for shift in (16,8,0))
     assert near(world['corner_rgb'],0x68927a if dark else 0x94b181),world
     assert near(world['inside_rgb'],0x2e4542 if dark else 0xeff1d7),world

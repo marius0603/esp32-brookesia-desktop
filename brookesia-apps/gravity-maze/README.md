@@ -40,8 +40,10 @@ python codex-quota-monitor/tools/package_gravity_maze.py
 python -m unittest discover -s tests -p test_maze_native_contract.py
 ```
 
-生成 `packages/apps/local.gravitymaze.debug.0.1.7.bpk` 和家长设置包；`src/app/main.js` 由 engine.js 与 controller.js 拼接，修改源文件后需重新打包。48像素小马和96像素桌面图标复用仓库原有小马素材，避免解码大尺寸纹理；星星、小屋和短提示音由打包脚本生成。
+生成 `packages/apps/local.gravitymaze.debug.0.1.8.bpk` 和家长设置包；`src/app/main.js` 由 engine.js 与 controller.js 拼接，修改源文件后需重新打包。48像素小马和96像素桌面图标复用仓库原有小马素材，避免解码大尺寸纹理；星星、小屋和短提示音由打包脚本生成。
 
-现有设备先使用项目的完整备份与 `flash_app_only.py` 流程安装 s3.68，仅替换应用分区并验证区外数据不变；再运行 `deploy_gravity_maze.py` 部署 SD 包、`deploy_child_audio_ui.py` 更新 Flash 家长界面，重启登记版本。部署工具校验包、来源资源和新树哈希，保留旧目录与进度；若上次更新记录缺失或来源被修改，会拒绝覆盖并要求检查。不要把本机 runtime 记录、整片备份或个人配置上传仓库。
+现有设备先使用项目的完整备份与 `flash_app_only.py` 流程安装 s3.69，仅替换应用分区并验证区外数据不变；再运行 `deploy_gravity_maze.py` 部署 SD 包、`deploy_child_audio_ui.py` 更新 Flash 家长界面，重启登记版本。部署工具校验包、来源资源和新树哈希，保留旧目录与进度；若上次更新记录缺失或来源被修改，会拒绝覆盖并要求检查。不要把本机 runtime 记录、整片备份或个人配置上传仓库。
 
-`verify_gravity_maze.py` 检查租约释放/过期、静音 PCM 双声道输出、蓝牙重新开启、资源和原音量保留。它需要普通模式、无其他活动音频，不绕过家长验证。Node 测试覆盖400张随机地图、十关实际物理路径、16种旋转/校准组合、运行时生命周期以及深浅配色至少7:1的文字对比度。实机方向、阅读效果与最高关负载的现场结论见 [VERIFICATION.md](VERIFICATION.md)。复杂地图只保留两个静态缓存视图，加载时不提前获取运动租约；最高关CPU开销仍高，保留后续优化空间。
+`verify_gravity_maze.py` 检查租约释放/过期、静音 PCM 双声道输出、蓝牙重新开启、资源和原音量保留。它需要普通模式、无其他活动音频，不绕过家长验证。Node 测试覆盖400张随机地图、十关实际物理路径、16种旋转/校准组合、运行时生命周期以及深浅配色至少7:1的文字对比度。实机方向、阅读效果与最高关负载的现场结论见 [VERIFICATION.md](VERIFICATION.md)。复杂地图使用四块360×360墙体缓存和一块76×76缩略图缓存，加载时不提前获取运动租约；最高关CPU开销仍高，保留后续优化空间。
+
+0.1.8针对连续内存块不足：大画布分成四块，像素尺寸、镜头、物理和随机规则不变。缓存总像素字节仍为1,048,352，最大单次像素分配降至259,200字节；移动不重绘缓存。测试包括接缝及随机像素等价检查。详见`codex-quota-monitor/MEMORY_RECOVERY.md`。

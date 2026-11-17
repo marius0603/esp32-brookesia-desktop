@@ -1,5 +1,7 @@
 """Run idf.py in the isolated ESP-Brookesia 0.8 / ESP-IDF 6.0.2 environment."""
 import os
+import shutil
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -17,4 +19,8 @@ for line in result.stdout.splitlines():
         key,value=line.split('=',1)
         env[key]=value.replace('%PATH%',env['PATH'])
 python=Path(env['IDF_PYTHON_ENV_PATH'])/'Scripts/python.exe'
-raise SystemExit(subprocess.call([str(python),str(IDF/'tools/idf.py'),*sys.argv[1:]],env=env,cwd=PROJECT))
+git = shutil.which('git')
+cache=PROJECT/'build/CMakeCache.txt'
+cached_git=re.search(r'^GIT_EXECUTABLE:FILEPATH=(.+)$',cache.read_text(encoding='utf-8') if cache.exists() else '',re.M)
+git_args=['-DGIT_EXECUTABLE='+git] if git and (not cached_git or not Path(cached_git[1]).is_file()) else []
+raise SystemExit(subprocess.call([str(python),str(IDF/'tools/idf.py'),*git_args,*sys.argv[1:]],env=env,cwd=PROJECT))

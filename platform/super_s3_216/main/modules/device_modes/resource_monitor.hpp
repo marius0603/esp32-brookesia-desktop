@@ -5,7 +5,7 @@
 namespace resource_monitor {
 struct Snapshot {
     uint64_t sampled_us=0;
-    uint32_t samples=0;
+    uint32_t samples=0,failed_bytes=0,failed_caps=0,failed_count=0;
     int cpu_basis_points=-1, ram_basis_points=-1;
     unsigned cores=0;
     std::array<int,2> core_basis_points{{-1,-1}};
