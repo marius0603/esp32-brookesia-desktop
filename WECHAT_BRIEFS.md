@@ -13,7 +13,19 @@ python tools/wechat_brief.py --body-file codex-quota-monitor/runtime/work-brief.
 python tools/wechat_brief.py --body-file codex-quota-monitor/runtime/work-brief.txt --id <已推送的完整提交SHA>
 ```
 
-工具必须读取平台`payload.deliveryStatus=sent`才确认成功，不能仅凭CLI退出码。相同工作ID不会自动重发；请求前先记录未确认状态，超时或进程中断时避免重复发送，应先现场检查微信再决定是否用新的ID重发。发送状态本地保存，不保存正文，不自动重试。
+当前工具通过常驻Gateway的`send` RPC发送：只有响应的`runId`与本次稳定请求标识一致、`channel`一致且存在`messageId`才确认成功，不能仅凭CLI退出码。当前安装版本的Gateway仅在通道发送成功后生成该回执。旧版`message send`路径使用的`payload.deliveryStatus=sent`不再作为新RPC的判据。相同工作ID不会自动重发；请求前先记录未确认状态，超时或进程中断时避免重复发送，应先现场检查微信再决定是否用新的ID重发。发送状态本地保存，不保存正文，不自动重试。
+
+### 2026-11-17：发送超时修复及自启动核对
+
+旧发送器每次启动独立`message send`，整个进程仅允许55秒；超时丢失阶段耗时和部分标准输出，留下一条uncertain。用户确认未收到。原始超时没有留下足够阶段证据，不能断言是CLI启动、网络或微信登录失效。后续日志存在独立的DNS/TCP长轮询错误，不把它们冒充本次发送失败的确定根因。
+
+测量：版本查询0.09秒、Gateway健康1.56秒、本地发送dry-run7.34秒；直接发送命令与自启动Gateway的代理环境不同。新路径先检查已运行Gateway，再调用其`send` RPC，复用服务的插件、身份和环境，不额外调用模型。请求含稳定`idempotencyKey`；同一请求实测8.14秒成功，再查1.28秒返回相同回执。Gateway去重有运行期限制，不替代本机持久化防重复记录。
+
+正式Python发送器实测健康检查1.31秒、发送3.09秒，平台回执通过，用户已在手机微信确认收到。7项回归覆盖：健康失败不发出、不占用工作ID；发送超时保留uncertain且不自动重发；错误回执不能报成功；已收到回执但CLI退出超时仍保留成功；dry-run/超时边界；持久防重复；诊断日志不含正文、账号或收件者。
+
+默认外层等待180秒，可用`--timeout-seconds 30..300`调整；Gateway请求设独立期限。私有配置同目录的`brief-attempts.jsonl`只记录事件哈希、阶段、时间、耗时与状态，不记录正文或服务原始响应。健康检查失败返回`not_sent/gateway_unavailable`；请求已提交但无确定回执返回`uncertain`，不自动退回另一路发送。
+
+Windows登录自启动原已开启，本次继续使用`OpenClaw Gateway.vbs → gateway.cmd → gateway-with-proxy.exe`，核对入口及文件存在，并再次启动此入口；当前配置端口只有一个监听进程，随后正式发送成功。发送器由工作完成流程调用，依赖自启动常驻网关，无需再手动打开独立同步程序。本次未重启整台电脑，不宣称新的冷启动现场验收；旧版真实重启记录见下文。
 
 2026-11-16本机验证：扫码凭证保存、微信通道运行，用户发送“测试”后收到直接测试回复。初次尚无会话上下文时发送被拒绝；不将绑定成功等同所有情况下均可主动推送。OpenClaw默认模型未登录曾返回AI服务错误，直接发送工具不依赖此模型。
 
