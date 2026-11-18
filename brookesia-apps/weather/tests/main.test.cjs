@@ -55,6 +55,7 @@ test('missing values and WMO codes',()=>{
 });
 test('offline -> connected starts asynchronous Shanghai request and updates GUI/cache',()=>{
   const h=harness(false);h.app.on_start();assert.equal(h.requests().length,0);
+  assert.match(h.texts['/main/content/source'],/^未联网/);
   h.online(true);h.app.on_timer();assert.equal(h.requests().length,1);
   assert.match(h.requests()[0].p.Request.url,/latitude=31.2304/);
   assert.equal(h.requests()[0].p.Request.tls_verify,'Verify');h.complete(1);
@@ -69,6 +70,16 @@ test('ten minute refresh, failure retains data, backoff, unrelated completion ig
   h.advance(5000);h.app.on_timer();assert.equal(h.requests().length,2);
   h.advance(60000);h.app.on_timer();assert.equal(h.requests().length,3);
   h.complete(999);assert.equal(h.value('pending.id'),3);
+});
+test('connection budget stops after three failures and tapping refresh re-arms it',()=>{
+  const h=harness();h.app.on_start();
+  assert.match(h.texts['/main/content/source'],/^连接中/);
+  h.complete(1,{},503);assert.match(h.texts['/main/content/source'],/^服务不可用/);
+  h.advance(10000);h.app.on_timer();h.complete(2,{},503);
+  h.advance(30000);h.app.on_timer();h.complete(3,{},503);
+  h.advance(900000);h.app.on_timer();assert.equal(h.requests().length,3);
+  h.app.on_action('refresh');assert.equal(h.requests().length,4);
+  h.app.on_stop();assert.ok(h.calls.some(c=>c.name==='CancelRequest'&&c.p.RequestId===4));
 });
 test('disconnect cancels pending operation, reconnect retries',()=>{
   const h=harness();h.app.on_start();h.online(false);h.app.on_timer();
@@ -90,6 +101,7 @@ test('cache is restored offline and stale data is marked',()=>{
   const restarted=harness(false,h.files);restarted.advance(1900000);restarted.app.on_start();
   assert.equal(restarted.texts['/main/content/temperature'],'23.6°C');
   assert.match(restarted.texts['/main/content/condition'],/缓存/);
+  assert.match(restarted.texts['/main/content/source'],/数据过期/);
   assert.equal(restarted.requests().length,0);
 });
 test('24 hourly entries, accurate themes, bounded droplet updates and pause',()=>{

@@ -13,7 +13,7 @@ const views=new Map(),actions=new Set();function index(n,p=''){const k=p+'/'+n.i
 for(const p of ['/main/player/stations','/main/player/timer']){const n=views.get(p);assert(n.placement.y+n.placement.height<=466,'Bottom controls exceed touch safe area');}
 let calls=[],texts={},bindings={},saved={'/littlefs/radio-settings.json':JSON.stringify({station:stations[0].id,favorites:[stations[2].id]})},volume=40,quiet=false;
 let state={station:'',active:false,paused:false,state:'Idle',sleep_active:false};
-let desktopTheme=0,allowedIds=stations.map(s=>s.id);
+let link='Connected',desktopTheme=0,allowedIds=stations.map(s=>s.id);
 const brookesia={start_service:n=>n,call_function(h,n,json){
  const a=JSON.parse(json);calls.push({h,n,a});let data=null;if(n==='GetEnvironment')data={theme_id:desktopTheme===1?'dark':'light'};
  if(h==='SystemGui'&&a.Path){assert(views.has(a.Path),'Unknown view '+a.Path);if(n==='SetBinding')assert(Object.values(views.get(a.Path).bindings||{}).includes(a.Key),'Unbound property '+a.Path+':'+a.Key);}
@@ -30,7 +30,7 @@ const brookesia={start_service:n=>n,call_function(h,n,json){
   if(n==='SetSleepTimer')state={...state,sleep_active:a.Minutes>0,sleep_remaining_seconds:a.Minutes*60};
  }
  if(n==='GetState')data=h==='DeviceModes'?{resume_volume:volume,do_not_disturb:quiet,desktop_theme_index:desktopTheme}:h==='Wifi'?'Connected':{...state,available_stations:allowedIds};
- if(h==='Wifi'&&n==='GetGeneralState')data='Connected';
+ if(h==='Wifi'&&n==='GetGeneralState')data=link;
  if(n==='SetText')texts[a.Path]=a.Text;
  if(n==='SetBinding')bindings[a.Path+':'+a.Key]=a.Value;
  return JSON.stringify({success:true,data});
@@ -52,7 +52,8 @@ action('stations');action('cat1');action('row1');assert.equal(state.station,'nap
 ctx.brookesia_app.on_stop();assert.equal(state.active,false);start();assert.equal(texts['/main/player/title'],'Fun Kids Naps','Selection persists');
 saved['/littlefs/radio-settings.json']=JSON.stringify({station:stations[0].id,favorites:stations.map(s=>s.id)});start();
 action('stations');action('cat3');action('listNext');assert.equal(bindings['/main/stations/row2:hidden'],'false');action('listNext');assert.equal(bindings['/main/stations/row2:hidden'],'true');assert.equal(texts['/main/stations/footer/label'],'下一页 3/3');
-state={...state,state:'Error',error:'network error',active:false};ctx.brookesia_app.on_timer();assert.equal(texts['/main/player/status'],'播放失败，请切换频道或重试');
+state={...state,state:'Error',error:'network error',active:false};ctx.brookesia_app.on_timer();assert.equal(texts['/main/player/status'],'服务不可用');
+assert.equal(texts['/main/player/toggle/label'],'重试');
 console.log('Radio lifecycle, silent start, playback controls, all categories, favorites pagination, persistence, timer and hardware-volume refresh passed.');
 
 desktopTheme=1;ctx.brookesia_app.on_timer();assert(calls.some(c=>c.n==='SetBinding'&&c.a.Path==='/main'&&c.a.Value==='#101723'),'Dark desktop theme must reach the app background');
@@ -75,3 +76,13 @@ const playCount=calls.filter(c=>c.h==='Radio'&&c.n==='Play').length;
 action('toggle');action('next');action('previous');
 assert.equal(calls.filter(c=>c.h==='Radio'&&c.n==='Play').length,playCount);
 console.log('Radio whitelist filters saved selections, browsing, favorites, previous/next and live revocation.');
+
+allowedIds=stations.map(s=>s.id);ctx.brookesia_app.on_timer();action('toggle');
+link='Started';state={...state,active:true,state:'Offline',network_pending:true};ctx.brookesia_app.on_timer();
+assert.equal(texts['/main/player/connection'],'未联网');
+assert.equal(texts['/main/player/toggle/label'],'停止');
+link='Connecting';ctx.brookesia_app.on_timer();assert.equal(texts['/main/player/connection'],'连接中');
+link='Connected';state={...state,state:'Reconnecting'};ctx.brookesia_app.on_timer();
+assert.equal(texts['/main/player/status'],'连接中');
+action('toggle');assert(!state.active,'The player can cancel a pending connection');
+console.log('Radio network states and cancel while reconnecting passed.');

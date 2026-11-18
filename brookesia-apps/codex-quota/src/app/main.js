@@ -2,12 +2,14 @@
 'use strict';
 let gui, storage, timer, lastBridge = 0, received = 0, rendered = 0, data = null, paused = false;
 let fxTimer=0, frames=0, isStale=true, cache={}, primaryUsed=null, secondaryUsed=null;
-let requestId='', requestAt=0, responded=false, fresh=false, hasExpired=false, quotaTimer=0;
+let requestId='', requestAt=0, responded=false, fresh=false, quotaTimer=0;
+let nextFetch=0, failures=0, replyKey='';
+const RETRY_DELAYS=[5000,15000];
 const REQUEST_MS=60000, RESPONSE_MS=15000;
 const PAC_TRAVEL=358;
 // QUOTA_THEME_BEGIN
 const themePalettes={"dark":{"root":"#090e17","card":"#151e2c","edge":"#2a3648","ink":"#edf2f8","muted":"#a6b4c7","track":"#0c1420","gold":"#ffd166","mint":"#71ddc9","pill":"#172a28","status":"#91dfbb"},"light":{"root":"#f5eddf","card":"#fffaf2","edge":"#dfd0b7","ink":"#453b31","muted":"#7d6b58","track":"#f0e5d2","gold":"#a86c12","mint":"#197e70","pill":"#e1eddb","status":"#35704e"}};
-const themeNodes=[["/main","themebgColor","root"],["/main/sync","themebgColor","pill"],["/main/sync/status","themetextColor","status"],["/main/card_primary","themebgColor","card"],["/main/card_primary","themeborderColor","edge"],["/main/card_primary/label_primary","themetextColor","ink"],["/main/card_primary/primary","themetextColor","gold"],["/main/card_primary/unit_primary","themetextColor","gold"],["/main/card_primary/divider","themebgColor","edge"],["/main/card_primary/clock","themeborderColor","muted"],["/main/card_primary/clock/hour","themebgColor","muted"],["/main/card_primary/clock/minute","themebgColor","muted"],["/main/card_primary/days_primary","themetextColor","muted"],["/main/card_primary/reset_primary","themetextColor","ink"],["/main/card_primary/track_primary","themebgColor","track"],["/main/card_primary/track_primary/d0","themebgColor","gold"],["/main/card_primary/track_primary/d1","themebgColor","gold"],["/main/card_primary/track_primary/d2","themebgColor","gold"],["/main/card_primary/track_primary/d3","themebgColor","gold"],["/main/card_primary/track_primary/d4","themebgColor","gold"],["/main/card_primary/track_primary/d5","themebgColor","gold"],["/main/card_primary/track_primary/d6","themebgColor","gold"],["/main/card_primary/track_primary/d7","themebgColor","gold"],["/main/card_primary/track_primary/d8","themebgColor","gold"],["/main/card_primary/track_primary/d9","themebgColor","gold"],["/main/card_primary/track_primary/d10","themebgColor","gold"],["/main/card_primary/track_primary/d11","themebgColor","gold"],["/main/card_primary/track_primary/d12","themebgColor","gold"],["/main/card_primary/track_primary/d13","themebgColor","gold"],["/main/card_primary/track_primary/d14","themebgColor","gold"],["/main/card_primary/track_primary/d15","themebgColor","gold"],["/main/card_primary/track_primary/d16","themebgColor","gold"],["/main/card_primary/track_primary/d17","themebgColor","gold"],["/main/card_primary/track_primary/d18","themebgColor","gold"],["/main/card_primary/track_primary/d19","themebgColor","gold"],["/main/card_secondary","themebgColor","card"],["/main/card_secondary","themeborderColor","edge"],["/main/card_secondary/label_secondary","themetextColor","ink"],["/main/card_secondary/secondary","themetextColor","mint"],["/main/card_secondary/unit_secondary","themetextColor","mint"],["/main/card_secondary/divider","themebgColor","edge"],["/main/card_secondary/clock","themeborderColor","muted"],["/main/card_secondary/clock/hour","themebgColor","muted"],["/main/card_secondary/clock/minute","themebgColor","muted"],["/main/card_secondary/days_secondary","themetextColor","muted"],["/main/card_secondary/reset_secondary","themetextColor","ink"],["/main/card_secondary/track_secondary","themebgColor","track"],["/main/card_secondary/track_secondary/d0","themebgColor","mint"],["/main/card_secondary/track_secondary/d1","themebgColor","mint"],["/main/card_secondary/track_secondary/d2","themebgColor","mint"],["/main/card_secondary/track_secondary/d3","themebgColor","mint"],["/main/card_secondary/track_secondary/d4","themebgColor","mint"],["/main/card_secondary/track_secondary/d5","themebgColor","mint"],["/main/card_secondary/track_secondary/d6","themebgColor","mint"],["/main/card_secondary/track_secondary/d7","themebgColor","mint"],["/main/card_secondary/track_secondary/d8","themebgColor","mint"],["/main/card_secondary/track_secondary/d9","themebgColor","mint"],["/main/card_secondary/track_secondary/d10","themebgColor","mint"],["/main/card_secondary/track_secondary/d11","themebgColor","mint"],["/main/card_secondary/track_secondary/d12","themebgColor","mint"],["/main/card_secondary/track_secondary/d13","themebgColor","mint"],["/main/card_secondary/track_secondary/d14","themebgColor","mint"],["/main/card_secondary/track_secondary/d15","themebgColor","mint"],["/main/card_secondary/track_secondary/d16","themebgColor","mint"],["/main/card_secondary/track_secondary/d17","themebgColor","mint"],["/main/card_secondary/track_secondary/d18","themebgColor","mint"],["/main/card_secondary/track_secondary/d19","themebgColor","mint"]];
+const themeNodes=[["/main","themebgColor","root"],["/main/sync","themebgColor","pill"],["/main/sync/status","themetextColor","status"],["/main/sync/refresh","themetextColor","status"],["/main/card_primary","themebgColor","card"],["/main/card_primary","themeborderColor","edge"],["/main/card_primary/label_primary","themetextColor","ink"],["/main/card_primary/primary","themetextColor","gold"],["/main/card_primary/unit_primary","themetextColor","gold"],["/main/card_primary/divider","themebgColor","edge"],["/main/card_primary/clock","themeborderColor","muted"],["/main/card_primary/clock/hour","themebgColor","muted"],["/main/card_primary/clock/minute","themebgColor","muted"],["/main/card_primary/days_primary","themetextColor","muted"],["/main/card_primary/reset_primary","themetextColor","ink"],["/main/card_primary/track_primary","themebgColor","track"],["/main/card_primary/track_primary/d0","themebgColor","gold"],["/main/card_primary/track_primary/d1","themebgColor","gold"],["/main/card_primary/track_primary/d2","themebgColor","gold"],["/main/card_primary/track_primary/d3","themebgColor","gold"],["/main/card_primary/track_primary/d4","themebgColor","gold"],["/main/card_primary/track_primary/d5","themebgColor","gold"],["/main/card_primary/track_primary/d6","themebgColor","gold"],["/main/card_primary/track_primary/d7","themebgColor","gold"],["/main/card_primary/track_primary/d8","themebgColor","gold"],["/main/card_primary/track_primary/d9","themebgColor","gold"],["/main/card_primary/track_primary/d10","themebgColor","gold"],["/main/card_primary/track_primary/d11","themebgColor","gold"],["/main/card_primary/track_primary/d12","themebgColor","gold"],["/main/card_primary/track_primary/d13","themebgColor","gold"],["/main/card_primary/track_primary/d14","themebgColor","gold"],["/main/card_primary/track_primary/d15","themebgColor","gold"],["/main/card_primary/track_primary/d16","themebgColor","gold"],["/main/card_primary/track_primary/d17","themebgColor","gold"],["/main/card_primary/track_primary/d18","themebgColor","gold"],["/main/card_primary/track_primary/d19","themebgColor","gold"],["/main/card_secondary","themebgColor","card"],["/main/card_secondary","themeborderColor","edge"],["/main/card_secondary/label_secondary","themetextColor","ink"],["/main/card_secondary/secondary","themetextColor","mint"],["/main/card_secondary/unit_secondary","themetextColor","mint"],["/main/card_secondary/divider","themebgColor","edge"],["/main/card_secondary/clock","themeborderColor","muted"],["/main/card_secondary/clock/hour","themebgColor","muted"],["/main/card_secondary/clock/minute","themebgColor","muted"],["/main/card_secondary/days_secondary","themetextColor","muted"],["/main/card_secondary/reset_secondary","themetextColor","ink"],["/main/card_secondary/track_secondary","themebgColor","track"],["/main/card_secondary/track_secondary/d0","themebgColor","mint"],["/main/card_secondary/track_secondary/d1","themebgColor","mint"],["/main/card_secondary/track_secondary/d2","themebgColor","mint"],["/main/card_secondary/track_secondary/d3","themebgColor","mint"],["/main/card_secondary/track_secondary/d4","themebgColor","mint"],["/main/card_secondary/track_secondary/d5","themebgColor","mint"],["/main/card_secondary/track_secondary/d6","themebgColor","mint"],["/main/card_secondary/track_secondary/d7","themebgColor","mint"],["/main/card_secondary/track_secondary/d8","themebgColor","mint"],["/main/card_secondary/track_secondary/d9","themebgColor","mint"],["/main/card_secondary/track_secondary/d10","themebgColor","mint"],["/main/card_secondary/track_secondary/d11","themebgColor","mint"],["/main/card_secondary/track_secondary/d12","themebgColor","mint"],["/main/card_secondary/track_secondary/d13","themebgColor","mint"],["/main/card_secondary/track_secondary/d14","themebgColor","mint"],["/main/card_secondary/track_secondary/d15","themebgColor","mint"],["/main/card_secondary/track_secondary/d16","themebgColor","mint"],["/main/card_secondary/track_secondary/d17","themebgColor","mint"],["/main/card_secondary/track_secondary/d18","themebgColor","mint"],["/main/card_secondary/track_secondary/d19","themebgColor","mint"]];
 // QUOTA_THEME_END
 let core, theme='dark';
 function applyTheme(){
@@ -35,10 +37,17 @@ function resetText(kind,at,now){
   if(cache[kind+'TimeSize']!==size){call(gui,'SetBindings',{Updates:[binding(textPath('reset_'+kind),'fontSize',size)]});cache[kind+'TimeSize']=size;}
 }
 function requestQuota(active=true){
-  if(active){requestId=String(Date.now())+'-'+String(Math.random()).slice(2);requestAt=Date.now();responded=false;}
+  if(active){requestId=String(Date.now())+'-'+String(Math.random()).slice(2);requestAt=Date.now();responded=false;replyKey='';}
   try{call(storage,'FSWriteText',{Path:'/littlefs/quota-request.json',Data:JSON.stringify({
     type:'quota_request',v:1,request_id:requestId,active:active
   })});}catch(_){} // No successful response still expires locally.
+}
+function retry(){
+  failures=0;fresh=false;requestQuota();
+}
+function requestFailed(now,status){
+  responded=true;fresh=false;++failures;
+  nextFetch=status!=='auth_required'&&failures<=RETRY_DELAYS.length?now+RETRY_DELAYS[failures-1]:Infinity;
 }
 function trackPath(name){return '/main/card_'+name.replace('track_','')+'/'+name;}
 function textPath(id){return id==='status'?'/main/sync/status':'/main/card_'+(id.endsWith('primary')?'primary':'secondary')+'/'+id;}
@@ -66,7 +75,7 @@ function persistState(){
     sampled_at:data?data.sampled_at:0,primary_remaining:primaryUsed===null?null:100-primaryUsed,
     secondary_remaining:secondaryUsed===null?null:100-secondaryUsed,stale:isStale,animation_frames:frames,
     primary_x:pacX(primaryUsed),secondary_x:pacX(secondaryUsed),request_id:requestId,
-    responded:responded,status:cache.status,theme:theme,ui_version:'0.2.5'})});}catch(_){}
+    responded:responded,status:cache.status,theme:theme,ui_version:'0.2.6'})});}catch(_){}
 }
 function animate(){
   if(paused||!data||isStale||data.status!=='ok')return;
@@ -89,28 +98,38 @@ function reset(at, now) {
 }
 function tick() {
   if (paused) return;
-  if(!requestId || Date.now()<requestAt || Date.now()-requestAt>=REQUEST_MS)requestQuota();
+  const localNow=Date.now();
+  if(!requestId || localNow<requestAt)retry();
   try {
     const packet = JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/quota.json'}));
-    if (packet.v !== 1 || packet.type !== 'quota' || !Array.isArray(packet.windows)) throw new Error('quota format');
-    // Cached samples and unrelated responses never acknowledge a new request.
-    if (!data || packet.request_id===requestId) {
-      if(!data || packet.bridge_at!==lastBridge || packet.request_id!==data.request_id){lastBridge=packet.bridge_at||0;received=Date.now();}
-      data=packet;
-      if(packet.request_id===requestId){responded=true;fresh=packet.status==='ok' && !!packet.sampled_at;hasExpired=!fresh;}
+    if(packet.v!==1 || packet.type!=='quota' || !Array.isArray(packet.windows))throw new Error('quota format');
+    const hasSample=Number.isFinite(packet.sampled_at) && packet.sampled_at>0 && packet.windows.some(w=>usedValue(w)!==null);
+    const usable=packet.status==='ok'&&hasSample;
+    if((!data&&hasSample || usable&&packet.request_id===requestId) &&
+       (!data || packet.sampled_at!==data.sampled_at || packet.bridge_at!==lastBridge || packet.request_id!==data.request_id)){
+      data=packet;lastBridge=packet.bridge_at||packet.sampled_at;received=localNow;
     }
-  } catch (_) { /* Keep the last valid sample when a file or transport is unavailable. */ }
-  if(!responded && Date.now()-requestAt>=RESPONSE_MS){fresh=false;hasExpired=true;}
-  const waiting=!responded && Date.now()-requestAt<RESPONSE_MS;
+    if(packet.request_id===requestId){
+      const key=JSON.stringify([packet.bridge_at,packet.sampled_at,packet.status]);
+      if(key!==replyKey){
+        replyKey=key;
+        if(usable){responded=true;fresh=true;failures=0;nextFetch=requestAt+REQUEST_MS;}
+        else requestFailed(localNow,packet.status);
+      }
+    }
+  } catch (_) { /* Keep the last usable sample when a file or transport is unavailable. */ }
+  if(!responded && localNow-requestAt>=RESPONSE_MS)requestFailed(localNow,'timeout');
+  if(responded && localNow>=nextFetch)requestQuota();
+
+  const now=Math.max(localNow/1000,lastBridge+Math.max(0,localNow-received)/1000);
+  const expired=!!data && now-data.sampled_at>=(Number(data.stale_after)||180);
   const oldStatus=cache.status;
-  isStale=!fresh;
-  const status=data && data.request_id===requestId && data.status==='auth_required'?'需登录':
-    waiting && !hasExpired?'等待同步':fresh?'已同步':'已过期';
+  isStale=expired||!fresh;
+  const status=expired?'数据过期':!responded?'连接中':fresh?'已同步':'服务不可用';
   text('status',status);
-  const dotColor=status==='已同步'?'#62e69b':status==='需登录'?'#ef8991':'#e9b65d';
+  const dotColor=status==='已同步'?'#62e69b':status==='服务不可用'?'#ef8991':'#e9b65d';
   if(cache.dotColor!==dotColor){call(gui,'SetBindings',{Updates:[binding('/main/sync/dot','color',dotColor)]});cache.dotColor=dotColor;}
   if (!data){percent('primary',null);percent('secondary',null);if(oldStatus!==status)persistState();return;}
-  const elapsed=(Date.now()-received)/1000, now=lastBridge+elapsed;
   const primary=data.windows.find(w=>w.kind==='primary')||data.windows[0];
   const secondary=data.windows.find(w=>w.kind==='secondary')||data.windows[1];
   primaryUsed=usedValue(primary);secondaryUsed=usedValue(secondary);
@@ -129,16 +148,18 @@ globalThis.brookesia_app = {
     storage=brookesia.start_service('Storage');
     timer=brookesia.start_service('SystemTimer');
     applyTheme();
+    call(gui,'SubscribeAction',{Action:'refresh'});
     paused=false;
     if(!quotaTimer)quotaTimer=call(timer,'StartPeriodic',{Name:'quota',IntervalMs:1000});
-    fresh=false;hasExpired=false;requestQuota();
+    retry();
     tick();
     startFx();
     return true;
   },
+  on_action(name){if(name==='refresh'&&!paused&&responded){retry();tick();}return true;},
   on_timer(id,name) {if(name==='pacman')animate();else tick(); return true;},
   on_pause() {paused=true;requestQuota(false);stopFx();return true;},
-  on_resume() {paused=false;cache={};applyTheme();fresh=false;requestQuota();tick();startFx();return true;},
+  on_resume() {paused=false;cache={};applyTheme();retry();tick();startFx();return true;},
   on_stop() {paused=true;requestQuota(false);stopFx();if(quotaTimer){try{call(timer,'Stop',{TimerId:quotaTimer});}catch(_){}quotaTimer=0;}return true;}
 };
 })();

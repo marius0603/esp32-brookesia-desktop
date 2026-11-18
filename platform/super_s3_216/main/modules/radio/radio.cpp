@@ -11,6 +11,7 @@
 #include "esp_http_client.h"
 #include "esp_crt_bundle.h"
 #include "esp_wifi.h"
+#include "esp_netif.h"
 #include "lwip/sockets.h"
 #include "lwip/inet.h"
 #include "esp_audio_dec_default.h"
@@ -27,13 +28,21 @@
 using namespace esp_brookesia;
 using namespace esp_brookesia::service;
 namespace {
+constexpr unsigned max_failures=4;
+constexpr int64_t wifi_wait_us=30000000, source_idle_us=12000000, hls_idle_us=20000000;
+bool wifi_ready(){
+ esp_netif_ip_info_t info{};
+ auto *sta=esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+ wifi_ap_record_t ap{};
+ return sta && esp_wifi_sta_get_ap_info(&ap)==ESP_OK && esp_netif_get_ip_info(sta,&info)==ESP_OK && info.ip.addr;
+}
 class Radio final:public ServiceBase {
 public:
  Radio():ServiceBase({.name="Radio",.description="Buffered Wi-Fi radio",.version="0.1.0",.dependencies={"AudioPlayback"}}){}
 private:
  std::mutex operation_,mutex_;
  std::string state_="Idle",error_,station_,peer_;
- std::atomic<bool> live_{false},reader_live_{false},cancel_{false},paused_{false},reader_failed_{false};
+ std::atomic<bool> live_{false},reader_live_{false},cancel_{false},paused_{false},network_pending_{false},reset_stream_{false};
  std::atomic<uint32_t> bytes_{0},received_{0},retries_{0},starvations_{0},gap_{0},epoch_{0},rate_{0},channels_{0},decoder_free_{0},reader_free_{0};
  std::atomic<uint32_t> decode_errors_{0},decode_frames_{0},decode_max_us_{0},input_stalls_{0};
  std::atomic<int> wifi_ps_{-1};
@@ -69,7 +78,7 @@ private:
   if(!child_mode_radio_station_allowed(id))return std::unexpected("此频道未获家长授权");
   if(!local_audio::claim(local_audio::Radio))return std::unexpected("请先关闭听书或语音助手");
   source_=chosen;{std::lock_guard lock(mutex_);station_=id;state_="Connecting";error_.clear();}
-  cancel_=false;paused_=false;reader_failed_=false;bytes_=0;received_=0;retries_=0;starvations_=0;gap_=0;rate_=0;channels_=0;deadline_=0;decoder_free_=0;reader_free_=0;
+  cancel_=false;paused_=false;network_pending_=true;reset_stream_=false;bytes_=0;received_=0;retries_=0;starvations_=0;gap_=0;rate_=0;channels_=0;deadline_=0;decoder_free_=0;reader_free_=0;
   decode_errors_=0;decode_frames_=0;decode_max_us_=0;input_stalls_=0;
   read_result_=0;read_errno_=0;http_status_=0;read_calls_=0;read_max_us_=0;decode_total_us_=0;read_total_us_=0;
   local_audio::radio_busy=true;live_=true;
@@ -88,7 +97,7 @@ private:
   boost::json::array available;
   for(const auto &s:radio_catalog::stations)
    if(child_mode_radio_station_allowed(s.id))available.emplace_back(s.id);
-  return {{"available_stations",std::move(available)},{"state",state_},{"error",error_},{"station",station_},{"active",live_.load()},{"paused",paused_.load()},
+  return {{"available_stations",std::move(available)},{"state",state_},{"error",error_},{"station",station_},{"active",live_.load()},{"paused",paused_.load()},{"network_pending",network_pending_.load()},
    {"bytes_written",bytes_.load()},{"bytes_received",received_.load()},{"reconnects",retries_.load()},{"pcm_starvations",starvations_.load()},{"write_gap_max_us",gap_.load()},
    {"sample_rate",rate_.load()},{"channels",channels_.load()},{"decoder_stack_free",decoder_free_.load()},{"reader_stack_free",reader_free_.load()},
    {"decode_errors",decode_errors_.load()},{"decoded_frames",decode_frames_.load()},{"decode_max_us",decode_max_us_.load()},{"input_stalls",input_stalls_.load()},
@@ -117,7 +126,7 @@ private:
   {"GetState",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(snapshot())};}},
   {"TestSleepTimer",[this](FunctionParameterMap &&)->FunctionResult{if(!live_)return {.success=false,.error_message="Nothing is playing"};deadline_=esp_timer_get_time()+10000000;return {.success=true};}}
  };}
- // A bounded read is performed only on the reader task's internal stack. No
+ // Keep HTTP IO on the reader task. No
  // certificate bypass, credentials, downloaded book or PC relay is needed.
  bool fetch(const std::string &url,std::string *text=nullptr){
   // Streaming needs continuous receive service. Restore the board's previous
@@ -128,8 +137,8 @@ private:
   auto *client=esp_http_client_init(&config);if(!client)return false;
   bool okay=false;auto *buffer=static_cast<char *>(heap_caps_malloc(4096,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT));
   if(buffer){
-   for(int redirect=0;redirect<=5&&!abort();++redirect){
-    if(esp_http_client_open(client,0)!=ESP_OK)break;
+   for(int redirect=0;redirect<=5&&!abort()&&wifi_ready();++redirect){
+    if(esp_http_client_open(client,0)!=ESP_OK || abort() || !wifi_ready())break;
     esp_http_client_fetch_headers(client);const int status=esp_http_client_get_status_code(client);http_status_=status;
     if(status>=300&&status<400){esp_http_client_close(client);if(esp_http_client_set_redirection(client)!=ESP_OK)break;continue;}
     if(status!=200)break;
@@ -143,12 +152,12 @@ private:
     sockaddr_in remote{};socklen_t remote_size=sizeof(remote);char address[INET_ADDRSTRLEN]{};
     if(socket>=0&&getpeername(socket,reinterpret_cast<sockaddr *>(&remote),&remote_size)==0&&remote.sin_family==AF_INET&&inet_ntop(AF_INET,&remote.sin_addr,address,sizeof(address))){std::lock_guard lock(mutex_);peer_=address;}
     okay=true;auto last_data=esp_timer_get_time();
-    while(!abort()){
+    while(!abort()&&wifi_ready()){
      const auto began=esp_timer_get_time();int n=esp_http_client_read(client,buffer,1024);
      const auto duration=uint32_t(esp_timer_get_time()-began);read_result_=n;read_errno_=errno;++read_calls_;read_total_us_+=duration;read_max_us_=std::max(read_max_us_.load(),duration);
      reader_free_=uxTaskGetStackHighWaterMark(nullptr);
      if(n==-ESP_ERR_HTTP_EAGAIN || (n==0&&!esp_http_client_is_complete_data_received(client))){
-      if(esp_timer_get_time()-last_data<12000000){vTaskDelay(pdMS_TO_TICKS(20));continue;}
+      if(esp_timer_get_time()-last_data<source_idle_us){vTaskDelay(pdMS_TO_TICKS(20));continue;}
       okay=false;break;
      }
      if(n<0){okay=false;break;}
@@ -156,8 +165,9 @@ private:
      last_data=esp_timer_get_time();
      if(text){if(text->size()+n>32768){okay=false;break;}text->append(buffer,n);}
      else {
-      received_+=n;
-      while(!abort()&&xRingbufferSend(net_,buffer,n,pdMS_TO_TICKS(50))!=pdTRUE){}
+      while(!abort()&&wifi_ready()){
+       if(xRingbufferSend(net_,buffer,n,pdMS_TO_TICKS(50))==pdTRUE){received_+=n;network_pending_=false;break;}
+      }
      }
     }break;
    }
@@ -166,33 +176,71 @@ private:
  }
  void read_network(){
   const bool hls=std::string_view(source_->format)=="hls_ts";
-  std::string playlist_url=source_->url;uint64_t last=0;bool have_last=false;unsigned failures=0,nested=0;
+  std::string playlist_url=source_->url;uint64_t last=0;bool have_last=false;
+  unsigned failures=0,nested=0;
+  auto last_audio=esp_timer_get_time();
+  int64_t offline_since=0;uint32_t outage_bytes=0;
+  auto wait=[&](unsigned ticks){for(unsigned i=0;i<ticks&&!abort()&&wifi_ready();++i)vTaskDelay(pdMS_TO_TICKS(100));};
+  auto unavailable=[&](const std::string &message){set_state("Error",message);cancel_=true;};
   while(!abort()){
+   if(!wifi_ready()){
+    network_pending_=true;set_state("Offline");
+    if(!offline_since || received_.load()-outage_bytes>=32768){
+     offline_since=esp_timer_get_time();outage_bytes=received_.load();
+    }
+    while(!abort()&&!wifi_ready()&&esp_timer_get_time()-offline_since<wifi_wait_us)vTaskDelay(pdMS_TO_TICKS(100));
+    if(abort())break;
+    if(!wifi_ready()){unavailable("未联网");break;}
+    ++retries_;set_state("Reconnecting");
+    // A new HTTP connection can start at a different codec/TS boundary.
+    // Wait for the decoder to drop the old stream before publishing new bytes.
+    if(received_){
+     reset_stream_=true;
+     while(reset_stream_&&!abort())vTaskDelay(pdMS_TO_TICKS(10));
+     if(abort())break;
+    }
+    if(hls){playlist_url=source_->url;nested=0;have_last=false;}
+    last_audio=esp_timer_get_time();
+   }
+
+   const auto before=received_.load();
    bool okay=true;
-   if(!hls)okay=fetch(source_->url);
+   if(!hls)fetch(source_->url);
    else {
     std::string text;okay=fetch(playlist_url,&text);
-    if(okay){
+    if(okay&&wifi_ready()&&!abort()){
      auto list=radio_playlist::parse(playlist_url,text);
-     if(!list.error.empty()){set_state("Error",list.error);reader_failed_=true;break;}
-     if(!list.nested.empty()){if(++nested>4){set_state("Error","HLS nesting limit exceeded");reader_failed_=true;break;}playlist_url=list.nested;continue;}
-     if(list.segments.empty())okay=false;
+     if(!list.error.empty()){unavailable(list.error);break;}
+     if(!list.nested.empty()){
+      if(++nested>4){unavailable("HLS nesting limit exceeded");break;}
+      playlist_url=list.nested;continue;
+     }
      if(have_last&&!list.segments.empty()&&list.segments.back().sequence<last){have_last=false;++retries_;}
-     // Start two segments behind the live edge. Subsequent polls use sequence
-     // numbers, rather than repeating the last segment on every playlist fetch.
+     // Start two segments behind the live edge, then fetch only new segments.
      size_t start=have_last?0:(list.segments.size()>2?list.segments.size()-2:0);
-     for(size_t i=start;i<list.segments.size()&&!abort();++i){
+     for(size_t i=start;i<list.segments.size()&&!abort()&&wifi_ready();++i){
       const auto &s=list.segments[i];if(have_last&&s.sequence<=last)continue;
-      if(!fetch(s.url)){okay=false;break;}last=s.sequence;have_last=true;
+      const auto segment_start=received_.load();
+      if(!fetch(s.url)||received_.load()==segment_start){okay=false;break;}
+      last=s.sequence;have_last=true;
      }
     }
    }
    if(abort())break;
-   if(!hls||!okay){
-    ++retries_;if(!okay&&++failures>=6){set_state("Error","音源暂不可用，请切换频道或重试");reader_failed_=true;break;}
-    if(!paused_)set_state("Reconnecting");
-    for(unsigned i=0;i<std::min(30u,5u*(1+failures))&&!abort();++i)vTaskDelay(pdMS_TO_TICKS(100));
-   }else {failures=0;for(int i=0;i<10&&!abort();++i)vTaskDelay(pdMS_TO_TICKS(100));}
+   if(!wifi_ready())continue;
+   const auto now=esp_timer_get_time();
+   const auto read=received_.load()-before;
+   if(read)last_audio=now;
+   if(hls && okay && now-last_audio<hls_idle_us){
+    if(read)failures=0;
+    wait(10);continue;
+   }
+   // A successful HTTP header or a truncated stream with a few bytes must
+   // not reset the retry budget. Allow a fresh budget after sustained data.
+   if(read>=32768)failures=0;
+   if(++failures>=max_failures){unavailable("音源暂不可用，请切换频道或重试");break;}
+   ++retries_;network_pending_=true;set_state("Reconnecting");
+   wait(failures*10);
   }
   reader_live_=false;
  }
@@ -231,7 +279,25 @@ private:
    // Several seconds of compressed data cover TLS/server burst delivery. The
    // PCM queue alone covers only half a second before output starts.
    const size_t prefill=ts?32768:mp3?65536:49152;
-   while(!abort()&&reader_live_&&xRingbufferGetCurFreeSize(net_)>128*1024-prefill)vTaskDelay(pdMS_TO_TICKS(20));
+   auto reset_if_requested=[&](){
+    if(!reset_stream_)return true;
+    ++epoch_;phase=0;bad_frames=0;input_size=0;
+    size_t discarded=0;
+    while(auto *item=xRingbufferReceiveUpTo(net_,&discarded,0,4096))vRingbufferReturnItem(net_,item);
+    if(mp3)drmp3dec_init(mp3_decoder);
+    else {
+     esp_audio_simple_dec_close(decoder);decoder=nullptr;
+     if(esp_audio_simple_dec_open(&config,&decoder)!=ESP_AUDIO_ERR_OK){fail("Audio decoder unavailable");return false;}
+    }
+    reset_stream_=false;
+    return true;
+   };
+   const auto started=esp_timer_get_time();
+   while(!abort()&&reader_live_&&xRingbufferGetCurFreeSize(net_)>128*1024-prefill){
+    if(!reset_if_requested())break;
+    if(esp_timer_get_time()-started>=wifi_wait_us+hls_idle_us){fail("音源暂不可用，请切换频道或重试");break;}
+    vTaskDelay(pdMS_TO_TICKS(20));
+   }
    if(mp3)drmp3dec_init(mp3_decoder);
    auto emit=[&](size_t decoded,const esp_audio_simple_dec_info_t &info){
     if(info.bits_per_sample!=16||(info.channel!=1&&info.channel!=2)||info.sample_rate<8000||info.sample_rate>96000){fail("Unsupported audio format");return false;}
@@ -243,19 +309,23 @@ private:
      if(count+2>16384){fail("Resample output exceeds bound");return false;}stereo[count++]=sample;stereo[count++]=sample;
     }
     phase-=frames*16000;
-    if(!abort()&&!output->send(stereo,count*2,0,[&](){return abort();})){if(!abort())fail("PCM queue failed");return false;}
-    if(!paused_&&!abort())set_state("Playing");
+    if(!abort()&&!output->send(stereo,count*2,0,[&](){return reset_stream_||abort();})){
+     if(!reset_stream_&&!abort())fail("PCM queue failed");
+     return false;
+    }
+    if(!paused_&&!network_pending_&&!abort())set_state("Playing");
     return !abort();
    };
    while(!abort()){
     if(output->failed()){fail("Speaker output failed");break;}
-    while(paused_&&!abort())vTaskDelay(pdMS_TO_TICKS(20));
+    if(!reset_if_requested())break;
+    if(paused_){vTaskDelay(pdMS_TO_TICKS(20));continue;}
     if(input_size>=16384){fail("Audio parser input exceeded bound");break;}
     size_t size=0;auto *data=static_cast<uint8_t *>(xRingbufferReceiveUpTo(net_,&size,pdMS_TO_TICKS(100),std::min<size_t>(4096,16384-input_size)));
     if(!data){if(!reader_live_){fail("音源暂不可用，请切换频道或重试");break;}continue;}
     memcpy(input+input_size,data,size);input_size+=size;vRingbufferReturnItem(net_,data);
     esp_audio_simple_dec_raw_t raw{};raw.buffer=input;raw.len=input_size;
-    while(raw.len&&!abort()){
+    while(raw.len&&!reset_stream_&&!abort()){
      // minimp3's push API treats an incomplete tail as unsynchronised data.
      // Keep enough look-ahead across network blocks, just as dr_mp3's file
      // reader does; never discard a partial MP3 frame at each HTTP boundary.
@@ -295,7 +365,7 @@ private:
   heap_caps_free(pcm);heap_caps_free(stereo);heap_caps_free(input);if(net_){vRingbufferDeleteWithCaps(net_);net_=nullptr;}
   if(restore_ps){esp_wifi_set_ps(previous_ps);wifi_ps_=int(previous_ps);}
   {std::lock_guard lock(mutex_);if(state_!="Error"&&state_!="TimerEnded")state_="Idle";}
-  deadline_=0;local_audio::release(local_audio::Radio);live_=false;
+  network_pending_=false;deadline_=0;local_audio::release(local_audio::Radio);live_=false;
  }
 };
 }

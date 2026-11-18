@@ -162,5 +162,10 @@
   "packages/firmware/brookesia-0.8.3-s3.72-app-only.zip": "4fa5f46d193c34b1751a68265c9dee7e8fdab6fe5ad035d1946ee32bdcdc73e0",
   "packages/firmware/brookesia-0.8.3-s3.73-app-only.zip": "cc694bef8ddf2f5998df1c60eec1701eea34e3c0f82247bc5cf7f46049bd804f",
   "packages/apps/local.radio.debug.0.1.4.bpk": "78ab92a5a9ec2e5e9e19d6cd1ddfbf78278dd97434a1f508d175057223d4d52d",
-  "packages/apps/local.childmode.debug.0.1.6.bpk": "38c811b78ac966584c1dd74664e7d4838c48273cb2c91a9c73ef994cf2f4387f"
+  "packages/apps/local.childmode.debug.0.1.6.bpk": "38c811b78ac966584c1dd74664e7d4838c48273cb2c91a9c73ef994cf2f4387f",
+  "packages/apps/local.radio.debug.0.1.5.bpk": "58ee63eaa1133ec5d6c2569630d5bf5145985f60811e9e717c0bad56920f05dd",
+  "packages/apps/local.weather.debug.0.2.11.bpk": "ba89b430b26c9b6f20c6260795385ff7e384c16d9b051d79fc481da341b86de0",
+  "packages/apps/local.codex.quota.debug.0.2.6.bpk": "94359596031a4853ad4620d506018d53ae45b9e864605e5badf7ca61a6c64308",
+  "packages/apps/local.voiceassistant.debug.0.2.4.bpk": "3ae8bfd4004692076a373e570729ff48d4b9a079784464a7cd3fb5171d13f64d",
+  "packages/firmware/brookesia-0.8.3-s3.74-app-only.zip": "7cf3d9d406a1629566552430965ce2459dd2c0ad548747ccd3718d9a8f6d2a18"
 }

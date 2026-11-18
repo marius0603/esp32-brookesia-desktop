@@ -48,13 +48,14 @@ python brookesia-apps/radio/tools/build_layout.py
 python codex-quota-monitor/tools/package_radio.py
 ```
 
-`SHARP_MODULE`可指向本机sharp模块。`stations.json`生成固件白名单和设备精简目录；更换URL须重新编译固件，修改显示交互可只更新BPK。发布包：[电台 0.1.4](../../packages/apps/local.radio.debug.0.1.4.bpk)、[s3.73 应用分区](../../packages/firmware/brookesia-0.8.3-s3.73-app-only.zip)。
+`SHARP_MODULE`可指向本机sharp模块。`stations.json`生成固件白名单和设备精简目录；更换URL须重新编译固件，修改显示交互可只更新BPK。发布包：[电台 0.1.5](../../packages/apps/local.radio.debug.0.1.5.bpk)、[s3.74 应用分区](../../packages/firmware/brookesia-0.8.3-s3.74-app-only.zip)。
 
 已有s3.41设备须先做本地完整备份，再用主仓库更新器只写s3.42应用分区，保留分区表、NVS、LittleFS和SD。随后运行：
 
 ```powershell
 python codex-quota-monitor/tools/deploy_radio.py --port COM5
 python codex-quota-monitor/tools/verify_radio.py --port COM5
+python codex-quota-monitor/tools/verify_radio_recovery.py --port COM5
 # 单台延长抽样（仍检查暂停、定时、断网及互斥）
 python codex-quota-monitor/tools/verify_radio.py --port COM5 --station suzhou-qtfm --sample-seconds 120
 ```

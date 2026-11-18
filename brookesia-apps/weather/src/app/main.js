@@ -4,6 +4,7 @@
 const SHANGHAI = {city:'上海', latitude:31.2304, longitude:121.4737, origin:'默认城市'};
 const CACHE = '/littlefs/weather-cache.json', SETTINGS = '/littlefs/weather-settings.json';
 const STATE = '/littlefs/weather-state.json', REFRESH_MS = 10*60*1000, STALE_MS = 30*60*1000;
+const RETRY_DELAYS = [10000,30000];
 // Asset generator reads this JSON-compatible object to render matching RGB565 tiles.
 const SKY_PALETTES = {
   "idle":["#081421","#142b43"], "clear_day":["#70b8ec","#d1ebfa"], "clear_night":["#080e24","#122b43"],
@@ -17,7 +18,7 @@ let gui, storage, http, wifi, timer, modes;
 let screenAsleep=false, fxProbe=null;
 let mode = 'shanghai', location = SHANGHAI, data = null, receivedAt = 0;
 let connected = false, paused = false, pending = null, nextFetch = 0, failures = 0;
-let lastRequest = 0, error = '', status = '等待联网', rendered = {};
+let lastRequest = 0, error = '', status = '未联网', rendered = {};
 let fxDay=1, fxSky=null;
 let fxScene='', fxTimer=0, tickTimer=0, fxLastTick=0, fxElapsed=0, fxInterval=250, fxFrames=0, fxError='', fxValues={};
 
@@ -228,8 +229,11 @@ function syncHourlyThemes(hours) {
 }
 function render() {
   applyScene();
+  const stale=!!data && (Date.now()-receivedAt>=STALE_MS || Date.now()<receivedAt);
+  const networkLabel=status==='已更新'?(stale?'数据过期':'Open-Meteo'):status+(stale?' · 数据过期':'');
+  text('source',networkLabel+' · 刷新');
   if (!data) { text('condition',status); return; }
-  const c=data.current, stale=Date.now()-receivedAt>STALE_MS;
+  const c=data.current;
   text('temperature',num(c.temperature_2m,1)+'°C');
   text('humidity','湿度 '+num(c.relative_humidity_2m)+'%');
   text('condition',(!connected || error || stale?'缓存 · ':'')+condition(c.weather_code,daylightNow().day));
@@ -256,12 +260,11 @@ function request(kind, url) {
     max_response_size:8192,retry_count:0,tls_verify:'Verify',use_crt_bundle:true,
     headers:{Accept:'application/json','User-Agent':'BrookesiaWeather/0.2'}}});
   pending={id:id,kind:kind,started:Date.now()};
-  setStatus(kind==='location'?'正在定位（网络出口）':data?'正在更新天气':'正在获取天气');
+  setStatus('连接中');
 }
 function requestWeather() { request('weather',forecastUrl(location)); }
 function beginFetch() {
-  if (pending || !connected) return;
-  error='';
+  if (pending || !connected || failures>RETRY_DELAYS.length) return;
   try {
     if (mode==='auto') request('location','https://ipwho.is/?fields=success,message,city,latitude,longitude');
     else { location=SHANGHAI; requestWeather(); }
@@ -269,8 +272,8 @@ function beginFetch() {
 }
 function failed(message) {
   pending=null; error=String(message).slice(0,160); failures++;
-  nextFetch=Date.now()+Math.min(15*60*1000,60000*Math.pow(2,Math.min(failures-1,4)));
-  setStatus(data?'更新失败，显示缓存':'获取失败，稍后重试');
+  nextFetch=failures<=RETRY_DELAYS.length?Date.now()+RETRY_DELAYS[failures-1]:Infinity;
+  setStatus('服务不可用');
 }
 function handleResponse(items) {
   if (!pending || items.RequestId !== pending.id) return;
@@ -293,20 +296,21 @@ function handleResponse(items) {
     const value=validateWeather(JSON.parse(response.body));
     data=value; receivedAt=Date.now(); lastRequest=id; failures=0; error=''; nextFetch=receivedAt+REFRESH_MS;
     write(CACHE,{version:2,mode:mode,location:location,received_at:receivedAt,data:data});
-    setStatus('已更新 · 每 10 分钟刷新');
+    setStatus('已更新');
   } catch(e) { failed(String(e)); }
 }
 function tick() {
   try {
     if(modes){try{const state=call(modes,'GetState'),asleep=!!(state && state.screen_asleep);if(asleep!==screenAsleep){screenAsleep=asleep;applyScene();persistState();}}catch(_){}}
     if(screenAsleep)stopFx();
-    const online=call(wifi,'GetGeneralState',{})==='Connected';
-    if (!online) {
-      const offlineStatus=data?'网络断开，显示缓存':'等待 Wi-Fi 连接';
+    let link;
+    try {link=call(wifi,'GetGeneralState',{});} catch (_) {link=null;}
+    if (link!=='Connected') {
+      const offlineStatus=link===null?'服务不可用':link==='Connecting'?'连接中':'未联网';
       if (connected || status!==offlineStatus) { connected=false; cancelPending(); setStatus(offlineStatus); }
       render();return;
     }
-    if (!connected) { connected=true; nextFetch=0; }
+    if (!connected) { connected=true; nextFetch=0; failures=0; }
     if (pending && Date.now()-pending.started>25000) { cancelPending(); failed('请求超时'); }
     if (!pending && Date.now()>=nextFetch) beginFetch();
     render();
@@ -319,12 +323,17 @@ globalThis.brookesia_app = {
     wifi=brookesia.start_service('Wifi'); http=brookesia.start_service('Http'); timer=brookesia.start_service('SystemTimer');
     for (const event of ['RequestCompleted','RequestFailed','RequestCanceled']) brookesia.subscribe_event(http,event);
     brookesia.subscribe_event(wifi,'GeneralEventHappened');
+    call(gui,'SubscribeAction',{Action:'refresh'});
     const settings=read(SETTINGS); if (settings && settings.mode==='auto') mode='auto';
     const cache=read(CACHE);
     if (cache && cache.version===2 && cache.mode===mode) {
-      try { data=validateWeather(cache.data); location=cache.location || SHANGHAI; receivedAt=cache.received_at || 0; status='显示上次天气'; } catch (_) {}
+      try { data=validateWeather(cache.data); location=cache.location || SHANGHAI; receivedAt=cache.received_at || 0; status='未联网'; } catch (_) {}
     }
     stopFx();stopTick();fxScene='';paused=false;rendered={};render();startTick();tick();return true;
+  },
+  on_action(name) {
+    if(name==='refresh'&&!paused&&!pending){failures=0;nextFetch=0;tick();}
+    return true;
   },
   on_timer(id,name) { if(paused)return true;if (name==='weather_fx') animateFx(); else tick(); return true; },
   on_event(service,event,json) {
@@ -336,7 +345,7 @@ globalThis.brookesia_app = {
     return true;
   },
   on_pause() { paused=true;stopFx();stopTick();cancelPending();persistState();return true; },
-  on_resume() { paused=false;rendered={};fxScene='';render();startTick();tick();persistState();return true; },
+  on_resume() { paused=false;failures=0;nextFetch=0;rendered={};fxScene='';render();startTick();tick();persistState();return true; },
   on_stop() { paused=true;stopFx();stopTick();cancelPending();persistState();return true; }
 };
 

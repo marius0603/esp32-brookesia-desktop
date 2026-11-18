@@ -46,6 +46,7 @@ private:
     bool local_test_=false;
     std::atomic<bool> live_{false},cancel_{false},fatal_{false},connected_{false},channel_{false},done_{false};
     std::atomic<bool> connection_lost_{false};
+    std::atomic<unsigned> transport_failures_{0};
     std::atomic<bool> ack_live_{false},ack_stop_{false};
     std::atomic<int> command_{0};
     std::atomic<uint32_t> turn_{0},captured_{0},sent_{0},received_{0},played_{0},level_{0},peak_{0},minimum_stack_{STACK};
@@ -152,7 +153,7 @@ private:
         if(auto *id=j.if_contains("turn");id && id->is_int64() && uint32_t(id->as_int64())!=turn_)return;
         if(type=="ready"){
             if(value(j,"encoding")!="ima_adpcm"){fail("请更新电脑语音服务后重新连接");return;}
-            channel_=true;state("Ready","点击说话，再次点击发送");
+            transport_failures_=0;channel_=true;state("Ready","点击说话，再次点击发送");
         }
         else if(type=="status")state(value(j,"state").c_str(),value(j,"message"));
         else if(type=="user_text"){std::lock_guard<std::mutex> lock(mutex_);user_=clipped(value(j,"text"),600);}
@@ -166,7 +167,8 @@ private:
         auto &self=*static_cast<LocalVoice *>(context);
         if(id==WEBSOCKET_EVENT_CONNECTED)self.connected_=true;
         else if(id==WEBSOCKET_EVENT_DATA&&data)self.receive(*static_cast<esp_websocket_event_data_t *>(data));
-        else if((id==WEBSOCKET_EVENT_DISCONNECTED||id==WEBSOCKET_EVENT_ERROR)&&!self.cancel_&&!self.fatal_){self.connected_=false;self.channel_=false;self.connection_lost_=true;}
+        else if((id==WEBSOCKET_EVENT_DISCONNECTED||id==WEBSOCKET_EVENT_ERROR)&&!self.cancel_&&!self.fatal_){if(id==WEBSOCKET_EVENT_DISCONNECTED)++self.transport_failures_;
+            self.connected_=false;self.channel_=false;self.connection_lost_=true;}
     }
     void close_recorder(){if(recording_){recorder_->close();recording_=false;}level_=0;}
     void close_player(){if(playing_){if(player_->is_pa_on_off_supported())player_->set_pa_on_off(false);player_->close();playing_=false;}}
@@ -244,6 +246,7 @@ private:
         while(!cancel_&&!fatal_){
             minimum_stack_=std::min(minimum_stack_.load(),uint32_t(uxTaskGetStackHighWaterMark(nullptr)));
             if(!child_mode_voice_allowed()){fail("语音助手已被家长限制");break;}
+            if(transport_failures_>=3){fail("已用完电脑连接重试次数，请重试");break;}
             if(connection_lost_.exchange(false)){
                 close_recorder();close_player();
                 {std::lock_guard<std::mutex> lock(queue_mutex_);++turn_;head_=count_=0;output_sequence_=0;done_=false;ack_pending_=false;segment_end_=false;}
@@ -346,7 +349,7 @@ private:
         bool expected=false;if(!live_.compare_exchange_strong(expected,true))return std::unexpected("助手正在运行或关闭中");
         if(!offline_voice_prepare_online()){live_=false;return std::unexpected("麦克风正在释放，请稍后重试");}
         if(!local_audio::claim(local_audio::Assistant)){live_=false;return std::unexpected("请先停止听书或其他助手");}
-        cancel_=fatal_=connected_=channel_=done_=connection_lost_=false;command_=0;turn_=0;captured_=sent_=received_=played_=level_=peak_=0;minimum_stack_=STACK;
+        cancel_=fatal_=connected_=channel_=done_=connection_lost_=false;transport_failures_=0;command_=0;turn_=0;captured_=sent_=received_=played_=level_=peak_=0;minimum_stack_=STACK;
         uploaded_wire_bytes_=received_wire_bytes_=0;
         local_test_=local_test;
         ack_pending_=false;segment_end_=false;buffering_=true;last_write_=0;segment_=completed_segment_=playing_segment_=0;maximum_gap_ms_=0;ack_stack_min_=ACK_STACK;internal_min_=UINT32_MAX;

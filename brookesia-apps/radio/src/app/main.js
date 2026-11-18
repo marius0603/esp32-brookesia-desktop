@@ -26,8 +26,9 @@ function text(path,value){value=String(value);if(hidden||cache[path]===value)ret
 function bind(path,key,value){if(key==='bg')value=audioThemeColor(value);value=String(value);const k=path+':'+key;if(hidden||cache[k]===value)return;call(gui,'SetBinding',{Path:'/main/'+path,Key:key,Value:value});cache[k]=value;}
 function save(){try{call(storage,'FSWriteText',{Path:'/littlefs/radio-settings.json',Data:JSON.stringify({station:stations[current].id,favorites:favorites})});}catch(_){text('player/status','设置保存失败');}}
 function show(next){screen=next;for(const p of ['player','stations','timer'])bind(p,'hidden',p!==next);if(next==='stations')renderList();if(next==='timer'){draft=minutes;renderTimer();}}
+function connecting(){return state.active&&!state.paused&&(state.network_pending||['Offline','Connecting','Buffering','Reconnecting'].includes(state.state));}
 function renderPlayer(){const s=available.includes(current)?stations[current]:null;
- text('player/title',s?(s.display_name||s.name):'暂无可播放频道');text('player/meta',s?s.sub:'请家长检查电台和频道白名单');text('player/toggle/label',state.active&&!state.paused?'暂停':'播放');text('player/timer/label',state.sleep_active?Math.ceil(state.sleep_remaining_seconds/60)+'分钟':'定时');}
+ text('player/title',s?(s.display_name||s.name):'暂无可播放频道');text('player/meta',s?s.sub:'请家长检查电台和频道白名单');text('player/toggle/label',connecting()?'停止':state.active&&!state.paused?'暂停':state.state==='Error'?'重试':'播放');text('player/timer/label',state.sleep_active?Math.ceil(state.sleep_remaining_seconds/60)+'分钟':'定时');}
 function filteredStations(){
  return available.map(i=>({s:stations[i],i:i})).filter(r=>category==='收藏'?favorites.includes(r.s.id):r.s.group===category);
 }
@@ -53,10 +54,16 @@ function poll(){
  if(available.includes(at)&&state.active)current=at;
  if(!available.includes(current))current=available.length?available[0]:-1;
  if(changed&&screen==='stations')renderList();
- const labels={Idle:'准备播放',Connecting:'连接电台…',Buffering:'缓冲中…',Playing:'正在播放',Paused:'已暂停',Reconnecting:'连接中断，正在重连…',TimerEnded:'定时结束，已停止',Error:'播放失败'};
- text('player/status',!available.length?'请家长检查电台授权':state.error?'播放失败，请切换频道或重试':(labels[state.state]||state.state));
+ const labels={Idle:'准备播放',Offline:'未联网',Connecting:'连接中',Buffering:'连接中',Playing:'正在播放',Paused:'已暂停',Reconnecting:'连接中',TimerEnded:'定时结束，已停止',Error:'服务不可用'};
+ let netStatus;
+ try {
+  const link=call(wifi,'GetGeneralState');
+  netStatus=link==='Connected'?'':link==='Connecting'?'连接中':'未联网';
+ } catch (_) {netStatus='服务不可用';}
+ text('player/connection',netStatus||'Wi-Fi 已连接');
+ text('player/status',!available.length?'请家长检查电台授权':netStatus?'':
+   state.error?'服务不可用':connecting()?'连接中':labels[state.state]||'');
  const mode=call(modes,'GetState');applyAudioTheme(mode);text('player/volume','音量 '+mode.resume_volume+'%'+(mode.do_not_disturb?' · 静音':''));
- try{const net=call(wifi,'GetGeneralState');text('player/connection',net==='Connected'?'Wi-Fi 已连接':'等待 Wi-Fi');}catch(_){}
  if(!state.sleep_active&&(state.state==='TimerEnded'||state.state==='Idle'))minutes=0;
  renderPlayer();
 }
@@ -69,7 +76,7 @@ function action(name){
  if(name==='listNext'){page++;const n=filteredStations().length;if(page*3>=n)page=0;renderList();return;}
  if(name==='lockScreen'){call(modes,'LockScreen');return;}
  if(name==='previous'){move(-1);return;}if(name==='next'){move(1);return;}
- if(name==='toggle'){state=call(audio,'GetState');if(state.active){call(audio,state.paused?'Resume':'Pause');poll();}else play(current);}
+ if(name==='toggle'){state=call(audio,'GetState');if(state.active){call(audio,connecting()?'Stop':state.paused?'Resume':'Pause');poll();}else play(current);}
 }
 globalThis.brookesia_app={
  on_start(){gui=brookesia.start_service('SystemGui');storage=brookesia.start_service('Storage');audio=brookesia.start_service('Radio');volume=brookesia.start_service('AudioPlayback');modes=brookesia.start_service('DeviceModes');wifi=brookesia.start_service('Wifi');timer=brookesia.start_service('SystemTimer');
@@ -79,7 +86,7 @@ globalThis.brookesia_app={
   const actions=['stations','back','timerBack','timer','timerConfirm','listNext','lockScreen','previous','next','toggle','cat0','cat1','cat2','cat3','row0','row1','row2','choice0','choice1','choice2','choice3'];
   for(const n of actions)call(gui,'SubscribeAction',{Action:n});hidden=false;cache={};show('player');poll();call(timer,'StartPeriodic',{Name:'radio',IntervalMs:1000});return true;},
  on_action(name){try{action(name);}catch(e){if(screen==='stations')show('player');text('player/status',String(e));if(screen==='timer')text('timer/note',String(e));}return true;},
- on_timer(){if(!hidden)try{poll();}catch(e){text('player/status',String(e));}return true;},
+ on_timer(){if(!hidden)try{poll();}catch(_){text('player/status','服务不可用');}return true;},
  on_pause(){hidden=true;return true;},
  on_resume(){hidden=false;cache={};show(screen);poll();return true;},
  on_stop(){try{call(audio,'Stop');}catch(_){}return true;}

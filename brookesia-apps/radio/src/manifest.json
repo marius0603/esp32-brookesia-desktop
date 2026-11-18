@@ -5,7 +5,7 @@
       "en": "Radio",
       "zh_CN": "电台"
     },
-    "version": "0.1.4",
+    "version": "0.1.5",
     "visible": true,
     "systems": [
       "super"

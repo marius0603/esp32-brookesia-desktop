@@ -365,6 +365,7 @@ private:
         if(!cancel_)state("Tested","本地编解码自检通过");
     }
     bool activate(bool &mqtt, bool &websocket) {
+        unsigned failures=0;
         for(int n=0;!cancel_ && n<60;++n){
             if(!wifi_ready()){fail("Wi-Fi 未连接，请先在设置中联网");return false;}
             state("Connecting","正在检查小智激活状态");
@@ -374,7 +375,12 @@ private:
             {std::lock_guard<std::mutex> lock(mutex_);code_=short_text(info.activation_code,32);}
             esp_xiaozhi_chat_free_info(&info);
             if(cancel_)return false;
-            if(result!=ESP_OK){fail("无法连接小智平台，请检查网络后重试");return false;}
+            if(result!=ESP_OK){
+                if(++failures>=3){fail("无法连接小智平台，请检查网络后重试");return false;}
+                for(unsigned t=0;t<10*failures&&!cancel_;++t)vTaskDelay(pdMS_TO_TICKS(100));
+                continue;
+            }
+            failures=0;
             if(!pending&&(mqtt||websocket))return true;
             state("Activation","请在 xiaozhi.me 添加设备并输入激活码");
             for(int t=0;t<50&&!cancel_;++t)vTaskDelay(pdMS_TO_TICKS(100));

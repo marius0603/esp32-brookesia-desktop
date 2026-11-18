@@ -4794,20 +4794,21 @@
           "type": "label",
           "id": "source",
           "commonProps": {
-            "clickable": false
+            "clickable": true
           },
           "placement": {
-            "width": 220,
-            "height": "wrap"
+            "width": 350,
+            "height": 26
           },
           "style": {
             "textColor": "#8ca7bb",
             "font": "${font.zh_CN}",
-            "fontSize": 12,
+            "fontSize": 15,
             "textAlign": "center"
           },
-          "labelProps": {
-            "text": "Open-Meteo"
+          "events": [{"type":"clicked","action":"refresh"}],
+            "labelProps": {
+            "text": "未联网 · 刷新"
           }
         }
       ]

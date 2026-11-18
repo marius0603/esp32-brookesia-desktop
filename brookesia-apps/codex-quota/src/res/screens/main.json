@@ -15,13 +15,13 @@
       "id": "sync",
       "commonProps": {
         "scrollable": false,
-        "clickable": false
+        "clickable": true
       },
       "placement": {
         "mode": "absolute",
-        "x": 170,
+        "x": 139,
         "y": 25,
-        "width": 140,
+        "width": 202,
         "height": 30
       },
       "style": {
@@ -38,6 +38,7 @@
         "crossAlign": "center",
         "gap": 8
       },
+      "events": [{"type":"clicked","action":"refresh"}],
       "children": [
         {
           "type": "container",
@@ -79,6 +80,14 @@
           "bindings": {
             "style.textColor": "themetextColor"
           }
+        },
+        {
+          "type": "label",
+          "id": "refresh",
+          "placement": {"width":"wrap","height":"wrap"},
+          "style": {"font":"${font.zh_CN}","fontSize":14,"textColor":"#91dfbb"},
+          "bindings": {"style.textColor":"themetextColor"},
+          "labelProps": {"text":"刷新"}
         }
       ],
       "bindings": {
