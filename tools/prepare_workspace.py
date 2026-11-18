@@ -33,7 +33,7 @@ if fresh:
     for relative in paths:
         file=REPO/relative
         if file.is_file():file.write_bytes(file.read_bytes().replace(b'\r\n',b'\n'))
-for name in ('brookesia-s3.patch','phone-launcher.patch','desktop-themes.patch','phone-provisioning.patch','phone-remote.patch','bluetooth-settings.patch','remote-navigation.patch','single-foreground.patch','transparent-launcher.patch','sd-app-storage.patch','nine-grid-launcher.patch','bounded-display-dma.patch','persistent-display-dma.patch','aligned-display-strips.patch','cached-canvas-rect.patch','qspi-display-80mhz.patch','canvas-memory-pressure.patch'):
+for name in ('brookesia-s3.patch','phone-launcher.patch','desktop-themes.patch','phone-provisioning.patch','phone-remote.patch','bluetooth-settings.patch','remote-navigation.patch','single-foreground.patch','transparent-launcher.patch','sd-app-storage.patch','nine-grid-launcher.patch','bounded-display-dma.patch','persistent-display-dma.patch','aligned-display-strips.patch','cached-canvas-rect.patch','qspi-display-80mhz.patch','canvas-memory-pressure.patch','launcher-settled-refresh.patch','launcher-full-row-dma.patch'):
     patch=ROOT/'patches'/name
     if git('apply','--check',str(patch),check=False).returncode==0:
         git('apply',str(patch))

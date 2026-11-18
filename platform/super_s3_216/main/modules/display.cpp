@@ -31,6 +31,7 @@ extern "C" int brookesia_board_user_volume();
 extern "C" bool brookesia_board_volume_muted();
 extern "C" int brookesia_board_battery_status();
 extern "C" bool brookesia_board_desktop_visible();
+extern "C" unsigned brookesia_panel_wide_desktop_draws();
 extern "C" bool brookesia_board_screen_asleep();
 extern "C" int brookesia_board_desktop_theme();
 
@@ -129,6 +130,34 @@ struct RefreshStats {
     uint32_t count = 0, strips = 0, last_strips = 0;
 } refresh_stats;
 
+uint32_t launcher_settled_refreshes = 0;
+
+void refresh_settled_launcher(lv_event_t *event)
+{
+    auto *pager = static_cast<lv_obj_t *>(lv_event_get_current_target(event));
+    if (lv_event_get_target(event) != pager || !brookesia_board_desktop_visible() ||
+            brookesia_board_screen_asleep()) {
+        return;
+    }
+
+    auto *screen = lv_obj_get_screen(pager);
+    auto *display = lv_obj_get_display(pager);
+    if (screen != lv_display_get_screen_active(display)) {
+        return;
+    }
+
+    // Partial transfers at the viewport edge can leave a column of pixels on
+    // this panel. Repaint complete rows once per scroll end, allowing the
+    // ordinary partial redraws to keep the viewport responsive during a drag.
+    lv_area_t area;
+    lv_obj_get_coords(pager, &area);
+    area.x1 = 0;
+    area.x2 = lv_display_get_horizontal_resolution(display) - 1;
+    if (lv_obj_invalidate_area(screen, &area) == LV_RESULT_OK) {
+        ++launcher_settled_refreshes;
+    }
+}
+
 void render_event(lv_event_t *event)
 {
     const auto code = lv_event_get_code(event);
@@ -177,6 +206,11 @@ void log_render_stats(lv_timer_t *)
 
 } // namespace
 
+extern "C" void brookesia_board_attach_launcher_pager(lv_obj_t *pager)
+{
+    lv_obj_add_event_cb(pager, refresh_settled_launcher, LV_EVENT_SCROLL_END, nullptr);
+}
+
 boost::json::object board_display_profile(bool force_refresh)
 {
     auto *display = LvglDisplaySource::get_instance().display();
@@ -210,7 +244,8 @@ boost::json::object board_display_profile(bool force_refresh)
         inspect(inspect,lv_display_get_layer_top(display));
         inspect(inspect,lv_display_get_layer_sys(display));
     }
-    return {{"refresh_count",refresh_stats.count},{"last_refresh_us",refresh_stats.last_us},
+    return {{"launcher_settled_refreshes",launcher_settled_refreshes},
+            {"launcher_wide_dma_transfers",brookesia_panel_wide_desktop_draws()},{"refresh_count",refresh_stats.count},{"last_refresh_us",refresh_stats.last_us},
             {"max_refresh_us",refresh_stats.max_us},{"last_strips",refresh_stats.last_strips},
             {"flush_wait_us",refresh_stats.wait_us},{"forced_refresh_us",forced_us},{"canvases",std::move(canvases)}};
 }

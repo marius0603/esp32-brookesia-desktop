@@ -1,0 +1,220 @@
+diff --git a/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.hpp b/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.hpp
+--- a/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.hpp
++++ b/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.hpp
+@@ -6,6 +6,7 @@
+ #pragma once
+ 
+ #include <array>
++#include <bitset>
+ #include <cstddef>
+ #include <cstdint>
+ #include "boost/thread/lock_guard.hpp"
+@@ -42,6 +43,12 @@
+     }
+ 
+ private:
++    static constexpr uint32_t DESKTOP_PANEL_SIZE = 480;
++    static constexpr uint32_t DESKTOP_MARGIN_WIDTH = 64;
++    static constexpr uint32_t DESKTOP_RIGHT_EDGE = DESKTOP_PANEL_SIZE - DESKTOP_MARGIN_WIDTH;
++    static constexpr size_t DESKTOP_MARGIN_ROW_BYTES = DESKTOP_MARGIN_WIDTH * 2;
++    static constexpr size_t DESKTOP_MARGIN_BYTES = DESKTOP_MARGIN_ROW_BYTES * DESKTOP_PANEL_SIZE;
++
+     struct EventListener {
+         bool is_used = false;
+         uint32_t id = 0;
+@@ -61,6 +68,10 @@
+     bool has_event_listener_locked() const;
+     bool submit_draw_bitmap_locked(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const uint8_t *data);
+     void drain_spi_transfers_locked();
++    void cache_desktop_margins(
++        uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const uint8_t *data
++    );
++    bool can_widen_desktop_draw(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2) const;
+     bool draw_staged_locked(uint32_t x1,uint32_t y1,uint32_t x2,uint32_t y2,const uint8_t *data,uint32_t timeout_ms);
+ 
+     static bool add_event_listener_trampoline(
+@@ -73,6 +84,9 @@
+     bool device_initialized_ = false;
+     display::PanelIface::BusType bus_type_ = display::PanelIface::BusType::Max;
+     uint8_t *dma_stage_ = nullptr;
++    uint8_t *desktop_margins_ = nullptr;
++    std::bitset<DESKTOP_PANEL_SIZE> desktop_left_valid_;
++    std::bitset<DESKTOP_PANEL_SIZE> desktop_right_valid_;
+     bool staging_required_ = false;
+     bool suppress_strip_events_ = false;
+     SemaphoreHandle_t sync_done_ = nullptr;
+diff --git a/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.cpp b/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.cpp
+--- a/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.cpp
++++ b/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.cpp
+@@ -14,6 +14,7 @@
+ 
+ #if BROOKESIA_HAL_ADAPTOR_DISPLAY_ENABLE_LCD_PANEL_IMPL
+ #include <algorithm>
++#include <atomic>
+ #include "esp_heap_caps.h"
+ #include <condition_variable>
+ #include <cstring>
+@@ -39,11 +40,14 @@
+ #include "esp_lcd_mipi_dsi.h"
+ #endif
+ 
++extern "C" bool brookesia_board_desktop_visible() __attribute__((weak));
++
+ namespace esp_brookesia::hal {
+ 
+ namespace {
+ constexpr const char *LCD_PANEL_INIT_THREAD_NAME = "HalLcdInit";
+ constexpr size_t LCD_PANEL_INIT_THREAD_STACK_SIZE = 8192;
++std::atomic_uint wide_desktop_draws{0};
+ 
+ esp_lcd_panel_handle_t get_panel_handle(void *handles)
+ {
+@@ -233,6 +237,11 @@
+ }
+ #endif
+ } // namespace
++
++extern "C" unsigned brookesia_panel_wide_desktop_draws()
++{
++    return wide_desktop_draws.load(std::memory_order_relaxed);
++}
+ 
+ LcdDisplayPanelImpl::LcdDisplayPanelImpl()
+     : display::PanelIface(generate_info())
+@@ -292,6 +301,14 @@
+     if (staging_required_) {
+         dma_stage_ = static_cast<uint8_t *>(heap_caps_aligned_alloc(64,4096,MALLOC_CAP_INTERNAL|MALLOC_CAP_DMA));
+         BROOKESIA_CHECK_NULL_EXIT(dma_stage_, "Cannot reserve fixed LCD DMA staging buffer");
++        if (brookesia_board_desktop_visible) {
++            desktop_margins_ = static_cast<uint8_t *>(
++                heap_caps_malloc(2 * DESKTOP_MARGIN_BYTES, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT)
++            );
++            if (!desktop_margins_) {
++                BROOKESIA_LOGW("Cannot reserve desktop margin cache; retaining partial DMA draws");
++            }
++        }
+     }
+ }
+ 
+@@ -305,6 +322,7 @@
+         disable_event_dispatcher_locked();
+     }
+ 
++    heap_caps_free(desktop_margins_);
+     heap_caps_free(dma_stage_);
+     dma_stage_ = nullptr;
+     if (sync_done_ != nullptr) {
+@@ -413,11 +431,63 @@
+     return success;
+ }
+ 
++bool LcdDisplayPanelImpl::can_widen_desktop_draw(
++    uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2
++) const
++{
++    if (!desktop_margins_ || !brookesia_board_desktop_visible() ||
++            x1 > DESKTOP_MARGIN_WIDTH || x2 < DESKTOP_RIGHT_EDGE || (x1 == 0 && x2 == DESKTOP_PANEL_SIZE) ||
++            y2 - y1 < DESKTOP_PANEL_SIZE / 2) {
++        return false;
++    }
++
++    for (auto y = y1; y < y2; ++y) {
++        if ((x1 > 0 && !desktop_left_valid_.test(y)) ||
++                (x2 < DESKTOP_PANEL_SIZE && !desktop_right_valid_.test(y))) {
++            return false;
++        }
++    }
++    return true;
++}
++
++void LcdDisplayPanelImpl::cache_desktop_margins(
++    uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, const uint8_t *data
++)
++{
++    const auto left_end = std::min(x2, DESKTOP_MARGIN_WIDTH);
++    const auto right_start = std::max(x1, DESKTOP_RIGHT_EDGE);
++    const auto input_row_bytes = size_t(x2 - x1) * 2;
++
++    for (auto y = y1; y < y2; ++y) {
++        const auto *src = data + size_t(y - y1) * input_row_bytes;
++        const auto margin_offset = size_t(y) * DESKTOP_MARGIN_ROW_BYTES;
++        if (x1 < left_end) {
++            memcpy(desktop_margins_ + margin_offset + x1 * 2, src, (left_end - x1) * 2);
++            if (x1 == 0 && left_end == DESKTOP_MARGIN_WIDTH) desktop_left_valid_.set(y);
++        }
++        if (right_start < x2) {
++            memcpy(
++                desktop_margins_ + DESKTOP_MARGIN_BYTES + margin_offset + (right_start - DESKTOP_RIGHT_EDGE) * 2,
++                src + (right_start - x1) * 2, (x2 - right_start) * 2
++            );
++            if (right_start == DESKTOP_RIGHT_EDGE && x2 == DESKTOP_PANEL_SIZE) desktop_right_valid_.set(y);
++        }
++    }
++}
++
+ bool LcdDisplayPanelImpl::draw_staged_locked(uint32_t x1,uint32_t y1,uint32_t x2,uint32_t y2,const uint8_t *data,uint32_t timeout_ms)
+ {
+     if (!is_valid_internal() || !data || x2<=x1 || y2<=y1 || x2>get_info().h_res || y2>get_info().v_res) return false;
+     if (!event_dispatcher_enabled_ && !enable_event_dispatcher_locked()) return false;
+-    const size_t row_bytes=(x2-x1)*2;
++
++    // The CO5300 can leave a seam on partial-width writes during desktop
++    // scrolling. LVGL can still render only the dirty region: the two
++    // cached margins complete each panel row in the existing DMA buffer.
++    const bool widen = can_widen_desktop_draw(x1, y1, x2, y2);
++    const auto draw_x1 = widen ? 0 : x1;
++    const auto draw_x2 = widen ? DESKTOP_PANEL_SIZE : x2;
++    const size_t input_row_bytes = (x2 - x1) * 2;
++    const size_t row_bytes = (draw_x2 - draw_x1) * 2;
+     // LVGL rounds whole dirty areas to the panel's row alignment. Each
+     // staging subwindow must preserve that alignment as well (CO5300: 2 rows).
+     constexpr uint32_t row_alignment = 1U << (BROOKESIA_HAL_ADAPTOR_DISPLAY_LCD_PANEL_DRAW_Y_ALIGN_BYTES - 1);
+@@ -428,13 +498,27 @@
+     for (uint32_t y=y1;y<y2;) {
+         const auto count=std::min(rows,y2-y);
+         while(xSemaphoreTake(sync_done_,0)==pdTRUE) {}
+-        memcpy(dma_stage_,data+size_t(y-y1)*row_bytes,size_t(count)*row_bytes);
++        const auto *src = data + size_t(y - y1) * input_row_bytes;
++        if (!widen) {
++            memcpy(dma_stage_, src, size_t(count) * row_bytes);
++        } else {
++            for (uint32_t row = 0; row < count; ++row) {
++                auto *dst = dma_stage_ + row * row_bytes;
++                const auto *left = desktop_margins_ + size_t(y + row) * DESKTOP_MARGIN_ROW_BYTES;
++                const auto *right = left + DESKTOP_MARGIN_BYTES;
++                if (x1 > 0) memcpy(dst, left, x1 * 2);
++                memcpy(dst + x1 * 2, src + row * input_row_bytes, input_row_bytes);
++                if (x2 < DESKTOP_PANEL_SIZE) {
++                    memcpy(dst + x2 * 2, right + (x2 - DESKTOP_RIGHT_EDGE) * 2, (DESKTOP_PANEL_SIZE - x2) * 2);
++                }
++            }
++        }
+         portENTER_CRITICAL(&event_lock_);
+         suppress_strip_events_=y+count<y2;
+         sync_waiting_=true;sync_target_draw_seq_=submitted_draw_seq_+1;
+         portEXIT_CRITICAL(&event_lock_);
+         const auto elapsed=xTaskGetTickCount()-started;
+-        if (elapsed>=budget || !submit_draw_bitmap_locked(x1,y,x2,y+count,dma_stage_) ||
++        if (elapsed>=budget || !submit_draw_bitmap_locked(draw_x1,y,draw_x2,y+count,dma_stage_) ||
+             xSemaphoreTake(sync_done_,budget-elapsed)!=pdTRUE) {ok=false;break;}
+         y+=count;
+     }
+@@ -443,7 +527,18 @@
+     portENTER_CRITICAL(&event_lock_);
+     sync_waiting_=false;sync_target_draw_seq_=0;suppress_strip_events_=false;
+     portEXIT_CRITICAL(&event_lock_);
++    if (desktop_margins_) {
++        if (ok) {
++            if (x1 < DESKTOP_MARGIN_WIDTH || x2 > DESKTOP_RIGHT_EDGE) cache_desktop_margins(x1, y1, x2, y2, data);
++        } else {
++            for (auto y = y1; y < y2; ++y) {
++                desktop_left_valid_.reset(y);
++                desktop_right_valid_.reset(y);
++            }
++        }
++    }
++    if (ok && widen) wide_desktop_draws.fetch_add(1, std::memory_order_relaxed);
+     return ok;
+ }
+ 
+ void LcdDisplayPanelImpl::drain_spi_transfers_locked()
