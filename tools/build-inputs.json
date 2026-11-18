@@ -33,7 +33,7 @@
     "phone-remote/tools/downloads.json": "f4dca27ac3cb2d5b30d308eafae0ae106e9108809f3d0d0f595664f98f0e8e1d",
     "phone-remote/tools/requirements-signing.txt": "8b5c18678b29b5e8e0fb586a35ac1dce3ccd9da321e8f12ace0e118350b4e568",
     "platform/super_s3_216/sdkconfig.reproducible": "00cba8885f30a1618c335b79945006bff45c019a38f0d2327b9aeff7f81209a1",
-    "versions.json": "6f990682e3ee2eb30c14d6584f933f358df9a0334ae0c51cdec5db4072a236c2",
+    "versions.json": "f0ec81f22e90c79717bc7eafa81a95f2f0ac8b4dd97e0e7bbb7b31b9a3df3da5",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.c": "52a51002bd22aac5c2105187c27cd393a34f13143c8ae97b0964ad27dec1c1ea",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.h": "a2fc087b68c25141e2fb7ab56e71b111bee79cf311fcc850d492eb574c0eeffe",
     "patches/transparent-launcher.patch": "b9cbe446371691db2c9e4674b73293646b63ca003a24f59a5c0a2646ce871732",
@@ -47,7 +47,7 @@
     "patches/bounded-display-dma.patch": "b1e6eb13627718506036f14f94f0a9cb3bac0a893094068084707bb29152e290",
     "patches/persistent-display-dma.patch": "cc8c6cf3dbe36d4089abff0242a3f740cca31e111138ea88df3a341b09d8c264",
     "patches/aligned-display-strips.patch": "1629b23605921dd00fab60995969fd3ad5c5243cb540b9f20a64da4841d25dc2",
-    "platform/super_s3_216/CMakeLists.txt": "140352a22f48af9a616f347d6a0f9be0fe015c1991105ae981ef1cac53d3a179",
+    "platform/super_s3_216/CMakeLists.txt": "9c0dbfae53f4301027819985a037379b32569b39c080d41c7a0dbd31ac9ec541",
     "platform/super_s3_216/main/modules/display.cpp": "ffb5fa0f7f0a9c39b4c32023eac8d7c49fbdd85ee962b910fe22f0cf9b8ca855",
     "platform/super_s3_216/main/modules/device_modes/device_modes.cpp": "9bee11bb59d8f72915a7196d3579fa6cc99bdb2896bd19e44bb832697fa17217",
     "platform/super_s3_216/main/modules/device_modes/resource_monitor.cpp": "0f4d6b9c6fa5d4247a4e74e3335a0c82a46d8080ec6f2c191149df38c558a85f",
@@ -66,6 +66,7 @@
     "patches/qspi-display-80mhz.patch": "7af506c58f054cedd7fee83c6dc15e62c84b62c8269f506778ff940ae305a98c",
     "patches/canvas-memory-pressure.patch": "412aa21391f466e2203d2c1b6b7835264ea41f52cfe38fd3573098db01988bee",
     "patches/launcher-settled-refresh.patch": "af98782f43579d39f30f6ac5ccc44182a89004a352e7dc96df92445d58fa1147",
-    "patches/launcher-full-row-dma.patch": "651fab77c642883d746eb697f7031bfebcb3bbd4f369374c73d02448083ef9c8"
+    "patches/launcher-full-row-dma.patch": "651fab77c642883d746eb697f7031bfebcb3bbd4f369374c73d02448083ef9c8",
+    "platform/super_s3_216/main/modules/audiobook/dr_mp3.h": "a19e039736f400ff2b34e82792b4571896dbdc82c26353bb839bea13081a6347"
   }
 }

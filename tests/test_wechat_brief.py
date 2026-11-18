@@ -44,6 +44,19 @@ class WechatBriefTests(unittest.TestCase):
    with self.subTest(response=response),tempfile.TemporaryDirectory() as d:
     with patch.object(brief.subprocess,'run',side_effect=[self.healthy(),subprocess.CompletedProcess([],0,response,'')]):
      self.assertEqual(brief.send(self.config(d),'完成','id')['status'],'uncertain')
+ def test_wechat_prepare_rejection_is_distinct_and_never_resent(self):
+  with tempfile.TemporaryDirectory() as d:
+   p=self.config(d)
+   error='Gateway call failed: sendMessage ret=-2 errmsg=prepare failed recipient=private-recipient'
+   response=subprocess.CompletedProcess([],1,'',error)
+   with patch.object(brief.subprocess,'run',side_effect=[self.healthy(),response]) as run:
+    result=brief.send(p,'private-body','id')
+    self.assertEqual((result['status'],result['reason']),('rejected','wechat_prepare_rejected'))
+    self.assertEqual(brief.send(p,'private-body','id')['previous'],'rejected')
+    self.assertEqual(run.call_count,2)
+   audit=(p.parent/'brief-attempts.jsonl').read_text()
+   self.assertNotIn(error,audit)
+   self.assertNotIn('private-recipient',audit)
  def test_ack_before_process_timeout_is_preserved(self):
   def run(cmd,**kw):
    result=self.dispatch(cmd,**kw)

@@ -15,6 +15,12 @@ python tools/wechat_brief.py --body-file codex-quota-monitor/runtime/work-brief.
 
 当前工具通过常驻Gateway的`send` RPC发送：只有响应的`runId`与本次稳定请求标识一致、`channel`一致且存在`messageId`才确认成功，不能仅凭CLI退出码。当前安装版本的Gateway仅在通道发送成功后生成该回执。旧版`message send`路径使用的`payload.deliveryStatus=sent`不再作为新RPC的判据。相同工作ID不会自动重发；请求前先记录未确认状态，超时或进程中断时避免重复发送，应先现场检查微信再决定是否用新的ID重发。发送状态本地保存，不保存正文，不自动重试。
 
+### 2026-11-18 微信接口拒绝检测和实测恢复
+
+摇篮曲验收简报发送时本机 Gateway 健康检查通过。微信接口实际返回 `sendMessage ret=-2 errmsg=prepare failed`，旧脚本将它归为缺少回执。发送器现在将这条明确的拒绝记录为 `rejected / wechat_prepare_rejected`，日志只保存状态和耗时。相同工作 ID 保持防重复。
+
+用户在微信 ClawBot 发来一条新消息后，发送器发出的验证消息拿到了匹配回执。新的入站消息可恢复本次会话。该错误与上游报告的主动推送失效现象一致，接口会话有效期及无人发消息时的长期主动推送能力尚未确认。 [微信插件上游复现](https://github.com/Tencent/openclaw-weixin/issues/389)
+
 ### 2026-11-17：发送超时修复及自启动核对
 
 旧发送器每次启动独立`message send`，整个进程仅允许55秒；超时丢失阶段耗时和部分标准输出，留下一条uncertain。用户确认未收到。原始超时没有留下足够阶段证据，不能断言是CLI启动、网络或微信登录失效。后续日志存在独立的DNS/TCP长轮询错误，不把它们冒充本次发送失败的确定根因。

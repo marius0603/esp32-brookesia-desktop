@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import time
@@ -27,6 +28,13 @@ def find_response(raw, valid):
         if isinstance(value, dict) and valid(value):
             return value
     return None
+
+
+def wechat_prepare_rejected(raw):
+    return bool(re.search(
+        r"\bsendMessage\s+ret\s*=\s*-2\b[^\r\n]{0,120}\berrmsg\s*=\s*prepare failed\b",
+        raw or "", re.IGNORECASE,
+    ))
 
 
 def send(config_path, body, event_id, dry_run=False, timeout_seconds=180):
@@ -83,11 +91,16 @@ def send(config_path, body, event_id, dry_run=False, timeout_seconds=180):
     audit('send_started')
     send_started = time.monotonic()
     reason = None
+    rejected = False
     try:
         result = run(['gateway', 'call', 'send', '--params', json.dumps(params, ensure_ascii=False),
                       '--timeout', str(min(120000, (timeout_seconds - 10) * 1000)), '--json'], timeout_seconds)
         acknowledged = result.returncode == 0 and find_response(result.stdout, receipt)
-        reason = None if acknowledged else 'missing_gateway_delivery_receipt'
+        rejected = result.returncode != 0 and (
+            wechat_prepare_rejected(result.stderr) or wechat_prepare_rejected(result.stdout)
+        )
+        if not acknowledged:
+            reason = 'wechat_prepare_rejected' if rejected else 'missing_gateway_delivery_receipt'
     except subprocess.TimeoutExpired as error:
         # An acknowledgement already received remains proof even if CLI exit stalls.
         acknowledged = find_response(error.stdout, receipt)
@@ -95,7 +108,7 @@ def send(config_path, body, event_id, dry_run=False, timeout_seconds=180):
     except OSError:
         acknowledged = False
         reason = 'sender_process_error'
-    status = 'sent' if acknowledged else 'uncertain'
+    status = 'sent' if acknowledged else 'rejected' if rejected else 'uncertain'
     timings['send_seconds'] = round(time.monotonic() - send_started, 2)
     events[key] = status
     record.write_text(json.dumps(events, indent=2) + '\n', encoding='utf-8')

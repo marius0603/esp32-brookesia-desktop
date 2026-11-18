@@ -4267,8 +4267,16 @@ static drmp3_uint64 drmp3_read_pcm_frames_raw(drmp3* pMP3, drmp3_uint64 framesTo
 
         DRMP3_ASSERT(pMP3->pcmFramesRemainingInMP3Frame == 0);
 
-        /* At this point we have exhausted our in-memory buffer so we need to re-fill. */
-        if (drmp3_decode_next_frame(pMP3) == 0) {
+        /*
+        Brookesia: seek/read-and-discard can skip PCM synthesis for frames
+        far before the destination. The decoder still processes the MP3
+        frame and maintains its bit reservoir. Fully decode at least the
+        final eight frames (1152 samples per frame at most) to prime the
+        overlap and synthesis state before any samples are used.
+        */
+        if ((pBufferOut == NULL && framesToRead > 8 * 1152
+                ? drmp3_decode_next_frame_ex(pMP3, NULL, NULL, NULL)
+                : drmp3_decode_next_frame(pMP3)) == 0) {
             break;
         }
     }
@@ -4383,11 +4391,7 @@ static drmp3_bool32 drmp3_seek_forward_by_pcm_frames__brute_force(drmp3* pMP3, d
 {
     drmp3_uint64 framesRead;
 
-    /*
-    Just using a dumb read-and-discard for now. What would be nice is to parse only the header of the MP3 frame, and then skip over leading
-    frames without spending the time doing a full decode. I cannot see an easy way to do this in minimp3, however, so it may involve some
-    kind of manual processing.
-    */
+    /* Discard samples using the ordinary frame, delay and padding accounting. */
 #if defined(DR_MP3_FLOAT_OUTPUT)
     framesRead = drmp3_read_pcm_frames_f32(pMP3, frameOffset, NULL);
 #else
