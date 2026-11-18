@@ -13,7 +13,7 @@ const views=new Map(),actions=new Set();function index(n,p=''){const k=p+'/'+n.i
 for(const p of ['/main/player/stations','/main/player/timer']){const n=views.get(p);assert(n.placement.y+n.placement.height<=466,'Bottom controls exceed touch safe area');}
 let calls=[],texts={},bindings={},saved={'/littlefs/radio-settings.json':JSON.stringify({station:stations[0].id,favorites:[stations[2].id]})},volume=40,quiet=false;
 let state={station:'',active:false,paused:false,state:'Idle',sleep_active:false};
-let desktopTheme=0;
+let desktopTheme=0,allowedIds=stations.map(s=>s.id);
 const brookesia={start_service:n=>n,call_function(h,n,json){
  const a=JSON.parse(json);calls.push({h,n,a});let data=null;if(n==='GetEnvironment')data={theme_id:desktopTheme===1?'dark':'light'};
  if(h==='SystemGui'&&a.Path){assert(views.has(a.Path),'Unknown view '+a.Path);if(n==='SetBinding')assert(Object.values(views.get(a.Path).bindings||{}).includes(a.Key),'Unbound property '+a.Path+':'+a.Key);}
@@ -29,7 +29,7 @@ const brookesia={start_service:n=>n,call_function(h,n,json){
   if(n==='Stop')state={...state,active:false,state:'Idle',sleep_active:false};
   if(n==='SetSleepTimer')state={...state,sleep_active:a.Minutes>0,sleep_remaining_seconds:a.Minutes*60};
  }
- if(n==='GetState')data=h==='DeviceModes'?{resume_volume:volume,do_not_disturb:quiet,desktop_theme_index:desktopTheme}:h==='Wifi'?'Connected':state;
+ if(n==='GetState')data=h==='DeviceModes'?{resume_volume:volume,do_not_disturb:quiet,desktop_theme_index:desktopTheme}:h==='Wifi'?'Connected':{...state,available_stations:allowedIds};
  if(h==='Wifi'&&n==='GetGeneralState')data='Connected';
  if(n==='SetText')texts[a.Path]=a.Text;
  if(n==='SetBinding')bindings[a.Path+':'+a.Key]=a.Value;
@@ -57,3 +57,21 @@ console.log('Radio lifecycle, silent start, playback controls, all categories, f
 
 desktopTheme=1;ctx.brookesia_app.on_timer();assert(calls.some(c=>c.n==='SetBinding'&&c.a.Path==='/main'&&c.a.Value==='#101723'),'Dark desktop theme must reach the app background');
 desktopTheme=0;ctx.brookesia_app.on_timer();assert(calls.some(c=>c.n==='SetBinding'&&c.a.Path==='/main'&&c.a.Value==='#f4ebdd'),'Light desktop theme must reach the app background');
+
+ctx.brookesia_app.on_stop();
+allowedIds=['junior-0','naps-0'];start();
+assert.equal(texts['/main/player/title'],'Fun Kids Junior','A saved channel outside the whitelist must not be selected');
+action('toggle');assert.equal(state.station,'junior-0');
+action('previous');assert.equal(state.station,'junior-0');
+action('stations');action('cat3');assert.equal(texts['/main/stations/row0/name'],'Fun Kids Junior');
+assert.equal(texts['/main/stations/row1/name'],'Fun Kids Naps');
+assert.equal(bindings['/main/stations/row2:hidden'],'true');
+action('cat1');assert.equal(texts['/main/stations/row0/name'],'Fun Kids Naps');
+allowedIds=[];state={...state,active:false,state:'Idle'};
+ctx.brookesia_app.on_timer();
+assert.equal(bindings['/main/stations/row0:hidden'],'true');
+action('back');assert.equal(texts['/main/player/title'],'暂无可播放频道');
+const playCount=calls.filter(c=>c.h==='Radio'&&c.n==='Play').length;
+action('toggle');action('next');action('previous');
+assert.equal(calls.filter(c=>c.h==='Radio'&&c.n==='Play').length,playCount);
+console.log('Radio whitelist filters saved selections, browsing, favorites, previous/next and live revocation.');

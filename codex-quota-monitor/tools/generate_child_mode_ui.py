@@ -5,6 +5,7 @@ import shutil
 
 ROOT=Path(__file__).resolve().parents[2]
 APP=ROOT/'brookesia-apps/child-mode'
+VERSION='0.1.6'
 def write(name,data):
     p=APP/name;p.parent.mkdir(parents=True,exist_ok=True)
     p.write_text(json.dumps(data,ensure_ascii=False,separators=(',',':'))+'\n',encoding='utf-8')
@@ -24,12 +25,12 @@ def group(id,children,hidden=True):
 def stepper(prefix,title,y):
     return [button(prefix+'_minus','-',104,y,48),label(prefix,title,158,y+5,164,38),button(prefix+'_plus','+',328,y,48)]
 
-write('package.json',{'name':'local.childmode','version':'0.1.5','private':True,'scripts':{'build':'brookesia build'}})
+write('package.json',{'name':'local.childmode','version':VERSION,'private':True,'scripts':{'build':'brookesia build'}})
 (APP/'brookesia.config.js').write_text("module.exports={cli:{sourceRoot:'src',outputPath:'build',releasePath:'dist',signRoot:'sign'},convertImages:false};\n",encoding='utf-8')
-write('src/manifest.json',{'package':{'id':'local.childmode','name':{'en':'Child Mode','zh_CN':'儿童模式'},'version':'0.1.5','visible':True,'systems':['super']},
+write('src/manifest.json',{'package':{'id':'local.childmode','name':{'en':'Child Mode','zh_CN':'儿童模式'},'version':VERSION,'visible':True,'systems':['super']},
     'runtime':{'type':'JavaScript','entry':'app/main.js','resource_dir':'res','arguments':[]},'services':[{'name':'ChildMode','version':'0.1.0'}]})
 write('src/res/profile.json',{'root':'root.json','icon_id':'launcher_icon','screen_flows':[{'screen_flow':'main','layer':'AppDefault'}]})
-write('src/res/root.json',{'version':'0.1.5','assets':['images/index.json','screens/main.json','flows/main.json']})
+write('src/res/root.json',{'version':VERSION,'assets':['images/index.json','screens/main.json','flows/main.json']})
 write('src/res/flows/main.json',{'type':'screenFlow','id':'main','screens':['main'],'initial':'main'})
 gate=[label('dots','',120,137,240,40,32)]
 for i,char in enumerate('123456789'):
@@ -39,14 +40,26 @@ gate += [button('erase','删除',104,365,84,48),button('digit0','0',198,365,84,4
 control=[button('mode','开启儿童模式',105,126,270),*stepper('volume','音量上限 30%',187),
          *stepper('limit','每日 30 分钟',246),button('apps','允许使用的应用',105,306,270),
          button('time','休息时间 / PIN',105,363,270),button('lock','完成并锁定',140,420,200,36)]
-apps=[button('book','听书/儿歌/电台：允许',105,126,270),button('weather','天气：允许',105,183,270),
-      button('clock','时钟：允许',105,240,270),button('assistant','语音助手：关闭',105,297,270),button('back_apps','返回',140,376,200)]
+apps=[button('book','听书：允许',52,135,182),button('songs','儿歌：允许',246,135,182),
+      button('radio','电台：关闭',52,195,182),button('channels','频道白名单 0',246,195,182),
+      button('weather','天气：允许',52,255,182),button('clock','时钟：允许',246,255,182),
+      button('assistant','小马助手：关闭',52,315,182),button('learning','学习/迷宫：关闭',246,315,182),
+      button('back_apps','返回',140,412,200,36)]
+channels=[]
+for i in range(4):
+    row=button(f'channel{i}','',70,130+52*i,340)
+    row['bindings']={'commonProps.hidden':'hidden'}
+    channels.append(row)
+channels += [label('live_notice','直播可能插播节目或宣传',55,342,370,36,17),
+             button('back_channels','返回',70,400,158),button('channel_next','下一页',252,400,158)]
 times=[button('night','夜间休息：关闭',105,126,270),*stepper('start','开始 21:00',185),*stepper('end','结束 08:00',242),
        button('reset','重置今日时长',120,299,240),button('change','修改家长 PIN',120,354,240),button('back_time','返回',140,413,200,36)]
-children=[group('gate',gate,False),group('control',control),group('apps',apps),group('times',times),
+children=[group('gate',gate,False),group('control',control),group('apps',apps),group('times',times),group('channels',channels),
           label('title','儿童模式',120,36,240,40,28),label('status','正在读取设置',65,84,350,40,17)]
 write('src/res/screens/main.json',{'type':'viewScreen','id':'main','commonProps':{'scrollable':False},'style':{'bgColor':'#fff2df','padding':0},'children':children})
 image_dir=APP/'src/res/images';image_dir.mkdir(parents=True,exist_ok=True)
-shutil.copy2(APP/'artwork/child-mode.png',image_dir/'launcher_icon.png')
-write('src/res/images/index.json',{'type':'imageSet','images':[{'id':'launcher_icon','src':'launcher_icon.png','width':96,'height':96}]})
+if not (image_dir/'launcher_icon.png').exists():
+    shutil.copy2(APP/'artwork/child-mode.png',image_dir/'launcher_icon.png')
+if not (image_dir/'index.json').exists():
+    write('src/res/images/index.json',{'type':'imageSet','images':[{'id':'launcher_icon','src':'launcher_icon.png','width':96,'height':96}]})
 print(APP)

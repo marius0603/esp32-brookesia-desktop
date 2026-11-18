@@ -3,6 +3,7 @@
 #include "model_manifest.hpp"
 #include "../audio_ownership.hpp"
 #include "../child_mode/child_mode.hpp"
+#include "../child_mode/policy.hpp"
 #include "../device_modes/device_modes.hpp"
 #include "brookesia/hal_interface.hpp"
 #include "brookesia/service_manager/service/manager.hpp"
@@ -158,13 +159,21 @@ private:
    return {.success=false,.error_message="Offline voice is unavailable"};
   if(id<1 || id>8)return {.success=false,.error_message="Invalid command"};
   if(id==5 || id==6){
-   if(brookesia_board_do_not_disturb() || !child_mode_audiobook_allowed())return {.success=false,.error_message="家长限制或勿扰时段"};
+   if(brookesia_board_do_not_disturb() || (!child_mode_audiobook_allowed() && !child_mode_songs_allowed()))return {.success=false,.error_message="家长限制或勿扰时段"};
    auto value=invoke("AudioPlayback","GetVolume");if(!value.success || !value.data)return value;
    const double volume=std::holds_alternative<double>(*value.data)?std::get<double>(*value.data):0;
    return invoke("AudioPlayback","SetVolume",{{"Volume",std::clamp(volume+(id==5?10:-10),0.0,100.0)}});
   }
   if(id!=7)invoke("DeviceModes","Wake");
-  if(id==1 || id==3 || id==4){
+  bool song=false;
+  if(id==3 || id==4) {
+   auto playback=invoke("Audiobook","GetState");
+   if(playback.success && playback.data) {
+    const auto &path=std::get<boost::json::object>(*playback.data).at("path").as_string();
+    song=child_policy::is_song_path(std::string_view(path.data(),path.size()));
+   }
+  }
+  if(!song && (id==1 || id==3 || id==4)){
    auto apps=invoke("SystemCore","ListApps");
    if(apps.success && apps.data)for(const auto &app:std::get<boost::json::array>(*apps.data)){
     const auto &a=app.as_object();if(a.at("manifest").as_object().at("id").as_string()=="local.audiobook"){

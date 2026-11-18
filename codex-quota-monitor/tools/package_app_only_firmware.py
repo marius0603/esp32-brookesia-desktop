@@ -29,23 +29,25 @@ def main():
         'app_only': True, 'files': {}}
     sdkconfig = json.loads((build / 'config/sdkconfig.json').read_text(encoding='utf-8'))
     manifest['features'] = {'separate_websocket_tx_lock': bool(sdkconfig.get('ESP_WS_CLIENT_SEPARATE_TX_LOCK'))}
-    if desc['project_version'] in ('0.8.3-s3.64','0.8.3-s3.65','0.8.3-s3.66','0.8.3-s3.67','0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72'):
+    if desc['project_version'] in ('0.8.3-s3.64','0.8.3-s3.65','0.8.3-s3.66','0.8.3-s3.67','0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73'):
         manifest['features'].update(phone_ble_remote=bool(sdkconfig.get('BT_NIMBLE_ENABLED') and sdkconfig.get('ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_1')),
             ble_controller_flash_code=bool(sdkconfig.get('BT_CTRL_RUN_IN_FLASH_ONLY')),phone_navigation=True,
             navigation_packet_bytes=256,navigation_stale_seconds=15,navigation_unknown_value=-1,
             navigation_sources=['offline_demo','sdk_simulation','amap_notification'],navigation_local_voice=True)
         assert manifest['features']['phone_ble_remote'] and manifest['features']['ble_controller_flash_code']
-    if desc['project_version'] in ('0.8.3-s3.66','0.8.3-s3.67','0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72'):
+    if desc['project_version'] in ('0.8.3-s3.66','0.8.3-s3.67','0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73'):
         manifest['features'].update(navigation_psram_stack=True,internal_dma_reserve_bytes=sdkconfig['SPIRAM_MALLOC_RESERVE_INTERNAL'])
-    if desc['project_version'] in ('0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72'):
+    if desc['project_version'] in ('0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73'):
         manifest['features'].update(canvas_allocation_retry=True,allocation_failure_diagnostics=True,largest_free_heap_diagnostics=True)
-    if desc['project_version'] in ('0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72'):
+    if desc['project_version'] in ('0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73'):
         manifest['features'].update(launcher_full_width_refresh_on_scroll_end=True,launcher_margin_dma_cache_psram_bytes=122880)
-    if desc['project_version'] in ('0.8.3-s3.71','0.8.3-s3.72'):
+    if desc['project_version'] in ('0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73'):
         manifest['features']['weather_full_width_dirty_rows']=True
-    if desc['project_version']=='0.8.3-s3.72':
+    if desc['project_version'] in ('0.8.3-s3.72','0.8.3-s3.73'):
         manifest['features']['fast_mp3_seek_discard']=True
-    if desc['project_version'] in ('0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72'):
+    if desc['project_version']=='0.8.3-s3.73':
+        manifest['features'].update(independent_child_audio_permissions=True,child_radio_station_allowlist=True)
+    if desc['project_version'] in ('0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73'):
         generated=(build.parent/'components/gen_bmgr_codes/gen_board_device_config.c').read_text(encoding='utf-8')
         assert re.search(r'\.pclk_hz\s*=\s*80000000',generated),'QSPI frequency was not regenerated'
         manifest['features'].update(canvas_native_stride=True,canvas_rect_cache=True,display_dma_staging_bytes=4096,qspi_clock_hz=80000000)

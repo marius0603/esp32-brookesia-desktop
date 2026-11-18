@@ -14,6 +14,8 @@ def main():
     with SharedPowerDiagnosticClient('COM5',timeout=35) as c:
         c.hello()
         def f(s,n,a=None):return c.call_timeout(s,n,a or {})['result']
+        firmware=f('DeviceModes','GetState')['firmware_version'].split('-s3.')
+        assert len(firmware)==2 and int(firmware[-1])>=73,'Install matching s3.73 firmware first'
         end=time.monotonic()+90
         while True:
             apps=f('SystemCore','ListApps');app=next((a for a in apps if a['manifest']['id']=='local.childmode'),None)
@@ -31,8 +33,9 @@ def main():
             f('Storage','FSCopyTree',{'From':root+'/'+name,'To':check+'/'+str(number),'Overwrite':False});checked[str(number)]=data
         assert f('SdResources','InspectTree',{'Path':check})['sha256']==tree_hash(checked)
         after=f('ChildMode','GetState')
-        for name in ('configured','enabled','max_volume','daily_minutes','night_enabled','night_start','night_end','allow_audiobook'):
+        for name in ('configured','enabled','max_volume','daily_minutes','night_enabled','night_start','night_end',
+                     'allow_audiobook','allow_songs','allow_radio','radio_allowed_stations'):
             assert after[name]==before[name],name
         (ROOT/'codex-quota-monitor/runtime/child-audio-ui-deployment.json').write_text(json.dumps({'passed':True,'version':version,'backup':backup,'pin_preserved':after['configured']},indent=2),encoding='utf-8')
-    print('Parent audio permission label updated; original UI and policy preserved.',flush=True)
+    print('Parent authorization panel updated; existing policy and a backup of the old UI were verified.',flush=True)
 if __name__=='__main__':main()

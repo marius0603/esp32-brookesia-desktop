@@ -159,5 +159,8 @@
   "packages/firmware/brookesia-0.8.3-s3.70-app-only.zip": "bb3a73e0966c1874cdfe0599d008b3baeaf0b6593d3d9718fb72e34ee0498da5",
   "packages/apps/local.weather.debug.0.2.10.bpk": "ee675936acafeb030747fcec03e8fc77f038910bc690799ac6cb204a2db6edab",
   "packages/firmware/brookesia-0.8.3-s3.71-app-only.zip": "c7f1b0a82c16edbd232e2df9cf48c08df86c26e6af4946d9b94712700bd6fcf1",
-  "packages/firmware/brookesia-0.8.3-s3.72-app-only.zip": "4fa5f46d193c34b1751a68265c9dee7e8fdab6fe5ad035d1946ee32bdcdc73e0"
+  "packages/firmware/brookesia-0.8.3-s3.72-app-only.zip": "4fa5f46d193c34b1751a68265c9dee7e8fdab6fe5ad035d1946ee32bdcdc73e0",
+  "packages/firmware/brookesia-0.8.3-s3.73-app-only.zip": "cc694bef8ddf2f5998df1c60eec1701eea34e3c0f82247bc5cf7f46049bd804f",
+  "packages/apps/local.radio.debug.0.1.4.bpk": "78ab92a5a9ec2e5e9e19d6cd1ddfbf78278dd97434a1f508d175057223d4d52d",
+  "packages/apps/local.childmode.debug.0.1.6.bpk": "38c811b78ac966584c1dd74664e7d4838c48273cb2c91a9c73ef994cf2f4387f"
 }

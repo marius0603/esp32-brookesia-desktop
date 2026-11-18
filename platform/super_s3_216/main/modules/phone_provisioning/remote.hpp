@@ -83,7 +83,7 @@ inline boost::json::object execute(const boost::json::object &request) {
   return std::isfinite(n) && std::floor(n)==n && n>=low && n<=high?int(n):-1;
  };
  if(command=="songs" || command=="song_play" || command=="song_previous" || command=="song_next" || command=="song_pause" || command=="song_resume" || command=="song_stop" || command=="song_mode" || command=="song_timer") {
-  if(command!="song_stop"&&!child_mode_audiobook_allowed())return fail("儿歌已被家长限制，或已到休息时间");
+  if(command!="song_stop"&&!child_mode_songs_allowed())return fail("儿歌已被家长限制，或已到休息时间");
   if(command=="song_mode"){
    const auto *mode=request.if_contains("value");if(!mode||!mode->is_string())return fail("播放模式无效");
    result=call("Audiobook","SetSongMode",{{"Mode",*mode}});
@@ -122,17 +122,22 @@ inline boost::json::object execute(const boost::json::object &request) {
    } else result=call("Audiobook",command=="song_pause"?"Pause":command=="song_resume"?"Resume":"Stop");
   }
  } else if(command=="radio_stations" || command=="radio_play" || command=="radio_pause" || command=="radio_resume" || command=="radio_stop" || command=="radio_timer") {
-  if(command!="radio_stop"&&!child_mode_radio_allowed())return fail("网络电台暂未开放给儿童模式");
+  if(command!="radio_stop"&&!child_mode_radio_allowed())return fail("电台未获家长授权，或已到休息时间");
   if(command=="radio_stations") {
    int page=integer("page",0,127);if(page<0)return fail("页码无效");
-   constexpr size_t count=sizeof(radio_stations)/sizeof(radio_stations[0]);boost::json::array items;
-   for(size_t i=page*2;i<count&&i<size_t(page*2+2);++i){const auto &s=radio_stations[i];items.push_back(boost::json::object{{"id",s.id},{"name",s.name},{"group",s.group},{"sub",s.sub}});}
+   size_t count=0;boost::json::array items;
+   for(const auto &s:radio_stations){
+    if(!child_mode_radio_station_allowed(s.id))continue;
+    if(count/2==size_t(page))items.push_back(boost::json::object{{"id",s.id},{"name",s.name},{"group",s.group},{"sub",s.sub}});
+    ++count;
+   }
    return {{"ok",true},{"items",std::move(items)},{"more",size_t(page*2+2)<count},{"total",count}};
   }
   if(command=="radio_play") {
    const auto *id=request.if_contains("id");const RadioStation *chosen=nullptr;
    if(id&&id->is_string())for(const auto &s:radio_stations)if(id->as_string()==s.id){chosen=&s;break;}
    if(!chosen)return fail("频道编号无效");
+   if(!child_mode_radio_station_allowed(chosen->id))return fail("此频道未获家长授权");
    result=open_radio();if(!result.success)return {{"ok",false},{"error",result.error_message}};
    result=call("Radio","Play",{{"Station",chosen->id}});
   } else if(command=="radio_timer") {

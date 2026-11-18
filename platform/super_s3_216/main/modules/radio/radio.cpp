@@ -49,7 +49,7 @@ private:
  bool on_start()override{return true;}
  void on_stop()override{stop();}
  bool abort(){
-  if(cancel_||local_audio::sleeping||!child_mode_radio_allowed())return true;
+  if(cancel_||local_audio::sleeping||!child_mode_radio_station_allowed(source_->id))return true;
   const auto end=deadline_.load();if(end && esp_timer_get_time()>=end){set_state("TimerEnded");cancel_=true;return true;}return false;
  }
  void set_state(const std::string &s,const std::string &error=""){std::lock_guard lock(mutex_);state_=s;error_=error;}
@@ -63,8 +63,10 @@ private:
   const radio_catalog::Station *chosen=nullptr;for(const auto &s:radio_catalog::stations)if(id==s.id){chosen=&s;break;}
   if(!chosen)return std::unexpected("Unknown station");
   if(!child_mode_radio_allowed())return std::unexpected("电台未获家长授权，或已到休息时间");
+  if(!child_mode_radio_station_allowed(id))return std::unexpected("此频道未获家长授权");
   auto stopped=stop();if(!stopped)return stopped;
   std::lock_guard op(operation_);
+  if(!child_mode_radio_station_allowed(id))return std::unexpected("此频道未获家长授权");
   if(!local_audio::claim(local_audio::Radio))return std::unexpected("请先关闭听书或语音助手");
   source_=chosen;{std::lock_guard lock(mutex_);station_=id;state_="Connecting";error_.clear();}
   cancel_=false;paused_=false;reader_failed_=false;bytes_=0;received_=0;retries_=0;starvations_=0;gap_=0;rate_=0;channels_=0;deadline_=0;decoder_free_=0;reader_free_=0;
@@ -83,7 +85,10 @@ private:
  boost::json::object snapshot(){
   std::lock_guard lock(mutex_);const auto end=deadline_.load();
   wifi_ap_record_t ap{};const int rssi=esp_wifi_sta_get_ap_info(&ap)==ESP_OK?ap.rssi:-127;
-  return {{"state",state_},{"error",error_},{"station",station_},{"active",live_.load()},{"paused",paused_.load()},
+  boost::json::array available;
+  for(const auto &s:radio_catalog::stations)
+   if(child_mode_radio_station_allowed(s.id))available.emplace_back(s.id);
+  return {{"available_stations",std::move(available)},{"state",state_},{"error",error_},{"station",station_},{"active",live_.load()},{"paused",paused_.load()},
    {"bytes_written",bytes_.load()},{"bytes_received",received_.load()},{"reconnects",retries_.load()},{"pcm_starvations",starvations_.load()},{"write_gap_max_us",gap_.load()},
    {"sample_rate",rate_.load()},{"channels",channels_.load()},{"decoder_stack_free",decoder_free_.load()},{"reader_stack_free",reader_free_.load()},
    {"decode_errors",decode_errors_.load()},{"decoded_frames",decode_frames_.load()},{"decode_max_us",decode_max_us_.load()},{"input_stalls",input_stalls_.load()},
@@ -107,7 +112,7 @@ private:
   BROOKESIA_SERVICE_FUNC_HANDLER_1("Play","Station",std::string,play(PARAM)),
   BROOKESIA_SERVICE_FUNC_HANDLER_0("Stop",stop()),
   {"Pause",[this](FunctionParameterMap &&)->FunctionResult{if(!live_)return {.success=false,.error_message="Nothing is playing"};paused_=true;local_audio::radio_busy=false;set_state("Paused");return {.success=true};}},
-  {"Resume",[this](FunctionParameterMap &&)->FunctionResult{if(!live_)return {.success=false,.error_message="Nothing is playing"};paused_=false;local_audio::radio_busy=true;set_state("Buffering");return {.success=true};}},
+  {"Resume",[this](FunctionParameterMap &&)->FunctionResult{std::lock_guard op(operation_);if(!live_)return {.success=false,.error_message="Nothing is playing"};if(!child_mode_radio_station_allowed(source_->id))return {.success=false,.error_message="此频道未获家长授权"};paused_=false;local_audio::radio_busy=true;set_state("Buffering");return {.success=true};}},
   BROOKESIA_SERVICE_FUNC_HANDLER_1("SetSleepTimer","Minutes",double,timer(PARAM)),
   {"GetState",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(snapshot())};}},
   {"TestSleepTimer",[this](FunctionParameterMap &&)->FunctionResult{if(!live_)return {.success=false,.error_message="Nothing is playing"};deadline_=esp_timer_get_time()+10000000;return {.success=true};}}
@@ -204,6 +209,7 @@ private:
   auto *mp3_decoder=static_cast<drmp3dec *>(heap_caps_malloc(sizeof(drmp3dec),MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT));
   auto fail=[&](const char *why){set_state("Error",why);cancel_=true;};
   do {
+   if(abort())break;
    if(!net_||!pcm||!stereo||!input||!codec||!mp3_decoder){fail("Not enough audio memory");break;}
    esp_audio_dec_register_default();esp_audio_simple_dec_register_default();
    const bool ts=std::string_view(source_->format)=="hls_ts";

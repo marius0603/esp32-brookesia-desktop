@@ -1,4 +1,4 @@
-"""Install the radio BPK on s3.42+, preserving existing apps and media."""
+"""Install the radio BPK on s3.73+, preserving existing apps and media."""
 import argparse,json,time,zipfile,hashlib
 from pathlib import Path
 from maintenance_client import SharedPowerDiagnosticClient as StoryClient
@@ -17,7 +17,7 @@ def main():
     c.hello()
     def f(s,n,p=None):return c.call_timeout(s,n,p or {})['result']
     mode=f('DeviceModes','GetState');version=mode['firmware_version'].split('-s3.')
-    assert len(version)==2 and int(version[-1])>=42,'Install matching s3.42 firmware first'
+    assert len(version)==2 and int(version[-1])>=73,'Install matching s3.73 firmware first'
     story=f('Audiobook','GetState');voice=f('VoiceAssistant','GetState')
     assert not story['active'] and not story['sleep_active'],'Finish the current story and timer first'
     assert not voice.get('recording',False) and not voice.get('active',False),'Finish the current assistant conversation first'

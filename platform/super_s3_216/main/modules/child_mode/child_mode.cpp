@@ -1,6 +1,7 @@
 #include "child_mode.hpp"
 #include "policy.hpp"
 #include "../audio_ownership.hpp"
+#include "../phone_provisioning/radio_catalog.hpp"
 #include <atomic>
 #include <array>
 #include <cmath>
@@ -21,20 +22,40 @@
 using namespace esp_brookesia;
 using namespace esp_brookesia::service;
 namespace {
-struct Preferences {
+struct PreferencesV1 {
     uint32_t version=1, used_reserved=0, day=0;
     uint8_t enabled=0, mask=7, volume=30, minutes=30;
     uint8_t night=0, start=21, end=8, has_pin=0, failures=0;
     std::array<uint8_t,16> salt{};
     std::array<uint8_t,32> hash{};
 };
+using StationId = std::array<char,32>;
+struct Preferences : PreferencesV1 {
+    std::array<StationId,16> radio_ids{};
+    constexpr Preferences() {version=2;mask=child_policy::default_mask;}
+};
+constexpr unsigned enabled_bit=1u<<7, resting_bit=1u<<8, stations_shift=9;
+static_assert(std::size(phone_remote::radio_stations)<=Preferences{}.radio_ids.size());
+constexpr uint32_t station_flag(std::string_view id) {
+    for (size_t i=0;i<std::size(phone_remote::radio_stations);++i)
+        if (id==phone_remote::radio_stations[i].id) return uint32_t{1}<<i;
+    return 0;
+}
+uint32_t station_flags(const Preferences &config) {
+    uint32_t flags=0;
+    for (const auto &id:config.radio_ids)
+        flags|=station_flag(std::string_view(id.data(),strnlen(id.data(),id.size())));
+    return flags;
+}
 std::mutex state_mutex;
 Preferences prefs;
 unsigned used=0;
 std::string token,storage_error;
 int64_t token_until=0,locked_until=0;
-std::atomic<bool> ready{false},enabled{false},resting{false};
-std::atomic<unsigned> mask{7},volume{30},revision{0},foreground{0},foreground_id{0};
+std::atomic<bool> ready{false};
+// Publish the switches, rest state and channel permissions together for the audio workers.
+std::atomic<uint32_t> runtime_policy{child_policy::default_mask};
+std::atomic<unsigned> volume{30},revision{0},foreground{0},foreground_id{0};
 std::atomic<system::core::System *> system_ptr{nullptr};
 std::atomic<uint32_t> worker_stack_free{6144};
 
@@ -94,10 +115,14 @@ std::pair<uint32_t,int> local_clock() {
     return {static_cast<uint32_t>((t.tm_year+1900)*10000+(t.tm_mon+1)*100+t.tm_mday),t.tm_hour};
 }
 void publish_locked() {
-    enabled=prefs.enabled!=0;mask=prefs.mask;volume=prefs.volume;
     const auto [day,hour]=local_clock();
-    resting=prefs.enabled && (!storage_error.empty() || (prefs.minutes && used>=unsigned(prefs.minutes)*60) ||
+    const bool resting=prefs.enabled && (!storage_error.empty() || (prefs.minutes && used>=unsigned(prefs.minutes)*60) ||
             (prefs.night && (hour<0 || child_policy::night(hour,prefs.start,prefs.end))));
+    volume=prefs.volume;
+    runtime_policy=prefs.mask | (prefs.enabled?enabled_bit:0) | (resting?resting_bit:0) | (station_flags(prefs)<<stations_shift);
+}
+bool playback_allowed(uint32_t policy,unsigned permission) {
+    return child_policy::allowed(ready,policy&enabled_bit,policy,policy&resting_bit,permission);
 }
 bool authorize_locked(const std::string &candidate) {
     if(token.empty() || candidate!=token || esp_timer_get_time()>=token_until)return false;
@@ -112,7 +137,7 @@ FunctionResult auth_result_locked() {
     return {.success=true,.data=FunctionValue(boost::json::object{{"token",token}})};
 }
 void apply_volume_cap() {
-    if(!enabled)return;
+    if(!(runtime_policy.load()&enabled_bit))return;
     using Audio=service::helper::AudioPlayback;
     auto current=Audio::call_function_sync<double>(Audio::FunctionId::GetVolume,service::helper::Timeout(2000));
     if(current)(void)Audio::call_function_sync(Audio::FunctionId::SetVolume,*current,service::helper::Timeout(2000));
@@ -128,9 +153,23 @@ private:
             std::lock_guard<std::mutex> lock(state_mutex);
             nvs_handle_t h;auto e=nvs_open("ChildModeV1",NVS_READONLY,&h);
             if(e==ESP_OK) {
-                size_t size=sizeof(prefs);e=nvs_get_blob(h,"policy",&prefs,&size);nvs_close(h);
-                if(e==ESP_ERR_NVS_NOT_FOUND){prefs=Preferences{};e=ESP_OK;size=sizeof(prefs);}
-                if(e!=ESP_OK || size!=sizeof(prefs) || prefs.version!=1 || prefs.volume>child_policy::volume_limit_max ||
+                size_t size=0;e=nvs_get_blob(h,"policy",nullptr,&size);
+                if(e==ESP_OK && size==sizeof(PreferencesV1)) {
+                    PreferencesV1 old;
+                    e=nvs_get_blob(h,"policy",&old,&size);
+                    if(e==ESP_OK && old.version==1 && old.mask<=31) {
+                        static_cast<PreferencesV1 &>(prefs)=old;
+                        prefs.version=2;
+                        prefs.mask=child_policy::migrate_mask(old.mask);
+                        prefs.radio_ids={};
+                    } else if(e==ESP_OK) e=ESP_ERR_INVALID_VERSION;
+                } else if(e==ESP_OK && size==sizeof(prefs)) {
+                    e=nvs_get_blob(h,"policy",&prefs,&size);
+                } else if(e==ESP_ERR_NVS_NOT_FOUND) {
+                    prefs=Preferences{};e=ESP_OK;
+                } else if(e==ESP_OK) e=ESP_ERR_INVALID_SIZE;
+                nvs_close(h);
+                if(e!=ESP_OK || prefs.version!=2 || prefs.volume>child_policy::volume_limit_max ||
                         prefs.minutes>120 || prefs.start>23 || prefs.end>23 || !child_policy::valid_mask(prefs.mask) ||
                         (prefs.enabled && !prefs.has_pin))return false;
             } else if(e!=ESP_ERR_NVS_NOT_FOUND)return false;
@@ -162,18 +201,18 @@ private:
                     if(prefs.day) {used=0;prefs.used_reserved=0;}
                     prefs.day=day;changed=true;
                 }
-                if(prefs.enabled && (foreground || local_audio::owner!=local_audio::Free) && !resting) {
+                if(prefs.enabled && (foreground || local_audio::owner!=local_audio::Free) && !(runtime_policy.load()&resting_bit)) {
                     ++used;
                     const auto reserve=child_policy::reserve(used);
                     if(reserve>prefs.used_reserved) {prefs.used_reserved=reserve;changed=true;}
                 }
-                if(changed && !save_locked())resting=true;
+                if(changed)save_locked();
                 publish_locked();
-                if(!storage_error.empty() && prefs.enabled)resting=true;
             }
             const auto app=foreground_id.load();
             const auto bit=foreground.load();
-            if(enabled && bit && (resting || !(mask.load()&bit))) {
+            const auto policy=runtime_policy.load();
+            if((policy&enabled_bit) && bit && ((policy&resting_bit) || !(policy&bit))) {
                 if(auto *sys=system_ptr.load();sys && app) {
                     (void)sys->stop_app(app);
                 }
@@ -189,14 +228,19 @@ private:
         const auto [day,hour]=local_clock();
         const unsigned remaining=prefs.minutes?std::max(0,int(prefs.minutes)*60-int(used)):0;
         boost::json::object o{{"configured",prefs.has_pin!=0},{"enabled",prefs.enabled!=0},
-            {"allow_audiobook",(prefs.mask&1)!=0},{"allow_songs",(prefs.mask&1)!=0},{"allow_radio",(prefs.mask&1)!=0},{"allow_weather",(prefs.mask&2)!=0},
+            {"allow_audiobook",(prefs.mask&child_policy::audiobook)!=0},{"allow_songs",(prefs.mask&child_policy::songs)!=0},
+            {"allow_radio",(prefs.mask&child_policy::radio)!=0},{"allow_weather",(prefs.mask&2)!=0},
             {"allow_clock",(prefs.mask&4)!=0},{"allow_assistant",(prefs.mask&8)!=0},
             {"allow_learning",(prefs.mask&16)!=0},
             {"max_volume",prefs.volume},{"daily_minutes",prefs.minutes},{"used_seconds",used},
             {"remaining_seconds",remaining},{"night_enabled",prefs.night!=0},
             {"night_start",prefs.start},{"night_end",prefs.end},{"clock_ready",day!=0},
-            {"resting",resting.load()},{"locked_seconds",std::max<int64_t>(0,(locked_until-esp_timer_get_time()+999999)/1000000)},
+            {"resting",(runtime_policy.load()&resting_bit)!=0},{"locked_seconds",std::max<int64_t>(0,(locked_until-esp_timer_get_time()+999999)/1000000)},
             {"error",storage_error},{"worker_stack_free_min_bytes",worker_stack_free.load()}};
+        boost::json::array approved;
+        for (const auto &station:phone_remote::radio_stations)
+            if ((runtime_policy.load()>>stations_shift) & station_flag(station.id)) approved.emplace_back(station.id);
+        o["radio_allowed_stations"]=std::move(approved);
         return {.success=true,.data=FunctionValue(std::move(o))};
     }
     FunctionResult login(FunctionParameterMap &&p,bool setup) {
@@ -243,10 +287,24 @@ private:
                     !number("max_volume",10,child_policy::volume_limit_max,next.volume) || !number("daily_minutes",0,120,next.minutes) ||
                     !number("night_start",0,23,next.start) || !number("night_end",0,23,next.end))return failed("设置数值无效");
             for(const auto &[key,bit]:std::initializer_list<std::pair<const char *,unsigned>>{
-                    {"allow_audiobook",1},{"allow_weather",2},{"allow_clock",4},{"allow_assistant",8},{"allow_learning",16}}) {
+                    {"allow_audiobook",child_policy::audiobook},{"allow_songs",child_policy::songs},
+                    {"allow_radio",child_policy::radio},{"allow_weather",2},{"allow_clock",4},{"allow_assistant",8},{"allow_learning",16}}) {
                 uint8_t on=(next.mask&bit)!=0;
                 if(!boolean(key,on))return failed("应用开关无效");
                 if(on)next.mask|=bit;else next.mask&=~bit;
+            }
+            if(const auto *items=settings.if_contains("radio_allowed_stations")) {
+                if(!items->is_array() || items->as_array().size()>next.radio_ids.size())return failed("频道名单无效");
+                next.radio_ids={};
+                uint32_t seen=0;size_t index=0;
+                for(const auto &item:items->as_array()) {
+                    if(!item.is_string())return failed("频道编号无效");
+                    const auto id=item.as_string();
+                    const auto flag=station_flag(std::string_view(id.data(),id.size()));
+                    if(!flag || (seen&flag) || id.size()>=next.radio_ids.front().size())return failed("频道编号无效");
+                    std::copy(id.begin(),id.end(),next.radio_ids[index++].begin());
+                    seen|=flag;
+                }
             }
             if(next.enabled && !next.has_pin)return failed("请先设置家长 PIN");
             if(next.night && next.start==next.end)return failed("休息开始和结束时间不能相同");
@@ -279,6 +337,7 @@ private:
     std::vector<FunctionSchema> get_function_schemas() override {
         const FunctionReturnSchema object{FunctionValueType::Object,"Child policy"};
         return {{"GetState","Get public child settings",{},true,std::nullopt,object},
+            {"GetRadioStations","List channels for the parent to choose",{},true,std::nullopt,object},
             {"SetupPin","Set first six digit parent PIN",{{"Pin","PIN",FunctionValueType::String}},true,std::nullopt,object},
             {"VerifyPin","Verify parent PIN",{{"Pin","PIN",FunctionValueType::String}},true,std::nullopt,object},
             {"Configure","Save authorized settings",{{"Token","Session",FunctionValueType::String},{"Settings","Options",FunctionValueType::Object}}},
@@ -289,6 +348,12 @@ private:
     }
     FunctionHandlerList get_function_handlers() override {
         return {{"GetState",[this](FunctionParameterMap &&){return state();}},
+            {"GetRadioStations",[](FunctionParameterMap &&)->FunctionResult{
+                boost::json::array stations;
+                for(const auto &item:phone_remote::radio_stations)
+                    stations.emplace_back(boost::json::object{{"id",item.id},{"name",item.name},{"group",item.group},{"sub",item.sub}});
+                return {.success=true,.data=FunctionValue(boost::json::object{{"stations",std::move(stations)}})};
+            }},
             {"SetupPin",[this](FunctionParameterMap &&p){return login(std::move(p),true);}},
             {"VerifyPin",[this](FunctionParameterMap &&p){return login(std::move(p),false);}},
             {"Configure",[this](FunctionParameterMap &&p){return configure(std::move(p));}},
@@ -301,20 +366,27 @@ private:
 }
 std::shared_ptr<ServiceBase> make_child_mode_service(){return std::make_shared<ChildMode>();}
 void child_mode_attach_system(system::core::System *system){system_ptr=system;}
-bool child_mode_voice_allowed(){return ready && (!enabled || ((mask.load()&8) && !resting));}
-bool child_mode_audiobook_allowed(){return child_policy::audio_allowed(ready,enabled,mask,resting);}
-bool child_mode_learning_allowed(){return ready && (!enabled || ((mask.load()&16) && !resting));}
-// Parent audio permission covers stories, songs and network radio.
-bool child_mode_radio_allowed(){return child_policy::audio_allowed(ready,enabled,mask,resting);}
+bool child_mode_voice_allowed(){return playback_allowed(runtime_policy,8);}
+bool child_mode_audiobook_allowed(){return playback_allowed(runtime_policy,child_policy::audiobook);}
+bool child_mode_songs_allowed(){return playback_allowed(runtime_policy,child_policy::songs);}
+bool child_mode_learning_allowed(){return playback_allowed(runtime_policy,16);}
+bool child_mode_radio_allowed(){return playback_allowed(runtime_policy,child_policy::radio);}
+bool child_mode_radio_station_allowed(std::string_view id){
+    const auto policy=runtime_policy.load();
+    return child_policy::station_allowed(playback_allowed(policy,child_policy::radio),
+            policy&enabled_bit,station_flag(id),policy>>stations_shift);
+}
 extern "C" bool brookesia_child_visible(const char *id) {
-    return child_policy::administrative(id) || (ready && child_policy::visible(enabled,mask,id));
+    const auto policy=runtime_policy.load();
+    return child_policy::administrative(id) || (ready && child_policy::visible(policy&enabled_bit,policy,id));
 }
 extern "C" const char *brookesia_child_launch_error(const char *id) {
     if(child_policy::administrative(id))return nullptr;
     if(!ready)return "儿童模式正在初始化";
-    if(!enabled)return nullptr;
-    if(!child_policy::visible(true,mask,id))return "该应用未获家长授权";
-    if(resting)return "现在是休息时间，请到儿童模式查看或由家长调整";
+    const auto policy=runtime_policy.load();
+    if(!(policy&enabled_bit))return nullptr;
+    if(!child_policy::visible(true,policy,id))return "该应用未获家长授权";
+    if(policy&resting_bit)return "现在是休息时间，请到儿童模式查看或由家长调整";
     return nullptr;
 }
 extern "C" unsigned brookesia_child_revision(){return revision;}
@@ -330,7 +402,7 @@ extern "C" void brookesia_child_foreground(const char *id,unsigned app_id) {
     foreground=child_policy::app_bit(id);foreground_id=app_id;
 }
 extern "C" int brookesia_child_cap_volume(int requested) {
-    return enabled ? std::min(requested,int(volume.load())) : requested;
+    return (runtime_policy.load()&enabled_bit) ? std::min(requested,int(volume.load())) : requested;
 }
 extern "C" bool brookesia_child_requires_internal(const char *id) {
     return std::strcmp(id,"local.childmode")==0;

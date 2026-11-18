@@ -79,7 +79,10 @@ def main():
         call('Configure',{'Token':token,'Settings':{'enabled':True,'daily_minutes':1,'night_enabled':False,'max_volume':30}})
         apps=c.call('SystemCore','ListApps',{})['result']
         visible={a['manifest']['id'] for a in apps if a['manifest']['visible']}
-        assert visible=={'local.audiobook','local.weather','local.flipclock','local.childmode'},visible
+        expected={'local.audiobook','local.weather','local.flipclock','local.childmode'}
+        if before.get('allow_songs') and any(a['manifest']['id']=='local.nurserysongs' for a in apps):
+            expected.add('local.nurserysongs')
+        assert visible==expected,visible
         report['child_visible_apps']=sorted(visible)
         for app in apps:
             if app['manifest']['id'] in ('local.codex.quota','brookesia.general.settings','brookesia.general.files','brookesia.general.app_store','local.voiceassistant'):

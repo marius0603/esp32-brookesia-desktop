@@ -1,6 +1,7 @@
 #include "story_titles.hpp"
 #include "audiobook.hpp"
 #include "../child_mode/child_mode.hpp"
+#include "../child_mode/policy.hpp"
 #include "../audio_ownership.hpp"
 #include "../device_modes/device_modes.hpp"
 #include "story_sleep.hpp"
@@ -44,7 +45,8 @@ bool supported(const std::string &path) {
     return ext == ".mp3" || ext == ".wav";
 }
 bool permitted(const std::string &path) {
-    return path.starts_with("/sdcard/audiobooks/") && path.find("..") == std::string::npos && supported(path);
+    return path.starts_with("/sdcard/audiobooks/") && path.find("..") == std::string::npos &&
+           path.find_first_of("\\:") == std::string::npos && path.find('\0') == std::string::npos && supported(path);
 }
 void scan(const std::string &path, unsigned depth, std::vector<std::string> &files) {
     DIR *dir = opendir(path.c_str());
@@ -61,10 +63,16 @@ void scan(const std::string &path, unsigned depth, std::vector<std::string> &fil
     closedir(dir);
 }
 constexpr const char *songs_root="/sdcard/audiobooks/songs";
-bool is_song(const std::string &path) {return path.starts_with(std::string(songs_root)+"/");}
+using child_policy::is_song_path;
+bool playback_allowed(bool song) {
+    return song ? child_mode_songs_allowed() : child_mode_audiobook_allowed();
+}
+const char *playback_restricted(bool song) {
+    return song ? "儿歌已被家长限制，或已到休息时间" : "听书已被家长限制，或已到休息时间";
+}
 void scan_library(bool songs,std::vector<std::string> &files) {
     scan(songs?songs_root:"/sdcard/audiobooks",2,files);
-    if(!songs)std::erase_if(files,[](const auto &path){return is_song(path);});
+    if(!songs)std::erase_if(files,[](const auto &path){return is_song_path(path);});
     std::sort(files.begin(),files.end());
 }
 const int16_t goodnight_pcm[]={
@@ -195,8 +203,8 @@ private:
         deadline_=0;sleep_minutes_=0;sleep_due_=false;sleep_completed_=true;gain_=1000;local_audio::story_timer_busy=false;
         brookesia_board_story_sleep_done();
     }
-    void say_goodnight(hal::InterfaceHandle<hal::audio::CodecPlayerIface> &codec,int16_t *pcm,uint32_t id) {
-        if(cancel_ || brookesia_board_do_not_disturb() || !child_mode_audiobook_allowed())return;
+    void say_goodnight(hal::InterfaceHandle<hal::audio::CodecPlayerIface> &codec,int16_t *pcm,uint32_t id,bool song) {
+        if(cancel_ || brookesia_board_do_not_disturb() || !playback_allowed(song))return;
         codec->close();
         if(!codec->open({.bits=16,.channels=2,.sample_rate=16000}))return;
         if(codec->is_pa_on_off_supported())codec->set_pa_on_off(true);
@@ -204,7 +212,7 @@ private:
         const size_t total=std::size(goodnight_pcm);
         bool wrote=false;
         for(size_t at=0;at<total && !cancel_ && sleep_due_;at+=512) {
-            if(brookesia_board_do_not_disturb() || !child_mode_audiobook_allowed())break;
+            if(brookesia_board_do_not_disturb() || !playback_allowed(song))break;
             const size_t count=std::min<size_t>(512,total-at);
             for(size_t i=0;i<count;++i) {
                 const int envelope=std::min<size_t>(640,std::min(at+i,total-at-i));
@@ -216,8 +224,8 @@ private:
         std::lock_guard lock(mutex_);
         if(wrote && id==sleep_id_){goodnight_played_=true;++goodnight_count_;}
     }
-    void say_remaining(hal::InterfaceHandle<hal::audio::CodecPlayerIface> &codec,int16_t *pcm){
-        if(cancel_ || brookesia_board_do_not_disturb() || !child_mode_audiobook_allowed())return;
+    void say_remaining(hal::InterfaceHandle<hal::audio::CodecPlayerIface> &codec,int16_t *pcm,bool song){
+        if(cancel_ || brookesia_board_do_not_disturb() || !playback_allowed(song))return;
         unsigned prompt=0;
         {std::lock_guard lock(mutex_);if(deadline_){const auto seconds=story_sleep::remaining(esp_timer_get_time()/1000,deadline_);prompt=seconds<60?46:std::min(45u,unsigned((seconds+59)/60));}}
         char path[96];snprintf(path,sizeof(path),"/sdcard/offline-voice/prompts/remaining-%02u.pcm",prompt);
@@ -226,7 +234,7 @@ private:
         codec->close();
         if(codec->open({.bits=16,.channels=2,.sample_rate=16000})){
             if(codec->is_pa_on_off_supported())codec->set_pa_on_off(true);
-            size_t n;while(!cancel_ && !sleep_due_ && !brookesia_board_do_not_disturb() && child_mode_audiobook_allowed() && (n=fread(pcm,2,512,fp))>0){
+            size_t n;while(!cancel_ && !sleep_due_ && !brookesia_board_do_not_disturb() && playback_allowed(song) && (n=fread(pcm,2,512,fp))>0){
                 for(size_t i=n;i-->0;){const int16_t sample=pcm[i];pcm[2*i]=pcm[2*i+1]=sample;}
                 if(!codec->write_data(reinterpret_cast<uint8_t *>(pcm),n*4))break;
                 wrote=true;vTaskDelay(1);
@@ -237,7 +245,10 @@ private:
     std::expected<void,std::string> voice_action(double command){
         if(!std::isfinite(command)||std::floor(command)!=command||command<1||command>8)return std::unexpected("Invalid command");
         const int id=int(command);
-        if(id!=7 && !child_mode_audiobook_allowed())return std::unexpected("听书已被家长限制，或已到休息时间");
+        std::string current;bool ended;
+        {std::lock_guard lock(mutex_);current=path_;ended=state_=="Ended";}
+        const bool song=id!=1 && is_song_path(current);
+        if(id!=2 && id!=7 && !playback_allowed(song))return std::unexpected(playback_restricted(song));
         if(id==2){paused_=true;state("Paused");return {};}
         if(id==7){std::lock_guard operation(operation_);reset_sleep();std::lock_guard lock(mutex_);deadline_=esp_timer_get_time()/1000;sleep_due_=true;local_audio::story_timer_busy=true;return {};}
         if(id==8){
@@ -250,13 +261,12 @@ private:
             return {};
         }
         if(id==1||id==3||id==4){
-            std::string current;bool ended=false;{std::lock_guard lock(mutex_);current=path_;ended=state_=="Ended";}
-            if(live_ && id!=4 && !(id==1 && is_song(current))){paused_=false;state("Playing");return {};}
-            if(id!=4 && permitted(current) && !(id==1 && is_song(current)))return play(current,ended?0:position_.load());
+            if(live_ && id!=4 && !(id==1 && is_song_path(current)))return resume();
+            if(id!=4 && permitted(current) && !(id==1 && is_song_path(current)))return play(current,ended?0:position_.load());
             // "Tell a story" always selects the story library. "Next" keeps
             // the active library, so offline next never crosses into stories.
-            if(id==1 && is_song(current)) {current.clear();}
-            std::vector<std::string> files;scan_library(id!=1 && is_song(current),files);
+            if(id==1 && is_song_path(current)) {current.clear();}
+            std::vector<std::string> files;scan_library(song,files);
             if(files.empty())return std::unexpected("SD 卡中没有故事");
             auto next=std::find(files.begin(),files.end(),current);if(id==4 && next!=files.end() && ++next!=files.end())return play(*next,0);
             return play(files.front(),0);
@@ -283,11 +293,20 @@ private:
     std::expected<void,std::string> stop() {
         std::lock_guard operation(operation_);reset_sleep();return stop_worker();
     }
+    std::expected<void,std::string> resume() {
+        std::lock_guard operation(operation_);
+        if(!live_)return std::unexpected("Nothing to resume");
+        bool song;
+        {std::lock_guard lock(mutex_);song=is_song_path(path_);}
+        if(!playback_allowed(song))return std::unexpected(playback_restricted(song));
+        paused_=false;state("Playing");return {};
+    }
     void on_stop() override {started_=false;stop();}
     std::expected<void,std::string> play(const std::string &path, double start) {
         std::lock_guard operation(operation_);
         if(sleep_due_)return std::unexpected("Goodnight is finishing; cancel the timer first");
-        if(!child_mode_audiobook_allowed())return std::unexpected("听书已被家长限制，或已到休息时间");
+        const bool song=is_song_path(path);
+        if(!playback_allowed(song))return std::unexpected(playback_restricted(song));
         if (path!="@tone" && !permitted(path)) return std::unexpected("Only MP3/WAV under /sdcard/audiobooks is supported");
         if (!std::isfinite(start) || start<0 || start>86400) return std::unexpected("Invalid playback position");
         if (path!="@tone") {
@@ -352,7 +371,7 @@ private:
             BROOKESIA_SERVICE_FUNC_HANDLER_0("ListSongs",list(true)),
             BROOKESIA_SERVICE_FUNC_HANDLER_2("Play","Path",std::string,"Position",double,play(PARAM1,PARAM2)),
             {"Pause",[this](FunctionParameterMap &&)->FunctionResult{if(!live_)return {.success=false,.error_message="Nothing is playing"};paused_=true;state("Paused");return {.success=true};}},
-            {"Resume",[this](FunctionParameterMap &&)->FunctionResult{if(!live_)return {.success=false,.error_message="Nothing to resume"};paused_=false;state("Playing");return {.success=true};}},
+            BROOKESIA_SERVICE_FUNC_HANDLER_0("Resume",resume()),
             BROOKESIA_SERVICE_FUNC_HANDLER_0("Stop",stop()),
             {"Seek",[this](FunctionParameterMap &&args)->FunctionResult{
                 const double seconds=std::get<double>(args.at("Seconds"));
@@ -385,18 +404,20 @@ private:
         bool mp3open=false,wavopen=false,opened=false,failed=false,eof=false;
         std::unique_ptr<StoryPcmBuffer> buffered;
         std::unique_ptr<sonicStreamStruct,decltype(&sonicDestroyStream)> stretch(nullptr,&sonicDestroyStream);
+        bool finish_sleep=goodnight_only;uint32_t finish_id=0;
+        {std::lock_guard lock(mutex_);finish_id=sleep_id_;}
+        std::string path;{std::lock_guard<std::mutex> lock(mutex_);path=path_;}
+        const bool song=is_song_path(path);
+        const auto interrupted=[&](){return cancel_ || sleep_due_ || !playback_allowed(song);};
         auto start_buffer=[&](){
             buffered=std::make_unique<StoryPcmBuffer>([&](const uint8_t *data,size_t size,uint32_t position,uint32_t epoch){
                 if(!codec->write_data(data,size))return false;
                 pcm_stack_free_=std::min(pcm_stack_free_.load(),uint32_t(uxTaskGetStackHighWaterMark(nullptr)));
                 bytes_+=size;if(position!=UINT32_MAX && epoch==pcm_epoch_)position_=position;
                 return true;
-            },paused_,pcm_epoch_,starvations_,write_gap_us_,[&](){return cancel_ || sleep_due_;});
+            },paused_,pcm_epoch_,starvations_,write_gap_us_,interrupted);
             return buffered->start();
         };
-        bool finish_sleep=goodnight_only;uint32_t finish_id=0;
-        {std::lock_guard lock(mutex_);finish_id=sleep_id_;}
-        std::string path;{std::lock_guard<std::mutex> lock(mutex_);path=path_;}
         const bool tone=path=="@tone";
         uint32_t rate=16000,channels=1;uint64_t frames=0,total=32000;
         const drmp3_allocation_callbacks mp3alloc{nullptr,audio_malloc,audio_realloc,audio_free};
@@ -404,8 +425,8 @@ private:
         auto fail=[&](const char *message){state("Error",message);failed=true;};
         do {
             if(!codec || !pcm || !output || !mp3 || !wav){fail("Audio memory or codec unavailable");break;}
-            if(goodnight_only)break;
-            if(feedback_only){say_remaining(codec,pcm);opened=true;break;}
+            if(goodnight_only || !playback_allowed(song))break;
+            if(feedback_only){say_remaining(codec,pcm,song);opened=true;break;}
             if(!tone){
                 auto ext=path.substr(path.find_last_of('.'));std::transform(ext.begin(),ext.end(),ext.begin(),::tolower);
                 if(ext==".mp3") {
@@ -432,7 +453,7 @@ private:
             auto emit=[&](){
                 int n;while((n=sonicReadShortFromStream(stretch.get(),pcm,1024))>0){
                     for(int i=0;i<n;++i)output[2*i]=output[2*i+1]=pcm[i];
-                    if(!buffered->send(output,n*4,frames/rate,[&](){return cancel_ || sleep_due_ || seek_.load()>=0;}))return false;
+                    if(!buffered->send(output,n*4,frames/rate,[&](){return interrupted() || seek_.load()>=0;}))return false;
                 }return true;
             };
             uint64_t resample_phase=0;
@@ -446,10 +467,10 @@ private:
                     // its decoder at the last submitted (whole-second) position.
                     if(was_paused)seek_=position_.load();
                     else vTaskDelay(pdMS_TO_TICKS(60));
-                    say_remaining(codec,pcm);
+                    say_remaining(codec,pcm,song);
                     if(!start_buffer()){fail("PCM buffer/task unavailable");break;}
                 }
-                if(!child_mode_audiobook_allowed())break;
+                if(!playback_allowed(song))break;
                 int32_t requested=seek_.exchange(-1);
                 if(requested>=0){
                     ++pcm_epoch_;
@@ -472,7 +493,7 @@ private:
                     decode_max_us_=std::max(decode_max_us_.load(),uint32_t(esp_timer_get_time()-began));
                 }
                 if(!count){
-                    if(!sonicFlushStream(stretch.get()) || !emit()){if(!cancel_&&!sleep_due_&&seek_.load()<0)fail("Speech output failed");}
+                    if(!sonicFlushStream(stretch.get()) || !emit()){if(!interrupted()&&seek_.load()<0)fail("Speech output failed");}
                     else eof=true;
                     if(seek_.load()>=0)continue;
                     break;
@@ -489,13 +510,13 @@ private:
                 frames+=count;
                 sonicSetSpeed(stretch.get(),tone?1.0f:speed_percent_.load()/100.0f);
                 if(!sonicWriteShortToStream(stretch.get(),output,written) || !emit()){
-                    if(seek_.load()<0 && !cancel_ && !sleep_due_){fail("Speech output failed");break;}
-                    if(cancel_ || sleep_due_)break;
+                    if(seek_.load()<0 && !interrupted()){fail("Speech output failed");break;}
+                    if(interrupted())break;
                 }
             }
         }while(false);
-        if(buffered){buffered->finish(eof && !cancel_ && !sleep_due_ && !failed);if(buffered->failed()&&!failed)fail("Speaker write failed");buffered.reset();if(eof&&!cancel_&&!sleep_due_)vTaskDelay(pdMS_TO_TICKS(60));}
-        if(finish_sleep && codec && pcm && !failed) {say_goodnight(codec,pcm,finish_id);opened=true;}
+        if(buffered){buffered->finish(eof && !interrupted() && !failed);if(buffered->failed()&&!failed)fail("Speaker write failed");buffered.reset();if(eof&&!interrupted())vTaskDelay(pdMS_TO_TICKS(60));}
+        if(finish_sleep && codec && pcm && !failed) {say_goodnight(codec,pcm,finish_id,song);opened=true;}
         if(opened){
             if(codec->is_pa_on_off_supported())codec->set_pa_on_off(false);
             codec->close();
