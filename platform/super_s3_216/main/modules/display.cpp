@@ -31,6 +31,7 @@ extern "C" int brookesia_board_user_volume();
 extern "C" bool brookesia_board_volume_muted();
 extern "C" int brookesia_board_battery_status();
 extern "C" bool brookesia_board_desktop_visible();
+extern "C" bool brookesia_board_weather_visible();
 extern "C" unsigned brookesia_panel_wide_desktop_draws();
 extern "C" bool brookesia_board_screen_asleep();
 extern "C" int brookesia_board_desktop_theme();
@@ -131,6 +132,22 @@ struct RefreshStats {
 } refresh_stats;
 
 uint32_t launcher_settled_refreshes = 0;
+uint32_t weather_full_row_invalidations = 0;
+
+void round_weather_refresh(lv_event_t *event)
+{
+    if (!brookesia_board_weather_visible()) return;
+    auto *display = static_cast<lv_display_t *>(lv_event_get_target(event));
+    auto *area = static_cast<lv_area_t *>(lv_event_get_param(event));
+    const auto right = lv_display_get_horizontal_resolution(display) - 1;
+    if (!area || (area->x1 == 0 && area->x2 == right)) return;
+
+    // The CO5300 can leave a seam at the left edge of narrow writes.
+    // Preserve the dirty row range so a moving sprite does not refresh the entire screen.
+    area->x1 = 0;
+    area->x2 = right;
+    ++weather_full_row_invalidations;
+}
 
 void refresh_settled_launcher(lv_event_t *event)
 {
@@ -245,7 +262,8 @@ boost::json::object board_display_profile(bool force_refresh)
         inspect(inspect,lv_display_get_layer_sys(display));
     }
     return {{"launcher_settled_refreshes",launcher_settled_refreshes},
-            {"launcher_wide_dma_transfers",brookesia_panel_wide_desktop_draws()},{"refresh_count",refresh_stats.count},{"last_refresh_us",refresh_stats.last_us},
+            {"launcher_wide_dma_transfers",brookesia_panel_wide_desktop_draws()},
+            {"weather_full_row_invalidations",weather_full_row_invalidations},{"refresh_count",refresh_stats.count},{"last_refresh_us",refresh_stats.last_us},
             {"max_refresh_us",refresh_stats.max_us},{"last_strips",refresh_stats.last_strips},
             {"flush_wait_us",refresh_stats.wait_us},{"forced_refresh_us",forced_us},{"canvases",std::move(canvases)}};
 }
@@ -329,6 +347,7 @@ bool Display::start_lvgl_display_source(int core_id)
     BROOKESIA_CHECK_FALSE_RETURN(source.start(config), false, "Failed to start LVGL Display source");
 
     esp_lv_adapter_lock(-1);
+    lv_display_add_event_cb(source.display(), round_weather_refresh, LV_EVENT_INVALIDATE_AREA, nullptr);
     lv_display_add_event_cb(source.display(), render_event, LV_EVENT_RENDER_START, nullptr);
     lv_display_add_event_cb(source.display(), render_event, LV_EVENT_RENDER_READY, nullptr);
     for (auto code : {LV_EVENT_REFR_START, LV_EVENT_REFR_READY, LV_EVENT_FLUSH_START,

@@ -60,6 +60,84 @@
       "src": "wx_storm.png",
       "width": 32,
       "height": 32
+    },
+    {
+      "id": "sky_idle",
+      "src": "sky_idle.bin",
+      "width": 32,
+      "height": 480
+    },
+    {
+      "id": "sky_clear_day",
+      "src": "sky_clear_day.bin",
+      "width": 32,
+      "height": 480
+    },
+    {
+      "id": "sky_clear_night",
+      "src": "sky_clear_night.bin",
+      "width": 32,
+      "height": 480
+    },
+    {
+      "id": "sky_cloudy_day",
+      "src": "sky_cloudy_day.bin",
+      "width": 32,
+      "height": 480
+    },
+    {
+      "id": "sky_cloudy_night",
+      "src": "sky_cloudy_night.bin",
+      "width": 32,
+      "height": 480
+    },
+    {
+      "id": "sky_rain_day",
+      "src": "sky_rain_day.bin",
+      "width": 32,
+      "height": 480
+    },
+    {
+      "id": "sky_rain_night",
+      "src": "sky_rain_night.bin",
+      "width": 32,
+      "height": 480
+    },
+    {
+      "id": "sky_storm_day",
+      "src": "sky_storm_day.bin",
+      "width": 32,
+      "height": 480
+    },
+    {
+      "id": "sky_storm_night",
+      "src": "sky_storm_night.bin",
+      "width": 32,
+      "height": 480
+    },
+    {
+      "id": "sky_snow_day",
+      "src": "sky_snow_day.bin",
+      "width": 32,
+      "height": 480
+    },
+    {
+      "id": "sky_snow_night",
+      "src": "sky_snow_night.bin",
+      "width": 32,
+      "height": 480
+    },
+    {
+      "id": "sky_fog_day",
+      "src": "sky_fog_day.bin",
+      "width": 32,
+      "height": 480
+    },
+    {
+      "id": "sky_fog_night",
+      "src": "sky_fog_night.bin",
+      "width": 32,
+      "height": 480
     }
   ]
 }

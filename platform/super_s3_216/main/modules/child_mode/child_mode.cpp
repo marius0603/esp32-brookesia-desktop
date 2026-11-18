@@ -318,10 +318,15 @@ extern "C" const char *brookesia_child_launch_error(const char *id) {
     return nullptr;
 }
 extern "C" unsigned brookesia_child_revision(){return revision;}
-namespace {std::atomic<bool> desktop_visible{true};}
+namespace {
+std::atomic<bool> desktop_visible{true};
+std::atomic<bool> weather_visible{false};
+}
 extern "C" bool brookesia_board_desktop_visible(){return desktop_visible.load();}
+extern "C" bool brookesia_board_weather_visible(){return weather_visible.load();}
 extern "C" void brookesia_child_foreground(const char *id,unsigned app_id) {
     desktop_visible=!id || !*id || std::strcmp(id,"brookesia.system.super.shell")==0;
+    weather_visible=id && std::strcmp(id,"local.weather")==0;
     foreground=child_policy::app_bit(id);foreground_id=app_id;
 }
 extern "C" int brookesia_child_cap_volume(int requested) {

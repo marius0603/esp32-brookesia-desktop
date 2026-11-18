@@ -4,12 +4,21 @@
 const SHANGHAI = {city:'上海', latitude:31.2304, longitude:121.4737, origin:'默认城市'};
 const CACHE = '/littlefs/weather-cache.json', SETTINGS = '/littlefs/weather-settings.json';
 const STATE = '/littlefs/weather-state.json', REFRESH_MS = 10*60*1000, STALE_MS = 30*60*1000;
+// Asset generator reads this JSON-compatible object to render matching RGB565 tiles.
+const SKY_PALETTES = {
+  "idle":["#081421","#142b43"], "clear_day":["#70b8ec","#d1ebfa"], "clear_night":["#080e24","#122b43"],
+  "cloudy_day":["#91afc6","#d7e3eb"], "cloudy_night":["#122030","#060e1c"],
+  "rain_day":["#749bb5","#b7ccd9"], "rain_night":["#101f34","#050c18"],
+  "storm_day":["#8199ad","#b0c3d2"], "storm_night":["#10182a","#050a13"],
+  "snow_day":["#a5cbe7","#e3f1fa"], "snow_night":["#162d44","#081629"],
+  "fog_day":["#a5b9c5","#d8e3e8"], "fog_night":["#202e3b","#0d1723"]
+};
 let gui, storage, http, wifi, timer, modes;
 let screenAsleep=false, fxProbe=null;
 let mode = 'shanghai', location = SHANGHAI, data = null, receivedAt = 0;
 let connected = false, paused = false, pending = null, nextFetch = 0, failures = 0;
 let lastRequest = 0, error = '', status = '等待联网', rendered = {};
-let fxDay=1;
+let fxDay=1, fxSky=null;
 let fxScene='', fxTimer=0, tickTimer=0, fxLastTick=0, fxElapsed=0, fxInterval=250, fxFrames=0, fxError='', fxValues={};
 
 function call(handle, name, args) {
@@ -112,15 +121,8 @@ function applyScene() {
   const scene=data?sceneFor(code,day):'idle';
   if (scene===fxScene && day===fxDay && (scene==='idle' || fxTimer)) return;
   stopFx();
-  const colors={idle:['#081421','#142b43'],clear_day:['#70b8ec','#d1ebfa'],clear_night:['#080e24','#122b43'],
-    cloudy_day:['#91afc6','#d7e3eb'],cloudy_night:['#122030','#060e1c'],rain:['#122d40','#081421'],
-    storm:['#171f38','#08111e'],snow:['#2a435a','#122239'],fog:['#344651','#15242e']};
-  const weatherPalettes={
-    rain:day?['#749bb5','#b7ccd9']:['#101f34','#050c18'],
-    storm:day?['#8199ad','#b0c3d2']:['#10182a','#050a13'],
-    snow:day?['#a5cbe7','#e3f1fa']:['#162d44','#081629'],
-    fog:day?['#a5b9c5','#d8e3e8']:['#202e3b','#0d1723']};
-  const c=weatherPalettes[scene] || colors[scene] || colors.idle, rain=scene==='rain'||scene==='storm';
+  const skyName=SKY_PALETTES[scene]?scene:scene+(day?'_day':'_night');
+  const c=SKY_PALETTES[skyName] || SKY_PALETTES.idle, rain=scene==='rain'||scene==='storm';
   const clouds=scene.indexOf('cloudy')===0 || rain || scene==='snow';
   const celestial=scene!=='idle' && scene!=='fog' && scene!=='storm' && code!==3;
   const stars=!day && (scene==='clear_night' || (scene==='cloudy_night' && code!==3));
@@ -138,6 +140,16 @@ function applyScene() {
     binding('/main/backdrop/fog','hidden',scene!=='fog'),binding('/main/backdrop/snow','hidden',scene!=='snow')];
   for (let i=0;i<4;i++) updates.push(binding('/main/backdrop/drop'+i,'hidden',!rain));
   try {
+    try {
+      const skySrc='sky_'+(SKY_PALETTES[skyName]?skyName:'idle');
+      call(gui,'SetViewSrc',{Path:'/main/sky_texture',Src:skySrc});
+      updates.push(binding('/main/sky_texture','hidden',false));
+      fxSky=skySrc;
+    } catch (_) {
+      // Keep the color fallback and the animation if a tile is unavailable.
+      updates.push(binding('/main/sky_texture','hidden',true));
+      fxSky=null;
+    }
     updateBindings(updates); fxScene=scene;fxDay=day; fxLastTick=Date.now(); fxElapsed=0; fxFrames=0; fxError='';fxValues={};fxProbe=null;
     fxInterval=rain?125:250;
     if (scene!=='idle') fxTimer=call(timer,'StartPeriodic',{Name:'weather_fx',IntervalMs:fxInterval});
@@ -190,7 +202,7 @@ function animateFx() {
   catch(e) { fxError=String(e);stopFx();persistState(); }
 }
 function persistState() {
-  write(STATE,{version:4,background:fxScene,day_phase:fxDay?'day':'night',solar:daylightNow(),screen_asleep:screenAsleep,fx_probe:fxProbe,fx_frames:fxFrames,fx_error:fxError,fx_active:!!fxTimer,fx_interval_ms:fxInterval,paused:paused,hourly_count:data?hours24(data).length:0,status:status,error:error,connected:connected,mode:mode,location:location,
+  write(STATE,{version:4,background:fxScene,sky_texture:fxSky,day_phase:fxDay?'day':'night',solar:daylightNow(),screen_asleep:screenAsleep,fx_probe:fxProbe,fx_frames:fxFrames,fx_error:fxError,fx_active:!!fxTimer,fx_interval_ms:fxInterval,paused:paused,hourly_count:data?hours24(data).length:0,status:status,error:error,connected:connected,mode:mode,location:location,
     pending:pending?pending.kind:null,last_weather_request_id:lastRequest,
     received_at:receivedAt,source_time:data?data.current.time:null,
     temperature:data?data.current.temperature_2m:null,ui_updated:!paused && !!data});

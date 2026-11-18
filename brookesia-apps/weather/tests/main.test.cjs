@@ -4,6 +4,8 @@ const vm = require('node:vm');
 const path = require('node:path');
 const code = fs.readFileSync(path.join(__dirname,'../src/app/main.js'),'utf8');
 const nodes={};
+const imageIndex=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/images/index.json'),'utf8')).images;
+const images=Object.fromEntries(imageIndex.map(asset=>[asset.id,asset]));
 // Binding fields supported by the target Brookesia GUI ABI for these effects.
 const supportedFxFields=new Set(['commonProps.hidden','style.bgColor','style.bgGradientColor','style.opacity','style.textColor','style.borderColor','placement.x','placement.y']);
 (function walk(node,parent=''){const p=parent+'/'+node.id;nodes[p]=node;for(const c of node.children||[])walk(c,p);})(JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/screens/main.json'),'utf8')));
@@ -23,6 +25,10 @@ function harness(online=true, files={}) {
       if(name==='SetBindings')for(const u of p.Updates){
         const field=Object.entries(nodes[u.Path]?.bindings||{}).find(([field,key])=>key===u.Key)?.[0];
         assert.ok(field,'Missing GUI binding '+u.Path+' '+u.Key);assert.ok(supportedFxFields.has(field),'Unsupported target GUI field '+field);
+      }
+      if (name==='SetViewSrc' && p.Path==='/main/sky_texture') {
+        assert.equal(nodes[p.Path].imageProps.innerAlign,'tile');
+        assert.ok(images[p.Src],p.Src);
       }
       if (name==='FSReadText') {if (!(p.Path in files)) return JSON.stringify({success:false,error:'missing'});data=JSON.stringify(files[p.Path]);}
       if (name==='FSWriteText') files[p.Path]=JSON.parse(p.Data);
@@ -172,6 +178,9 @@ test('each precipitation layer has distinct day/night sky and keeps its animatio
   assert.equal(h.value('fxDay'),0,'offline sunset must still switch');
   const nightSky=h.calls.filter(c=>c.name==='SetBindings').flatMap(c=>c.p.Updates).filter(u=>u.Key==='sky').at(-1).Value;
   assert.notEqual(daySky,nightSky);assert.ok(h.value('fxTimer'));
+  const tiles=h.calls.filter(c=>c.name==='SetViewSrc' && c.p.Path==='/main/sky_texture').map(c=>c.p.Src);
+  const root=scene.includes('_')?scene.split('_')[0]:scene;
+  assert.deepEqual(tiles.slice(-2),['sky_'+root+'_day','sky_'+root+'_night']);
   h.advance(250);h.app.on_timer(99,'weather_fx');assert.ok(h.value('fxFrames')>0);
  }
 });
@@ -223,4 +232,29 @@ test('hour cards use their forecast daylight, keep edge separation and avoid rep
  const themeBatches=h.calls.filter(c=>c.name==='SetBindings'&&c.p.Updates.some(u=>u.Key==='card_bg'));
  assert.ok(themeBatches.every(c=>c.p.Updates.length<=20));
 });
+
+test('all sky palettes ship with dithered LVGL RGB565 tiles',()=>{
+ const palettes=harness().value('SKY_PALETTES');
+ for(const [name,endpoints] of Object.entries(palettes)){
+  const asset=images['sky_'+name];assert.ok(asset,name);
+  const tile=fs.readFileSync(path.join(__dirname,'../src/res/images',asset.src));
+  assert.equal(tile[0],0x19);assert.equal(tile[1],0x12);
+  assert.equal(tile.readUInt16LE(4),asset.width);
+  assert.equal(tile.readUInt16LE(6),asset.height);
+  assert.equal(tile.length,12+asset.width*asset.height*2);
+  const row=y=>Array.from({length:asset.width},(_,x)=>tile.readUInt16LE(12+(y*asset.width+x)*2));
+  const average=y=>row(y).reduce((rgb,pixel,_,pixels)=>{
+   rgb[0]+=((pixel>>11)/31)*255/pixels.length;
+   rgb[1]+=(((pixel>>5)&63)/63)*255/pixels.length;
+   rgb[2]+=((pixel&31)/31)*255/pixels.length;
+   return rgb;
+  },[0,0,0]);
+  for(const [index,y] of [0,asset.height-1].entries()){
+   const expected=endpoints[index].slice(1).match(/../g).map(c=>parseInt(c,16));
+   assert.ok(average(y).every((value,channel)=>Math.abs(value-expected[channel])<3),name);
+  }
+  assert.ok(Array.from({length:asset.height},(_,y)=>y).some(y=>new Set(row(y)).size>1),name);
+ }
+});
+
 console.log(count+' weather tests passed');

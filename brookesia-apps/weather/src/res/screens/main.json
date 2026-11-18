@@ -16,6 +16,28 @@
   },
   "children": [
     {
+      "type": "image",
+      "id": "sky_texture",
+      "commonProps": {
+        "clickable": false,
+        "scrollable": false,
+        "hidden": true
+      },
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "imageProps": {
+        "innerAlign": "tile"
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      }
+    },
+    {
       "type": "container",
       "id": "backdrop",
       "commonProps": {
