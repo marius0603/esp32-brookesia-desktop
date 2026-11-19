@@ -1,0 +1,187 @@
+diff --git a/system/brookesia_system_super/src/private/launcher_swipe.hpp b/system/brookesia_system_super/src/private/launcher_swipe.hpp
+new file mode 100644
+index 0000000..37c1405
+--- /dev/null
++++ b/system/brookesia_system_super/src/private/launcher_swipe.hpp
+@@ -0,0 +1,85 @@
++/*
++ * SPDX-FileCopyrightText: 2026 Espressif Systems (Shanghai) CO LTD
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ */
++#pragma once
++
++#include <algorithm>
++#include <cstdint>
++
++namespace esp_brookesia::system::super {
++
++class LauncherSwipe {
++public:
++    constexpr void begin()
++    {
++        *this = {};
++        active_ = true;
++    }
++
++    constexpr void update(float dx, float dy, uint32_t time_ms)
++    {
++        if (!active_ || time_ms <= last_sample_ms_) {
++            return;
++        }
++
++        const auto elapsed_ms = time_ms - last_sample_ms_;
++        if (elapsed_ms <= max_sample_gap_ms) {
++            const float speed = (dx - last_dx_) / elapsed_ms;
++            // Follow reversals immediately and decay while the finger is still.
++            velocity_ = speed * velocity_ < 0 ? speed : (velocity_ + speed) * 0.5F;
++        } else {
++            velocity_ = 0;
++        }
++        last_dx_ = dx;
++        last_sample_ms_ = time_ms;
++        dragging_ = dragging_ || (magnitude(dx) > 8 && magnitude(dx) > magnitude(dy));
++    }
++
++    constexpr bool dragging() const
++    {
++        return dragging_;
++    }
++
++    constexpr int page_delta(float dx, int32_t page_width, uint32_t release_ms) const
++    {
++        if (magnitude(dx) < min_distance) {
++            return 0;
++        }
++
++        const float threshold = std::max(page_width * 0.25F, 24.0F);
++        const float max_projection = threshold - min_distance;
++        // Release includes the debounce interval. Only project movement
++        // measured while touching and discard velocity across long gaps.
++        const bool recent = release_ms - last_sample_ms_ <= max_release_gap_ms;
++        const float projection = recent && magnitude(velocity_) >= 0.12F ?
++                                 std::clamp(velocity_ * 120.0F, -max_projection, max_projection) : 0;
++        const float projected = dx + projection;
++        if (dx < 0 && projected <= -threshold) {
++            return 1;
++        }
++        if (dx > 0 && projected >= threshold) {
++            return -1;
++        }
++        return 0;
++    }
++
++private:
++    static constexpr float min_distance = 12;
++    static constexpr uint32_t max_sample_gap_ms = 65;
++    static constexpr uint32_t max_release_gap_ms = 100;
++
++    static constexpr float magnitude(float value)
++    {
++        return value < 0 ? -value : value;
++    }
++
++    float last_dx_ = 0;
++    float velocity_ = 0;
++    uint32_t last_sample_ms_ = 0;
++    bool active_ = false;
++    bool dragging_ = false;
++};
++
++} // namespace esp_brookesia::system::super
+diff --git a/system/brookesia_system_super/src/private/shell_app.hpp b/system/brookesia_system_super/src/private/shell_app.hpp
+index 89624ef..62eb915 100644
+--- a/system/brookesia_system_super/src/private/shell_app.hpp
++++ b/system/brookesia_system_super/src/private/shell_app.hpp
+@@ -25,6 +25,7 @@
+ #include "brookesia/service_manager/service/utils_service.hpp"
+ #include "brookesia/system_core.hpp"
+ #include "brookesia/system_super/system.hpp"
++#include "launcher_swipe.hpp"
+ #include "private/system_constants.hpp"
+ 
+ namespace esp_brookesia::system::super {
+@@ -245,9 +246,7 @@ private:
+     size_t launcher_slot_count_ = 0;
+     size_t launcher_page_ = 0, launcher_pages_ = 1, launcher_page_size_ = 9;
+     int32_t launcher_page_width_ = 372;
+-    bool launcher_swiping_ = false;
+-    std::chrono::steady_clock::time_point launcher_click_after_{};
+-    gui::SubscriptionId launcher_page_animation_ = 0;
++    LauncherSwipe launcher_swipe_;
+     void set_launcher_page(size_t page, bool animate);
+     void handle_launcher_swipe(const service::Display::TouchGestureInfo &info);
+     std::vector<DisplaySourceRestoreRecord> display_source_restore_records_;
+diff --git a/system/brookesia_system_super/src/shell_app_launcher.cpp b/system/brookesia_system_super/src/shell_app_launcher.cpp
+index 993879f..a6d9755 100644
+--- a/system/brookesia_system_super/src/shell_app_launcher.cpp
++++ b/system/brookesia_system_super/src/shell_app_launcher.cpp
+@@ -159,7 +159,7 @@ std::string ShellApp::get_app_icon_text(std::string_view name) const
+ std::expected<void, std::string> ShellApp::populate_launcher(core::AppContext &context)
+ {
+     disconnect_launcher_actions();
+-    launcher_swiping_ = false;
++    launcher_swipe_ = {};
+     for (const auto &[instance_id, app_id] : launcher_instance_to_app_) {
+         (void)instance_id;
+         const auto instance_path = make_launcher_item_path(app_id);
+@@ -415,7 +415,9 @@ void ShellApp::disconnect_launcher_actions()
+ 
+ void ShellApp::handle_launcher_event(const gui::Event &event)
+ {
+-    if (launcher_swiping_ || SteadyClock::now() < launcher_click_after_) return;
++    if (launcher_swipe_.dragging()) {
++        return;
++    }
+     if (launch_overlay_active_) {
+         BROOKESIA_LOGW("Ignore launcher action while app launch overlay is active");
+         return;
+@@ -506,25 +508,33 @@ void ShellApp::set_launcher_page(size_t page, bool animate)
+ void ShellApp::handle_launcher_swipe(const service::Display::TouchGestureInfo &info)
+ {
+     using Type = service::Display::TouchGestureEventType;
+-    if (launch_overlay_active_ || !launcher_populated_ || !system_ui_expanded_) return;
+-    if (info.event_type == Type::Press) { launcher_swiping_ = false; return; }
++    if (launch_overlay_active_ || !launcher_populated_ || !system_ui_expanded_) {
++        launcher_swipe_ = {};
++        return;
++    }
++    if (info.event_type == Type::Press) {
++        launcher_swipe_.begin();
++        return;
++    }
++
+     const float density = std::max(owner_.get_environment().density, .001F);
+-    int32_t dx = static_cast<int32_t>((info.stop_x - info.start_x) / density);
+-    const int32_t dy = static_cast<int32_t>((info.stop_y - info.start_y) / density);
+-    if (std::abs(dx) > 8 && std::abs(dx) > std::abs(dy) * 1.3F) launcher_swiping_ = true;
+-    if (!launcher_swiping_) return;
+-    launcher_click_after_ = SteadyClock::now() + std::chrono::milliseconds(300);
+-    if (info.event_type == Type::Release) {
+-        size_t next = launcher_page_;
+-        const int32_t threshold = info.duration_ms <= 350 ? 12 : 24;
+-        if (dx <= -threshold && next + 1 < launcher_pages_) ++next;
+-        if (dx >= threshold && next > 0) --next;
+-        launcher_swiping_ = false;
+-        set_launcher_page(next, true);
++    const float dx = (info.stop_x - info.start_x) / density;
++    if (info.event_type == Type::Pressing) {
++        launcher_swipe_.update(dx, (info.stop_y - info.start_y) / density, info.duration_ms);
+         return;
+     }
+-    // No binding updates while moving: LVGL scrolls in its input/render loop.
+ 
++    if (launcher_swipe_.dragging()) {
++        const int direction = launcher_swipe_.page_delta(dx, launcher_page_width_, info.duration_ms);
++        size_t next = launcher_page_;
++        if (direction > 0 && next + 1 < launcher_pages_) {
++            ++next;
++        } else if (direction < 0 && next > 0) {
++            --next;
++        }
++        set_launcher_page(next, true);
++    }
++    launcher_swipe_ = {};
+ }
+ 
+ } // namespace esp_brookesia::system::super

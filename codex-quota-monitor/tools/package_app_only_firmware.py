@@ -29,42 +29,44 @@ def main():
         'app_only': True, 'files': {}}
     sdkconfig = json.loads((build / 'config/sdkconfig.json').read_text(encoding='utf-8'))
     manifest['features'] = {'separate_websocket_tx_lock': bool(sdkconfig.get('ESP_WS_CLIENT_SEPARATE_TX_LOCK'))}
-    if desc['project_version'] in ('0.8.3-s3.64','0.8.3-s3.65','0.8.3-s3.66','0.8.3-s3.67','0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78'):
+    if desc['project_version'] in ('0.8.3-s3.64','0.8.3-s3.65','0.8.3-s3.66','0.8.3-s3.67','0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79'):
         manifest['features'].update(phone_ble_remote=bool(sdkconfig.get('BT_NIMBLE_ENABLED') and sdkconfig.get('ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_1')),
             ble_controller_flash_code=bool(sdkconfig.get('BT_CTRL_RUN_IN_FLASH_ONLY')),phone_navigation=True,
             navigation_packet_bytes=256,navigation_stale_seconds=15,navigation_unknown_value=-1,
             navigation_sources=['offline_demo','sdk_simulation','amap_notification'],navigation_local_voice=True)
         assert manifest['features']['phone_ble_remote'] and manifest['features']['ble_controller_flash_code']
-    if desc['project_version'] in ('0.8.3-s3.66','0.8.3-s3.67','0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78'):
+    if desc['project_version'] in ('0.8.3-s3.66','0.8.3-s3.67','0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79'):
         manifest['features'].update(navigation_psram_stack=True,internal_dma_reserve_bytes=sdkconfig['SPIRAM_MALLOC_RESERVE_INTERNAL'])
-    if desc['project_version'] in ('0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78'):
+    if desc['project_version'] in ('0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79'):
         manifest['features'].update(canvas_allocation_retry=True,allocation_failure_diagnostics=True,largest_free_heap_diagnostics=True)
-    if desc['project_version'] in ('0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78'):
+    if desc['project_version'] in ('0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79'):
         manifest['features'].update(launcher_full_width_refresh_on_scroll_end=True,launcher_margin_dma_cache_psram_bytes=122880)
-    if desc['project_version'] in ('0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78'):
+    if desc['project_version'] in ('0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79'):
         manifest['features']['weather_full_width_dirty_rows']=True
-    if desc['project_version'] in ('0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78'):
+    if desc['project_version'] in ('0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79'):
         manifest['features']['fast_mp3_seek_discard']=True
-    if desc['project_version'] in ('0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78'):
+    if desc['project_version'] in ('0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79'):
         manifest['features'].update(independent_child_audio_permissions=True,child_radio_station_allowlist=True)
-    if desc['project_version'] in ('0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78'):
+    if desc['project_version'] in ('0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79'):
         manifest['features'].update(radio_bounded_recovery=True,voice_bounded_recovery=True)
-    if desc['project_version'] in ('0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78'):
+    if desc['project_version'] in ('0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79'):
         manifest['features'].update(staged_text_writes=True,audio_read_error_is_not_eof=True)
-    if desc['project_version'] in ('0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78'):
+    if desc['project_version'] in ('0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79'):
         generated=(build.parent/'components/gen_bmgr_codes/gen_board_device_config.c').read_text(encoding='utf-8')
         assert re.search(r'\.pclk_hz\s*=\s*80000000',generated),'QSPI frequency was not regenerated'
         manifest['features'].update(canvas_native_stride=True,canvas_rect_cache=True,display_dma_staging_bytes=4096,qspi_clock_hz=80000000)
-    if desc['project_version'] in ('0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78'):
+    if desc['project_version'] in ('0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79'):
         peripherals = (build.parent/'components/gen_bmgr_codes/gen_board_periph_config.c').read_text(encoding='utf-8')
         assert re.search(r'\.max_transfer_sz\s*=\s*7680', peripherals), 'QSPI transfer size was not regenerated'
         manifest['features'].update(display_dma_staging_bytes=7680, display_dma_staging_buffers=2,
             display_dma_fallback_bytes=3840, display_spi_max_transfer_request=7680)
-    if desc['project_version'] in ('0.8.3-s3.77','0.8.3-s3.78'):
+    if desc['project_version'] in ('0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79'):
         manifest['features'].update(weather_local_rendering=True, weather_row_cache_bytes=480*480*2)
-    if desc['project_version'] == '0.8.3-s3.78':
+    if desc['project_version'] in ('0.8.3-s3.78', '0.8.3-s3.79'):
         assert sdkconfig.get('LV_USE_SNAPSHOT')
         manifest['features']['launcher_scroll_snapshot'] = True
+    if desc['project_version'] == '0.8.3-s3.79':
+        manifest['features']['launcher_release_snap'] = True
     if desc['project_version'] in ('0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44','0.8.3-s3.45','0.8.3-s3.46','0.8.3-s3.47','0.8.3-s3.48','0.8.3-s3.49','0.8.3-s3.50','0.8.3-s3.51','0.8.3-s3.53','0.8.3-s3.54','0.8.3-s3.55','0.8.3-s3.56','0.8.3-s3.57','0.8.3-s3.58'):
         manifest['features'].update(buffered_story_pcm=True,pitch_preserving_story_speed=True,default_story_speed=1.0)
     if desc['project_version'] in ('0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44','0.8.3-s3.45','0.8.3-s3.46','0.8.3-s3.47','0.8.3-s3.48','0.8.3-s3.49','0.8.3-s3.50','0.8.3-s3.51','0.8.3-s3.53','0.8.3-s3.54','0.8.3-s3.55','0.8.3-s3.56','0.8.3-s3.57','0.8.3-s3.58'):
