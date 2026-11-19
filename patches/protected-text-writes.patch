@@ -1,0 +1,146 @@
+diff --git a/service/system/brookesia_service_storage/src/service_storage.cpp b/service/system/brookesia_service_storage/src/service_storage.cpp
+--- a/service/system/brookesia_service_storage/src/service_storage.cpp
++++ b/service/system/brookesia_service_storage/src/service_storage.cpp
+@@ -8,6 +8,8 @@
+ #include <chrono>
+ #include <cstring>
+ #include <cstdint>
++#include <cstdio>
++#include <mutex>
+ #include <expected>
+ #include <filesystem>
+ #include <fstream>
+@@ -563,8 +565,8 @@
+             result.append(reinterpret_cast<char *>(chunk.data()), static_cast<size_t>(bytes_read));
+         }
+     }
+-    if (input.bad()) {
+-        return std::unexpected("Failed to read file: " + path.generic_string());
++    if (input.bad() || (!size_error && result.size() != expected_size)) {
++        return std::unexpected("Incomplete text file read: " + path.generic_string());
+     }
+     return result;
+ }
+@@ -603,6 +605,104 @@
+         total_written += write_size;
+     }
+     return {};
++}
++
++// Keep the file format and final path unchanged for existing apps and tools.
++std::mutex text_update_mutex;
++
++bool protected_text_path(const std::filesystem::path &path)
++{
++    constexpr std::string_view apps = "/sdcard/apps/";
++    const auto name = path.generic_string();
++    if (name.starts_with("/littlefs/")) return true;
++    if (!name.starts_with(apps)) return false;
++    const auto separator = name.find('/', apps.size());
++    return separator != std::string::npos && std::string_view(name).substr(separator).starts_with("/data/");
++}
++
++std::filesystem::path text_sidecar(const std::filesystem::path &path, const char *suffix)
++{
++    return path.parent_path() / (path.filename().generic_string() + suffix);
++}
++
++std::expected<void, std::string> flush_text(const std::filesystem::path &path, std::string_view data)
++{
++    InternalBuffer chunk(std::min(FILE_IO_CHUNK_SIZE, std::max<size_t>(data.size(), 1)));
++    if (!chunk.is_valid()) return std::unexpected("Failed to allocate text write buffer");
++    FILE *out = std::fopen(path.c_str(), "wb");
++    if (!out) return std::unexpected("Failed to open staged text: " + std::string(std::strerror(errno)));
++    bool success = true;
++    while (!data.empty()) {
++        const auto size = std::min(chunk.size(), data.size());
++        std::memcpy(chunk.data(), data.data(), size);
++        if (std::fwrite(chunk.data(), 1, size, out) != size) {
++            success = false;
++            break;
++        }
++        data.remove_prefix(size);
++    }
++    if (success && (std::fflush(out) != 0 || ::fsync(::fileno(out)) != 0)) success = false;
++    if (std::fclose(out) != 0) success = false;
++    if (!success) return std::unexpected("Could not fully write and sync staged text");
++    return {};
++}
++
++std::expected<void, std::string> write_protected_text(const std::filesystem::path &path, std::string_view data)
++{
++    const std::lock_guard lock(text_update_mutex);
++    const auto staged = text_sidecar(path, ".~stage");
++    const auto backup = text_sidecar(path, ".~previous");
++    // Unlink only files. Never replace a directory or follow a sidecar symlink.
++    auto sidecar_ok = [](const std::filesystem::path &p) {
++        const auto info = make_file_info(p);
++        return !info.exists || info.type == StorageFileType::File;
++    };
++    auto parent = ensure_parent_directory(path);
++    if (!parent) return parent;
++    auto stat = make_file_info(path);
++    if ((stat.exists && stat.type != StorageFileType::File) || !sidecar_ok(staged) || !sidecar_ok(backup) ||
++        !validate_no_symlink_components(staged) || !validate_no_symlink_components(backup)) {
++        return std::unexpected("Invalid text update path");
++    }
++    const bool had_backup = make_file_info(backup).exists;
++    if (!stat.exists && had_backup) {
++        if (std::rename(backup.c_str(), path.c_str()) != 0)
++            return std::unexpected("Cannot restore previous text before updating");
++    } else if (had_backup && ::unlink(backup.c_str()) != 0) {
++        return std::unexpected("Cannot remove completed text backup");
++    }
++    if (make_file_info(staged).exists && ::unlink(staged.c_str()) != 0)
++        return std::unexpected("Cannot remove incomplete text staging file");
++
++    auto written = flush_text(staged, data);
++    if (!written) {
++        ::unlink(staged.c_str());
++        return written;
++    }
++    if (std::rename(staged.c_str(), path.c_str()) == 0) return {};
++    // FatFs requires an unused destination. Preserve the committed text until
++    // the staged file has been flushed, then leave a recoverable previous copy.
++    if (errno != EEXIST || std::rename(path.c_str(), backup.c_str()) != 0) {
++        ::unlink(staged.c_str());
++        return std::unexpected("Cannot publish staged text");
++    }
++    if (std::rename(staged.c_str(), path.c_str()) != 0) {
++        std::rename(backup.c_str(), path.c_str());
++        ::unlink(staged.c_str());
++        return std::unexpected("Text update failed; previous value retained");
++    }
++    ::unlink(backup.c_str());
++    return {};
++}
++
++std::expected<std::string, std::string> read_protected_text(const std::filesystem::path &path)
++{
++    const std::lock_guard lock(text_update_mutex);
++    if (make_file_info(path).exists) return read_file_to_string(path);
++    const auto backup = text_sidecar(path, ".~previous");
++    if (make_file_info(backup).type == StorageFileType::File && validate_no_symlink_components(backup))
++        return read_file_to_string(backup);
++    return read_file_to_string(path);
+ }
+ 
+ std::expected<void, std::string> copy_file_chunked(
+@@ -1033,9 +1133,7 @@
+         return std::unexpected(path.error());
+     }
+ 
+-    auto result = read_file_to_string(path.value());
+-
+-    return result;
++    return protected_text_path(*path) ? read_protected_text(*path) : read_file_to_string(*path);
+ }
+ 
+ std::expected<double, std::string> Storage::function_fs_read(const std::string &raw_path, const RawBuffer &buffer)
+@@ -1075,5 +1173,6 @@
+         return std::unexpected(path.error());
+     }
+ 
++    if (protected_text_path(*path)) return write_protected_text(*path, data);
+     return write_bytes_to_file(path.value(), reinterpret_cast<const uint8_t *>(data.data()), data.size());
+ }

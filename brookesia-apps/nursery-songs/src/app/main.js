@@ -30,10 +30,13 @@ function clock(t){t=Math.max(0,Math.floor(Number(t)||0));return Math.floor(t/60)
 function own(s){return !!s.path&&s.path.startsWith('/sdcard/audiobooks/songs/');}
 function section(path){return path.startsWith('/sdcard/audiobooks/songs/lullabies/')?'lullaby':'nursery';}
 function sectionName(){return collection==='lullaby'?'摇篮曲':'快乐儿歌';}
+function validBookmark(value){return value&&typeof value.path==='string'&&value.path.startsWith('/sdcard/audiobooks/songs/')&&Number.isFinite(value.position)&&value.position>=0&&value.position<=86400;}
 function save(){
- if(own(state)&&(state.active||state.state==='Ended'||state.state==='SleepEnded'))bookmarks[section(state.path)]={path:state.path,position:state.state==='Ended'?0:state.position||0};
+ if(own(state)&&(state.active&&state.state!=='Loading'||state.state==='Ended'||state.state==='SleepEnded'||state.state==='Error'&&state.bytes_written))bookmarks[section(state.path)]={path:state.path,position:state.state==='Ended'?0:state.position||0};
  bookmark=bookmarks[collection]||null;
- call(core,'StorageWrite',{Location:location,Data:JSON.stringify({bookmark:bookmark,bookmarks:bookmarks,collection:collection,mode:mode})});lastSaved=Date.now();
+ lastSaved=Date.now();
+ try{call(core,'StorageWrite',{Location:location,Data:JSON.stringify({bookmark:bookmark,bookmarks:bookmarks,collection:collection,mode:mode})});}
+ catch(_){text('player/status','书签未保存，请检查 SD 卡');}
 }
 function selectTracks(){
  tracks=allTracks.filter(t=>section(t.path)===collection);bookmark=bookmarks[collection]||null;
@@ -91,7 +94,7 @@ function poll(){
  text('player/toggle/label',active&&state.state!=='Paused'?'暂停':'播放');
  const d=call(device,'GetState');applyAudioTheme(d);text('header/volume','音量 '+d.resume_volume+'%'+(d.do_not_disturb?' · 静音':''));
  text('player/sleep',state.sleep_active?clock(state.sleep_remaining_seconds):'');
- if(active&&Date.now()-lastSaved>=15000)save();
+ if((active||at>=0&&next.state==='Error'&&next.bytes_written)&&Date.now()-lastSaved>=15000)save();
 }
 function action(n){
  if(n==='nursery'||n==='lullaby'){selectCollection(n);return;}
@@ -116,13 +119,23 @@ globalThis.brookesia_app={
   gui=brookesia.start_service('SystemGui');audio=brookesia.start_service('Audiobook');core=brookesia.start_service('SystemCore');device=brookesia.start_service('DeviceModes');timer=brookesia.start_service('SystemTimer');
   hidden=false;cache={};
   for(const n of ['collections','nursery','lullaby','credits','creditsBack','toggle','previous','next','mode','songs','back','timerBack','listPrev','listNext','row0','row1','row2','row3','sleep','choice0','choice1','choice2','choice3','timerConfirm','lock'])call(gui,'SubscribeAction',{Action:n});
-  try{const saved=JSON.parse(call(core,'StorageRead',{Location:location}));bookmarks=saved.bookmarks||{};if(saved.bookmark&&!bookmarks[section(saved.bookmark.path)])bookmarks[section(saved.bookmark.path)]=saved.bookmark;if(saved.collection==='nursery'||saved.collection==='lullaby')collection=saved.collection;if(modes.includes(saved.mode))mode=saved.mode;}catch(_){}
+  bookmarks={};
+  try{
+   const saved=JSON.parse(call(core,'StorageRead',{Location:location}));
+   for(const key of ['nursery','lullaby']){
+    const value=saved.bookmarks&&saved.bookmarks[key];
+    if(validBookmark(value)&&section(value.path)===key)bookmarks[key]=value;
+   }
+   if(validBookmark(saved.bookmark)&&!bookmarks[section(saved.bookmark.path)])bookmarks[section(saved.bookmark.path)]=saved.bookmark;
+   if(saved.collection==='nursery'||saved.collection==='lullaby')collection=saved.collection;
+   if(modes.includes(saved.mode))mode=saved.mode;
+  }catch(_){}
   state=call(audio,'GetState');refresh();show('collections');poll();timerId=call(timer,'StartPeriodic',{Name:'nursery-songs',IntervalMs:1000});return true;
  },
  on_action(n){try{action(n);}catch(e){show('player');text('player/status',String(e.message||e));}return true;},
  on_timer(){if(!hidden)try{poll();}catch(e){text('player/status',String(e.message||e));}return true;},
  on_pause(){try{save();}catch(_){}hidden=true;return true;},
  on_resume(){hidden=false;cache={};refresh();show(view);poll();return true;},
- on_stop(){try{save();if(own(call(audio,'GetState')))call(audio,'Stop');}catch(_){}try{if(timerId)call(timer,'Stop',{TimerId:timerId});}catch(_){}hidden=true;return true;}
+ on_stop(){try{save();}catch(_){}try{if(own(call(audio,'GetState')))call(audio,'Stop');}catch(_){}try{if(timerId)call(timer,'Stop',{TimerId:timerId});}catch(_){}hidden=true;return true;}
 };
 })();

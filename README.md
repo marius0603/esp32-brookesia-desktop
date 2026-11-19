@@ -4,11 +4,11 @@
 
 | 内容 | 版本与当前行为 |
 | --- | --- |
-| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.74；基础功能保留Flash、附加App脚本与资源使用SD；手机BLE加密配网与独立蓝牙遥控；可切换经典Q版与赛博朋克桌面，壁纸和10个图标同步更换并记住选择；图标原生预载、手机式跟手分页，每页3×3九个应用，92像素图标及18像素格间距及页码圆点；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转；迷宫运动租约临时锁方向，超时自动释放 |
+| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.75；基础功能保留Flash、附加App脚本与资源使用SD；手机BLE加密配网与独立蓝牙遥控；可切换经典Q版与赛博朋克桌面，壁纸和10个图标同步更换并记住选择；图标原生预载、手机式跟手分页，每页3×3九个应用，92像素图标及18像素格间距及页码圆点；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转；迷宫运动租约临时锁方向，超时自动释放 |
 | 额度显示 | 0.2.6，跟随系统深浅配色的双卡片、左侧大数字与紧跟百分号、右侧倒计时及独立天数、底部吃豆人轨道；保留60秒请求/15秒超时与Codex联动 |
 | 天气 | 0.2.11，默认上海、开发板直接联网；按城市日出日落决定昼夜，白天亮色天空/深色文字、夜间深色天空/浅色文字，再叠加天气动画；24小时卡片按预报时刻切换暖白/深蓝配色并以细边框区分 |
 | 听书 | 0.3.6，六档保持音高倍速、开机默认1倍；64KiB PCM缓冲修复周期性卡顿，手机与设备通过内存同步播放模式；30篇故事使用统一响度目标，移出月亮灯并分两批新增21篇中文朗读，保留双声道抵消修正；图标切换顺序播放、随机播放与单故事循环，自动保存模式；音量与锁屏置顶、Q版图标、中文书名、大号播放按钮、睡眠选择框、语音控制、章节与书签；连按两次音量＋解锁，最后2分钟声音/亮度渐弱，到时离线“晚安”并停播 |
-| 儿歌 | 0.1.3，设备新增“快乐儿歌20首 / 摇篮曲10首”独立专区与各区断点；安卓沿用儿歌页合并曲库与播放模式同步；SD录音统一−14 LUFS响度；顶部音量、四行分页选歌、上一首/下一首、顺序/随机/单曲循环、断点保存及15/30/45分钟淡出睡眠定时；儿童模式单独授权。详见[儿歌应用](brookesia-apps/nursery-songs/README.md) |
+| 儿歌 | 0.1.4，设备新增“快乐儿歌20首 / 摇篮曲10首”独立专区与各区断点；安卓沿用儿歌页合并曲库与播放模式同步；SD录音统一−14 LUFS响度；顶部音量、四行分页选歌、上一首/下一首、顺序/随机/单曲循环、断点保存及15/30/45分钟淡出睡眠定时；儿童模式单独授权。详见[儿歌应用](brookesia-apps/nursery-songs/README.md) |
 | 顶部状态 | s3.61桌面左上CPU/RAM并列，音量、电量紧跟其右；四项独立定宽，数字变化不挤动相邻状态；透明底、主题配色，进入App隐藏，返回恢复；CPU约1秒刷新，RAM含内部/PSRAM堆，电池仍30秒缓存。详见[资源监控](codex-quota-monitor/RESOURCE_MONITOR.md) |
 | 电台 | 0.1.5，儿童模式按家长选择的频道白名单播放；播放页提供锁屏，播放继续、双击音量加解锁；八路真实频道、分类收藏与播放定时，原创圆角底框小马收音机图标，设备直接Wi-Fi播放；本轮7台各2分钟、6台零断粮，Naps短顿；苏州台停顿暂缓；s3.45已验证手机BLE播放控制、调音及定时。详见[电台应用](brookesia-apps/radio/README.md) |
 | 时钟 | 0.2.6，短划32px即可切换、略斜容错及底边返回保留；保留大号时分翻页和金属指针；猫咪款为六位时分秒原生翻页，顶端Wi-Fi/电池图标、28号日期左/天气图标温度右，全宽猫咪场景及底部分页圆点；局部动画、按城市日出日落切昼夜，左右滑动并记忆。见[时钟表盘](brookesia-apps/flip-clock/README.md) |
@@ -27,6 +27,8 @@
 手机直接蓝牙遥控见 [小马遥控](phone-remote/README.md)，提供[0.4.0安卓安装包](packages/android/xiaoma-remote-0.4.0.apk)，使用暖橙小马图标与原签名，可覆盖安装；底部为遥控/听书/儿歌/电台/应用五页。新增独立20首儿歌曲库、进度、上下首、播放模式、音量和淡出睡眠定时，需要s3.48与儿歌0.1.1，当前设备已配套更新；原电台八台、听书30篇和倍速保留。遥控入口位于“设置 → 蓝牙”，配网仍在“设置 → Wi-Fi → 手机配网”。
 壁纸微移的行为与已有设备更新步骤见 [WALLPAPER_SHIFT.md](codex-quota-monitor/WALLPAPER_SHIFT.md)。
 重力感应开关、校准与已有设备安装步骤见 [AUTO_ROTATION.md](codex-quota-monitor/AUTO_ROTATION.md)。
+SD 文件故障、读写和重启恢复见 [SD 应用存储](codex-quota-monitor/SD_APP_STORAGE.md)。
+
 联网状态、有限重试和断网验证见 [联网故障恢复](codex-quota-monitor/NETWORK_STATUS.md)。
 
 儿童模式设置与验证见 [CHILD_MODE.md](codex-quota-monitor/CHILD_MODE.md)，主题资源迁移见 [SD_RESOURCES.md](codex-quota-monitor/SD_RESOURCES.md)。
@@ -114,7 +116,7 @@ SD应用存储、基础Flash保留及迁移验证见 [SD存储说明](codex-quot
 
 ## 固件文件与备份
 
-`packages/apps` 保存可安装 BPK，当前听书为 [0.3.7](packages/apps/local.audiobook.debug.0.3.7.bpk)，小马助手为 [0.2.4](packages/apps/local.voiceassistant.debug.0.2.4.bpk)，儿歌为 [0.1.3](packages/apps/local.nurserysongs.debug.0.1.3.bpk)；`packages/firmware` 包含 [s3.74 应用分区固件](packages/firmware/brookesia-0.8.3-s3.74-app-only.zip) 及历史版本，更新步骤见 [资源监控](codex-quota-monitor/RESOURCE_MONITOR.md)。历史 [s3.58 更新包](packages/firmware/brookesia-0.8.3-s3.58-app-only.zip) 附带只用于核对的分区表。校验值见 `packages/SHA256.json`。
+`packages/apps` 保存可安装 BPK，当前听书为 [0.3.8](packages/apps/local.audiobook.debug.0.3.8.bpk)，小马助手为 [0.2.4](packages/apps/local.voiceassistant.debug.0.2.4.bpk)，儿歌为 [0.1.4](packages/apps/local.nurserysongs.debug.0.1.4.bpk)；`packages/firmware` 包含 [s3.75 应用分区固件](packages/firmware/brookesia-0.8.3-s3.75-app-only.zip) 及历史版本，更新步骤见 [资源监控](codex-quota-monitor/RESOURCE_MONITOR.md)。历史 [s3.58 更新包](packages/firmware/brookesia-0.8.3-s3.58-app-only.zip) 附带只用于核对的分区表。校验值见 `packages/SHA256.json`。
 它们不包含用户 NVS、Wi-Fi 数据或设备系统资源分区，不能当成任意新设备的完整恢复镜像。
 
 原电脑的恢复工具会检查完整备份和设备身份，新电脑没有备份时会拒绝直接烧录。这是已有防误刷机制。

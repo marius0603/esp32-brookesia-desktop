@@ -8,14 +8,14 @@ const lullabies=Array.from({length:10},(_,i)=>({path:'/sdcard/audiobooks/songs/l
 tracks.push(...lullabies);
 let state={path:'',state:'Idle',active:false},stored={},texts={},calls=[],now=20000;
 class Clock extends Date{static now(){return now;}}
-let desktopTheme=0;
+let desktopTheme=0,writeBlocked=false;
 const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>n,call_function(h,n,s){
  const a=JSON.parse(s);calls.push({h,n,a});let data=null;if(n==='GetEnvironment')data={theme_id:desktopTheme===1?'dark':'light'};
  if(h==='SystemGui'&&a.Path){assert(views.has(a.Path),'Unknown view '+a.Path);if(n==='SetBinding')assert(Object.values(views.get(a.Path).bindings||{}).includes(a.Key),'Missing binding '+a.Key);}
  if(n==='ListSongs')data={mounted,tracks};
  if(n==='List')throw Error('Songs must never list stories');
  if(n==='StorageRead'){if(!stored.player)return JSON.stringify({success:false,error:'missing'});data=stored.player;}
- if(n==='StorageWrite')stored.player=a.Data;
+ if(n==='StorageWrite'){if(writeBlocked)return JSON.stringify({success:false,error:'ENOSPC'});stored.player=a.Data;}
  if(n==='SetText')texts[a.Path]=a.Text;
  if(n==='GetState')data=h==='DeviceModes'?{resume_volume:57,do_not_disturb:false,desktop_theme_index:desktopTheme}:state;
  if(n==='SetSongMode')state={...state,song_play_mode:a.Mode};
@@ -85,3 +85,12 @@ console.log('Nursery/lullaby collections, independent bookmarks, collection EOF 
 
 desktopTheme=1;ctx.brookesia_app.on_timer();assert(calls.some(c=>c.n==='SetBinding'&&c.a.Path==='/main'&&c.a.Value==='#101723'),'Dark desktop theme must reach the app background');
 desktopTheme=0;ctx.brookesia_app.on_timer();assert(calls.some(c=>c.n==='SetBinding'&&c.a.Path==='/main'&&c.a.Value==='#f4ebdd'),'Light desktop theme must reach the app background');
+
+mounted=true;tracks=[{path:'/sdcard/audiobooks/songs/fault-test.wav',title:'Fixture'}];
+stored.player='{"collection":"nursery","bookmarks":{"nursery":{"path":null,"position":-1}}}';
+state={path:'',state:'Idle',active:false};app.on_start();app.on_action('nursery');app.on_action('toggle');
+assert.equal(state.position,0,'Malformed bookmark is ignored');
+const priorPlayer=stored.player;
+writeBlocked=true;state={...state,position:7,bytes_written:450000};app.on_timer();
+app.on_stop();assert.equal(state.active,false,'An unsaved bookmark must not prevent stopping');
+assert.equal(stored.player,priorPlayer);

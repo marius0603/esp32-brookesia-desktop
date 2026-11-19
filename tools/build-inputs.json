@@ -19,7 +19,8 @@
     "patches/qspi-display-80mhz.patch",
     "patches/canvas-memory-pressure.patch",
     "patches/launcher-settled-refresh.patch",
-    "patches/launcher-full-row-dma.patch"
+    "patches/launcher-full-row-dma.patch",
+    "patches/protected-text-writes.patch"
   ],
   "sha256": {
     "patches/brookesia-s3.patch": "75e0bb3f720b9bd442955f1b04ab4d6f1437c2cbdfa4359646f1176044bc0346",
@@ -33,7 +34,7 @@
     "phone-remote/tools/downloads.json": "f4dca27ac3cb2d5b30d308eafae0ae106e9108809f3d0d0f595664f98f0e8e1d",
     "phone-remote/tools/requirements-signing.txt": "8b5c18678b29b5e8e0fb586a35ac1dce3ccd9da321e8f12ace0e118350b4e568",
     "platform/super_s3_216/sdkconfig.reproducible": "00cba8885f30a1618c335b79945006bff45c019a38f0d2327b9aeff7f81209a1",
-    "versions.json": "9eb8ac1cd3e1871f643cbecddcd74943d25fa247996e94edad6a23c88c96950b",
+    "versions.json": "5a8efe9d333ca3db689aca2fefc9a3bde28ed5ed1904e605c9318c3ee91526a0",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.c": "52a51002bd22aac5c2105187c27cd393a34f13143c8ae97b0964ad27dec1c1ea",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.h": "a2fc087b68c25141e2fb7ab56e71b111bee79cf311fcc850d492eb574c0eeffe",
     "patches/transparent-launcher.patch": "b9cbe446371691db2c9e4674b73293646b63ca003a24f59a5c0a2646ce871732",
@@ -47,17 +48,17 @@
     "patches/bounded-display-dma.patch": "b1e6eb13627718506036f14f94f0a9cb3bac0a893094068084707bb29152e290",
     "patches/persistent-display-dma.patch": "cc8c6cf3dbe36d4089abff0242a3f740cca31e111138ea88df3a341b09d8c264",
     "patches/aligned-display-strips.patch": "1629b23605921dd00fab60995969fd3ad5c5243cb540b9f20a64da4841d25dc2",
-    "platform/super_s3_216/CMakeLists.txt": "9a5092032e1c245d478eede0472b9bb0c7f6dd1ca4dee8750bee930a79ba5b0f",
+    "platform/super_s3_216/CMakeLists.txt": "54f502c7319d09dbff2f54a19bd6d15a3b1b75fcc88494b5760be02c3eee276d",
     "platform/super_s3_216/main/modules/display.cpp": "ffb5fa0f7f0a9c39b4c32023eac8d7c49fbdd85ee962b910fe22f0cf9b8ca855",
     "platform/super_s3_216/main/modules/device_modes/device_modes.cpp": "9bee11bb59d8f72915a7196d3579fa6cc99bdb2896bd19e44bb832697fa17217",
     "platform/super_s3_216/main/modules/device_modes/resource_monitor.cpp": "0f4d6b9c6fa5d4247a4e74e3335a0c82a46d8080ec6f2c191149df38c558a85f",
     "platform/super_s3_216/main/modules/device_modes/resource_monitor.hpp": "7e58ab09e3c1ed3bef7ead2f4cad2715e365bd2c19aa5b3ec80a2dc3ddd082a4",
     "platform/super_s3_216/main/modules/device_modes/resource_math.hpp": "1c41257f73bc36729829e95ec5e3f419c8849be4583b79eabfa69af9539fb020",
     "samples/songs/lullabies-20261109.json": "7d38adc61321c182e5b1f68c1647dc4dd2bf70ecb341e6507832d5f6eb5f1b0b",
-    "brookesia-apps/nursery-songs/src/app/main.js": "697b82f0bf321e3d5aea47a2d7badfc4f3f19067613caba7f179fb09be0208b6",
+    "brookesia-apps/nursery-songs/src/app/main.js": "679fad5e65f38f5b344e35b0d2303bac124753b23d421c420ec3315dd70621b5",
     "brookesia-apps/nursery-songs/src/res/screens/main.json": "ea7853ee1ce984c494ea35b36db7d9ed9bdd67a6085a7876f5d60b8d557ae5b7",
     "tools/apply_audio_themes.py": "2f5e1024e67e797320cc7994df0e1faf3cd8423bae648a6a8ba1bc3a421bcd6d",
-    "brookesia-apps/audiobook/src/app/main.js": "62890db3b05cf30e272ea0515c46cc9eb2eb6ed83deccd099cfcd80e347af5cf",
+    "brookesia-apps/audiobook/src/app/main.js": "3bd233517858f74f62b7e14c5c25eb655a7c117b4327d996cee3d2cc385315b6",
     "brookesia-apps/radio/src/app/main.js": "06ffaa4cf69e31491da916ff138e5a64a5c0f6b3128b333d517c3ea8d57e0f43",
     "platform/super_s3_216/main/modules/child_mode/policy.hpp": "1ce9988df7c93bff0c189272f618e66c7a065ab051dec3b0c2789ed507d0c881",
     "platform/super_s3_216/main/modules/child_mode/child_mode.cpp": "5ce67d324020688787713f65344933816b2ac476645c7389468190a019f6c094",
@@ -71,6 +72,8 @@
     "platform/super_s3_216/main/modules/voice_assistant/local_voice.cpp": "b6bddbb20b8a9883255f4bf7b5cb2818d5d3f69aa2f2b0c6685e859220cc9a4d",
     "brookesia-apps/weather/src/app/main.js": "b568bc617c24e7684315890a8128a1324b0e196eb9f5aca3f317f3156d830859",
     "brookesia-apps/voice-assistant/src/app/main.js": "1b854124a903c15e67d959ebf23a15f7c1dd855cf60fa9b477cc57fef9c642df",
-    "brookesia-apps/codex-quota/src/app/main.js": "4d3731f084a974f5030f0c2bebbff2dcc62c958dbec081686e59faea9811c3bf"
+    "brookesia-apps/codex-quota/src/app/main.js": "4d3731f084a974f5030f0c2bebbff2dcc62c958dbec081686e59faea9811c3bf",
+    "patches/protected-text-writes.patch": "896ec71e8906d371f48d528cc3af9880f2c4ce2ec60397a863c1f92f6ce459a9",
+    "platform/super_s3_216/main/modules/audiobook/audiobook.cpp": "fe67e3223fcffcc95cd3ff2374e132c8a9d55adf6f70e9c0ca71a65d831c186a"
   }
 }

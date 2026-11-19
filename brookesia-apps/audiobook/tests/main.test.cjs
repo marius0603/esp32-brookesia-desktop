@@ -6,12 +6,12 @@ const document=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/screen
 function indexViews(node,parent=''){const key=parent+'/'+node.id;views.add(key);for(const c of node.children||[])indexViews(c,key);}
 indexViews(document);
 class Clock extends Date{static now(){return now;}}
-let desktopTheme=0;
+let desktopTheme=0,writeBlocked=false;
 const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>{bindings.push(n);return n;},call_function(h,n,s){
  const a=JSON.parse(s);calls.push({h,n,a});let data=null;if(n==='GetEnvironment')data={theme_id:desktopTheme===1?'dark':'light'};
  if(h==='SystemGui'&&a.Path)assert(views.has(a.Path),'Missing GUI view: '+a.Path);
  if(n==='FSReadText'){if(!stored[a.Path])return JSON.stringify({success:false,error:'missing'});data=stored[a.Path];}
- if(n==='FSWriteText')stored[a.Path]=a.Data;
+ if(n==='FSWriteText'){if(writeBlocked)return JSON.stringify({success:false,error:'ENOSPC'});stored[a.Path]=a.Data;}
  if(n==='SetVolume')volume=Math.min(volumeCap,a.Volume);
  if(n==='SetPlayMode'){state={...state,play_mode:a.Mode};stored['/littlefs/audiobook-play-mode.json']=JSON.stringify({mode:a.Mode});}
  if(n==='SetSpeed')state={...state,speed:a.Speed};
@@ -185,3 +185,14 @@ console.log('Playback speed passed: default 1x, all six rates, cycling without r
 
 desktopTheme=1;ctx.brookesia_app.on_timer();assert(calls.some(c=>c.n==='SetBinding'&&c.a.Path==='/main'&&c.a.Value==='#101723'),'Dark desktop theme must reach the app background');
 desktopTheme=0;ctx.brookesia_app.on_timer();assert(calls.some(c=>c.n==='SetBinding'&&c.a.Path==='/main'&&c.a.Value==='#f4ebdd'),'Light desktop theme must reach the app background');
+
+setup('sequence');
+state={...state,position:18,bytes_written:1152000};ctx.brookesia_app.on_timer();ctx.brookesia_app.on_pause();ctx.brookesia_app.on_resume();
+const priorBookmark=stored['/littlefs/audiobook-bookmark.json'];
+writeBlocked=true;state.position=27;ctx.brookesia_app.on_timer();
+const priorStops=calls.filter(c=>c.n==='Stop').length;ctx.brookesia_app.on_stop();
+assert.equal(calls.filter(c=>c.n==='Stop').length,priorStops+1,'An unsaved bookmark must not prevent stopping');
+assert.equal(stored['/littlefs/audiobook-bookmark.json'],priorBookmark);
+writeBlocked=false;stored['/littlefs/audiobook-bookmark.json']='{"path":null,"position":"bad"}';
+vm.runInContext(code,ctx);ctx.brookesia_app.on_start();ctx.brookesia_app.on_action('toggle');
+assert.equal(calls.filter(c=>c.n==='Play').at(-1).a.Position,0);

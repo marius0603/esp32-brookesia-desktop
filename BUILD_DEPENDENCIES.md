@@ -5,7 +5,7 @@
 | 内容 | 仓库位置 / 恢复入口 |
 | --- | --- |
 | 上游提交、固件、应用、30篇书库及20首儿歌版本 | `versions.json` |
-| ESP-Brookesia十七份适配补丁 | `patches/`，按`tools/build-inputs.json`顺序应用 |
+| ESP-Brookesia 适配补丁 | `patches/`，按`tools/build-inputs.json`顺序应用 |
 | 固件源码覆盖层与完整配置 | `platform/super_s3_216/`、`sdkconfig.reproducible` |
 | 上游重建及补丁验证 | `tools/prepare_workspace.py`、`tools/check_patch_chain.py` |
 | ESP-IDF工具链准备 | `codex-quota-monitor/tools/bootstrap_idf6.py`，详见主README |

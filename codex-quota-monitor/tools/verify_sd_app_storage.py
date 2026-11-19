@@ -19,8 +19,8 @@ BACKUP='/sdcard/apps/.rollback/'+ID
 JOURNAL='/sdcard/apps/.transactions/'+ID+'.json'
 STAGE='/sdcard/apps/.installing/'+ID+'-recovery-test'
 
-def package(version,bad_gui=False,oversize=False,unsafe=False):
- manifest={'package':{'id':ID,'name':{'en':'Storage verification'},'version':version,'visible':False,'systems':['super']},
+def package(version,bad_gui=False,oversize=False,unsafe=False,app_id=ID):
+ manifest={'package':{'id':app_id,'name':{'en':'Storage verification'},'version':version,'visible':False,'systems':['super']},
            'runtime':{'type':'JavaScript','entry':'app/main.js','resource_dir':'res','arguments':[]}}
  files={'manifest.json':json.dumps(manifest),'app/main.js':'''(function(){
 function call(h,n,a){const r=JSON.parse(brookesia.call_function(h,n,JSON.stringify(a||{})));if(!r.success)throw new Error(r.error||n);return r.data;}

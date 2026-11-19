@@ -42,7 +42,14 @@ function call(handle,name,args){const r=JSON.parse(brookesia.call_function(handl
 const textPaths={volume:'header/volume',chapter:'player/chapter',progress:'player/progress',status:'player/status',sleepStatus:'sleep/sleepStatus'};
 function text(id,value){value=String(value);if(cache[id]===value||hidden)return;call(gui,'SetText',{Path:'/main/'+(textPaths[id]||id),Text:value});cache[id]=value;}
 function clock(seconds){seconds=Math.max(0,Math.floor(Number(seconds)||0));return Math.floor(seconds/3600)+':'+String(Math.floor(seconds%3600/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');}
-function save(){if(!playing||!playing.path||playing.path==='@tone')return;bookmark={path:playing.path,position:playing.state==='Ended'?0:playing.position||0};call(storage,'FSWriteText',{Path:'/littlefs/audiobook-bookmark.json',Data:JSON.stringify(bookmark)});lastSaved=Date.now();}
+function validBookmark(value){return value&&typeof value.path==='string'&&Number.isFinite(value.position)&&value.position>=0&&value.position<=86400;}
+function save(){
+  if(!playing||!tracks.some(track=>track.path===playing.path)||playing.state==='Loading'||(playing.state==='Error'&&!playing.bytes_written))return;
+  const next={path:playing.path,position:playing.state==='Ended'?0:playing.position||0};
+  lastSaved=Date.now();
+  try{call(storage,'FSWriteText',{Path:'/littlefs/audiobook-bookmark.json',Data:JSON.stringify(next)});bookmark=next;}
+  catch(_){text('status','书签未保存，请检查存储');}
+}
 function syncMode(){if(hidden||cache.mode===playMode)return;call(gui,'SetViewSrc',{Path:'/main/tools/mode/icon',Src:'mode_'+playMode});cache.mode=playMode;}
 function randomIndex(){if(tracks.length<2)return index;const at=Math.floor(Math.random()*(tracks.length-1));return at>=index?at+1:at;}
 function startAt(at){index=at;current=tracks[index];bookmark={path:current.path,position:0};play();}
@@ -90,8 +97,8 @@ function poll(){
   const remaining=Math.max(0,Number(next.sleep_remaining_seconds)||0);
   text('sleepStatus',next.sleep_finishing?'晚安':next.sleep_active?String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):next.sleep_completed?'已结束':'');
   try{const sound=call(modes,'GetState');applyAudioTheme(sound);volume=call(playback,'GetVolume');text('volume',sound.do_not_disturb?'音量 '+sound.resume_volume+'% · 静音':'音量 '+volume+'%');}catch(_){}
-  try{const local=call(localVoice,'GetState');text('tools/voice/label',local.listening?'正在听':'语音控制');if(local.error)text('status','离线语音：'+local.error);}catch(_){}
-  if(sleepJustEnded&&actual>=0)save();
+  try{const local=call(localVoice,'GetState');text('tools/voice/label',local.listening?'正在听':'语音控制');if(local.error&&next.state!=='Error')text('status','离线语音：'+local.error);}catch(_){}
+  if((sleepJustEnded||next.state==='Error'&&next.bytes_written&&Date.now()-lastSaved>15000)&&actual>=0)save();
   text('progress',clock(next.position)+(next.duration?' / '+clock(next.duration):''));
   text('transport/toggle/label',next.active&&next.state!=='Paused'?'暂停':'播放');
   if(next.active&&next.path!=='@tone'&&Date.now()-lastSaved>15000)save();
@@ -123,13 +130,13 @@ globalThis.brookesia_app={
     for(const name of ['previous','next','toggle','sleepChoice','offlineSpeak','lockScreen','playMode','speed'])call(gui,'SubscribeAction',{Action:name});
     try{const saved=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/audiobook-play-mode.json'}));if(saved&&playModes.includes(saved.mode))playMode=saved.mode;}catch(_){}
     call(audio,'SetPlayMode',{Mode:playMode});
-    try{bookmark=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/audiobook-bookmark.json'}));}catch(_){}
+    try{const saved=JSON.parse(call(storage,'FSReadText',{Path:'/littlefs/audiobook-bookmark.json'}));bookmark=validBookmark(saved)?saved:null;}catch(_){bookmark=null;}
     try{volume=call(playback,'GetVolume');}catch(_){}
     hidden=false;sleepSelected=-1;text('volume','音量 '+volume+'%');refresh();poll();call(timer,'StartPeriodic',{Name:'audiobook',IntervalMs:1000});return true;},
   on_timer(){if(!hidden)try{poll();}catch(e){text('status',String(e));}return true;},
   on_action(name){try{action(name);}catch(e){text('status',String(e));}return true;},
   on_pause(){try{save();}catch(_){}hidden=true;return true;},
   on_resume(){hidden=false;cache={};sleepSelected=-1;refresh();text('volume','音量 '+volume+'%');poll();return true;},
-  on_stop(){try{save();call(audio,'Stop');}catch(_){}return true;}
+  on_stop(){try{save();}catch(_){}try{call(audio,'Stop');}catch(_){}return true;}
 };
 })();

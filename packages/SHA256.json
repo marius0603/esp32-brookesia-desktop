@@ -167,5 +167,8 @@
   "packages/apps/local.weather.debug.0.2.11.bpk": "ba89b430b26c9b6f20c6260795385ff7e384c16d9b051d79fc481da341b86de0",
   "packages/apps/local.codex.quota.debug.0.2.6.bpk": "94359596031a4853ad4620d506018d53ae45b9e864605e5badf7ca61a6c64308",
   "packages/apps/local.voiceassistant.debug.0.2.4.bpk": "3ae8bfd4004692076a373e570729ff48d4b9a079784464a7cd3fb5171d13f64d",
-  "packages/firmware/brookesia-0.8.3-s3.74-app-only.zip": "7cf3d9d406a1629566552430965ce2459dd2c0ad548747ccd3718d9a8f6d2a18"
+  "packages/firmware/brookesia-0.8.3-s3.74-app-only.zip": "7cf3d9d406a1629566552430965ce2459dd2c0ad548747ccd3718d9a8f6d2a18",
+  "packages/apps/local.audiobook.debug.0.3.8.bpk": "af1a2bafbb47214e6dfa7922bfd0dd6ffdb5a5b47c865b780482272bfb2b434c",
+  "packages/apps/local.nurserysongs.debug.0.1.4.bpk": "1c65c3d18c0d7b8e3b2f6b0f32a6984e5db2cdfb45877f88c785bb30a2f3cb17",
+  "packages/firmware/brookesia-0.8.3-s3.75-app-only.zip": "88537d455e088297f44ec7837654f0d7ee59b0980e9fae40348ca1c0a5427040"
 }

@@ -14,6 +14,7 @@
 #include <string_view>
 #include <cmath>
 #include <cstring>
+#include <cstdio>
 #include <dirent.h>
 #include <mutex>
 #include <sys/stat.h>
@@ -280,6 +281,7 @@ private:
     std::atomic<uint32_t> pcm_epoch_{0},starvations_{0},write_gap_us_{0},decode_max_us_{0};
     std::atomic<uint32_t> pcm_stack_free_{StoryPcmBuffer::stack_bytes};
     std::atomic<uint32_t> test_decode_delay_ms_{0};
+    std::atomic<bool> test_read_failure_{false};
     void state(const char *s, const char *error="") {
         local_audio::audiobook_busy=std::string_view(s)=="Loading" || std::string_view(s)=="Playing" || std::string_view(s)=="Goodnight";
         std::lock_guard<std::mutex> lock(mutex_); state_=s; error_=error;
@@ -362,7 +364,8 @@ private:
             {"TestDecodeDelay","Temporary decoder stall every 32 chunks; 0 disables",{{"Milliseconds","0..200",FunctionValueType::Number}}},
             {"SetSpeed","Set speech speed (0.5,0.75,1,1.25,1.5,2)",{{"Speed","Playback multiplier",FunctionValueType::Number}}},
             {"SetPlayMode","Set and persist a shared playback mode",{{"Mode","sequence/random/repeat_one",FunctionValueType::String}}},
-            {"SetSongMode","Set the independent shared nursery-song mode",{{"Mode","sequence/random/repeat_one",FunctionValueType::String}}}
+            {"SetSongMode","Set the independent shared nursery-song mode",{{"Mode","sequence/random/repeat_one",FunctionValueType::String}}},
+            {"TestReadFailure","Simulate a failed read after one second of fixture PCM",{{"Enabled","Diagnostic fixture only",FunctionValueType::Boolean}}}
         };
     }
     FunctionHandlerList get_function_handlers() override {
@@ -391,7 +394,10 @@ private:
                 if(!std::isfinite(speed)||(speed!=.5&&speed!=.75&&speed!=1&&speed!=1.25&&speed!=1.5&&speed!=2))return {.success=false,.error_message="Unsupported playback speed"};
                 speed_percent_=unsigned(speed*100);return {.success=true};}},
             BROOKESIA_SERVICE_FUNC_HANDLER_1("SetPlayMode","Mode",std::string,set_play_mode(PARAM)),
-            BROOKESIA_SERVICE_FUNC_HANDLER_1("SetSongMode","Mode",std::string,set_song_mode(PARAM))
+            BROOKESIA_SERVICE_FUNC_HANDLER_1("SetSongMode","Mode",std::string,set_song_mode(PARAM)),
+            {"TestReadFailure",[this](FunctionParameterMap &&p)->FunctionResult{
+                test_read_failure_=std::get<bool>(p.at("Enabled"));return {.success=true};
+            }}
         };
     }
     void run(bool goodnight_only=false,bool feedback_only=false) {
@@ -419,6 +425,8 @@ private:
             return buffered->start();
         };
         const bool tone=path=="@tone";
+        const bool diagnostic=path.starts_with("/sdcard/audiobooks/.storage-check/");
+        FILE *source_file=nullptr;
         uint32_t rate=16000,channels=1;uint64_t frames=0,total=32000;
         const drmp3_allocation_callbacks mp3alloc{nullptr,audio_malloc,audio_realloc,audio_free};
         const drwav_allocation_callbacks wavalloc{nullptr,audio_malloc,audio_realloc,audio_free};
@@ -431,12 +439,15 @@ private:
                 auto ext=path.substr(path.find_last_of('.'));std::transform(ext.begin(),ext.end(),ext.begin(),::tolower);
                 if(ext==".mp3") {
                     mp3open=drmp3_init_file(mp3,path.c_str(),&mp3alloc);
-                    if(!mp3open){fail("Invalid or unsupported MP3");break;}
+                    if(!mp3open){fail("无法读取音频，或 MP3 文件已损坏");break;}
+                    // The pinned dr_libs file initializers both retain the owned FILE*.
+                    source_file=static_cast<FILE *>(mp3->pUserData);
                     rate=mp3->sampleRate;channels=mp3->channels;
                     total=mp3->totalPCMFrameCount==DRMP3_UINT64_MAX?0:mp3->totalPCMFrameCount;
                 }else{
                     wavopen=drwav_init_file(wav,path.c_str(),&wavalloc);
-                    if(!wavopen){fail("Invalid or unsupported WAV");break;}
+                    if(!wavopen){fail("无法读取音频，或 WAV 文件已损坏");break;}
+                    source_file=static_cast<FILE *>(wav->pUserData);
                     rate=wav->sampleRate;channels=wav->channels;total=wav->totalPCMFrameCount;
                 }
             }
@@ -479,7 +490,7 @@ private:
                     uint64_t target=static_cast<uint64_t>(requested)*rate;
                     if(total)target=std::min(target,total);
                     bool ok=tone || (mp3open?drmp3_seek_to_pcm_frame(mp3,target):drwav_seek_to_pcm_frame(wav,target));
-                    if(!ok){fail("Failed to seek audio");break;}frames=target;position_=frames/rate;resample_phase=0;
+                    if(!ok || (source_file && std::ferror(source_file))){fail("音频跳转读取失败");break;}frames=target;position_=frames/rate;resample_phase=0;
                 }
                 if(paused_){vTaskDelay(pdMS_TO_TICKS(20));continue;}
                 size_t count;
@@ -489,7 +500,12 @@ private:
                 }else {
                     const auto began=esp_timer_get_time();
                     if(++decode_chunks%32==0 && test_decode_delay_ms_)vTaskDelay(pdMS_TO_TICKS(test_decode_delay_ms_.load()));
+                    const bool injected=diagnostic && bytes_>=64000 && test_read_failure_.exchange(false);
+                    if(injected){fail("无法读取 SD 卡音频");break;}
                     count=mp3open?drmp3_read_pcm_frames_s16(mp3,1024,pcm):drwav_read_pcm_frames_s16(wav,1024,pcm);
+                    if(std::ferror(source_file) || (!count && wavopen && frames<total)){
+                        fail("无法读取 SD 卡音频");break;
+                    }
                     decode_max_us_=std::max(decode_max_us_.load(),uint32_t(esp_timer_get_time()-began));
                 }
                 if(!count){
@@ -525,6 +541,12 @@ private:
         if(wavopen)drwav_uninit(wav);
         audio_free(mp3,nullptr);audio_free(wav,nullptr);audio_free(pcm,nullptr);audio_free(output,nullptr);
         if(finish_sleep)complete_sleep(finish_id);
+        else if(failed){
+            // A read error must not leave a scheduled goodnight or dim state.
+            std::lock_guard lock(mutex_);
+            deadline_=0;sleep_minutes_=0;sleep_due_=false;gain_=1000;
+            local_audio::story_timer_busy=false;brookesia_board_story_dim(1000);
+        }
         if(!failed)state(finish_sleep?"SleepEnded":eof?"Ended":"Stopped");
         codec.reset();local_audio::release(local_audio::Audiobook);live_=false;
     }
