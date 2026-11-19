@@ -17,6 +17,10 @@
 #include "esp_log.h"
 #include "esp_lv_adapter.h"
 #include "lvgl.h"
+#include "src/core/lv_obj_draw_private.h"
+#include "src/core/lv_obj_scroll_private.h"
+#include "src/draw/snapshot/lv_snapshot.h"
+#include "src/misc/cache/instance/lv_image_cache.h"
 
 #include "boost/json/array.hpp"
 #include "boost/json/object.hpp"
@@ -192,9 +196,195 @@ void round_weather_refresh(lv_event_t *event)
     }
 }
 
+// Keep the real buttons in the scroll tree for hit testing and click actions.
+struct LauncherTile {
+    lv_draw_buf_t buffer{};
+    std::unique_ptr<uint8_t, decltype(&heap_caps_free)> pixels{nullptr, heap_caps_free};
+    int x = 0;
+    int y = 0;
+};
+
+struct LauncherSnapshot {
+    lv_obj_t *items = nullptr;
+    lv_obj_t *layer = nullptr;
+    std::vector<LauncherTile> tiles;
+    size_t bytes = 0;
+    bool showing = false;
+    bool attempted = false;
+};
+LauncherSnapshot launcher_snapshot;
+lv_obj_t *launcher_pager = nullptr;
+std::atomic<bool> launcher_assets_changed{true};
+std::atomic_uint launcher_app_start_depth{0};
+uint32_t launcher_cached_scrolls = 0;
+uint32_t launcher_cache_build_us = 0;
+constexpr size_t LAUNCHER_CACHE_LIMIT = 1152 * 1024;
+
+bool launcher_is_visible()
+{
+    return launcher_pager && brookesia_board_desktop_visible() && !brookesia_board_screen_asleep() &&
+           lv_obj_get_screen(launcher_pager) == lv_display_get_screen_active(lv_obj_get_display(launcher_pager));
+}
+
+bool launcher_pointer_pressed()
+{
+    for (auto *input = lv_indev_get_next(nullptr); input; input = lv_indev_get_next(input)) {
+        if (lv_indev_get_type(input) == LV_INDEV_TYPE_POINTER && lv_indev_get_state(input) == LV_INDEV_STATE_PRESSED) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void show_launcher_snapshot(bool show)
+{
+    if (show == launcher_snapshot.showing || !launcher_snapshot.layer) return;
+    if (show) {
+        lv_obj_set_style_opa_layered(launcher_snapshot.items, LV_OPA_TRANSP, LV_PART_MAIN);
+        lv_obj_remove_flag(launcher_snapshot.layer, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(launcher_snapshot.layer, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_remove_local_style_prop(launcher_snapshot.items, LV_STYLE_OPA_LAYERED, LV_PART_MAIN);
+    }
+    launcher_snapshot.showing = show;
+}
+
+void release_launcher_snapshot()
+{
+    show_launcher_snapshot(false);
+    if (!launcher_snapshot.tiles.empty()) {
+        lv_obj_clean(launcher_snapshot.layer);
+        for (auto &tile : launcher_snapshot.tiles) lv_image_cache_drop(&tile.buffer);
+        launcher_snapshot.tiles.clear();
+        launcher_snapshot.bytes = 0;
+    }
+    launcher_snapshot.attempted = false;
+}
+
+void maintain_launcher_snapshot(lv_timer_t *)
+{
+    if (launcher_assets_changed.exchange(false)) {
+        release_launcher_snapshot();
+        return;
+    }
+    if (!launcher_is_visible()) {
+        if (!launcher_snapshot.tiles.empty()) release_launcher_snapshot();
+        return;
+    }
+    if (launcher_app_start_depth.load() != 0 || !launcher_snapshot.items || launcher_snapshot.attempted ||
+            launcher_pointer_pressed() ||
+            lv_obj_is_scrolling(launcher_pager) || local_audio::audiobook_busy || local_audio::radio_busy) {
+        return;
+    }
+    auto *items = launcher_snapshot.items;
+    lv_obj_update_layout(items);
+    const auto width = lv_obj_get_width(items);
+    const auto height = lv_obj_get_height(items);
+    const auto child_count = lv_obj_get_child_count(items);
+    if (width <= lv_obj_get_width(launcher_pager) || height <= 0 || !child_count) return;
+
+    const auto started = esp_timer_get_time();
+    const size_t spare = 1024 * 1024;
+    const size_t available = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    if (available <= spare) return;
+    const size_t budget = std::min(LAUNCHER_CACHE_LIMIT, available - spare);
+    lv_area_t item_area, pager_area;
+    lv_obj_get_coords(items, &item_area);
+    lv_obj_get_coords(launcher_pager, &pager_area);
+
+    std::vector<LauncherTile> tiles;
+    tiles.reserve(child_count);
+    size_t total_bytes = 0;
+    for (uint32_t index = 0; index < child_count; ++index) {
+        auto *button = lv_obj_get_child(items, index);
+        if (lv_obj_has_flag(button, LV_OBJ_FLAG_HIDDEN)) continue;
+        const auto extension = lv_obj_get_ext_draw_size(button);
+        const auto tile_width = lv_obj_get_width(button) + 2 * extension;
+        const auto tile_height = lv_obj_get_height(button) + 2 * extension;
+        if (tile_width <= 0 || tile_height <= 0) return;
+        const size_t bytes = size_t(tile_width) * tile_height * 4;
+        if (bytes > budget - total_bytes) {
+            launcher_snapshot.attempted = true;
+            return;
+        }
+
+        auto &tile = tiles.emplace_back();
+        tile.pixels.reset(static_cast<uint8_t *>(
+            heap_caps_aligned_alloc(64, bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT)));
+        if (!tile.pixels ||
+                lv_draw_buf_init(&tile.buffer, tile_width, tile_height, LV_COLOR_FORMAT_ARGB8888,
+                                 tile_width * 4, tile.pixels.get(), bytes) != LV_RESULT_OK ||
+                lv_snapshot_take_to_draw_buf(button, LV_COLOR_FORMAT_ARGB8888, &tile.buffer) != LV_RESULT_OK) {
+            launcher_snapshot.attempted = true;
+            return;
+        }
+        lv_area_t area;
+        lv_obj_get_coords(button, &area);
+        tile.x = area.x1 - item_area.x1 - extension;
+        tile.y = area.y1 - item_area.y1 - extension;
+        total_bytes += bytes;
+    }
+    if (tiles.empty()) return;
+
+    // A transparent sibling follows the same scroll and clip as the original
+    // buttons. Separate small pixel allocations tolerate PSRAM fragmentation.
+    if (!launcher_snapshot.layer) {
+        launcher_snapshot.layer = lv_obj_create(launcher_pager);
+        lv_obj_remove_style_all(launcher_snapshot.layer);
+        lv_obj_remove_flag(launcher_snapshot.layer, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_remove_flag(launcher_snapshot.layer, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_add_flag(launcher_snapshot.layer, LV_OBJ_FLAG_IGNORE_LAYOUT);
+        lv_obj_add_flag(launcher_snapshot.layer, LV_OBJ_FLAG_HIDDEN);
+    }
+    lv_obj_set_size(launcher_snapshot.layer, width, height);
+    lv_obj_set_pos(launcher_snapshot.layer, item_area.x1 - pager_area.x1 + lv_obj_get_scroll_x(launcher_pager),
+                  item_area.y1 - pager_area.y1 + lv_obj_get_scroll_y(launcher_pager));
+    launcher_snapshot.tiles = std::move(tiles);
+    for (auto &tile : launcher_snapshot.tiles) {
+        auto *image = lv_image_create(launcher_snapshot.layer);
+        lv_obj_remove_flag(image, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_remove_flag(image, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_set_pos(image, tile.x, tile.y);
+        lv_image_set_src(image, &tile.buffer);
+    }
+    launcher_snapshot.bytes = total_bytes;
+    launcher_snapshot.attempted = true;
+    launcher_cache_build_us = esp_timer_get_time() - started;
+}
+
+void start_launcher_scroll(lv_event_t *event)
+{
+    if (lv_event_get_target(event) == launcher_pager && launcher_is_visible() &&
+            !launcher_snapshot.tiles.empty() && !launcher_assets_changed.load()) {
+        show_launcher_snapshot(true);
+        ++launcher_cached_scrolls;
+    }
+}
+
+void launcher_items_changed(lv_event_t *event)
+{
+    if (lv_event_get_target(event) != launcher_snapshot.items) return;
+    if (lv_event_get_code(event) == LV_EVENT_DELETE) {
+        release_launcher_snapshot();
+        launcher_snapshot.items = nullptr;
+    }
+    launcher_assets_changed.store(true);
+}
+
+void delete_launcher_pager(lv_event_t *event)
+{
+    if (lv_event_get_target(event) == launcher_pager) {
+        // The parent's LV_EVENT_DELETE arrives while its children are alive.
+        release_launcher_snapshot();
+        launcher_snapshot = {};
+        launcher_pager = nullptr;
+    }
+}
+
 void refresh_settled_launcher(lv_event_t *event)
 {
     auto *pager = static_cast<lv_obj_t *>(lv_event_get_current_target(event));
+    if (lv_event_get_target(event) == pager) show_launcher_snapshot(false);
     if (lv_event_get_target(event) != pager || !brookesia_board_desktop_visible() ||
             brookesia_board_screen_asleep()) {
         return;
@@ -352,7 +542,138 @@ extern "C" bool brookesia_board_prepare_lvgl_flush(
 
 extern "C" void brookesia_board_attach_launcher_pager(lv_obj_t *pager)
 {
+    launcher_pager = pager;
+    lv_obj_add_event_cb(pager, start_launcher_scroll, LV_EVENT_SCROLL_BEGIN, nullptr);
     lv_obj_add_event_cb(pager, refresh_settled_launcher, LV_EVENT_SCROLL_END, nullptr);
+    lv_obj_add_event_cb(pager, delete_launcher_pager, LV_EVENT_DELETE, nullptr);
+}
+
+extern "C" void brookesia_board_attach_launcher_items(lv_obj_t *items)
+{
+    launcher_snapshot.items = items;
+    launcher_assets_changed.store(true);
+    lv_obj_add_event_cb(items, launcher_items_changed, LV_EVENT_CHILD_CHANGED, nullptr);
+    lv_obj_add_event_cb(items, launcher_items_changed, LV_EVENT_SIZE_CHANGED, nullptr);
+    lv_obj_add_event_cb(items, launcher_items_changed, LV_EVENT_DELETE, nullptr);
+}
+
+extern "C" void brookesia_board_launcher_app_start(bool starting)
+{
+    if (!starting) {
+        launcher_app_start_depth.fetch_sub(1);
+        return;
+    }
+    // App images and GUI documents allocate PSRAM before the foreground notice.
+    // Release the desktop pixels immediately and keep them released until the
+    // start transaction finishes, including failure and rollback paths.
+    launcher_app_start_depth.fetch_add(1);
+    if (esp_lv_adapter_lock(-1) == ESP_OK) {
+        release_launcher_snapshot();
+        esp_lv_adapter_unlock();
+    }
+}
+
+extern "C" void brookesia_board_launcher_assets_changed()
+{
+    launcher_assets_changed.store(true);
+}
+
+namespace {
+constexpr int LAUNCHER_SWEEP_STEPS = 12;
+struct LauncherSweep {
+    lv_timer_t *timer = nullptr;
+    lv_obj_t *pager = nullptr;
+    int width = 0;
+    int origin = 0;
+    int position = 0;
+    int step = 0;
+    int64_t previous_done = 0;
+    bool cached = false;
+    bool interrupted = false;
+    boost::json::array frames;
+} launcher_sweep;
+
+void finish_launcher_sweep()
+{
+    lv_timer_delete(launcher_sweep.timer);
+    launcher_sweep.timer = nullptr;
+}
+
+void measure_launcher_frame(lv_timer_t *)
+{
+    if (!launcher_is_visible() || launcher_sweep.pager != launcher_pager ||
+            launcher_pointer_pressed() || launcher_app_start_depth.load()) {
+        launcher_sweep.interrupted = true;
+        show_launcher_snapshot(false);
+        finish_launcher_sweep();
+        return;
+    }
+
+    auto *display = lv_obj_get_display(launcher_pager);
+    if (!launcher_sweep.previous_done) {
+        if (launcher_sweep.cached) {
+            lv_obj_send_event(launcher_pager, LV_EVENT_SCROLL_BEGIN, nullptr);
+            if (!launcher_snapshot.showing) {
+                launcher_sweep.interrupted = true;
+                finish_launcher_sweep();
+                return;
+            }
+        }
+        lv_refr_now(display);
+        launcher_sweep.previous_done = esp_timer_get_time();
+        return;
+    }
+
+    const auto i = ++launcher_sweep.step;
+    const int fraction = i <= LAUNCHER_SWEEP_STEPS ? i : 2 * LAUNCHER_SWEEP_STEPS - i;
+    const int direction = launcher_sweep.origin == 0 ? 1 : -1;
+    const int next = launcher_sweep.origin + direction * launcher_sweep.width * fraction / LAUNCHER_SWEEP_STEPS;
+    const auto started = esp_timer_get_time();
+    lv_obj_scroll_by_raw(launcher_pager, launcher_sweep.position - next, 0);
+    lv_refr_now(display);
+    const auto done = esp_timer_get_time();
+    launcher_sweep.frames.push_back(boost::json::object{
+        {"refresh_us",done - started},{"interval_us",done - launcher_sweep.previous_done},
+        {"flush_us",refresh_stats.last_flush_us},{"pixels",refresh_stats.last_pixels}});
+    launcher_sweep.previous_done = done;
+    launcher_sweep.position = next;
+    if (i == 2 * LAUNCHER_SWEEP_STEPS) {
+        lv_obj_send_event(launcher_pager, LV_EVENT_SCROLL_END, nullptr);
+        finish_launcher_sweep();
+    }
+}
+} // namespace
+
+bool board_start_launcher_profile(bool cached)
+{
+    if (launcher_sweep.timer || !launcher_is_visible() || launcher_pointer_pressed() ||
+            lv_obj_is_scrolling(launcher_pager) || !launcher_snapshot.items) return false;
+    if (cached && (launcher_snapshot.tiles.empty() || launcher_assets_changed.load())) return false;
+
+    const auto width = lv_obj_get_width(launcher_pager);
+    const auto x = lv_obj_get_scroll_x(launcher_pager);
+    if (width < 100 || (x != 0 && x != width) || lv_obj_get_width(launcher_snapshot.items) < 2 * width) {
+        return false;
+    }
+
+    // Keep the diagnostic on the native GUI task, yielding between frames.
+    launcher_sweep = {};
+    launcher_sweep.pager = launcher_pager;
+    launcher_sweep.width = width;
+    launcher_sweep.origin = x;
+    launcher_sweep.position = x;
+    launcher_sweep.cached = cached;
+    launcher_sweep.frames.reserve(2 * LAUNCHER_SWEEP_STEPS);
+    launcher_sweep.timer = lv_timer_create(measure_launcher_frame, 5, nullptr);
+    return launcher_sweep.timer != nullptr;
+}
+
+boost::json::object board_launcher_profile_result()
+{
+    if (launcher_sweep.timer) return {{"running",true}};
+    return {{"running",false},{"cached",launcher_sweep.cached},{"interrupted",launcher_sweep.interrupted},
+            {"frames",launcher_sweep.frames},{"build_us",launcher_cache_build_us},
+            {"cache_bytes",launcher_snapshot.bytes}};
 }
 
 boost::json::object board_display_profile(bool force_refresh)
@@ -390,6 +711,8 @@ boost::json::object board_display_profile(bool force_refresh)
     }
     return {{"launcher_settled_refreshes",launcher_settled_refreshes},
             {"launcher_wide_dma_transfers",brookesia_panel_wide_desktop_draws()},
+            {"launcher_cache_ready",!launcher_snapshot.tiles.empty() && !launcher_assets_changed.load()},
+            {"launcher_cached_scrolls",launcher_cached_scrolls},
             {"weather_full_row_invalidations",weather_full_row_invalidations},
             {"weather_cached_flushes",weather_cached_flushes},{"weather_cache_ready",weather_rows.valid_rows.all()},
             {"refresh_count",refresh_stats.count},{"last_refresh_us",refresh_stats.last_us},
@@ -486,6 +809,7 @@ bool Display::start_lvgl_display_source(int core_id)
     }
     lv_timer_create(log_render_stats, 5000, nullptr);
     lv_timer_create(update_volume_badge,200,nullptr);
+    lv_timer_create(maintain_launcher_snapshot,180,nullptr);
     esp_lv_adapter_unlock();
 
     return true;

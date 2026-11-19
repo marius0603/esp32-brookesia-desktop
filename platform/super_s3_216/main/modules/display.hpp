@@ -14,6 +14,8 @@
 
 // Called with the LVGL lock held; reports whole refreshes, not individual strips.
 boost::json::object board_display_profile(bool force_refresh);
+bool board_start_launcher_profile(bool cached);
+boost::json::object board_launcher_profile_result();
 
 class Display {
 public:

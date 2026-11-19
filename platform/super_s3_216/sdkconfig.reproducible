@@ -5566,7 +5566,7 @@ CONFIG_LV_FREETYPE_CACHE_FT_GLYPH_CNT=256
 # Others
 #
 # default:
-# CONFIG_LV_USE_SNAPSHOT is not set
+CONFIG_LV_USE_SNAPSHOT=y
 # default:
 # CONFIG_LV_USE_SYSMON is not set
 # default:

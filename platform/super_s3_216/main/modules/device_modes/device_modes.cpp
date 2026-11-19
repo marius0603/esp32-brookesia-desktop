@@ -188,6 +188,8 @@ private:
         return {{"GetSpeakerVolume","Read actual codec volume, mute and DAC register",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Speaker volume diagnostics"}},
 {"SetDesktopTheme","Select Q or cyberpunk desktop",{{"Index","0 Q, 1 cyberpunk",FunctionValueType::Number}}},
                 {"ProfileRefresh","Measure native full-screen refresh",{{"Force","Force one whole-screen redraw",FunctionValueType::Boolean}},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Refresh timing"}},
+                {"ProfileLauncher","Start a controlled desktop page sweep",{{"Cached","Draw cached launcher tiles",FunctionValueType::Boolean}}},
+                {"GetLauncherProfile","Read the last controlled desktop page sweep",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Frame timing"}},
                 {"GetWeatherLayers","Read visible native layer opacity for weather diagnostics",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Visible surfaces"}},
                 {"GetState","Get screen and sound mode state",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Modes"}},
                 {"GetResourceUsage","Read cached per-second CPU and heap RAM use",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"CPU and memory"}},
@@ -210,6 +212,17 @@ private:
                     if(esp_lv_adapter_lock(1000)!=ESP_OK)return {.success=false,.error_message="GUI busy"};
                     auto result=board_display_profile(std::get<bool>(p.at("Force")));
                     esp_lv_adapter_unlock();return {.success=true,.data=FunctionValue(std::move(result))};}},
+                {"ProfileLauncher",[](FunctionParameterMap &&p)->FunctionResult{
+                    if(esp_lv_adapter_lock(1000)!=ESP_OK)return {.success=false,.error_message="GUI busy"};
+                    const bool started=board_start_launcher_profile(std::get<bool>(p.at("Cached")));
+                    esp_lv_adapter_unlock();
+                    if(!started)return {.success=false,.error_message="Desktop or launcher cache unavailable"};
+                    return {.success=true};}},
+                {"GetLauncherProfile",[](FunctionParameterMap &&)->FunctionResult{
+                    if(esp_lv_adapter_lock(1000)!=ESP_OK)return {.success=false,.error_message="GUI busy"};
+                    auto result=board_launcher_profile_result();
+                    esp_lv_adapter_unlock();
+                    return {.success=true,.data=FunctionValue(std::move(result))};}},
                 {"GetWeatherLayers",[this](FunctionParameterMap &&)->FunctionResult{return visual_layers();}},
                 {"GetState",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(state())};}},
                 {"GetResourceUsage",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(resource_usage())};}},
@@ -273,7 +286,12 @@ extern "C" bool brookesia_board_volume_muted(){return dnd.load();}
 extern "C" int brookesia_board_battery_status(){return battery_status.load();}
 extern "C" int brookesia_board_desktop_theme(){return desktop_theme==1 && brookesia_board_cyber_available()?1:0;}
 extern "C" bool brookesia_board_set_desktop_theme(int index){if(!preferences_loaded || (index!=0 && index!=1) || (index==1 && !brookesia_board_cyber_available()))return false;desktop_theme=index;dirty=true;return true;}
-extern "C" void brookesia_board_desktop_theme_applied(int index){desktop_theme_applied=index;}
+extern "C" void brookesia_board_launcher_assets_changed();
+extern "C" void brookesia_board_desktop_theme_applied(int index)
+{
+    desktop_theme_applied = index;
+    brookesia_board_launcher_assets_changed();
+}
 extern "C" int brookesia_board_volume_filter(int volume){
     if(!dnd && preferences_loaded && desired_volume.exchange(volume)!=volume)dirty=true;
     return dnd?0:volume;

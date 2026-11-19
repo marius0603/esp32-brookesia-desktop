@@ -1,0 +1,35 @@
+diff --git a/gui/brookesia_gui_lvgl/src/backend.cpp b/gui/brookesia_gui_lvgl/src/backend.cpp
+--- a/gui/brookesia_gui_lvgl/src/backend.cpp
++++ b/gui/brookesia_gui_lvgl/src/backend.cpp
+@@ -31,4 +31,5 @@
+ 
+ extern "C" void brookesia_board_attach_launcher_pager(lv_obj_t *pager) __attribute__((weak));
++extern "C" void brookesia_board_attach_launcher_items(lv_obj_t *items) __attribute__((weak));
+ 
+ namespace esp_brookesia::gui::lvgl {
+@@ -269,4 +270,7 @@
+     if (node.id == "grid_stage" && parent_path == "/launcher/content/" && brookesia_board_attach_launcher_pager) {
+         brookesia_board_attach_launcher_pager(object);
++    } else if (node.id == "item_layer" && parent_path == "/launcher/content/grid_stage/" &&
++               brookesia_board_attach_launcher_items) {
++        brookesia_board_attach_launcher_items(object);
+     }
+ 
+diff --git a/system/brookesia_system_core/src/app/manager.cpp b/system/brookesia_system_core/src/app/manager.cpp
+--- a/system/brookesia_system_core/src/app/manager.cpp
++++ b/system/brookesia_system_core/src/app/manager.cpp
+@@ -17,4 +17,5 @@
+ extern "C" bool brookesia_board_single_app_mode() __attribute__((weak));
+ extern "C" const char *brookesia_board_before_app_start() __attribute__((weak));
++extern "C" void brookesia_board_launcher_app_start(bool starting) __attribute__((weak));
+ extern "C" bool brookesia_child_visible(const char *) __attribute__((weak));
+ extern "C" const char *brookesia_child_launch_error(const char *) __attribute__((weak));
+@@ -680,4 +681,8 @@
+         );
+     };
++    if (brookesia_board_launcher_app_start) brookesia_board_launcher_app_start(true);
++    lib_utils::FunctionGuard launcher_cache_cleanup([]() {
++        if (brookesia_board_launcher_app_start) brookesia_board_launcher_app_start(false);
++    });
+     if (brookesia_board_before_app_start) {
+         if (brookesia_board_app_phase) brookesia_board_app_phase("start.wait-audio-release");
