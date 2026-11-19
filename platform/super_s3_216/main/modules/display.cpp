@@ -5,9 +5,14 @@
  */
 #include <algorithm>
 #include <array>
+#include <atomic>
+#include <bitset>
+#include <cstring>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+#include "esp_heap_caps.h"
 #include "esp_timer.h"
 #include "esp_log.h"
 #include "esp_lv_adapter.h"
@@ -24,6 +29,7 @@
 #include "brookesia/service_manager/helper/base.hpp"
 #include "brookesia/service_manager/service/manager.hpp"
 #include "display.hpp"
+#include "audio_ownership.hpp"
 #include "device_modes/resource_monitor.hpp"
 #include "device_modes/resource_math.hpp"
 
@@ -134,20 +140,56 @@ struct RefreshStats {
 
 uint32_t launcher_settled_refreshes = 0;
 uint32_t weather_full_row_invalidations = 0;
+uint32_t weather_cached_flushes = 0;
+constexpr int WEATHER_WIDTH = 480;
+constexpr int WEATHER_HEIGHT = 480;
+constexpr size_t WEATHER_ROW_BYTES = WEATHER_WIDTH * 2;
+
+// The LVGL port and display events use the same adapter lock. Only source
+// handovers come from another task, so they post a reset for the next LVGL call.
+std::atomic<bool> weather_output_changed{false};
+struct WeatherRows {
+    lv_obj_t *screen = nullptr;
+    std::unique_ptr<uint8_t, decltype(&heap_caps_free)> pixels{nullptr, heap_caps_free};
+    std::bitset<WEATHER_HEIGHT> valid_rows;
+    bool allocation_attempted = false;
+    bool deferred_for_audio = false;
+    bool repaint = false;
+} weather_rows;
+
+bool sync_weather_rows(lv_display_t *display)
+{
+    auto *screen = brookesia_board_weather_visible() &&
+                   lv_display_get_horizontal_resolution(display) == WEATHER_WIDTH &&
+                   lv_display_get_vertical_resolution(display) == WEATHER_HEIGHT &&
+                   lv_display_get_color_format(display) == LV_COLOR_FORMAT_RGB565
+                   ? lv_display_get_screen_active(display) : nullptr;
+    const bool output_changed = weather_output_changed.exchange(false);
+    if (screen != weather_rows.screen) {
+        weather_rows = {};
+        weather_rows.screen = screen;
+    } else if (output_changed && screen) {
+        weather_rows.valid_rows.reset();
+        weather_rows.repaint = true;
+    }
+    return screen != nullptr;
+}
 
 void round_weather_refresh(lv_event_t *event)
 {
-    if (!brookesia_board_weather_visible()) return;
     auto *display = static_cast<lv_display_t *>(lv_event_get_target(event));
     auto *area = static_cast<lv_area_t *>(lv_event_get_param(event));
-    const auto right = lv_display_get_horizontal_resolution(display) - 1;
-    if (!area || (area->x1 == 0 && area->x2 == right)) return;
-
-    // The CO5300 can leave a seam at the left edge of narrow writes.
-    // Preserve the dirty row range so a moving sprite does not refresh the entire screen.
-    area->x1 = 0;
-    area->x2 = right;
-    ++weather_full_row_invalidations;
+    if (!sync_weather_rows(display) || !area) return;
+    if (weather_rows.repaint) {
+        // A source handover or failed present may have left stale pixels.
+        *area = {0, 0, WEATHER_WIDTH - 1, WEATHER_HEIGHT - 1};
+        ++weather_full_row_invalidations;
+    } else if (!weather_rows.valid_rows.all() && (area->x1 != 0 || area->x2 != WEATHER_WIDTH - 1)) {
+        // Prime the shadow from complete rows. This is also the low-memory path.
+        area->x1 = 0;
+        area->x2 = WEATHER_WIDTH - 1;
+        ++weather_full_row_invalidations;
+    }
 }
 
 void refresh_settled_launcher(lv_event_t *event)
@@ -234,6 +276,80 @@ void log_render_stats(lv_timer_t *)
 
 } // namespace
 
+extern "C" void brookesia_board_lvgl_output_changed()
+{
+    weather_output_changed.store(true);
+}
+
+extern "C" void brookesia_board_lvgl_flush_failed(lv_display_t *display)
+{
+    if (sync_weather_rows(display)) {
+        weather_rows.valid_rows.reset();
+        weather_rows.repaint = true;
+    }
+}
+
+extern "C" bool brookesia_board_prepare_lvgl_flush(
+    lv_display_t *display, int *x_start, int y_start, int *x_end, int y_end, const void **pixels
+)
+{
+    if (!sync_weather_rows(display)) return true;
+    if (*x_start < 0 || *x_end > WEATHER_WIDTH || *x_start >= *x_end ||
+            y_start < 0 || y_end > WEATHER_HEIGHT || y_start >= y_end || !*pixels) {
+        return false;
+    }
+
+    const bool full_width = *x_start == 0 && *x_end == WEATHER_WIDTH;
+    const bool full_frame = full_width && y_start == 0 && y_end == WEATHER_HEIGHT;
+    if (full_frame) weather_rows.repaint = false;
+    if (!weather_rows.allocation_attempted) {
+        // Weather assets and locally streamed audio share the SD card during
+        // app entry. Keep the original rendering path until playback is idle.
+        if (local_audio::audiobook_busy.load()) {
+            weather_rows.deferred_for_audio = true;
+            return full_width;
+        }
+        weather_rows.allocation_attempted = true;
+        weather_rows.pixels.reset(static_cast<uint8_t *>(
+            heap_caps_malloc(WEATHER_ROW_BYTES * WEATHER_HEIGHT, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT)));
+        if (weather_rows.pixels) {
+            weather_rows.repaint |= weather_rows.deferred_for_audio && !full_frame;
+        } else {
+            ESP_LOGW("S3_PERF", "Weather row cache unavailable; rendering complete rows");
+        }
+        weather_rows.deferred_for_audio = false;
+    }
+    if (!full_width && !weather_rows.valid_rows.all()) {
+        // A rectangle can have been queued just before an output handover.
+        // Wait for freshly painted rows before using it to form a full row.
+        weather_rows.repaint = true;
+        return false;
+    }
+    if (!weather_rows.pixels) return true;
+
+    auto *rows = weather_rows.pixels.get() + y_start * WEATHER_ROW_BYTES;
+    if (full_width) {
+        std::memcpy(rows, *pixels, (y_end - y_start) * WEATHER_ROW_BYTES);
+        for (int y = y_start; y < y_end; ++y) weather_rows.valid_rows.set(y);
+    } else {
+        const size_t dirty_bytes = (*x_end - *x_start) * 2;
+        auto *dst = rows + *x_start * 2;
+        const auto *src = static_cast<const uint8_t *>(*pixels);
+        for (int y = y_start; y < y_end; ++y) {
+            std::memcpy(dst, src, dirty_bytes);
+            dst += WEATHER_ROW_BYTES;
+            src += dirty_bytes;
+        }
+        // CO5300 still receives complete rows, including the cached pixels
+        // outside the rectangle that LVGL just drew.
+        *pixels = rows;
+        *x_start = 0;
+        *x_end = WEATHER_WIDTH;
+        ++weather_cached_flushes;
+    }
+    return true;
+}
+
 extern "C" void brookesia_board_attach_launcher_pager(lv_obj_t *pager)
 {
     lv_obj_add_event_cb(pager, refresh_settled_launcher, LV_EVENT_SCROLL_END, nullptr);
@@ -274,7 +390,9 @@ boost::json::object board_display_profile(bool force_refresh)
     }
     return {{"launcher_settled_refreshes",launcher_settled_refreshes},
             {"launcher_wide_dma_transfers",brookesia_panel_wide_desktop_draws()},
-            {"weather_full_row_invalidations",weather_full_row_invalidations},{"refresh_count",refresh_stats.count},{"last_refresh_us",refresh_stats.last_us},
+            {"weather_full_row_invalidations",weather_full_row_invalidations},
+            {"weather_cached_flushes",weather_cached_flushes},{"weather_cache_ready",weather_rows.valid_rows.all()},
+            {"refresh_count",refresh_stats.count},{"last_refresh_us",refresh_stats.last_us},
             {"max_refresh_us",refresh_stats.max_us},{"last_strips",refresh_stats.last_strips},
             {"flush_callback_us",refresh_stats.last_flush_us},{"flushed_pixels",refresh_stats.last_pixels},
             {"flush_wait_us",refresh_stats.wait_us},{"forced_refresh_us",forced_us},{"canvases",std::move(canvases)}};

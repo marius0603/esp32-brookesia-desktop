@@ -1,0 +1,41 @@
+diff --git a/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp b/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp
+--- a/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp
++++ b/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp
+@@ -21,4 +21,10 @@
+ #include "port/private/threading.hpp"
+ #include "private/utils.hpp"
++
++extern "C" bool brookesia_board_prepare_lvgl_flush(
++    lv_display_t *display, int *x_start, int y_start, int *x_end, int y_end, const void **pixels
++) __attribute__((weak));
++extern "C" void brookesia_board_lvgl_flush_failed(lv_display_t *display) __attribute__((weak));
++extern "C" void brookesia_board_lvgl_output_changed() __attribute__((weak));
+ 
+ namespace esp_brookesia::gui::lvgl {
+@@ -498,4 +504,7 @@
+         const bool want_dummy = (state == DisplayService::SourceState::Dummy);
+         if (esp_lv_adapter_get_dummy_draw_enabled(display_) != want_dummy) {
++            if (brookesia_board_lvgl_output_changed) {
++                brookesia_board_lvgl_output_changed();
++            }
+             auto dummy_draw_ret = esp_lv_adapter_set_dummy_draw(display_, want_dummy);
+             if (dummy_draw_ret != ESP_OK) {
+@@ -622,5 +631,4 @@
+ )
+ {
+-    (void)disp;
+     (void)panel;
+ 
+@@ -628,5 +636,12 @@
+     BROOKESIA_CHECK_NULL_RETURN(self, ESP_ERR_INVALID_ARG, "LVGL Display source callback context is null");
+ 
++    if (brookesia_board_prepare_lvgl_flush &&
++            !brookesia_board_prepare_lvgl_flush(disp, &x_start, y_start, &x_end, y_end, &color_map)) {
++        return ESP_ERR_INVALID_STATE;
++    }
+     auto ret = self->submit_frame(x_start, y_start, x_end, y_end, color_map);
++    if (ret != ESP_OK && brookesia_board_lvgl_flush_failed) {
++        brookesia_board_lvgl_flush_failed(disp);
++    }
+     if (ret == ESP_ERR_NOT_ALLOWED) {
+         BROOKESIA_LOGD("LVGL Display frame dropped because source is not active");
