@@ -220,64 +220,35 @@ uint32_t launcher_cached_scrolls = 0;
 uint32_t launcher_cache_build_us = 0;
 constexpr size_t LAUNCHER_CACHE_LIMIT = 1152 * 1024;
 
-// Touch detection posts the latest request. LVGL consumes it on its own task
-// so a slow display refresh cannot stall the motion samples.
+// Track only a small system-layer indicator during the gesture. Moving an
+// app root invalidates the whole screen and can delay both touch and rendering.
 std::atomic<uint32_t> app_back_request{0};
-lv_obj_t *app_back_root = nullptr;
-int32_t app_back_base_y = 0;
+lv_obj_t *app_back_indicator = nullptr;
 int32_t app_back_offset = 0;
-lv_style_value_t app_back_local_y{};
-bool app_back_had_local_y = false;
-
-void forget_app_back_root(lv_event_t *event)
-{
-    if (lv_event_get_target(event) == app_back_root) {
-        app_back_root = nullptr;
-        app_back_offset = 0;
-    }
-}
+constexpr int32_t APP_BACK_BOTTOM_MARGIN = 10;
 
 void set_app_back_offset(void *object, int32_t offset)
 {
-    if (object != app_back_root) return;
     app_back_offset = offset;
-    lv_obj_set_style_translate_y(app_back_root, app_back_base_y - offset, LV_PART_MAIN);
+    lv_obj_set_y(static_cast<lv_obj_t *>(object), -APP_BACK_BOTTOM_MARGIN - offset);
 }
 
-void restore_app_back_root()
+void hide_app_back_indicator()
 {
-    if (!app_back_root) return;
-    auto *root = app_back_root;
-    lv_anim_delete(root, set_app_back_offset);
-    lv_obj_remove_event_cb(root, forget_app_back_root);
-    if (app_back_had_local_y) {
-        lv_obj_set_style_translate_y(root, app_back_local_y.num, LV_PART_MAIN);
-    } else {
-        lv_obj_remove_local_style_prop(root, LV_STYLE_TRANSLATE_Y, LV_PART_MAIN);
-    }
-    app_back_root = nullptr;
+    if (!app_back_indicator || lv_obj_has_flag(app_back_indicator, LV_OBJ_FLAG_HIDDEN)) return;
+    lv_anim_delete(app_back_indicator, set_app_back_offset);
+    lv_obj_add_flag(app_back_indicator, LV_OBJ_FLAG_HIDDEN);
     app_back_offset = 0;
-}
-
-lv_obj_t *find_foreground_app_root(lv_display_t *display)
-{
-    auto *screen = lv_display_get_screen_active(display);
-    auto *launcher_root = launcher_pager;
-    while (launcher_root && lv_obj_get_parent(launcher_root) != screen) {
-        launcher_root = lv_obj_get_parent(launcher_root);
-    }
-    for (uint32_t i = lv_obj_get_child_count(screen); i > 0; --i) {
-        auto *root = lv_obj_get_child(screen, i - 1);
-        if (root != launcher_root && !lv_obj_has_flag(root, LV_OBJ_FLAG_HIDDEN) &&
-                lv_obj_get_width(root) > 0 && lv_obj_get_height(root) > 0) {
-            return root;
-        }
-    }
-    return nullptr;
 }
 
 void update_app_back_preview(lv_timer_t *)
 {
+    auto *display = LvglDisplaySource::get_instance().display();
+    if (!display || brookesia_board_desktop_visible() || brookesia_board_screen_asleep()) {
+        hide_app_back_indicator();
+        return;
+    }
+
     static uint32_t applied_request = 0;
     const auto request = app_back_request.load();
     if (request == applied_request) return;
@@ -286,54 +257,57 @@ void update_app_back_preview(lv_timer_t *)
     const int32_t offset = request & 0xffff;
     const uint32_t duration_ms = request >> 16;
     if (offset == 0 && duration_ms == 0) {
-        restore_app_back_root();
+        hide_app_back_indicator();
         return;
     }
 
-    auto *display = LvglDisplaySource::get_instance().display();
-    if (!display || brookesia_board_desktop_visible() || brookesia_board_screen_asleep()) {
-        restore_app_back_root();
-        return;
+    if (!app_back_indicator && offset > 0) {
+        app_back_indicator = lv_obj_create(lv_display_get_layer_sys(display));
+        lv_obj_remove_style_all(app_back_indicator);
+        lv_obj_remove_flag(app_back_indicator, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_remove_flag(app_back_indicator, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_add_flag(app_back_indicator, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_size(app_back_indicator, 72, 5);
+        lv_obj_align(app_back_indicator, LV_ALIGN_BOTTOM_MID, 0, -APP_BACK_BOTTOM_MARGIN);
+        lv_obj_set_style_radius(app_back_indicator, LV_RADIUS_CIRCLE, 0);
+        lv_obj_set_style_bg_color(app_back_indicator, lv_color_hex(0xf4f4f4), 0);
+        lv_obj_set_style_bg_opa(app_back_indicator, LV_OPA_COVER, 0);
+        lv_obj_set_style_border_width(app_back_indicator, 1, 0);
+        lv_obj_set_style_border_color(app_back_indicator, lv_color_hex(0x202020), 0);
     }
-    if (!app_back_root && offset > 0) {
-        auto *root = find_foreground_app_root(display);
-        if (!root) return;
-        app_back_root = root;
-        app_back_base_y = lv_obj_get_style_translate_y(root, LV_PART_MAIN);
-        app_back_had_local_y =
-            lv_obj_get_local_style_prop(root, LV_STYLE_TRANSLATE_Y, &app_back_local_y, LV_PART_MAIN) ==
-            LV_STYLE_RES_FOUND;
-        lv_obj_add_event_cb(root, forget_app_back_root, LV_EVENT_DELETE, nullptr);
+
+    if (!app_back_indicator) return;
+    lv_anim_delete(app_back_indicator, set_app_back_offset);
+    if (offset > 0 && lv_obj_has_flag(app_back_indicator, LV_OBJ_FLAG_HIDDEN)) {
         for (auto *input = lv_indev_get_next(nullptr); input; input = lv_indev_get_next(input)) {
             if (lv_indev_get_display(input) == display && lv_indev_get_type(input) == LV_INDEV_TYPE_POINTER &&
                     lv_indev_get_state(input) == LV_INDEV_STATE_PRESSED) {
                 lv_indev_wait_release(input);
             }
         }
-    }
-
-    if (!app_back_root) return;
-    lv_anim_delete(app_back_root, set_app_back_offset);
-    if (offset == app_back_offset) {
-        if (offset == 0) restore_app_back_root();
+        set_app_back_offset(app_back_indicator, offset);
+        lv_obj_remove_flag(app_back_indicator, LV_OBJ_FLAG_HIDDEN);
         return;
     }
+
     if (duration_ms == 0) {
-        set_app_back_offset(app_back_root, offset);
+        set_app_back_offset(app_back_indicator, offset);
+        return;
+    }
+    if (app_back_offset == 0 || lv_obj_has_flag(app_back_indicator, LV_OBJ_FLAG_HIDDEN)) {
+        hide_app_back_indicator();
         return;
     }
 
     lv_anim_t animation;
     lv_anim_init(&animation);
-    lv_anim_set_var(&animation, app_back_root);
+    lv_anim_set_var(&animation, app_back_indicator);
     lv_anim_set_exec_cb(&animation, set_app_back_offset);
-    lv_anim_set_values(&animation, app_back_offset, offset);
+    lv_anim_set_values(&animation, app_back_offset, 0);
     lv_anim_set_duration(&animation, duration_ms);
     lv_anim_set_path_cb(&animation, lv_anim_path_ease_out);
-    lv_anim_set_completed_cb(&animation, [](lv_anim_t *finished) {
-        if (finished->var == app_back_root && app_back_offset == 0) {
-            restore_app_back_root();
-        }
+    lv_anim_set_completed_cb(&animation, [](lv_anim_t *) {
+        hide_app_back_indicator();
     });
     lv_anim_start(&animation);
 }

@@ -1,0 +1,188 @@
+diff --git a/system/brookesia_system_super/src/private/shell_impl.hpp b/system/brookesia_system_super/src/private/shell_impl.hpp
+index 65257f1..3d3c85f 100644
+--- a/system/brookesia_system_super/src/private/shell_impl.hpp
++++ b/system/brookesia_system_super/src/private/shell_impl.hpp
+@@ -39,6 +39,8 @@
+ #   define SYSTEM_SUPER_PROFILE_LOGI(...) do { if (false) { BROOKESIA_LOGI(__VA_ARGS__); } } while (0)
+ #endif
+ 
++extern "C" void brookesia_board_set_app_back_preview(int32_t offset_px, uint32_t duration_ms) __attribute__((weak));
++
+ namespace esp_brookesia::system::super {
+ namespace {
+ 
+diff --git a/system/brookesia_system_super/src/private/system_constants.hpp b/system/brookesia_system_super/src/private/system_constants.hpp
+index 1d583a7..1aa46da 100644
+--- a/system/brookesia_system_super/src/private/system_constants.hpp
++++ b/system/brookesia_system_super/src/private/system_constants.hpp
+@@ -299,9 +299,7 @@ inline constexpr const char *SUPER_LAUNCHER_IMAGE_ICON_ID = "icon_box/icon_image
+ inline constexpr int32_t SUPER_STATUS_BAR_EXPANDED_Y = 0;
+ inline constexpr int32_t SUPER_STATUS_BAR_COLLAPSED_Y = -44;
+ inline constexpr int32_t SUPER_SYSTEM_UI_ANIMATION_MS = 180;
+-inline constexpr int32_t SUPER_GESTURE_BACK_PREVIEW_PX = 32;
+-inline constexpr int32_t SUPER_GESTURE_BACK_FINISH_PX = 42;
+-inline constexpr int32_t SUPER_GESTURE_EXIT_SETTLE_MS = 110;
++inline constexpr int32_t SUPER_GESTURE_BACK_PREVIEW_PX = 20;
+ inline constexpr int32_t SUPER_GESTURE_REBOUND_MS = 180;
+ inline constexpr int32_t SUPER_STATUS_PEEK_HOLD_MS = 1500;
+ inline constexpr int32_t SUPER_APP_LAUNCH_ANIMATION_MS = 220;
+diff --git a/system/brookesia_system_super/src/shell_display.cpp b/system/brookesia_system_super/src/shell_display.cpp
+index 17fed39..5e923bf 100644
+--- a/system/brookesia_system_super/src/shell_display.cpp
++++ b/system/brookesia_system_super/src/shell_display.cpp
+@@ -5,8 +5,6 @@
+  */
+ #include "private/shell_impl.hpp"
+ 
+-extern "C" void brookesia_board_set_app_back_preview(int32_t offset_px, uint32_t duration_ms) __attribute__((weak));
+-
+ namespace esp_brookesia::system::super {
+ 
+ std::expected<void, std::string> ShellApp::mount_background(core::AppContext &context)
+@@ -278,23 +276,27 @@ void ShellApp::handle_display_touch_gesture(const DisplayService::TouchGestureIn
+ 
+         gesture_tracking_ = false;
+         if (!should_return) {
+-            animate_gesture_indicator_rebound();
+-            (void)refresh_system_ui_state_bindings();
++            if (brookesia_board_set_app_back_preview) {
++                brookesia_board_set_app_back_preview(0, SUPER_GESTURE_REBOUND_MS);
++            } else {
++                animate_gesture_indicator_rebound();
++                (void)refresh_system_ui_state_bindings();
++            }
+             return;
+         }
+ 
+         gesture_exit_pending_ = true;
+         if (brookesia_board_set_app_back_preview) {
+-            brookesia_board_set_app_back_preview(SUPER_GESTURE_BACK_FINISH_PX, SUPER_GESTURE_EXIT_SETTLE_MS);
+-            auto timer = context_->timer().start_delayed(
+-                             SUPER_GESTURE_EXIT_SETTLE_TIMER_NAME, SUPER_GESTURE_EXIT_SETTLE_MS
+-                         );
+-            if (timer) {
+-                gesture_exit_settle_timer_id_ = *timer;
+-                return;
+-            }
++            brookesia_board_set_app_back_preview(0, 0);
++        }
++        // Let the Shell task close the app after the display callback returns.
++        auto timer = context_->timer().start_delayed(SUPER_GESTURE_EXIT_SETTLE_TIMER_NAME, 1);
++        if (timer) {
++            gesture_exit_settle_timer_id_ = *timer;
++        } else {
++            reset_gesture_indicator();
++            restore_display_after_system_ui();
+         }
+-        trigger_gesture_exit();
+         return;
+     }
+ 
+@@ -313,14 +315,10 @@ void ShellApp::handle_display_touch_gesture(const DisplayService::TouchGestureIn
+         reset_status_peek_session(false, true, "before bottom gesture");
+         ++gesture_generation_;
+         gesture_tracking_ = true;
+-        (void)refresh_system_ui_state_bindings();
+-        switch_display_to_gui_for_system_ui();
+         gesture_preview_offset_ = -1;
+-        if (brookesia_board_set_app_back_preview) {
+-            if (gesture_indicator_max_width_ <= 0) {
+-                gesture_indicator_max_width_ = get_fallback_gesture_indicator_width(owner_.get_environment());
+-            }
+-            update_gesture_indicator_width(gesture_indicator_max_width_ * 3 / 4);
++        if (!brookesia_board_set_app_back_preview) {
++            (void)refresh_system_ui_state_bindings();
++            switch_display_to_gui_for_system_ui();
+         }
+     }
+ 
+@@ -596,9 +594,6 @@ void ShellApp::animate_gesture_indicator_rebound()
+         return;
+     }
+ 
+-    if (brookesia_board_set_app_back_preview) {
+-        brookesia_board_set_app_back_preview(0, SUPER_GESTURE_REBOUND_MS);
+-    }
+     const auto generation = ++gesture_generation_;
+     auto x_animation = make_timed_animation(gui::AnimationProperty::X, 0, SUPER_GESTURE_REBOUND_MS);
+     auto x_animation_result = context_->gui().start_view_animation_with_result(
+@@ -670,15 +665,17 @@ void ShellApp::trigger_gesture_exit()
+         context_->gui().stop_animation(gesture_indicator_x_animation_id_);
+         gesture_indicator_x_animation_id_ = 0;
+     }
+-    if (gesture_indicator_max_width_ <= 0) {
+-        gesture_indicator_max_width_ = get_fallback_gesture_indicator_width(owner_.get_environment());
+-    }
+-    const auto max_width = std::max<int32_t>(gesture_indicator_max_width_, 1);
+-    std::vector<gui::BindingValueUpdate> updates;
+-    add_gesture_indicator_binding_updates(updates, true, max_width, max_width);
+-    auto binding_result = context_->gui().set_binding_values(updates);
+-    if (!binding_result) {
+-        BROOKESIA_LOGW("Failed to hide Shell gesture indicator after exit trigger: %1%", binding_result.error());
++    if (!brookesia_board_set_app_back_preview) {
++        if (gesture_indicator_max_width_ <= 0) {
++            gesture_indicator_max_width_ = get_fallback_gesture_indicator_width(owner_.get_environment());
++        }
++        const auto max_width = std::max<int32_t>(gesture_indicator_max_width_, 1);
++        std::vector<gui::BindingValueUpdate> updates;
++        add_gesture_indicator_binding_updates(updates, true, max_width, max_width);
++        auto binding_result = context_->gui().set_binding_values(updates);
++        if (!binding_result) {
++            BROOKESIA_LOGW("Failed to hide Shell gesture indicator after exit trigger: %1%", binding_result.error());
++        }
+     }
+     auto result = owner_.close_active_app();
+     if (!result) {
+diff --git a/system/brookesia_system_super/src/shell_launch.cpp b/system/brookesia_system_super/src/shell_launch.cpp
+index 89dfd22..49b6db6 100644
+--- a/system/brookesia_system_super/src/shell_launch.cpp
++++ b/system/brookesia_system_super/src/shell_launch.cpp
+@@ -45,11 +45,12 @@ std::expected<void, std::string> ShellApp::refresh_system_ui_state_bindings()
+         return {};
+     }
+ 
++    const bool gesture_mask_visible = !brookesia_board_set_app_back_preview &&
++                                      (gesture_tracking_ || gesture_exit_pending_ || gesture_exit_triggered_ ||
++                                       gesture_indicator_animation_id_ != 0);
+     const bool mask_visible = !foreground_is_shell_ &&
+                               (system_ui_expanded_ || status_peek_tracking_ || status_peek_visible_ ||
+-                               gesture_tracking_ || gesture_exit_pending_ || gesture_exit_triggered_ ||
+-                               gesture_indicator_animation_id_ != 0 ||
+-                               message_dialog_mounted_);
++                               gesture_mask_visible || message_dialog_mounted_);
+     std::vector<gui::BindingValueUpdate> updates;
+     add_binding_update(
+         updates,
+diff --git a/system/brookesia_system_super/src/private/app_back_swipe.hpp b/system/brookesia_system_super/src/private/app_back_swipe.hpp
+index 02077ff..9deb8f6 100644
+--- a/system/brookesia_system_super/src/private/app_back_swipe.hpp
++++ b/system/brookesia_system_super/src/private/app_back_swipe.hpp
+@@ -39,8 +39,15 @@ public:
+         }
+ 
+         const auto elapsed_ms = time_ms - last_sample_ms_;
+-        const float speed = elapsed_ms <= 65 ? static_cast<float>(upward - last_upward_) / elapsed_ms : 0;
+-        velocity_ = elapsed_ms > 65 || speed * velocity_ < 0 ? speed : (speed + velocity_) * 0.5F;
++        const int32_t travel = upward - last_upward_;
++        const bool motion_expired = time_ms - last_motion_ms_ > motion_window_ms;
++        if (travel <= -2 || travel >= 2) {
++            const float speed = elapsed_ms <= 65 ? static_cast<float>(travel) / elapsed_ms : 0;
++            velocity_ = motion_expired || speed * velocity_ < 0 ? speed : (speed + velocity_) * 0.5F;
++            last_motion_ms_ = time_ms;
++        } else if (motion_expired) {
++            velocity_ = 0;
++        }
+         last_sample_ms_ = time_ms;
+         last_upward_ = upward;
+         return claimed_;
+@@ -61,7 +68,10 @@ public:
+     }
+ 
+ private:
++    // A release can be preceded by a few duplicate contact samples.
++    static constexpr uint32_t motion_window_ms = 60;
+     uint32_t last_sample_ms_ = 0;
++    uint32_t last_motion_ms_ = 0;
+     int32_t last_upward_ = 0;
+     float velocity_ = 0;
+     bool candidate_ = false;

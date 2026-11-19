@@ -25,7 +25,8 @@
     "patches/weather-cached-rows.patch",
     "patches/launcher-scroll-snapshot.patch",
     "patches/launcher-release-snap.patch",
-    "patches/app-back-swipe.patch"
+    "patches/app-back-swipe.patch",
+    "patches/app-back-local-preview.patch"
   ],
   "sha256": {
     "patches/brookesia-s3.patch": "75e0bb3f720b9bd442955f1b04ab4d6f1437c2cbdfa4359646f1176044bc0346",
@@ -39,7 +40,7 @@
     "phone-remote/tools/downloads.json": "f4dca27ac3cb2d5b30d308eafae0ae106e9108809f3d0d0f595664f98f0e8e1d",
     "phone-remote/tools/requirements-signing.txt": "8b5c18678b29b5e8e0fb586a35ac1dce3ccd9da321e8f12ace0e118350b4e568",
     "platform/super_s3_216/sdkconfig.reproducible": "909bf7e7e565b5dc1e9f02f20b954daf34b6a07272a44b976fb3b2aae30593e0",
-    "versions.json": "b9960af7b2e158a41096a3b538d34e00a1993c03a75780383b9a61228533528e",
+    "versions.json": "c4e6b9eebefc33ae1668723e82b8a381cf3eb18d1a4d061d9184a159dd242030",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.c": "52a51002bd22aac5c2105187c27cd393a34f13143c8ae97b0964ad27dec1c1ea",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.h": "a2fc087b68c25141e2fb7ab56e71b111bee79cf311fcc850d492eb574c0eeffe",
     "patches/transparent-launcher.patch": "b9cbe446371691db2c9e4674b73293646b63ca003a24f59a5c0a2646ce871732",
@@ -53,8 +54,8 @@
     "patches/bounded-display-dma.patch": "b1e6eb13627718506036f14f94f0a9cb3bac0a893094068084707bb29152e290",
     "patches/persistent-display-dma.patch": "cc8c6cf3dbe36d4089abff0242a3f740cca31e111138ea88df3a341b09d8c264",
     "patches/aligned-display-strips.patch": "1629b23605921dd00fab60995969fd3ad5c5243cb540b9f20a64da4841d25dc2",
-    "platform/super_s3_216/CMakeLists.txt": "72c79ef0f55bdeaf4bc5195a0809997d33f9108a69883a7b37170192507cee14",
-    "platform/super_s3_216/main/modules/display.cpp": "854ae4d4392b7515e9fe2f44b3f1654fc0b10d6ba89465f46298d6589c15f281",
+    "platform/super_s3_216/CMakeLists.txt": "936fbd18d8a78d903047cd8534b92ce8c41bac6b18df25744139b50f6e7b7167",
+    "platform/super_s3_216/main/modules/display.cpp": "1b1c05ddd6782196db5794d70d0c6c6c1be2ccfefb9bfa1ca44028fe69597ab4",
     "platform/super_s3_216/main/modules/device_modes/device_modes.cpp": "75f7ad9fdceee47d495781327dac2e64ca4144255ebc8b3dad22b1cd0cb0183c",
     "platform/super_s3_216/main/modules/device_modes/resource_monitor.cpp": "0f4d6b9c6fa5d4247a4e74e3335a0c82a46d8080ec6f2c191149df38c558a85f",
     "platform/super_s3_216/main/modules/device_modes/resource_monitor.hpp": "7e58ab09e3c1ed3bef7ead2f4cad2715e365bd2c19aa5b3ec80a2dc3ddd082a4",
@@ -85,6 +86,7 @@
     "platform/super_s3_216/main/modules/display.hpp": "2aa1a6c7756103010b8f7ba5edf227baabcea6e3379b26349ddb0cb2154dc776",
     "patches/launcher-scroll-snapshot.patch": "a2da94f1829bedc150cb8b41d56fef60cb09ac78d16b00e68b2fb64b47d00604",
     "patches/launcher-release-snap.patch": "3231538b76f96003b3955e18e56955e2ac3b2abeb3c75275c245043e1afde718",
-    "patches/app-back-swipe.patch": "97f44828f8aa458a31eb4f6804cc1ac32e2d6215cd14909982001127e42c6184"
+    "patches/app-back-swipe.patch": "97f44828f8aa458a31eb4f6804cc1ac32e2d6215cd14909982001127e42c6184",
+    "patches/app-back-local-preview.patch": "1cd1de2bc4b3e6526343c737faa26e49b8a2fe0fbc74d94691d04f7e21ca8858"
   }
 }

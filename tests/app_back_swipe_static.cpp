@@ -36,9 +36,12 @@ constexpr bool short_flick_and_pause_differ()
             swipe.should_return(30, exit_distance, 141)) {
         return false;
     }
-    for (uint32_t time_ms = 40; time_ms <= 100; time_ms += 20) {
-        swipe.update(2, 30, time_ms);
+    swipe.update(2, 30, 40);
+    swipe.update(2, 30, 60);
+    if (!swipe.should_return(30, exit_distance, 120)) {
+        return false;
     }
+    swipe.update(2, 30, 100);
     return !swipe.should_return(30, exit_distance, 160);
 }
 
