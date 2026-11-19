@@ -1,0 +1,137 @@
+diff --git a/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.hpp b/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.hpp
+--- a/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.hpp
++++ b/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.hpp
+@@ -85,4 +85,6 @@
+     display::PanelIface::BusType bus_type_ = display::PanelIface::BusType::Max;
+     uint8_t *dma_stage_ = nullptr;
++    uint8_t *dma_stage_next_ = nullptr;
++    size_t dma_stage_bytes_ = 0;
+     uint8_t *desktop_margins_ = nullptr;
+     std::bitset<DESKTOP_PANEL_SIZE> desktop_left_valid_;
+diff --git a/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.cpp b/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.cpp
+--- a/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.cpp
++++ b/hal/brookesia_hal_adaptor/src/display/lcd_panel_impl.cpp
+@@ -48,4 +48,6 @@
+ constexpr const char *LCD_PANEL_INIT_THREAD_NAME = "HalLcdInit";
+ constexpr size_t LCD_PANEL_INIT_THREAD_STACK_SIZE = 8192;
++constexpr size_t LCD_DMA_STAGE_BYTES = 7680; // Eight 480-pixel RGB565 rows
++constexpr size_t LCD_DMA_FALLBACK_BYTES = 3840;
+ std::atomic_uint wide_desktop_draws{0};
+ 
+@@ -300,6 +302,18 @@
+                         get_info().pixel_format == display::PanelIface::PixelFormat::RGB565;
+     if (staging_required_) {
+-        dma_stage_ = static_cast<uint8_t *>(heap_caps_aligned_alloc(64,4096,MALLOC_CAP_INTERNAL|MALLOC_CAP_DMA));
++        const auto alloc_stage = [](size_t size) {
++            return static_cast<uint8_t *>(heap_caps_aligned_alloc(64, size, MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA));
++        };
++        dma_stage_bytes_ = LCD_DMA_STAGE_BYTES;
++        dma_stage_ = alloc_stage(dma_stage_bytes_);
++        if (!dma_stage_) {
++            dma_stage_bytes_ = LCD_DMA_FALLBACK_BYTES;
++            dma_stage_ = alloc_stage(dma_stage_bytes_);
++        }
+         BROOKESIA_CHECK_NULL_EXIT(dma_stage_, "Cannot reserve fixed LCD DMA staging buffer");
++        dma_stage_next_ = alloc_stage(dma_stage_bytes_);
++        if (!dma_stage_next_) {
++            BROOKESIA_LOGW("Cannot reserve second LCD DMA staging buffer; using serial staging");
++        }
+         if (brookesia_board_desktop_visible) {
+             desktop_margins_ = static_cast<uint8_t *>(
+@@ -324,4 +338,5 @@
+ 
+     heap_caps_free(desktop_margins_);
++    heap_caps_free(dma_stage_next_);
+     heap_caps_free(dma_stage_);
+     dma_stage_ = nullptr;
+@@ -483,5 +498,5 @@
+     // The CO5300 can leave a seam on partial-width writes during desktop
+     // scrolling. LVGL can still render only the dirty region: the two
+-    // cached margins complete each panel row in the existing DMA buffer.
++    // cached margins complete each panel row in the DMA staging buffers.
+     const bool widen = can_widen_desktop_draw(x1, y1, x2, y2);
+     const auto draw_x1 = widen ? 0 : x1;
+@@ -492,17 +507,34 @@
+     // staging subwindow must preserve that alignment as well (CO5300: 2 rows).
+     constexpr uint32_t row_alignment = 1U << (BROOKESIA_HAL_ADAPTOR_DISPLAY_LCD_PANEL_DRAW_Y_ALIGN_BYTES - 1);
+-    const uint32_t rows=(3840/row_bytes)/row_alignment*row_alignment;
++    const uint32_t rows = (dma_stage_bytes_ / row_bytes) / row_alignment * row_alignment;
+     if (!rows) return false;
+-    const TickType_t started=xTaskGetTickCount(),budget=std::max<TickType_t>(1,pdMS_TO_TICKS(timeout_ms));
+-    bool ok=true;
+-    for (uint32_t y=y1;y<y2;) {
+-        const auto count=std::min(rows,y2-y);
+-        while(xSemaphoreTake(sync_done_,0)==pdTRUE) {}
++
++    const auto started = xTaskGetTickCount();
++    const auto budget = std::max<TickType_t>(1, pdMS_TO_TICKS(timeout_ms));
++    const auto wait_for_stage = [&]() {
++        const auto elapsed = xTaskGetTickCount() - started;
++        return xSemaphoreTake(sync_done_, elapsed < budget ? budget - elapsed : 0) == pdTRUE;
++    };
++    while (xSemaphoreTake(sync_done_, 0) == pdTRUE) {
++    }
++
++    bool ok = true;
++    bool pending = false;
++    auto *stage = dma_stage_;
++    for (uint32_t y = y1; y < y2;) {
++        if (!dma_stage_next_ && pending) {
++            if (!wait_for_stage()) {
++                ok = false;
++                break;
++            }
++            pending = false;
++        }
++        const auto count = std::min(rows, y2 - y);
+         const auto *src = data + size_t(y - y1) * input_row_bytes;
+         if (!widen) {
+-            memcpy(dma_stage_, src, size_t(count) * row_bytes);
++            memcpy(stage, src, size_t(count) * row_bytes);
+         } else {
+             for (uint32_t row = 0; row < count; ++row) {
+-                auto *dst = dma_stage_ + row * row_bytes;
++                auto *dst = stage + row * row_bytes;
+                 const auto *left = desktop_margins_ + size_t(y + row) * DESKTOP_MARGIN_ROW_BYTES;
+                 const auto *right = left + DESKTOP_MARGIN_BYTES;
+@@ -514,13 +546,25 @@
+             }
+         }
++
++        // The CPU can prepare a strip while DMA reads the other slot. CO5300
++        // address-window commands still run after the previous pixels are sent.
++        if ((pending && !wait_for_stage()) || xTaskGetTickCount() - started >= budget) {
++            ok = false;
++            break;
++        }
+         portENTER_CRITICAL(&event_lock_);
+-        suppress_strip_events_=y+count<y2;
+-        sync_waiting_=true;sync_target_draw_seq_=submitted_draw_seq_+1;
++        suppress_strip_events_ = y + count < y2;
++        sync_waiting_ = true;
++        sync_target_draw_seq_ = submitted_draw_seq_ + 1;
+         portEXIT_CRITICAL(&event_lock_);
+-        const auto elapsed=xTaskGetTickCount()-started;
+-        if (elapsed>=budget || !submit_draw_bitmap_locked(draw_x1,y,draw_x2,y+count,dma_stage_) ||
+-            xSemaphoreTake(sync_done_,budget-elapsed)!=pdTRUE) {ok=false;break;}
+-        y+=count;
+-    }
++        if (!submit_draw_bitmap_locked(draw_x1, y, draw_x2, y + count, stage)) {
++            ok = false;
++            break;
++        }
++        pending = true;
++        if (dma_stage_next_) stage = stage == dma_stage_ ? dma_stage_next_ : dma_stage_;
++        y += count;
++    }
++    if (ok && pending) ok = wait_for_stage();
+     // Never recycle or free the fixed staging memory while DMA still owns it.
+     if (!ok) drain_spi_transfers_locked();
+diff --git a/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_peripherals.yaml b/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_peripherals.yaml
+--- a/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_peripherals.yaml
++++ b/hal/brookesia_hal_boards/boards/waveshare/esp32_s3_touch_amoled_2_16/board_peripherals.yaml
+@@ -61,3 +61,3 @@
+         quadhd_io_num: 7                 # QUADHD_IO_NUM
+         sclk_io_num: 38                   # SPI Clock signal
+-        max_transfer_sz: 3840             # Four RGB565 rows; one DMA descriptor after IDF rounding
++        max_transfer_sz: 7680             # Eight RGB565 rows; two DMA descriptors

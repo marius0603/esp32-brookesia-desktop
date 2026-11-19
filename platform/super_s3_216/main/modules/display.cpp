@@ -128,7 +128,8 @@ struct RenderStats {
 RenderStats render_stats;
 struct RefreshStats {
     int64_t started = 0, last_us = 0, max_us = 0, wait_started = 0, wait_us = 0;
-    uint32_t count = 0, strips = 0, last_strips = 0;
+    int64_t flush_started_us = 0, flush_us = 0, last_flush_us = 0;
+    uint32_t count = 0, strips = 0, last_strips = 0, pixels = 0, last_pixels = 0;
 } refresh_stats;
 
 uint32_t launcher_settled_refreshes = 0;
@@ -183,16 +184,26 @@ void render_event(lv_event_t *event)
         refresh_stats.started = now;
         refresh_stats.strips = 0;
         refresh_stats.wait_us = 0;
+        refresh_stats.flush_us = 0;
+        refresh_stats.pixels = 0;
     } else if (code == LV_EVENT_REFR_READY && refresh_stats.started) {
         if (refresh_stats.strips) {
             refresh_stats.last_us = now-refresh_stats.started;
             refresh_stats.max_us = std::max(refresh_stats.max_us, refresh_stats.last_us);
             refresh_stats.last_strips = refresh_stats.strips;
+            refresh_stats.last_flush_us = refresh_stats.flush_us;
+            refresh_stats.last_pixels = refresh_stats.pixels;
             ++refresh_stats.count;
         }
         refresh_stats.started = 0;
     } else if (code == LV_EVENT_FLUSH_START) {
         ++refresh_stats.strips;
+        const auto *area = static_cast<const lv_area_t *>(lv_event_get_param(event));
+        if (area) refresh_stats.pixels += lv_area_get_size(area);
+        refresh_stats.flush_started_us = now;
+    } else if (code == LV_EVENT_FLUSH_FINISH && refresh_stats.flush_started_us) {
+        refresh_stats.flush_us += now - refresh_stats.flush_started_us;
+        refresh_stats.flush_started_us = 0;
     } else if (code == LV_EVENT_FLUSH_WAIT_START) {
         refresh_stats.wait_started = now;
     } else if (code == LV_EVENT_FLUSH_WAIT_FINISH && refresh_stats.wait_started) {
@@ -265,6 +276,7 @@ boost::json::object board_display_profile(bool force_refresh)
             {"launcher_wide_dma_transfers",brookesia_panel_wide_desktop_draws()},
             {"weather_full_row_invalidations",weather_full_row_invalidations},{"refresh_count",refresh_stats.count},{"last_refresh_us",refresh_stats.last_us},
             {"max_refresh_us",refresh_stats.max_us},{"last_strips",refresh_stats.last_strips},
+            {"flush_callback_us",refresh_stats.last_flush_us},{"flushed_pixels",refresh_stats.last_pixels},
             {"flush_wait_us",refresh_stats.wait_us},{"forced_refresh_us",forced_us},{"canvases",std::move(canvases)}};
 }
 
@@ -350,7 +362,7 @@ bool Display::start_lvgl_display_source(int core_id)
     lv_display_add_event_cb(source.display(), round_weather_refresh, LV_EVENT_INVALIDATE_AREA, nullptr);
     lv_display_add_event_cb(source.display(), render_event, LV_EVENT_RENDER_START, nullptr);
     lv_display_add_event_cb(source.display(), render_event, LV_EVENT_RENDER_READY, nullptr);
-    for (auto code : {LV_EVENT_REFR_START, LV_EVENT_REFR_READY, LV_EVENT_FLUSH_START,
+    for (auto code : {LV_EVENT_REFR_START, LV_EVENT_REFR_READY, LV_EVENT_FLUSH_START, LV_EVENT_FLUSH_FINISH,
                       LV_EVENT_FLUSH_WAIT_START, LV_EVENT_FLUSH_WAIT_FINISH}) {
         lv_display_add_event_cb(source.display(), render_event, code, nullptr);
     }

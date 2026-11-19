@@ -8,6 +8,7 @@ import re
 ROOT=Path(__file__).resolve().parents[1]
 VERSIONS=json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))
 REPO=ROOT/'esp-brookesia-v08'
+PATCHES=json.loads((ROOT/'tools/build-inputs.json').read_text(encoding='utf-8'))['patch_order']
 def git(*args,check=True):
     return subprocess.run(['git','-c','core.longpaths=true',*args],cwd=REPO,check=check)
 
@@ -27,14 +28,14 @@ if head!=VERSIONS['commit']:raise SystemExit('Upstream revision differs; refusin
 # checkouts (including their unrelated edits) retain their exact file bytes.
 if fresh:
     paths=set()
-    for patch in (ROOT/'patches').glob('*.patch'):
-        paths.update(re.findall(r'^\+\+\+ b/(.+)$',patch.read_text(encoding='utf-8'),re.M))
+    for name in PATCHES:
+        paths.update(re.findall(r'^\+\+\+ b/(.+)$',(ROOT/name).read_text(encoding='utf-8'),re.M))
     paths.update(str(p.relative_to(REPO)).replace('\\','/') for p in (REPO/'hal/brookesia_hal_adaptor/tools').glob('*.patch'))
     for relative in paths:
         file=REPO/relative
         if file.is_file():file.write_bytes(file.read_bytes().replace(b'\r\n',b'\n'))
-for name in ('brookesia-s3.patch','phone-launcher.patch','desktop-themes.patch','phone-provisioning.patch','phone-remote.patch','bluetooth-settings.patch','remote-navigation.patch','single-foreground.patch','transparent-launcher.patch','sd-app-storage.patch','nine-grid-launcher.patch','bounded-display-dma.patch','persistent-display-dma.patch','aligned-display-strips.patch','cached-canvas-rect.patch','qspi-display-80mhz.patch','canvas-memory-pressure.patch','launcher-settled-refresh.patch','launcher-full-row-dma.patch'):
-    patch=ROOT/'patches'/name
+for name in PATCHES:
+    patch=ROOT/name
     if git('apply','--check',str(patch),check=False).returncode==0:
         git('apply',str(patch))
     elif git('apply','--reverse','--check',str(patch),check=False).returncode!=0:
