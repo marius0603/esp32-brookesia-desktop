@@ -31,7 +31,8 @@
     "patches/square-status-bar.patch",
     "patches/square-control-actions.patch",
     "patches/square-files-browser.patch",
-    "patches/deferred-runtime-close.patch"
+    "patches/deferred-runtime-close.patch",
+    "patches/settings-touch-scroll.patch"
   ],
   "sha256": {
     "patches/brookesia-s3.patch": "75e0bb3f720b9bd442955f1b04ab4d6f1437c2cbdfa4359646f1176044bc0346",
@@ -59,7 +60,7 @@
     "patches/bounded-display-dma.patch": "b1e6eb13627718506036f14f94f0a9cb3bac0a893094068084707bb29152e290",
     "patches/persistent-display-dma.patch": "cc8c6cf3dbe36d4089abff0242a3f740cca31e111138ea88df3a341b09d8c264",
     "patches/aligned-display-strips.patch": "1629b23605921dd00fab60995969fd3ad5c5243cb540b9f20a64da4841d25dc2",
-    "platform/super_s3_216/CMakeLists.txt": "56ebe54e75b10ea02b4f1e986b77e34353ebb466e10876445dd0e9f5ca3a08d1",
+    "platform/super_s3_216/CMakeLists.txt": "5d4f8f5eb9b41d7f12cf9f1051737eda1a6dda3d9b23608e04affecedd302fa6",
     "platform/super_s3_216/main/modules/display.cpp": "ec4a62d2d3798dc322383f1dbf999c94c8088c25f17f9dbdbe9a7b7cffa01387",
     "platform/super_s3_216/main/modules/device_modes/device_modes.cpp": "1e8f5b13af577a3177ad92462ebe1eda897c6f8d921067ed8a0c2c2ed4700536",
     "platform/super_s3_216/main/modules/device_modes/resource_monitor.cpp": "0f4d6b9c6fa5d4247a4e74e3335a0c82a46d8080ec6f2c191149df38c558a85f",
@@ -148,6 +149,7 @@
     "packages/resources/square-apps-ui/files/screens/header.json": "248c8e45dbae5d2aeacf0954003db2f475fa82e9203f2f18f26bbf07d4a556d7",
     "packages/resources/square-apps-ui/files/templates/file_entry.json": "a35afa0534497c136c3eec8f2b7e65b81e0e39b3133315d0f814be787ad2064e",
     "packages/resources/square-apps-ui/shell/screens/app_launcher.json": "b311ce00b4de24d9413e3792a96484694b2f71e805afb208ca7029f0aafe967b",
-    "patches/deferred-runtime-close.patch": "ab011fc10634123406c2d4caa72e2014eb06176c7c7ece69e24d81a14fd61d1f"
+    "patches/deferred-runtime-close.patch": "ab011fc10634123406c2d4caa72e2014eb06176c7c7ece69e24d81a14fd61d1f",
+    "patches/settings-touch-scroll.patch": "3bf45292a4c021abacb1a290fd28c893f0deac8a344e8c477865d979845e1855"
   }
 }

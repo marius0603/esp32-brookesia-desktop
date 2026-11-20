@@ -1,0 +1,156 @@
+diff --git a/gui/brookesia_gui_lvgl/src/private/types.hpp b/gui/brookesia_gui_lvgl/src/private/types.hpp
+index cce9120..f1dbedf 100644
+--- a/gui/brookesia_gui_lvgl/src/private/types.hpp
++++ b/gui/brookesia_gui_lvgl/src/private/types.hpp
+@@ -67,6 +67,17 @@ struct EventContext {
+ 
+ BROOKESIA_DESCRIBE_STRUCT(EventContext, (), (impl, handle, type, action))
+ 
++struct SettingsTouchGesture {
++    enum class Direction { Pending, Horizontal, Vertical };
++
++    lv_indev_t *pointer = nullptr;
++    lv_point_t origin{};
++    Direction direction = Direction::Pending;
++    bool moved = false;
++    bool click_allowed = false;
++    bool temporary_press_lock = false;
++};
++
+ struct ArcGradientContext {
+     BackendImpl *impl = nullptr;
+     BackendHandle handle;
+@@ -106,6 +117,7 @@ struct Record {
+     lv_obj_t *object = nullptr;
+     // Borrowed from BackendImpl::font_cache while this Record contributes one ref_count.
+     FontCacheEntry *font_cache_entry = nullptr;
++    std::unique_ptr<SettingsTouchGesture> settings_touch;
+     uint32_t depth = 0;
+     std::size_t mount_refresh_subtree_count = 0;
+     // Most nodes share one of a small number of placements. Shared entries stay immutable, while an
+diff --git a/gui/brookesia_gui_lvgl/src/event.cpp b/gui/brookesia_gui_lvgl/src/event.cpp
+index f54efdc..33fcf28 100644
+--- a/gui/brookesia_gui_lvgl/src/event.cpp
++++ b/gui/brookesia_gui_lvgl/src/event.cpp
+@@ -10,12 +10,113 @@
+ #endif
+ #include "private/utils.hpp"
+ 
++#include <cstdlib>
+ #include <optional>
+ 
+ namespace esp_brookesia::gui::lvgl {
+ 
+ namespace {
+ 
++static void track_settings_touch(SettingsTouchGesture &gesture, lv_indev_t *indev)
++{
++    lv_point_t point{};
++    lv_indev_get_point(indev, &point);
++    const auto dx = std::abs(point.x - gesture.origin.x);
++    const auto dy = std::abs(point.y - gesture.origin.y);
++    gesture.moved |= dx >= 8 || dy >= 8;
++    if (gesture.direction == SettingsTouchGesture::Direction::Pending) {
++        if (dy >= 8 && dx <= dy + 3) {
++            gesture.direction = SettingsTouchGesture::Direction::Vertical;
++        } else if (dx >= 12 && dx >= dy + 6) {
++            gesture.direction = SettingsTouchGesture::Direction::Horizontal;
++        }
++    }
++}
++
++static void on_settings_touch(lv_event_t *event)
++{
++    auto *indev = lv_indev_active();
++    if (indev == nullptr || lv_indev_get_type(indev) != LV_INDEV_TYPE_POINTER) {
++        return;
++    }
++    auto *object = lv_event_get_current_target_obj(event);
++    if (object != lv_event_get_target_obj(event)) {
++        return;
++    }
++    auto &gesture = *static_cast<SettingsTouchGesture *>(lv_event_get_user_data(event));
++    const bool slider = lv_obj_check_type(object, &lv_slider_class);
++    const auto code = lv_event_get_code(event);
++    if (code == LV_EVENT_PRESSED) {
++        gesture.pointer = indev;
++        lv_indev_get_point(indev, &gesture.origin);
++        gesture.direction = SettingsTouchGesture::Direction::Pending;
++        gesture.moved = false;
++        gesture.click_allowed = false;
++        if (!lv_obj_has_flag(object, LV_OBJ_FLAG_PRESS_LOCK)) {
++            // Keep the original scroll chain when the finger leaves the widget.
++            lv_obj_add_flag(object, LV_OBJ_FLAG_PRESS_LOCK);
++            gesture.temporary_press_lock = true;
++        }
++        return;
++    }
++    if (code == LV_EVENT_CLICKED) {
++        if (!gesture.click_allowed) lv_event_stop_processing(event);
++        gesture.click_allowed = false;
++        return;
++    }
++
++    const bool owned = gesture.pointer == indev;
++    if (owned && code != LV_EVENT_PRESS_LOST) track_settings_touch(gesture, indev);
++    const bool horizontal = owned && gesture.direction == SettingsTouchGesture::Direction::Horizontal;
++    if (code == LV_EVENT_PRESSING) {
++        // LVGL runs the slider before resolving its parent scroll. An early
++        // value change takes the vertical scroll chain away from the page.
++        if (slider && !horizontal) lv_event_stop_processing(event);
++        return;
++    }
++
++    const bool scrolling = lv_indev_get_scroll_obj(indev) != nullptr;
++    const bool tapped = owned && !gesture.moved && !scrolling;
++    if (owned) {
++        gesture.pointer = nullptr;
++        if (gesture.temporary_press_lock) {
++            lv_obj_remove_flag(object, LV_OBJ_FLAG_PRESS_LOCK);
++            gesture.temporary_press_lock = false;
++        }
++    }
++    gesture.click_allowed = code == LV_EVENT_RELEASED && tapped;
++    const bool accepted = code == LV_EVENT_PRESS_LOST ? !slider || horizontal :
++                          tapped || (slider && horizontal && !scrolling);
++    if (!accepted) {
++        // A native slider also changes value on PRESS_LOST. Clear its pressed
++        // style without forwarding an unclaimed touch to the widget.
++        lv_obj_remove_state(object, LV_STATE_PRESSED);
++        lv_event_stop_processing(event);
++    }
++}
++
++static void bind_settings_touch(Record &record, const std::vector<EventBinding> &events)
++{
++    if (record.settings_touch) {
++        if (record.settings_touch->temporary_press_lock) {
++            lv_obj_remove_flag(record.object, LV_OBJ_FLAG_PRESS_LOCK);
++        }
++        lv_obj_remove_event_cb_with_user_data(record.object, on_settings_touch, record.settings_touch.get());
++        record.settings_touch.reset();
++    }
++    if (!std::any_of(events.begin(), events.end(), [](const EventBinding &event) {
++        return event.action.starts_with("settings.");
++    })) {
++        return;
++    }
++    record.settings_touch = std::make_unique<SettingsTouchGesture>();
++    for (const auto code : {LV_EVENT_PRESSED, LV_EVENT_PRESSING, LV_EVENT_PRESS_LOST,
++                            LV_EVENT_RELEASED, LV_EVENT_CLICKED}) {
++        lv_obj_add_event_cb(record.object, on_settings_touch,
++                            static_cast<lv_event_code_t>(code | LV_EVENT_PREPROCESS), record.settings_touch.get());
++    }
++}
++
+ static void append_pointer_payload(BackendEvent &event)
+ {
+     auto *indev = lv_indev_active();
+@@ -218,6 +319,7 @@ void bind_events(BackendImpl &impl, Record &record, const std::vector<EventBindi
+         return;
+     }
+ 
++    bind_settings_touch(record, events);
+     unbind_events(record);
+     for (const auto &event : events) {
+         auto lvgl_event = to_lvgl_event_code(event.type);

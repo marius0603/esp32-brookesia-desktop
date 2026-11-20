@@ -37,9 +37,9 @@ def main():
             return call('Storage', method, **params)
 
         current = call('DeviceModes', 'GetState')
-        if current['firmware_version'] not in ('0.8.3-s3.84', '0.8.3-s3.85', '0.8.3-s3.86') or current['screen_locked']:
+        if current['firmware_version'] not in ('0.8.3-s3.84', '0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87') or current['screen_locked']:
             raise SystemExit('Start the supported firmware and unlock the screen before installing these resources')
-        app_ui = current['firmware_version'] == '0.8.3-s3.86'
+        app_ui = current['firmware_version'] in ('0.8.3-s3.86', '0.8.3-s3.87')
         if args.apps_ui_only and not app_ui:
             raise SystemExit('The Files layout requires firmware s3.86')
         local = Path(temp)
