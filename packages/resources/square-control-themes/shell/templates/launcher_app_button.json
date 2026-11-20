@@ -1,0 +1,152 @@
+{
+  "type": "viewTemplate",
+  "id": "launcher_app_button",
+  "node": {
+    "type": "button",
+    "bindings": {
+      "placement.x": "x",
+      "placement.y": "y",
+      "style.bgColor": "theme_fill",
+      "style.borderColor": "theme_edge"
+    },
+    "interactionRefs": [
+      "press.scale"
+    ],
+    "events": [
+      {
+        "type": "clicked",
+        "effects": [
+          {
+            "type": "emitAction",
+            "action": "super.launch.app",
+            "requireValidPress": true
+          }
+        ]
+      }
+    ],
+    "style": {
+      "bgColor": "#1B271F",
+      "borderColor": "#304036",
+      "borderWidth": 1,
+      "radius": 16,
+      "padding": 0
+    },
+    "placement": {
+      "mode": "absolute",
+      "width": 136,
+      "height": 82
+    },
+    "children": [
+      {
+        "type": "container",
+        "id": "icon_box",
+        "commonProps": {
+          "clickable": false
+        },
+        "layout": {
+          "type": "flex",
+          "mainAlign": "center",
+          "crossAlign": "center"
+        },
+        "placement": {
+          "width": 46,
+          "height": 46,
+          "mode": "absolute",
+          "x": 45,
+          "y": 5
+        },
+        "children": [
+          {
+            "type": "image",
+            "id": "icon_image",
+            "commonProps": {
+              "clickable": false,
+              "hidden": true
+            },
+            "bindings": {
+              "imageProps.src": "src",
+              "commonProps.hidden": "hidden"
+            },
+            "imageProps": {
+              "src": "",
+              "innerAlign": "contain"
+            },
+            "placement": {
+              "width": 43,
+              "height": 43
+            }
+          },
+          {
+            "type": "label",
+            "id": "icon",
+            "commonProps": {
+              "clickable": false,
+              "hidden": true
+            },
+            "bindings": {
+              "labelProps.text": "text",
+              "commonProps.hidden": "hidden"
+            },
+            "labelProps": {
+              "text": ""
+            },
+            "styleRefs": [
+              "shell.launcherFallbackIcon"
+            ]
+          }
+        ],
+        "styleRefs": [
+          "shell.launcherIconTile"
+        ],
+        "style": {
+          "padding": 0
+        }
+      },
+      {
+        "type": "container",
+        "id": "title_box",
+        "commonProps": {
+          "clickable": false
+        },
+        "layout": {
+          "type": "flex",
+          "mainAlign": "center",
+          "crossAlign": "center"
+        },
+        "placement": {
+          "width": 136,
+          "height": 21,
+          "mode": "absolute",
+          "x": 0,
+          "y": 55
+        },
+        "children": [
+          {
+            "type": "label",
+            "id": "app_name",
+            "commonProps": {
+              "clickable": false
+            },
+            "bindings": {
+              "labelProps.text": "name",
+              "style.borderColor": "theme_text"
+            },
+            "labelProps": {
+              "text": ""
+            },
+            "style": {
+              "fontSize": 16,
+              "textColor": "#F3F6ED"
+            },
+            "styleRefs": [
+              "shell.launcherAppLabel"
+            ]
+          }
+        ],
+        "bindings": {
+          "placement.x": "label_x"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,395 @@
+{
+  "type": "viewScreen",
+  "id": "launcher",
+  "commonProps": {
+    "scrollable": false
+  },
+  "style": {
+    "bgColor": "#101714",
+    "padding": 0
+  },
+  "children": [
+    {
+      "type": "container",
+      "id": "content",
+      "commonProps": {
+        "scrollable": false
+      },
+      "style": {
+        "bgColor": "#101714",
+        "padding": 0
+      },
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 40,
+        "width": 480,
+        "height": 440
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "square_header",
+          "placement": {
+            "mode": "absolute",
+            "x": 28,
+            "y": 4,
+            "width": 424,
+            "height": 108
+          },
+          "style": {
+            "padding": 0
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "date",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 5,
+                "width": 245,
+                "height": 22
+              },
+              "labelProps": {
+                "text": ""
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "style": {
+                "textColor": "#A7B2A9",
+                "fontSize": 15,
+                "textAlign": "left"
+              },
+              "bindings": {
+                "labelProps.text": "text",
+                "style.textColor": "theme_text"
+              }
+            },
+            {
+              "type": "label",
+              "id": "time",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 29,
+                "width": 258,
+                "height": 78
+              },
+              "labelProps": {
+                "text": "--:--"
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "style": {
+                "textColor": "#F3F6ED",
+                "fontSize": 65,
+                "textAlign": "left"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            },
+            {
+              "type": "button",
+              "id": "weather",
+              "placement": {
+                "mode": "absolute",
+                "x": 277,
+                "y": 31,
+                "width": 95,
+                "height": 68
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": true
+              },
+              "style": {
+                "bgColor": "#273721",
+                "borderColor": "#304036",
+                "borderWidth": 1,
+                "radius": 15,
+                "padding": 0
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 4,
+                    "y": 4,
+                    "width": 87,
+                    "height": 36
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#D5F588",
+                    "fontSize": 28,
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text",
+                    "style.textColor": "theme_text"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "city",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 4,
+                    "y": 40,
+                    "width": 87,
+                    "height": 21
+                  },
+                  "labelProps": {
+                    "text": "天气"
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#A7B2A9",
+                    "fontSize": 15,
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text",
+                    "style.textColor": "theme_text"
+                  }
+                }
+              ],
+              "events": [
+                {
+                  "type": "clicked",
+                  "action": "super.square.weather"
+                }
+              ],
+              "bindings": {
+                "style.bgColor": "theme_fill",
+                "style.borderColor": "theme_edge"
+              }
+            },
+            {
+              "type": "button",
+              "id": "controls",
+              "placement": {
+                "mode": "absolute",
+                "x": 380,
+                "y": 39,
+                "width": 44,
+                "height": 52
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": true
+              },
+              "style": {
+                "bgColor": "#1D2922",
+                "borderColor": "#304036",
+                "borderWidth": 1,
+                "radius": 13,
+                "padding": 0
+              },
+              "children": [
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 10,
+                    "y": 3,
+                    "width": 24,
+                    "height": 24
+                  },
+                  "imageProps": {
+                    "src": "${image.square.controls}",
+                    "innerAlign": "contain"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "title",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 0,
+                    "y": 31,
+                    "width": 44,
+                    "height": 17
+                  },
+                  "labelProps": {
+                    "text": "控制"
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#F3F6ED",
+                    "fontSize": 13,
+                    "textAlign": "center"
+                  }
+                }
+              ],
+              "events": [
+                {
+                  "type": "clicked",
+                  "action": "super.square.controls"
+                }
+              ],
+              "bindings": {
+                "style.bgColor": "theme_fill",
+                "style.borderColor": "theme_edge"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "grid_stage",
+          "commonProps": {
+            "scrollable": true
+          },
+          "style": {
+            "padding": 0
+          },
+          "bindings": {
+            "placement.x": "grid_x",
+            "placement.width": "grid_width"
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 28,
+            "y": 122,
+            "width": 424,
+            "height": 262
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "slot_grid",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "bindings": {
+                "placement.height": "content_height"
+              },
+              "style": {
+                "padding": 0
+              },
+              "layout": {
+                "type": "flex",
+                "flexFlow": "rowWrap",
+                "gap": "${constant.ui.content.metric.launcherItemGap}",
+                "mainAlign": "start",
+                "crossAlign": "start"
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": "match",
+                "height": "match"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "item_layer",
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "bindings": {
+                "placement.height": "content_height",
+                "placement.width": "content_width"
+              },
+              "style": {
+                "padding": 0
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": "match",
+                "height": "match"
+              },
+              "children": []
+            },
+            {
+              "type": "container",
+              "id": "drag_layer",
+              "commonProps": {
+                "hidden": true,
+                "clickable": false,
+                "scrollable": false
+              },
+              "bindings": {
+                "placement.height": "content_height"
+              },
+              "style": {
+                "padding": 0
+              },
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": "match",
+                "height": "match"
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "pages",
+          "commonProps": {
+            "clickable": false
+          },
+          "bindings": {
+            "labelProps.text": "text",
+            "style.borderColor": "theme_text",
+            "style.textColor": "theme_text"
+          },
+          "labelProps": {
+            "text": "●"
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 395,
+            "width": "match",
+            "height": 27
+          },
+          "style": {
+            "fontSize": 18,
+            "textColor": "#D5F588",
+            "textAlign": "center"
+          }
+        }
+      ],
+      "bindings": {
+        "style.bgColor": "theme_fill"
+      }
+    }
+  ],
+  "bindings": {
+    "style.bgColor": "theme_fill"
+  }
+}

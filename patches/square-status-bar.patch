@@ -1,0 +1,47 @@
+diff --git a/system/brookesia_system_super/src/shell_app_launcher.cpp b/system/brookesia_system_super/src/shell_app_launcher.cpp
+index 9d2a60f..eb7d85a 100644
+--- a/system/brookesia_system_super/src/shell_app_launcher.cpp
++++ b/system/brookesia_system_super/src/shell_app_launcher.cpp
+@@ -26,6 +26,9 @@ extern "C" void brookesia_board_desktop_theme_applied(int) __attribute__((weak))
+ #include "private/system_constants.hpp"
+ #include "private/utils.hpp"
+ #include "private/shell_impl.hpp"
++#include <cstdlib>
++
++extern "C" void brookesia_board_square_status_colors(bool, uint32_t, uint32_t, uint32_t) __attribute__((weak));
+ 
+ #if BROOKESIA_SYSTEM_SUPER_ENABLE_PROFILE_LOG
+ #   define SYSTEM_SUPER_PROFILE_LOGI(...) BROOKESIA_LOGI(__VA_ARGS__)
+@@ -428,6 +431,11 @@ void ShellApp::refresh_desktop_theme(bool force)
+         BROOKESIA_LOGW("Desktop wallpaper update failed: %1%", wallpaper.error());
+         return;
+     }
++    if (brookesia_board_square_status_colors) {
++        const auto color = [](const char *hex) { return uint32_t(std::strtoul(hex + 1, nullptr, 16)); };
++        brookesia_board_square_status_colors(square_layout, color(palette.background),
++                                            color(palette.edge), color(palette.muted));
++    }
+     desktop_theme_applied_ = selected;
+     if (brookesia_board_desktop_theme_applied) brookesia_board_desktop_theme_applied(selected);
+ }
+diff --git a/system/brookesia_system_super/src/shell_status.cpp b/system/brookesia_system_super/src/shell_status.cpp
+index a4f29bc..767d216 100644
+--- a/system/brookesia_system_super/src/shell_status.cpp
++++ b/system/brookesia_system_super/src/shell_status.cpp
+@@ -18,6 +18,8 @@
+ #include "brookesia/service_helper/network/sntp.hpp"
+ #include "brookesia/service_helper/network/wifi.hpp"
+ #include "private/shell_app.hpp"
++
++extern "C" void brookesia_board_square_wifi_status(bool, bool) __attribute__((weak));
+ #include "private/system_constants.hpp"
+ #include "private/utils.hpp"
+ 
+@@ -185,6 +187,7 @@ void ShellApp::refresh_wifi_status()
+ void ShellApp::set_status_wifi_state(bool visible, bool connected)
+ {
+     wifi_connected_ = connected;
++    if (brookesia_board_square_wifi_status) brookesia_board_square_wifi_status(visible, connected);
+     if (context_ == nullptr) {
+         return;
+     }

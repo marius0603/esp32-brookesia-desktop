@@ -1,0 +1,21 @@
+diff --git a/app/brookesia_app_settings/src/app/lifecycle.ipp b/app/brookesia_app_settings/src/app/lifecycle.ipp
+index aed5d5e..48303dd 100644
+--- a/app/brookesia_app_settings/src/app/lifecycle.ipp
++++ b/app/brookesia_app_settings/src/app/lifecycle.ipp
+@@ -645,7 +645,15 @@ std::expected<void, std::string> SettingsApp::subscribe_actions(system::core::Ap
+     }
+ 
+     std::vector<system::core::GuiActionHandlerSubscription> subscriptions;
+-    subscriptions.reserve(23);
++    subscriptions.reserve(25);
++    subscriptions.push_back({
++        .action = "settings.controls.brightness",
++        .handler = [this](const gui::Event &event) { handle_brightness_event(event); },
++    });
++    subscriptions.push_back({
++        .action = "settings.controls.volume",
++        .handler = [this](const gui::Event &event) { handle_volume_event(event); },
++    });
+     subscriptions.push_back({
+         .action = "settings.controls.lock",
+         .handler = [](const gui::Event &) {

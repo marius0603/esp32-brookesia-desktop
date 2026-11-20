@@ -54,11 +54,15 @@ namespace {
 
 constexpr uint32_t DISPLAY_SERVICE_TIMEOUT_MS = 1000;
 
+std::atomic<bool> square_status_active{false};
+std::atomic<uint32_t> square_status_fill{0x101714}, square_status_edge{0x304036}, square_status_ink{0xA7B2A9};
+std::atomic<unsigned> square_wifi_state{0};
+
 // The system layer survives application changes and full-screen app layouts.
 // Read only the shared settings: querying the codec here could block the GUI.
-lv_obj_t *make_status_badge()
+lv_obj_t *make_status_badge(lv_obj_t *parent)
 {
-    auto *label=lv_label_create(lv_layer_sys());
+    auto *label=lv_label_create(parent);
     lv_obj_remove_flag(label,LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_style_text_font(label,&lv_font_montserrat_16,0);
     lv_obj_set_style_text_color(label,lv_color_hex(0xfff0d4),0);
@@ -69,62 +73,107 @@ lv_obj_t *make_status_badge()
     return label;
 }
 
-void update_volume_badge(lv_timer_t *)
+void update_status_bar(lv_timer_t *)
 {
-    // Reserve room for 100% in every independent field. Never anchor a field
-    // to another label's text width: live CPU changes must not move its peers.
-    static std::array<lv_obj_t *,4> badges{};
-    static constexpr std::array<int,4> x{{8,108,210,284}},width{{84,86,58,66}};
-    static int previous_volume=-1,previous_battery=-1;
-    static int previous_cpu=-2,previous_ram=-2,previous_theme=-1;
-    if(!brookesia_board_desktop_visible() || brookesia_board_screen_asleep()){
-        for(auto *label:badges)if(label)lv_obj_add_flag(label,LV_OBJ_FLAG_HIDDEN);
+    static lv_obj_t *bar = nullptr;
+    static std::array<lv_obj_t *, 5> badges{};
+    static constexpr std::array<int, 5> square_x{28, 136, 245, 338, 431};
+    static constexpr std::array<int, 5> square_width{94, 95, 80, 83, 24};
+    static constexpr std::array<int, 5> legacy_x{8, 108, 210, 284, 431};
+    static constexpr std::array<int, 5> legacy_width{84, 86, 58, 66, 24};
+    static int previous_volume = -2, previous_battery = -1, previous_cpu = -2, previous_ram = -2;
+    static int previous_theme = -1;
+    static unsigned previous_wifi = 0;
+    static bool was_square = false;
+    static uint32_t previous_ink = 0, previous_fill = 0, previous_edge = 0;
+
+    if (!brookesia_board_desktop_visible() || brookesia_board_screen_asleep()) {
+        if (bar) lv_obj_add_flag(bar, LV_OBJ_FLAG_HIDDEN);
         return;
     }
-    const int requested=brookesia_board_user_volume();
-    if(requested<0)return;
-    const bool muted=brookesia_board_volume_muted();
-    const int volume=muted?0:requested;
-    const int volume_key=volume+(muted?101:0);
-    const int battery=brookesia_board_battery_status();
-    const int level=battery&255;
-    const auto resources=resource_monitor::snapshot();
-    const int cpu=resource_math::rounded_percent(resources.cpu_basis_points),ram=resource_math::rounded_percent(resources.ram_basis_points);
-    if(!badges[0]){
-        for(unsigned i=0;i<badges.size();++i){
-            badges[i]=make_status_badge();
-            lv_label_set_long_mode(badges[i],LV_LABEL_LONG_CLIP);
-            lv_obj_set_width(badges[i],width[i]);
-            lv_obj_align(badges[i],LV_ALIGN_TOP_LEFT,x[i],11);
+    const bool square = square_status_active.load();
+    const int theme = square ? -1 : brookesia_board_desktop_theme();
+    const uint32_t ink = square ? square_status_ink.load() : theme == 1 ? 0xa7f2ff : 0xfff0d4;
+    const uint32_t fill = square_status_fill.load(), edge = square_status_edge.load();
+    const bool new_bar = bar == nullptr;
+    if (new_bar) {
+        bar = lv_obj_create(lv_layer_sys());
+        lv_obj_remove_style_all(bar);
+        lv_obj_remove_flag(bar, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_remove_flag(bar, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_set_size(bar, lv_pct(100), 40);
+        lv_obj_align(bar, LV_ALIGN_TOP_LEFT, 0, 0);
+        for (auto &label : badges) {
+            label = make_status_badge(bar);
+            lv_label_set_long_mode(label, LV_LABEL_LONG_CLIP);
         }
+        lv_label_set_text(badges[4], LV_SYMBOL_WIFI);
     }
-    const auto theme=brookesia_board_desktop_theme();
-    if(previous_theme!=theme){
-        const auto foreground=lv_color_hex(theme==1?0xa7f2ff:0xfff0d4);
-        for(auto *label:badges)lv_obj_set_style_text_color(label,foreground,0);
-        previous_theme=theme;
+    if (new_bar || square != was_square || theme != previous_theme || ink != previous_ink ||
+            fill != previous_fill || edge != previous_edge) {
+        lv_obj_set_style_bg_color(bar, lv_color_hex(fill), 0);
+        lv_obj_set_style_bg_opa(bar, square ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
+        lv_obj_set_style_border_side(bar, LV_BORDER_SIDE_BOTTOM, 0);
+        lv_obj_set_style_border_width(bar, square ? 1 : 0, 0);
+        lv_obj_set_style_border_color(bar, lv_color_hex(edge), 0);
+        for (size_t i = 0; i < badges.size(); ++i) {
+            lv_obj_set_style_text_color(badges[i], lv_color_hex(ink), 0);
+            lv_obj_set_width(badges[i], (square ? square_width : legacy_width)[i]);
+            lv_obj_align(badges[i], LV_ALIGN_TOP_LEFT, (square ? square_x : legacy_x)[i], 9);
+        }
+        previous_theme = theme;
+        previous_ink = ink;
+        previous_fill = fill;
+        previous_edge = edge;
+        was_square = square;
+        previous_wifi = 0;
     }
-    if(previous_volume!=volume_key){
-        lv_label_set_text_fmt(badges[2],"%s %d%%",volume==0?LV_SYMBOL_MUTE:LV_SYMBOL_VOLUME_MID,volume);
-        previous_volume=volume_key;
+    const int requested = brookesia_board_user_volume();
+    const bool muted = brookesia_board_volume_muted();
+    const int volume = muted ? 0 : requested;
+    const int key = volume + (muted ? 101 : 0);
+    if (previous_volume != key) {
+        if (volume < 0) lv_label_set_text_fmt(badges[2], "%s --", LV_SYMBOL_VOLUME_MID);
+        else lv_label_set_text_fmt(badges[2], "%s %d%%", volume == 0 ? LV_SYMBOL_MUTE : LV_SYMBOL_VOLUME_MID, volume);
+        previous_volume = key;
     }
-    if(previous_battery!=battery){
+    const int battery = brookesia_board_battery_status();
+    const int level = battery & 255;
+    if (previous_battery != battery) {
         char percent[12];
-        if(level<=100)lv_snprintf(percent,sizeof(percent),"%d%%",level);
-        else lv_snprintf(percent,sizeof(percent),"%s",level==102 && (battery&512)?"USB":"--");
-        const char *icon=battery&256?LV_SYMBOL_CHARGE:level>100 || level<=10?LV_SYMBOL_BATTERY_EMPTY:level<=35?LV_SYMBOL_BATTERY_1:level<=65?LV_SYMBOL_BATTERY_2:level<=90?LV_SYMBOL_BATTERY_3:LV_SYMBOL_BATTERY_FULL;
-        lv_label_set_text_fmt(badges[3],"%s %s",icon,percent);
-        previous_battery=battery;
+        if (level <= 100) lv_snprintf(percent, sizeof(percent), "%d%%", level);
+        else lv_snprintf(percent, sizeof(percent), "%s", level == 102 && (battery & 512) ? "USB" : "--");
+        const char *icon = battery & 256 ? LV_SYMBOL_CHARGE : level > 100 || level <= 10 ? LV_SYMBOL_BATTERY_EMPTY :
+                           level <= 35 ? LV_SYMBOL_BATTERY_1 : level <= 65 ? LV_SYMBOL_BATTERY_2 :
+                           level <= 90 ? LV_SYMBOL_BATTERY_3 : LV_SYMBOL_BATTERY_FULL;
+        lv_label_set_text_fmt(badges[3], "%s %s", icon, percent);
+        previous_battery = battery;
     }
-    if(previous_cpu!=cpu){
-        if(cpu<0)lv_label_set_text(badges[0],"CPU --");else lv_label_set_text_fmt(badges[0],"CPU %d%%",cpu);
-        previous_cpu=cpu;
+    const auto resources = resource_monitor::snapshot();
+    const int cpu = resource_math::rounded_percent(resources.cpu_basis_points);
+    const int ram = resource_math::rounded_percent(resources.ram_basis_points);
+    if (previous_cpu != cpu) {
+        if (cpu < 0) lv_label_set_text(badges[0], "CPU --");
+        else lv_label_set_text_fmt(badges[0], "CPU %d%%", cpu);
+        previous_cpu = cpu;
     }
-    if(previous_ram!=ram){
-        if(ram<0)lv_label_set_text(badges[1],"RAM --");else lv_label_set_text_fmt(badges[1],"RAM %d%%",ram);
-        previous_ram=ram;
+    if (previous_ram != ram) {
+        if (ram < 0) lv_label_set_text(badges[1], "RAM --");
+        else lv_label_set_text_fmt(badges[1], "RAM %d%%", ram);
+        previous_ram = ram;
     }
-    for(auto *label:badges)lv_obj_remove_flag(label,LV_OBJ_FLAG_HIDDEN);
+    const unsigned wifi = square ? square_wifi_state.load() : 0;
+    if (new_bar || previous_wifi != wifi || !wifi) {
+        if (wifi) {
+            lv_obj_remove_flag(badges[4], LV_OBJ_FLAG_HIDDEN);
+            lv_obj_set_style_text_opa(badges[4], wifi == 2 ? LV_OPA_COVER : LV_OPA_50, 0);
+        } else {
+            lv_obj_add_flag(badges[4], LV_OBJ_FLAG_HIDDEN);
+        }
+        previous_wifi = wifi;
+    }
+    if (lv_obj_has_flag(bar, LV_OBJ_FLAG_HIDDEN)) lv_obj_remove_flag(bar, LV_OBJ_FLAG_HIDDEN);
+    if (square && lv_obj_get_child(lv_layer_sys(), -1) != bar) lv_obj_move_foreground(bar);
 }
 
 // Count actual render cycles, excluding idle LVGL refresh timer wakeups.
@@ -179,8 +228,13 @@ bool sync_weather_rows(lv_display_t *display)
     return screen != nullptr;
 }
 
+bool rendering_weather_frame = false;
+
 void round_weather_refresh(lv_event_t *event)
 {
+    // LVGL also emits INVALIDATE_AREA for its internal draw-buffer height probe.
+    // Expanding that probe to a full screen can leave the flush loop with zero rows.
+    if (rendering_weather_frame) return;
     auto *display = static_cast<lv_display_t *>(lv_event_get_target(event));
     auto *area = static_cast<lv_area_t *>(lv_event_get_param(event));
     if (!sync_weather_rows(display) || !area) return;
@@ -442,7 +496,10 @@ void render_event(lv_event_t *event)
         refresh_stats.wait_us += now-refresh_stats.wait_started;
         refresh_stats.wait_started = 0;
     }
-    if (lv_event_get_code(event) == LV_EVENT_RENDER_START) {
+    if (code == LV_EVENT_RENDER_START || code == LV_EVENT_RENDER_READY) {
+        rendering_weather_frame = code == LV_EVENT_RENDER_START;
+    }
+    if (code == LV_EVENT_RENDER_START) {
         render_stats.started_us = esp_timer_get_time();
     } else if (lv_event_get_code(event) == LV_EVENT_RENDER_READY && render_stats.started_us != 0) {
         const auto elapsed = esp_timer_get_time() - render_stats.started_us;
@@ -465,6 +522,19 @@ void log_render_stats(lv_timer_t *)
 }
 
 } // namespace
+
+extern "C" void brookesia_board_square_status_colors(bool enabled, uint32_t fill, uint32_t edge, uint32_t ink)
+{
+    square_status_fill = fill;
+    square_status_edge = edge;
+    square_status_ink = ink;
+    square_status_active = enabled;
+}
+
+extern "C" void brookesia_board_square_wifi_status(bool visible, bool connected)
+{
+    square_wifi_state = visible ? (connected ? 2 : 1) : 0;
+}
 
 extern "C" void brookesia_board_lvgl_output_changed()
 {
@@ -808,7 +878,7 @@ bool Display::start_lvgl_display_source(int core_id)
         lv_display_add_event_cb(source.display(), render_event, code, nullptr);
     }
     lv_timer_create(log_render_stats, 5000, nullptr);
-    lv_timer_create(update_volume_badge,200,nullptr);
+    lv_timer_create(update_status_bar,200,nullptr);
     lv_timer_create(maintain_launcher_snapshot,180,nullptr);
     esp_lv_adapter_unlock();
 

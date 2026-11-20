@@ -7,7 +7,7 @@ from fontTools.varLib.instancer import instantiateVariableFont
 ROOT=Path(__file__).resolve().parents[1]
 def main():
     p=argparse.ArgumentParser();p.add_argument('--font',type=Path,default=Path('C:/Windows/Fonts/NotoSansSC-VF.ttf'));a=p.parse_args()
-    text='桌面主题经典Q版赛博朋克'
+    text='桌面主题经典Q版赛博朋克墨绿深海蓝暮紫暖棕控制亮度音量勿扰锁定触屏'
     font=TTFont(a.font,recalcTimestamp=False);assert font['name'].getDebugName(1)=='Noto Sans SC'
     font=instantiateVariableFont(font,{'wght':400},inplace=True)
     options=subset.Options();options.name_IDs=['*'];sub=subset.Subsetter(options=options);sub.populate(text=text);sub.subset(font)

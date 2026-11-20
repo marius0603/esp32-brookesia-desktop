@@ -1,0 +1,63 @@
+diff --git a/system/brookesia_system_super/src/private/shell_app.hpp b/system/brookesia_system_super/src/private/shell_app.hpp
+index 62eb915..e3e2899 100644
+--- a/system/brookesia_system_super/src/private/shell_app.hpp
++++ b/system/brookesia_system_super/src/private/shell_app.hpp
+@@ -141,6 +141,8 @@ private:
+     void disconnect_launcher_actions();
+     void disconnect_overlay_actions();
+     void handle_launcher_event(const gui::Event &event);
++    std::expected<void, std::string> begin_launcher_launch(
++        const core::AppInfo &app, const std::optional<gui::ViewFrame> &origin);
+     bool ensure_display_operation();
+     void release_display_operation();
+     bool ensure_display_service_binding();
+diff --git a/system/brookesia_system_super/src/shell_app_launcher.cpp b/system/brookesia_system_super/src/shell_app_launcher.cpp
+index 124b013..371dac8 100644
+--- a/system/brookesia_system_super/src/shell_app_launcher.cpp
++++ b/system/brookesia_system_super/src/shell_app_launcher.cpp
+@@ -319,8 +319,12 @@ std::expected<void, std::string> ShellApp::populate_launcher(core::AppContext &c
+                 }
+                 for (const auto &app : owner_.list_apps()) {
+                     if (app.manifest.id == package_id) {
+-                        const auto result = owner_.start_app(app.app_id);
+-                        if (!result) BROOKESIA_LOGW("Failed to open desktop shortcut: %1%", result.error());
++                        launch_request_started_at_ = SteadyClock::now();
++                        const auto result = begin_launcher_launch(app, std::nullopt);
++                        if (!result) {
++                            launch_request_started_at_.reset();
++                            BROOKESIA_LOGW("Failed to open desktop shortcut: %1%", result.error());
++                        }
+                         return;
+                     }
+                 }
+@@ -501,18 +505,25 @@ void ShellApp::handle_launcher_event(const gui::Event &event)
+         return;
+     }
+ 
++    auto overlay_result = begin_launcher_launch(*app, launch_origin_frame);
++    if (!overlay_result) {
++        BROOKESIA_LOGW("Failed to show app launch overlay: %1%", overlay_result.error());
++        start_app();
++    }
++}
++
++std::expected<void, std::string> ShellApp::begin_launcher_launch(
++    const core::AppInfo &app, const std::optional<gui::ViewFrame> &origin
++)
++{
+     auto collapse_result = set_system_ui_expanded(false);
+     if (!collapse_result) {
+         BROOKESIA_LOGW("Failed to collapse system UI before app launch: %1%", collapse_result.error());
+     }
+ 
+-    auto overlay_result = show_launch_overlay(*app, launch_origin_frame, [this, app_id]() {
++    return show_launch_overlay(app, origin, [this, app_id = app.app_id]() {
+         schedule_app_start_after_launch(app_id);
+     });
+-    if (!overlay_result) {
+-        BROOKESIA_LOGW("Failed to show app launch overlay: %1%", overlay_result.error());
+-        start_app();
+-    }
+ }
+ 
+ void ShellApp::set_launcher_page(size_t page, bool animate)

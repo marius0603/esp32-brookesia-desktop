@@ -1,0 +1,115 @@
+{
+  "images": [
+    {
+      "id": "square.brookesia.general.app_store",
+      "src": "square-store.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.brookesia.general.files",
+      "src": "square-files.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.brookesia.general.settings",
+      "src": "square-controls.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.local.childmode",
+      "src": "square-kids.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.local.audiobook",
+      "src": "square-audiobook.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.local.codex.quota",
+      "src": "square-quota.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.local.flipclock",
+      "src": "square-clock.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.local.gravitymaze",
+      "src": "square-maze.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.local.lightlearning",
+      "src": "square-learn.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.local.navigation",
+      "src": "square-nav.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.local.nurserysongs",
+      "src": "square-songs.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.local.radio",
+      "src": "square-radio.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.local.virtualpet",
+      "src": "square-pet.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.local.voiceassistant",
+      "src": "square-assistant.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.local.weather",
+      "src": "square-weather.png",
+      "width": 43,
+      "height": 43,
+      "preload": true
+    },
+    {
+      "id": "square.controls",
+      "src": "square-controls.png",
+      "width": 43,
+      "height": 43
+    }
+  ]
+}

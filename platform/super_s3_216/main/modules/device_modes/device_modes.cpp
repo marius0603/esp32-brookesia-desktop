@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <ctime>
 #include <cmath>
+#include "brookesia/service_helper/system/storage.hpp"
 #include "quiet_hours.hpp"
 #include "brookesia/hal_interface.hpp"
 #include "brookesia/gui_lvgl.hpp"
@@ -142,11 +143,14 @@ private:
                     {"source_height",image?int(image->header.h):0},{"scale_x",lv_image_get_scale_x(object)},
                     {"scale_y",lv_image_get_scale_y(object)}});
             }
-            if(lv_obj_check_type(object,&lv_label_class) && lv_obj_get_parent(object)==lv_layer_sys() && color==0x3b2b29){
+            if(lv_obj_check_type(object,&lv_label_class) && color==0x3b2b29 &&
+                    (lv_obj_get_parent(object)==lv_layer_sys() ||
+                     lv_obj_get_parent(lv_obj_get_parent(object))==lv_layer_sys())){
                 const char *text=lv_label_get_text(object);
                 const std::string_view value=text;
                 const char *field=value.starts_with("CPU ")?"cpu":value.starts_with("RAM ")?"ram":
-                    value.starts_with(LV_SYMBOL_VOLUME_MID) || value.starts_with(LV_SYMBOL_MUTE)?"volume":"battery";
+                    value.starts_with(LV_SYMBOL_VOLUME_MID) || value.starts_with(LV_SYMBOL_MUTE)?"volume":
+                    value.starts_with(LV_SYMBOL_WIFI)?"wifi":"battery";
                 layers.push_back(boost::json::object{{"kind",value.starts_with("CPU ") || value.starts_with("RAM ")?"resource_status":"top_status"},{"field",field},{"text",text},
                     {"x",area.x1},{"y",area.y1},{"width",w},{"height",h},
                     {"clickable",lv_obj_has_flag(object,LV_OBJ_FLAG_CLICKABLE)},{"background_opacity",bg},
@@ -160,12 +164,16 @@ private:
             }
             if(layers.size()<32 && lv_obj_check_type(object,&lv_dropdown_class)){
                 const auto count=lv_dropdown_get_option_count(object);
-                if(count==4 || count==24 || count==60){
+                if(count==4 || count==6 || count==24 || count==60){
                     const auto font=lv_obj_get_style_text_font(object,LV_PART_MAIN);
                     auto *list=lv_dropdown_get_list(object);const auto popup=lv_obj_get_style_text_font(list,LV_PART_MAIN);
                     const auto selected=lv_obj_get_style_text_font(list,LV_PART_SELECTED);
                     char text[24]{};lv_dropdown_get_selected_str(object,text,sizeof(text));
-                    layers.push_back(boost::json::object{{"kind",count==4?"sleep_picker":"time_picker"},{"options",count},{"selected",lv_dropdown_get_selected(object)},
+                    layers.push_back(boost::json::object{{"kind",count==6?"desktop_theme_picker":count==4?"sleep_picker":"time_picker"},{"options",count},{"selected",lv_dropdown_get_selected(object)},
+                        {"x",area.x1},{"y",area.y1},{"width",w},{"height",h},
+                        {"open",lv_dropdown_is_open(object)},{"list_y",lv_obj_get_y(list)},
+                        {"list_height",lv_obj_get_height(list)},{"row_height",popup?popup->line_height+lv_obj_get_style_text_line_space(list,LV_PART_MAIN):0},
+                        {"list_padding",lv_obj_get_style_pad_top(list,LV_PART_MAIN)},
                         {"text",text},{"font_height",font?font->line_height:0},{"popup_font_height",popup?popup->line_height:0},
                         {"selected_font_height",selected?selected->line_height:0},{"symbol_present",lv_dropdown_get_symbol(object)!=nullptr},
                         {"background_rgb",color},{"text_rgb",lv_color_to_u32(lv_obj_get_style_text_color(object,LV_PART_MAIN)) & 0xffffff},
@@ -175,7 +183,7 @@ private:
                         {"selected_text_rgb",lv_color_to_u32(lv_obj_get_style_text_color(list,LV_PART_SELECTED)) & 0xffffff}});
                 }
             }
-            if(layers.size()<32 && effective>0 && bg>0 && (kind[0]!='s' || color==0x020913 || color==0xffce65 || (w>=400 && h>=400))){
+            if(layers.size()<32 && effective>0 && bg>0 && (kind[0]!='s' || color==0x020913 || color==0xffce65 || (w>=400 && (h>=400 || h==40)))){
                 layers.push_back(boost::json::object{{"kind",kind},{"order",order},{"x",area.x1},{"y",area.y1},{"width",w},{"height",h},
                     {"opacity",opacity},{"effective_opacity",effective},{"background_opacity",bg},{"rgb",color}});
             }
@@ -186,7 +194,7 @@ private:
     }
     std::vector<FunctionSchema> get_function_schemas() override {
         return {{"GetSpeakerVolume","Read actual codec volume, mute and DAC register",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Speaker volume diagnostics"}},
-{"SetDesktopTheme","Select Q or cyberpunk desktop",{{"Index","0 Q, 1 cyberpunk",FunctionValueType::Number}}},
+{"SetDesktopTheme","Select desktop theme",{{"Index","0 Q, 1 cyberpunk, 2 moss, 3 navy, 4 violet, 5 brown",FunctionValueType::Number}}},
                 {"ProfileRefresh","Measure native full-screen refresh",{{"Force","Force one whole-screen redraw",FunctionValueType::Boolean}},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Refresh timing"}},
                 {"ProfileLauncher","Start a controlled desktop page sweep",{{"Cached","Draw cached launcher tiles",FunctionValueType::Boolean}}},
                 {"GetLauncherProfile","Read the last controlled desktop page sweep",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Frame timing"}},
@@ -207,7 +215,13 @@ private:
     }
     FunctionHandlerList get_function_handlers() override {
         return {{"GetSpeakerVolume",[this](FunctionParameterMap &&)->FunctionResult{return speaker_volume();}},
-{"SetDesktopTheme",[](FunctionParameterMap &&p)->FunctionResult{const double value=std::get<double>(p.at("Index"));if(!std::isfinite(value) || (value!=0 && value!=1) || !brookesia_board_set_desktop_theme(int(value)))return {.success=false,.error_message="Theme unavailable: select 0 Q or 1 cyberpunk with installed SD assets"};return {.success=true};}},
+{"SetDesktopTheme",[](FunctionParameterMap &&p)->FunctionResult{
+                    const double value=std::get<double>(p.at("Index"));
+                    if(!std::isfinite(value) || value<0 || value>5 || std::floor(value)!=value ||
+                            !brookesia_board_set_desktop_theme(int(value))) {
+                        return {.success=false,.error_message="Theme unavailable or resources missing"};
+                    }
+                    return {.success=true};}},
                 {"ProfileRefresh",[](FunctionParameterMap &&p)->FunctionResult{
                     if(esp_lv_adapter_lock(1000)!=ESP_OK)return {.success=false,.error_message="GUI busy"};
                     auto result=board_display_profile(std::get<bool>(p.at("Force")));
@@ -235,11 +249,8 @@ private:
                     brookesia_board_set_quiet_hours(std::get<bool>(p.at("Enabled")),int(a),int(b));return {.success=true};}},
                 {"SleepNow",[](FunctionParameterMap &&)->FunctionResult{sleep_requested=true;return {.success=true};}},
                 {"LockScreen",[](FunctionParameterMap &&)->FunctionResult{
-                    if(brookesia_board_deep_sleep_pending())return {.success=false,.error_message="Device is entering deep sleep"};
-                    if(!keys_ready)return {.success=false,.error_message="Volume keys are not ready"};
-                    if(!screen_locked.exchange(true))++lock_count;
-                    lock_reset=true;unlock_taps=0;wake_requested=false;sleep_requested=true;
-                    return {.success=true};}},
+                    const bool locked=brookesia_board_lock_touch();
+                    return {.success=locked,.error_message=locked?"":"Touch lock is unavailable"};}},
                 {"Wake",[](FunctionParameterMap &&)->FunctionResult{wake_requested=true;return {.success=true};}},
                 {"DeepSleepNow",[](FunctionParameterMap &&)->FunctionResult{const auto e=brookesia_board_request_deep_sleep(0);return {.success=e==ESP_OK,.error_message=e==ESP_OK?"":esp_err_to_name(e)};}},
                 {"TestDeepSleep",[](FunctionParameterMap &&)->FunctionResult{const auto e=brookesia_board_request_deep_sleep(20);return {.success=e==ESP_OK,.error_message=e==ESP_OK?"":esp_err_to_name(e)};}},
@@ -284,8 +295,39 @@ extern "C" void brookesia_board_set_offline_voice(bool value){offline_enabled=va
 extern "C" int brookesia_board_user_volume(){return preferences_loaded?desired_volume.load():-1;}
 extern "C" bool brookesia_board_volume_muted(){return dnd.load();}
 extern "C" int brookesia_board_battery_status(){return battery_status.load();}
-extern "C" int brookesia_board_desktop_theme(){return desktop_theme==1 && brookesia_board_cyber_available()?1:0;}
-extern "C" bool brookesia_board_set_desktop_theme(int index){if(!preferences_loaded || (index!=0 && index!=1) || (index==1 && !brookesia_board_cyber_available()))return false;desktop_theme=index;dirty=true;return true;}
+extern "C" bool brookesia_board_lock_touch()
+{
+    if (brookesia_board_deep_sleep_pending() || !keys_ready) return false;
+    if (!screen_locked.exchange(true)) ++lock_count;
+    lock_reset=true;unlock_taps=0;wake_requested=false;sleep_requested=true;
+    return true;
+}
+
+static bool desktop_theme_available(int index)
+{
+    if (index == 0) return true;
+    if (index == 1) return brookesia_board_cyber_available();
+    if (index < 2 || index > 5) return false;
+    static std::atomic<bool> resources_ready{false};
+    if (!resources_ready) {
+        const auto marker = service::helper::Storage::fs_stat("/littlefs/system/super/shell/images/square-controls.png");
+        resources_ready = marker && marker->exists && marker->size > 0;
+    }
+    return resources_ready;
+}
+
+extern "C" int brookesia_board_desktop_theme()
+{
+    const int selected = desktop_theme.load();
+    return desktop_theme_available(selected) ? selected : 0;
+}
+
+extern "C" bool brookesia_board_set_desktop_theme(int index)
+{
+    if (!preferences_loaded || !desktop_theme_available(index)) return false;
+    desktop_theme=index;dirty=true;
+    return true;
+}
 extern "C" void brookesia_board_launcher_assets_changed();
 extern "C" void brookesia_board_desktop_theme_applied(int index)
 {
@@ -396,7 +438,7 @@ void device_modes_poll(){
     if(!preferences_loaded){
         nvs_handle_t h;uint8_t a=1,d=0;int32_t resume=75;
         if(nvs_open("DeviceModes",NVS_READONLY,&h)==ESP_OK){
-uint8_t theme=0;nvs_get_u8(h,"desktop_theme",&theme);desktop_theme=theme==1?1:0;
+uint8_t theme=0;nvs_get_u8(h,"desktop_theme",&theme);desktop_theme=theme<=5?theme:0;
             uint8_t off=0;nvs_get_u8(h,"offline_voice",&off);offline_enabled=off!=0;
             uint16_t minutes=0;nvs_get_u16(h,"deep_min",&minutes);deep_minutes=idle_deep_sleep::index(minutes)>=0?minutes:0;
             nvs_get_u8(h,"auto_sleep",&a);nvs_get_u8(h,"dnd",&d);nvs_get_i32(h,"resume_volume",&resume);

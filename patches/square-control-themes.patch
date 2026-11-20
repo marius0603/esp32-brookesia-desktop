@@ -1,0 +1,280 @@
+diff --git a/app/brookesia_app_settings/src/app/lifecycle.ipp b/app/brookesia_app_settings/src/app/lifecycle.ipp
+index 8fd0824..aed5d5e 100644
+--- a/app/brookesia_app_settings/src/app/lifecycle.ipp
++++ b/app/brookesia_app_settings/src/app/lifecycle.ipp
+@@ -645,10 +645,26 @@ std::expected<void, std::string> SettingsApp::subscribe_actions(system::core::Ap
+     }
+ 
+     std::vector<system::core::GuiActionHandlerSubscription> subscriptions;
+-    subscriptions.reserve(21);
++    subscriptions.reserve(23);
++    subscriptions.push_back({
++        .action = "settings.controls.lock",
++        .handler = [](const gui::Event &) {
++            if (brookesia_board_lock_touch) (void)brookesia_board_lock_touch();
++        },
++    });
++    subscriptions.push_back({
++        .action = "settings.controls.quiet",
++        .handler = [this](const gui::Event &event) {
++            const auto checked = event.get_bool("checked");
++            if (context_ && checked && brookesia_board_set_do_not_disturb) {
++                brookesia_board_set_do_not_disturb(*checked);
++                (void)refresh_sound_state(*context_);
++            }
++        },
++    });
+     subscriptions.push_back({.action="settings.display.desktop_theme",.handler=[this](const gui::Event &event){
+         auto selected=event.get_int64("selectedIndex");
+-        if(context_ && selected && *selected>=0 && *selected<=1 && brookesia_board_set_desktop_theme){
++        if(context_ && selected && *selected>=0 && *selected<=5 && brookesia_board_set_desktop_theme){
+             if(!brookesia_board_set_desktop_theme(int(*selected)))BROOKESIA_LOGW("Desktop theme unavailable; install its SD resources and restart");
+             (void)refresh_display_state(*context_);
+         }
+diff --git a/app/brookesia_app_settings/src/private/settings_app_internal.hpp b/app/brookesia_app_settings/src/private/settings_app_internal.hpp
+index bee97ec..81d00e2 100644
+--- a/app/brookesia_app_settings/src/private/settings_app_internal.hpp
++++ b/app/brookesia_app_settings/src/private/settings_app_internal.hpp
+@@ -4,6 +4,9 @@
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ #pragma once
++extern "C" bool brookesia_board_lock_touch() __attribute__((weak));
++extern "C" bool brookesia_board_manual_dnd() __attribute__((weak));
++extern "C" void brookesia_board_set_do_not_disturb(bool) __attribute__((weak));
+ extern "C" int brookesia_board_desktop_theme() __attribute__((weak));
+ extern "C" bool brookesia_board_set_desktop_theme(int) __attribute__((weak));
+ extern "C" void brookesia_board_desktop_theme_applied(int) __attribute__((weak));
+diff --git a/app/brookesia_app_settings/src/service/device.ipp b/app/brookesia_app_settings/src/service/device.ipp
+index 2df5100..c0f8963 100644
+--- a/app/brookesia_app_settings/src/service/device.ipp
++++ b/app/brookesia_app_settings/src/service/device.ipp
+@@ -320,6 +320,12 @@ std::expected<void, std::string> SettingsApp::refresh_display_state(system::core
+     const bool enabled = device_ui_state_.display_service_ready && device_ui_state_.display_backlight_supported;
+     std::vector<gui::BindingValueUpdate> updates;
+     add_control_state_updates(updates, DISPLAY_BRIGHTNESS_ROW_PATH, DISPLAY_BRIGHTNESS_SLIDER_PATH, enabled);
++    if (current_page_ == PAGE_HOME && context.gui().get_view_frame("/settings_home/page/quick_controls")) {
++        constexpr auto row = "/settings_home/page/quick_controls/brightness";
++        constexpr auto slider = "/settings_home/page/quick_controls/brightness/slider";
++        add_control_state_updates(updates, row, slider, enabled);
++        add_binding_update(updates, slider, "value", std::to_string(enabled ? device_ui_state_.brightness : 0));
++    }
+     add_binding_update(updates,"/display/page/desktop_theme_card/choice","selected",std::to_string(brookesia_board_desktop_theme?brookesia_board_desktop_theme():0));
+     add_binding_update(updates,"/display/page/deep_sleep_card/after","selected",
+         std::to_string(brookesia_board_auto_deep_sleep_index?brookesia_board_auto_deep_sleep_index():0));
+@@ -366,6 +372,14 @@ std::expected<void, std::string> SettingsApp::refresh_sound_state(system::core::
+         add_binding_update(updates,base+"status","text",!synced?"北京时间 · 等待网络校时":active?(start==end?"北京时间 · 正在全天静音":"北京时间 · 正在静音"):"北京时间 · 当前不在静音时段");
+     }
+     add_control_state_updates(updates, SOUND_VOLUME_ROW_PATH, SOUND_VOLUME_SLIDER_PATH, enabled);
++    if (current_page_ == PAGE_HOME && context.gui().get_view_frame("/settings_home/page/quick_controls")) {
++        constexpr auto row = "/settings_home/page/quick_controls/volume";
++        constexpr auto slider = "/settings_home/page/quick_controls/volume/slider";
++        add_control_state_updates(updates, row, slider, enabled);
++        add_binding_update(updates, slider, "value", std::to_string(enabled ? device_ui_state_.volume : 0));
++        add_binding_update(updates, "/settings_home/page/quick_controls/quiet/toggle", "checked",
++                           brookesia_board_manual_dnd && brookesia_board_manual_dnd() ? "true" : "false");
++    }
+     add_control_state_updates(updates, SOUND_MUTE_ROW_PATH, SOUND_MUTE_TOGGLE_PATH, enabled);
+     add_binding_update(
+         updates,
+diff --git a/app/brookesia_app_settings/src/settings_app.cpp b/app/brookesia_app_settings/src/settings_app.cpp
+index d20c150..c936d96 100644
+--- a/app/brookesia_app_settings/src/settings_app.cpp
++++ b/app/brookesia_app_settings/src/settings_app.cpp
+@@ -59,8 +59,8 @@ using SteadyClock = std::chrono::steady_clock;
+ using SteadyTimePoint = SteadyClock::time_point;
+ 
+ static constexpr const char *APP_ID = "brookesia.general.settings";
+-static constexpr const char *APP_NAME = "Settings";
+-static constexpr const char *APP_NAME_ZH_CN = "设置";
++static constexpr const char *APP_NAME = "Controls";
++static constexpr const char *APP_NAME_ZH_CN = "控制";
+ static constexpr const char *APP_ICON_ID = "launcher_icon";
+ static constexpr const char *APP_ICON_PATH = "res/images/index.json";
+ static constexpr const char *GUI_ROOT = "res/root.json";
+diff --git a/system/brookesia_system_super/src/private/shell_app.hpp b/system/brookesia_system_super/src/private/shell_app.hpp
+index e3e2899..d237650 100644
+--- a/system/brookesia_system_super/src/private/shell_app.hpp
++++ b/system/brookesia_system_super/src/private/shell_app.hpp
+@@ -254,6 +254,7 @@ private:
+     std::vector<DisplaySourceRestoreRecord> display_source_restore_records_;
+     int desktop_theme_applied_ = -1;
+     void refresh_desktop_theme(bool force = false);
++    static std::string launcher_icon_source(const core::AppManifest &manifest, int theme);
+     bool launcher_populated_ = false;
+     std::string applied_i18n_locale_;
+     std::shared_ptr<ExpansionNotifications> expansion_notifications_;
+diff --git a/system/brookesia_system_super/src/shell_app_launcher.cpp b/system/brookesia_system_super/src/shell_app_launcher.cpp
+index 371dac8..9d2a60f 100644
+--- a/system/brookesia_system_super/src/shell_app_launcher.cpp
++++ b/system/brookesia_system_super/src/shell_app_launcher.cpp
+@@ -182,9 +182,10 @@ std::expected<void, std::string> ShellApp::populate_launcher(core::AppContext &c
+     const int32_t item_width = square_layout ? 136 : LAUNCHER_ITEM_WIDTH;
+     const int32_t item_height = square_layout ? 82 : LAUNCHER_ITEM_HEIGHT;
+     const int32_t item_gap = square_layout ? 8 : LAUNCHER_ITEM_GAP;
++    const int theme = brookesia_board_desktop_theme ? brookesia_board_desktop_theme() : 0;
+     std::vector<core::AppInfo> visible_apps;
+     for (const auto &app : owner_.list_apps()) {
+-        if (!app.manifest.visible) {
++        if (!app.manifest.visible || (square_layout && app.manifest.id == "brookesia.general.settings")) {
+             continue;
+         }
+         visible_apps.push_back(app);
+@@ -262,7 +263,7 @@ std::expected<void, std::string> ShellApp::populate_launcher(core::AppContext &c
+                 binding_updates,
+                 image_icon_path,
+                 "src",
+-                (brookesia_board_desktop_theme && brookesia_board_desktop_theme()==1)?"cyber."+app.manifest.id:core::resolve_app_icon_resource_id(app.manifest)
++                launcher_icon_source(app.manifest, theme)
+             );
+             add_binding_update(binding_updates, image_icon_path, "hidden", "false");
+             add_binding_update(binding_updates, fallback_icon_path, "hidden", "true");
+@@ -311,7 +312,7 @@ std::expected<void, std::string> ShellApp::populate_launcher(core::AppContext &c
+     );
+     if (square_layout) {
+         for (const auto &[action, package_id] : {
+-                 std::pair{"super.square.controls", "local.quickcontrols"},
++                 std::pair{"super.square.controls", "brookesia.general.settings"},
+                  std::pair{"super.square.weather", "local.weather"}}) {
+             auto connection = context.gui().subscribe_action(action, [this, package_id](const gui::Event &) {
+                 if (!foreground_is_shell_ || launcher_swipe_.dragging() || launch_overlay_active_) {
+@@ -346,27 +347,89 @@ std::expected<void, std::string> ShellApp::populate_launcher(core::AppContext &c
+ }
+ 
+ 
++std::string ShellApp::launcher_icon_source(const core::AppManifest &manifest, int theme)
++{
++    constexpr std::array<std::string_view, 15> square_icons = {
++        "brookesia.general.app_store", "brookesia.general.files", "brookesia.general.settings",
++        "local.childmode", "local.audiobook", "local.codex.quota", "local.flipclock",
++        "local.gravitymaze", "local.lightlearning", "local.navigation", "local.nurserysongs",
++        "local.radio", "local.virtualpet", "local.voiceassistant", "local.weather",
++    };
++    if (theme >= 2 && std::find(square_icons.begin(), square_icons.end(), manifest.id) != square_icons.end()) {
++        return "square." + manifest.id;
++    }
++    return theme == 1 ? "cyber." + manifest.id : core::resolve_app_icon_resource_id(manifest);
++}
++
+ void ShellApp::refresh_desktop_theme(bool force)
+ {
+-    if(!context_ || !launcher_populated_)return;
+-    const int selected=brookesia_board_desktop_theme?brookesia_board_desktop_theme():0;
+-    if(!force && selected==desktop_theme_applied_)return;
++    if (!context_ || !launcher_populated_) return;
++    const int selected = brookesia_board_desktop_theme ? brookesia_board_desktop_theme() : 0;
++    if (!force && selected == desktop_theme_applied_) return;
++
++    struct Palette {
++        const char *background;
++        const char *tile;
++        const char *edge;
++        const char *weather;
++        const char *controls;
++        const char *muted;
++        const char *accent;
++    };
++    static constexpr std::array<Palette, 4> palettes = {{
++        {"#101714", "#1B271F", "#304036", "#273721", "#1D2922", "#A7B2A9", "#D5F588"},
++        {"#0D1521", "#17293D", "#2B4560", "#203B53", "#1A2D43", "#A5B9CB", "#A3E6F3"},
++        {"#191321", "#2B203A", "#48375A", "#372649", "#31233F", "#BDAECB", "#DAC4FA"},
++        {"#201611", "#33241A", "#573C2D", "#492E1D", "#38261A", "#C7B2A5", "#F2CD92"},
++    }};
++    constexpr auto header = "/launcher/content/square_header";
++    const bool square_layout = context_->gui().get_view_frame(header).has_value();
++    const auto &palette = palettes[std::clamp(selected - 2, 0, 3)];
+     std::vector<gui::BindingValueUpdate> updates;
+-    for(const auto &app:owner_.list_apps()) {
+-        if(!app.manifest.visible || !core::has_app_icon_image(app.manifest))continue;
+-        const auto path=make_launcher_item_path(app.app_id);
+-        const auto source=selected==1?"cyber."+app.manifest.id:core::resolve_app_icon_resource_id(app.manifest);
+-        add_binding_update(updates,path+"/"+SUPER_LAUNCHER_IMAGE_ICON_ID,"src",source);
+-        add_binding_update(updates,path+"/"+SUPER_LAUNCHER_LABEL_ID,"theme_text",selected==1?"#edf5ff":"#664c40");
+-    }
+-    add_binding_update(updates,"/launcher/content/pages","theme_text",selected==1?"#65edff":"#775145");
+-    auto result=context_->gui().set_binding_values(updates);
+-    if(!result){BROOKESIA_LOGW("Desktop theme icons failed: %1%",result.error());return;}
+-    auto wallpaper=context_->gui().set_view_src("/background/cream_wallpaper",selected==1?"cyber.wallpaper":"cream.wallpaper");
+-    if(!wallpaper){BROOKESIA_LOGW("Desktop wallpaper failed: %1%",wallpaper.error());return;}
+-    desktop_theme_applied_=selected;
+-    if(brookesia_board_desktop_theme_applied)brookesia_board_desktop_theme_applied(selected);
+-    BROOKESIA_LOGI("Desktop theme applied: %1%",selected==1?"cyberpunk-v1":"cartoon-q-v1");
++    for (const auto &item : launcher_instance_to_app_) {
++        const auto app_id = item.second;
++        const auto app = owner_.get_app(app_id);
++        if (!app) continue;
++        const auto path = make_launcher_item_path(app_id);
++        if (core::has_app_icon_image(app->manifest)) {
++            add_binding_update(updates, path + "/" + SUPER_LAUNCHER_IMAGE_ICON_ID,
++                               "src", launcher_icon_source(app->manifest, selected));
++        }
++        if (square_layout) {
++            add_binding_update(updates, path, "theme_fill", palette.tile);
++            add_binding_update(updates, path, "theme_edge", palette.edge);
++        } else {
++            add_binding_update(updates, path + "/" + SUPER_LAUNCHER_LABEL_ID,
++                               "theme_text", selected == 1 ? "#edf5ff" : "#664c40");
++        }
++    }
++    if (square_layout) {
++        const std::string head = header;
++        add_binding_update(updates, "/launcher", "theme_fill", palette.background);
++        add_binding_update(updates, "/launcher/content", "theme_fill", palette.background);
++        add_binding_update(updates, head + "/date", "theme_text", palette.muted);
++        add_binding_update(updates, head + "/weather", "theme_fill", palette.weather);
++        add_binding_update(updates, head + "/weather", "theme_edge", palette.edge);
++        add_binding_update(updates, head + "/weather/temperature", "theme_text", palette.accent);
++        add_binding_update(updates, head + "/weather/city", "theme_text", palette.muted);
++        add_binding_update(updates, head + "/controls", "theme_fill", palette.controls);
++        add_binding_update(updates, head + "/controls", "theme_edge", palette.edge);
++    }
++    add_binding_update(updates, "/launcher/content/pages", "theme_text",
++                       square_layout ? palette.accent : selected == 1 ? "#65edff" : "#775145");
++    auto result = context_->gui().set_binding_values(updates);
++    if (!result) {
++        BROOKESIA_LOGW("Desktop theme update failed: %1%", result.error());
++        return;
++    }
++    auto wallpaper = context_->gui().set_view_src("/background/cream_wallpaper",
++                     selected == 1 ? "cyber.wallpaper" : "cream.wallpaper");
++    if (!wallpaper) {
++        BROOKESIA_LOGW("Desktop wallpaper update failed: %1%", wallpaper.error());
++        return;
++    }
++    desktop_theme_applied_ = selected;
++    if (brookesia_board_desktop_theme_applied) brookesia_board_desktop_theme_applied(selected);
+ }
+ 
+ std::expected<void, std::string> ShellApp::refresh_launcher()
+@@ -393,7 +456,8 @@ std::expected<void, std::string> ShellApp::refresh_environment()
+ 
+     std::vector<gui::BindingValueUpdate> updates;
+     for (const auto &app : owner_.list_apps()) {
+-        if (!app.manifest.visible) {
++        if (!app.manifest.visible || (app.manifest.id == "brookesia.general.settings" &&
++                !launcher_instance_to_app_.contains(make_launcher_item_instance_id(app.app_id)))) {
+             continue;
+         }
+ 
+@@ -411,7 +475,7 @@ std::expected<void, std::string> ShellApp::refresh_environment()
+                 updates,
+                 image_icon_path,
+                 "src",
+-                (brookesia_board_desktop_theme && brookesia_board_desktop_theme()==1)?"cyber."+app.manifest.id:core::resolve_app_icon_resource_id(app.manifest)
++                launcher_icon_source(app.manifest, desktop_theme_applied_)
+             );
+             add_binding_update(updates, image_icon_path, "hidden", "false");
+             add_binding_update(updates, fallback_icon_path, "hidden", "true");
+diff --git a/system/brookesia_system_super/src/shell_launch.cpp b/system/brookesia_system_super/src/shell_launch.cpp
+index 5b4dae9..48014fa 100644
+--- a/system/brookesia_system_super/src/shell_launch.cpp
++++ b/system/brookesia_system_super/src/shell_launch.cpp
+@@ -108,7 +108,7 @@ std::expected<void, std::string> ShellApp::show_launch_overlay(
+         updates,
+         SUPER_APP_MODAL_LAUNCH_ICON_IMAGE_PATH,
+         "src",
+-        has_icon ? (desktop_theme_applied_==1?"cyber."+app.manifest.id:core::resolve_app_icon_resource_id(app.manifest)) : SUPER_DEFAULT_IMAGE_ID
++        has_icon ? launcher_icon_source(app.manifest, desktop_theme_applied_) : SUPER_DEFAULT_IMAGE_ID
+     );
+     add_binding_update(updates, SUPER_APP_MODAL_LAUNCH_ICON_IMAGE_PATH, "hidden", bool_to_binding(!has_icon));
+     add_binding_update(
