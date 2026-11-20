@@ -38,16 +38,30 @@ function render(){
   message(notice||prompt);return;
  }
  if(page==='channels'){renderChannels();return;}
- message(state.resting?'当前处于休息限制':state.enabled?(state.daily_minutes?'今日还可使用 '+Math.ceil(state.remaining_seconds/60)+' 分钟':'儿童模式已开启'):'家长模式：完整桌面');
- text('control/mode/label',state.enabled?'关闭儿童模式':'开启儿童模式');
- text('control/volume','音量上限 '+state.max_volume+'%');
- text('control/limit',state.daily_minutes?'每日 '+state.daily_minutes+' 分钟':'时长不限制');
+ message(state.resting?'当前处于休息限制':state.enabled?'家长管理':'家长模式 · 完整桌面');
+ text('control/mode/label',state.enabled?'已开启':'已关闭');
+ text('control/volume',state.max_volume+'%');
+ text('control/limit',state.daily_minutes?state.daily_minutes+' 分钟':'不限时');
+ const remaining = Math.max(0, Math.ceil(state.remaining_seconds / 60));
+ const duration = state.daily_minutes;
+ const usage = state.enabled ? (duration ? '今日还可使用 '+remaining+' / '+duration+' 分钟' : '今日时长不限') : '开启后应用使用限制';
+ text('control/summary/usage',usage);
+ const width = state.enabled && duration ? Math.max(1, Math.min(398, Math.round(398 * remaining / duration))) : 1;
+ const appearance = state.enabled+':'+width;
+ if (page==='control' && cache.appearance!==appearance) {
+  call(gui,'SetBindings',{Updates:[
+   {Path:'/main/control/mode',Key:'fill',Value:state.enabled?'#273721':'#1B271F'},
+   {Path:'/main/control/mode/label',Key:'ink',Value:state.enabled?'#D5F588':'#A7B2A9'},
+   {Path:'/main/control/summary/track/fill',Key:'width',Value:String(width)}
+  ]});
+  cache.appearance=appearance;
+ }
  for(const [action,label,key] of appOptions)
    text('apps/'+action+'/label',label+'：'+(state[key]?'允许':'关闭'));
  text('apps/channels/label','频道白名单 '+state.radio_allowed_stations.length);
  text('times/night/label','夜间休息：'+(state.night_enabled?'开启':'关闭'));
- text('times/start','开始 '+('0'+state.night_start).slice(-2)+':00');
- text('times/end','结束 '+('0'+state.night_end).slice(-2)+':00');
+ text('times/start',('0'+state.night_start).slice(-2)+':00');
+ text('times/end',('0'+state.night_end).slice(-2)+':00');
  if(page==='times'&&state.night_enabled&&!state.clock_ready)message('时间未同步，儿童应用暂时休息');
 }
 function save(settings){call(policy,'Configure',{Token:token,Settings:settings});read();render();}

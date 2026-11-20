@@ -1,0 +1,71 @@
+{
+  "type": "imageSet",
+  "images": [
+    {
+      "id": "launcher_icon",
+      "src": "launcher_icon.jpg",
+      "width": 92,
+      "height": 92
+    },
+    {
+      "id": "files.icon.driver",
+      "src": "square-driver.png",
+      "width": 34,
+      "height": 34
+    },
+    {
+      "id": "files.icon.directory",
+      "src": "square-directory.png",
+      "width": 34,
+      "height": 34
+    },
+    {
+      "id": "files.icon.file",
+      "src": "square-file.png",
+      "width": 34,
+      "height": 34
+    },
+    {
+      "id": "files.icon.image",
+      "src": "square-image.png",
+      "width": 34,
+      "height": 34
+    },
+    {
+      "id": "files.icon.doc",
+      "src": "square-doc.png",
+      "width": 34,
+      "height": 34
+    },
+    {
+      "id": "files.icon.bpk",
+      "src": "square-bpk.png",
+      "width": 34,
+      "height": 34
+    },
+    {
+      "id": "files.icon.audio",
+      "src": "square-audio.png",
+      "width": 34,
+      "height": 34
+    },
+    {
+      "id": "files.icon.video",
+      "src": "square-video.png",
+      "width": 34,
+      "height": 34
+    },
+    {
+      "id": "files.icon.rename",
+      "src": "square-rename.png",
+      "width": 34,
+      "height": 34
+    },
+    {
+      "id": "files.icon.delete",
+      "src": "square-delete.png",
+      "width": 34,
+      "height": 34
+    }
+  ]
+}

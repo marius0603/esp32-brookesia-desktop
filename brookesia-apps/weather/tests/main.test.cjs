@@ -7,7 +7,7 @@ const nodes={};
 const imageIndex=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/images/index.json'),'utf8')).images;
 const images=Object.fromEntries(imageIndex.map(asset=>[asset.id,asset]));
 // Binding fields supported by the target Brookesia GUI ABI for these effects.
-const supportedFxFields=new Set(['commonProps.hidden','style.bgColor','style.bgGradientColor','style.opacity','style.textColor','style.borderColor','placement.x','placement.y','labelProps.text','lineProps.points']);
+const supportedFxFields=new Set(['commonProps.hidden','style.bgColor','style.bgGradientColor','style.opacity','style.textColor','style.borderColor','placement.x','placement.y','labelProps.text','lineProps.points','dropdownProps.selectedIndex']);
 (function walk(node,parent=''){const p=parent+'/'+node.id;nodes[p]=node;for(const c of node.children||[])walk(c,p);})(JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/screens/main.json'),'utf8')));
 const fixture = {current:{time:'2026-10-18T20:00',temperature_2m:23.6,relative_humidity_2m:82,
   apparent_temperature:26.1,is_day:0,precipitation:0.1,weather_code:51,wind_speed_10m:3.06},
@@ -100,15 +100,25 @@ test('disconnect cancels pending operation, reconnect retries',()=>{
   assert.equal(h.value('pending'),null);assert.equal(h.calls.filter(c=>c.name==='CancelRequest').length,1);
   h.online(true);h.app.on_timer();assert.equal(h.requests().length,2);
 });
-test('IP location is explicitly marked and failure falls back to Shanghai',()=>{
-  const h=harness(true,{'/littlefs/weather-settings.json':{mode:'auto'}});h.app.on_start();
-  assert.match(h.requests().at(-1).p.Request.url,/ipwho.is/);
-  h.complete(1,{success:true,city:'Test City',latitude:40,longitude:100});
-  assert.match(h.requests().at(-1).p.Request.url,/latitude=40/);h.complete(2);
-  assert.equal(h.files['/littlefs/weather-state.json'].location.origin,'网络出口推测');
-  h.advance(601000);h.app.on_timer();h.complete(3,{success:false});
-  assert.match(h.requests().at(-1).p.Request.url,/latitude=31.2304/);h.complete(4);
-  assert.equal(h.files['/littlefs/weather-state.json'].location.origin,'定位失败，默认城市');
+test('city selection saves the choice and never displays the previous city or its late response',()=>{
+  const h=harness(true,{},true);h.app.on_start();
+  assert.match(h.requests()[0].p.Request.url,/latitude=31.2304/);
+  h.app.on_action('compact.city','/main/compact/city',JSON.stringify({selectedIndex:1}));
+  assert.match(h.requests()[1].p.Request.url,/latitude=36.0671/);
+  assert.equal(h.files['/littlefs/weather-settings.json'].mode,'qingdao');
+  assert.equal(h.files['/littlefs/weather-state.json'].temperature,null);
+  h.complete(1);
+  assert.equal(h.files['/littlefs/weather-state.json'].temperature,null);
+  h.complete(2);
+  assert.equal(h.files['/littlefs/weather-cache-qingdao.json'].mode,'qingdao');
+  const restarted=harness(false,h.files,true);restarted.app.on_start();
+  assert.equal(restarted.files['/littlefs/weather-state.json'].location.city,'青岛');
+  assert.equal(restarted.files['/littlefs/weather-state.json'].temperature,23.6);
+});
+test('legacy automatic location defaults to Shanghai in the two-city picker',()=>{
+  const h=harness(true,{'/littlefs/weather-settings.json':{mode:'auto'}},true);h.app.on_start();
+  assert.match(h.requests()[0].p.Request.url,/latitude=31.2304/);
+  assert.equal(h.files['/littlefs/weather-state.json'].mode,'shanghai');
 });
 test('cache is restored offline and stale data is marked',()=>{
   const h=harness();h.app.on_start();h.complete(1);

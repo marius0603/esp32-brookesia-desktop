@@ -1,7 +1,10 @@
 (function () {
 'use strict';
 // Device-side Wi-Fi -> verified HTTPS -> GUI. No computer weather bridge.
-const SHANGHAI = {city:'上海', latitude:31.2304, longitude:121.4737, origin:'默认城市'};
+const CITIES = {
+  shanghai: {city:'上海', latitude:31.2304, longitude:121.4737, origin:'手动选择'},
+  qingdao: {city:'青岛', latitude:36.0671, longitude:120.3826, origin:'手动选择'}
+};
 const CACHE = '/littlefs/weather-cache.json', SETTINGS = '/littlefs/weather-settings.json';
 const STATE = '/littlefs/weather-state.json', REFRESH_MS = 10*60*1000, STALE_MS = 30*60*1000;
 const RETRY_DELAYS = [10000,30000];
@@ -18,7 +21,7 @@ let gui, storage, http, wifi, timer, modes, core;
 let hasCompact = false, compact = false;
 let compactKey = '';
 let screenAsleep=false, fxProbe=null;
-let mode = 'shanghai', location = SHANGHAI, data = null, receivedAt = 0;
+let mode = 'shanghai', location = CITIES.shanghai, data = null, receivedAt = 0;
 let connected = false, paused = false, pending = null, nextFetch = 0, failures = 0;
 let lastRequest = 0, error = '', status = '未联网', rendered = {};
 let fxDay=1, fxSky=null;
@@ -141,8 +144,10 @@ function renderCompact() {
   const key = JSON.stringify([receivedAt, location.city, status, cached]);
   if (key === compactKey) return;
   const updates = [
-    binding(path + '/city', 'text', location.city),
-    binding(path + '/source', 'text', cached ? '缓存天气' : status === '已更新' ? 'Open-Meteo' : status)
+    binding(path + '/city', 'selected', mode === 'qingdao' ? 1 : 0),
+    binding(path + '/source', 'text', cached ? '缓存天气' : status === '已更新' ? 'Open-Meteo' : status),
+    binding(path + '/data/forecast', 'hidden', !data),
+    binding(path + '/data/hero/icon', 'hidden', !data)
   ];
   if (data) {
     const current = data.current;
@@ -172,7 +177,11 @@ function renderCompact() {
     updates.push(binding(forecast + '/trace', 'points', JSON.stringify(points)));
     call(gui, 'SetViewSrc', {Path: hero + '/icon', Src: iconFor(current.weather_code, day)});
   } else {
-    updates.push(binding(path + '/data/hero/condition', 'text', status));
+    updates.push(
+      binding(path + '/data/hero/temperature', 'text', '--°'),
+      binding(path + '/data/hero/condition', 'text', status),
+      binding(path + '/data/hero/range', 'text', '')
+    );
   }
   for (let offset = 0; offset < updates.length; offset += 16) updateBindings(updates.slice(offset, offset + 16));
   compactKey = key;
@@ -318,8 +327,9 @@ function render() {
 }
 function setStatus(value) { status=value; render(); persistState(); }
 function cancelPending() {
-  if (pending) { try { call(http,'CancelRequest',{RequestId:pending.id}); } catch (_) {} }
-  pending=null;
+  const request = pending;
+  pending = null;
+  if (request) { try { call(http, 'CancelRequest', {RequestId:request.id}); } catch (_) {} }
 }
 function request(kind, url) {
   const id = call(http,'RequestAsync',{Request:{url:url,method:'Get',timeout_ms:15000,
@@ -332,8 +342,7 @@ function requestWeather() { request('weather',forecastUrl(location)); }
 function beginFetch() {
   if (pending || !connected || failures>RETRY_DELAYS.length) return;
   try {
-    if (mode==='auto') request('location','https://ipwho.is/?fields=success,message,city,latitude,longitude');
-    else { location=SHANGHAI; requestWeather(); }
+    requestWeather();
   } catch (e) { failed(String(e)); }
 }
 function failed(message) {
@@ -343,25 +352,14 @@ function failed(message) {
 }
 function handleResponse(items) {
   if (!pending || items.RequestId !== pending.id) return;
-  const kind=pending.kind, id=pending.id, response=items.Response || {};
+  const id=pending.id, response=items.Response || {};
   pending=null;
   const ok=response.status_code===200 && response.error==='Ok';
-  if (kind==='location') {
-    try {
-      const place=ok?JSON.parse(response.body):null;
-      if (!place || !place.success || typeof place.city!=='string' || !place.city ||
-          !Number.isFinite(place.latitude) || Math.abs(place.latitude)>90 ||
-          !Number.isFinite(place.longitude) || Math.abs(place.longitude)>180) throw new Error('定位失败');
-      location={city:place.city,latitude:place.latitude,longitude:place.longitude,origin:'网络出口推测'};
-    } catch (_) { location={city:SHANGHAI.city,latitude:SHANGHAI.latitude,longitude:SHANGHAI.longitude,origin:'定位失败，默认城市'}; }
-    try { requestWeather(); } catch(e) { failed(String(e)); }
-    return;
-  }
   if (!ok) { failed('HTTP '+(response.status_code||0)+' '+(response.error||'RequestFailed')); return; }
   try {
     const value=validateWeather(JSON.parse(response.body));
     data=value; receivedAt=Date.now(); lastRequest=id; failures=0; error=''; nextFetch=receivedAt+REFRESH_MS;
-    write(CACHE,{version:2,mode:mode,location:location,received_at:receivedAt,data:data});
+    write(cachePath(), {version:2, mode, location, received_at:receivedAt, data});
     setStatus('已更新');
   } catch(e) { failed(String(e)); }
 }
@@ -382,6 +380,44 @@ function tick() {
     render();
   } catch(e) { failed(String(e)); }
 }
+function cachePath() {
+  return mode === 'qingdao' ? '/littlefs/weather-cache-qingdao.json' : CACHE;
+}
+function loadCityCache() {
+  location = CITIES[mode];
+  data = null;
+  receivedAt = 0;
+  const cache = read(cachePath());
+  if (!cache || cache.version !== 2 || cache.mode !== mode) return;
+  try {
+    data = validateWeather(cache.data);
+    receivedAt = cache.received_at || 0;
+  } catch (_) {}
+}
+function selectCity(index) {
+  if (index !== 0 && index !== 1) return;
+  const next = index === 1 ? 'qingdao' : 'shanghai';
+  if (next === mode) return;
+  try {
+    const previous = read(SETTINGS) || {};
+    call(storage, 'FSWriteText', {Path:SETTINGS, Data:JSON.stringify({...previous, mode:next})});
+  } catch (_) {
+    compactKey = '';
+    setStatus('无法保存城市');
+    return;
+  }
+  cancelPending();
+  mode = next;
+  loadCityCache();
+  failures = 0;
+  error = '';
+  nextFetch = 0;
+  lastRequest = 0;
+  compactKey = '';
+  rendered = {};
+  setStatus(connected ? '正在更新' : '未联网');
+  tick();
+}
 globalThis.brookesia_app = {
   on_start() {
     try{modes=brookesia.start_service('DeviceModes');}catch(_){}
@@ -393,22 +429,27 @@ globalThis.brookesia_app = {
     try { hasCompact = Boolean(call(gui, 'GetViewFrame', {Path: '/main/compact'})?.width); } catch (_) { hasCompact = false; }
     if (hasCompact) {
       core = brookesia.start_service('SystemCore');
-      for (const action of ['compact.back', 'compact.details', 'compact.overview', 'compact.refresh']) call(gui, 'SubscribeAction', {Action: action});
+      for (const action of ['compact.back', 'compact.details', 'compact.overview', 'compact.refresh', 'compact.city']) call(gui, 'SubscribeAction', {Action: action});
       showCompact(true);
     }
-    const settings=read(SETTINGS); if (settings && settings.mode==='auto') mode='auto';
-    const cache=read(CACHE);
-    if (cache && cache.version===2 && cache.mode===mode) {
-      try { data=validateWeather(cache.data); location=cache.location || SHANGHAI; receivedAt=cache.received_at || 0; status='未联网'; } catch (_) {}
-    }
+    const settings = read(SETTINGS);
+    mode = settings?.mode === 'qingdao' ? 'qingdao' : 'shanghai';
+    status = '未联网';
+    loadCityCache();
     stopFx();stopTick();fxScene='';paused=false;rendered={};render();startTick();tick();return true;
   },
-  on_action(name) {
+  on_action(name, path, payload) {
+    if (name === 'compact.city' && !paused) {
+      let selected;
+      try { selected = JSON.parse(payload || '{}').selectedIndex; } catch (_) {}
+      selectCity(selected);
+      return true;
+    }
     if((name==='refresh'||name==='compact.refresh')&&!paused&&!pending){failures=0;nextFetch=0;tick();}
     if (!paused && hasCompact) {
       if (name === 'compact.back') {
         const app = call(core, 'GetActiveApp');
-        if (app?.manifest?.id === 'local.weather') call(core, 'RequestCloseApp', {AppId: app.app_id});
+        if (app?.manifest?.id === 'local.weather') call(core, 'RequestCloseApp', {AppId:app.app_id});
       } else if (name === 'compact.details' || name === 'compact.overview') {
         showCompact(name === 'compact.overview');
         render();

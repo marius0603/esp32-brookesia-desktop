@@ -1,0 +1,383 @@
+{
+  "type": "viewScreen",
+  "id": "browser",
+  "commonProps": {
+    "scrollable": false
+  },
+  "children": [
+    {
+      "type": "container",
+      "id": "page",
+      "commonProps": {
+        "scrollable": false
+      },
+      "placement": {
+        "mode": "absolute",
+        "x": 24,
+        "y": 82,
+        "width": 432,
+        "height": 374
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "volumes",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 0,
+            "width": 432,
+            "height": 53
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "bgColor": "#16221A",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 16,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "button",
+              "id": "internal",
+              "placement": {
+                "mode": "absolute",
+                "x": 5,
+                "y": 4,
+                "width": 209,
+                "height": 45
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": true
+              },
+              "style": {
+                "bgColor": "#1B271F",
+                "borderColor": "#304036",
+                "borderWidth": 1,
+                "radius": 13,
+                "padding": 0
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "label",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 4,
+                    "y": 8,
+                    "width": 201,
+                    "height": 28
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "labelProps": {
+                    "text": "内部存储"
+                  },
+                  "style": {
+                    "fontSize": 18,
+                    "textColor": "#F3F6ED",
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "labelProps.text",
+                    "style.textColor": "style.textColor"
+                  }
+                }
+              ],
+              "events": [
+                {
+                  "type": "clicked",
+                  "action": "files.volume.internal"
+                }
+              ],
+              "bindings": {
+                "commonProps.disabled": "commonProps.disabled",
+                "style.bgColor": "style.bgColor"
+              }
+            },
+            {
+              "type": "button",
+              "id": "sd",
+              "placement": {
+                "mode": "absolute",
+                "x": 218,
+                "y": 4,
+                "width": 209,
+                "height": 45
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": true
+              },
+              "style": {
+                "bgColor": "#1B271F",
+                "borderColor": "#304036",
+                "borderWidth": 1,
+                "radius": 13,
+                "padding": 0
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "label",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 4,
+                    "y": 8,
+                    "width": 201,
+                    "height": 28
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "labelProps": {
+                    "text": "SD 卡"
+                  },
+                  "style": {
+                    "fontSize": 18,
+                    "textColor": "#F3F6ED",
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "labelProps.text",
+                    "style.textColor": "style.textColor"
+                  }
+                }
+              ],
+              "events": [
+                {
+                  "type": "clicked",
+                  "action": "files.volume.sd"
+                }
+              ],
+              "bindings": {
+                "commonProps.disabled": "commonProps.disabled",
+                "style.bgColor": "style.bgColor"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "list",
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 16,
+            "padding": 1
+          },
+          "layout": {
+            "type": "flex",
+            "flexFlow": "column",
+            "gap": "4dp"
+          },
+          "commonProps": {
+            "scrollable": true
+          },
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 65,
+            "width": 432,
+            "height": 246
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "items",
+              "layout": {
+                "type": "flex",
+                "flexFlow": "column",
+                "gap": 1
+              },
+              "placement": {
+                "mode": "flow",
+                "width": "match",
+                "height": "wrap",
+                "alignSelf": "stretch"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "actions",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 326,
+            "width": 432,
+            "height": 48
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "note",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 10,
+                "width": 209,
+                "height": 29
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "轻点文件，长按文件夹"
+              },
+              "style": {
+                "fontSize": 15,
+                "textColor": "#A7B2A9",
+                "textAlign": "left"
+              },
+              "bindings": {
+                "labelProps.text": "labelProps.text"
+              }
+            },
+            {
+              "type": "button",
+              "id": "rename",
+              "placement": {
+                "mode": "absolute",
+                "x": 220,
+                "y": 0,
+                "width": 104,
+                "height": 48
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": true,
+                "disabled": true
+              },
+              "style": {
+                "bgColor": "#1B271F",
+                "borderColor": "#304036",
+                "borderWidth": 1,
+                "radius": 13,
+                "padding": 0,
+                "opacity": 108
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "label",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 4,
+                    "y": 10,
+                    "width": 96,
+                    "height": 27
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "labelProps": {
+                    "text": "重命名"
+                  },
+                  "style": {
+                    "fontSize": 17,
+                    "textColor": "#F3F6ED",
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "labelProps.text"
+                  }
+                }
+              ],
+              "events": [
+                {
+                  "type": "clicked",
+                  "action": "files.inline.rename"
+                }
+              ],
+              "bindings": {
+                "commonProps.disabled": "commonProps.disabled",
+                "style.opacity": "style.opacity"
+              }
+            },
+            {
+              "type": "button",
+              "id": "delete",
+              "placement": {
+                "mode": "absolute",
+                "x": 328,
+                "y": 0,
+                "width": 104,
+                "height": 48
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": true,
+                "disabled": true
+              },
+              "style": {
+                "bgColor": "#1B271F",
+                "borderColor": "#304036",
+                "borderWidth": 1,
+                "radius": 13,
+                "padding": 0,
+                "opacity": 108
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "label",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 4,
+                    "y": 10,
+                    "width": 96,
+                    "height": 27
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "labelProps": {
+                    "text": "删除"
+                  },
+                  "style": {
+                    "fontSize": 17,
+                    "textColor": "#FFC2B4",
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "labelProps.text"
+                  }
+                }
+              ],
+              "events": [
+                {
+                  "type": "clicked",
+                  "action": "files.inline.delete"
+                }
+              ],
+              "bindings": {
+                "commonProps.disabled": "commonProps.disabled",
+                "style.opacity": "style.opacity"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "style": {
+    "bgColor": "#101714",
+    "padding": 0
+  }
+}

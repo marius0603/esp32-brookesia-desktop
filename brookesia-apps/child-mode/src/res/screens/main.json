@@ -1,1 +1,3012 @@
-{"type":"viewScreen","id":"main","commonProps":{"scrollable":false},"style":{"bgColor":"#fff2df","padding":0},"children":[{"type":"container","id":"gate","placement":{"x":0,"y":0,"width":480,"height":480},"commonProps":{"hidden":false,"scrollable":false},"bindings":{"commonProps.hidden":"hidden"},"style":{"bgOpacity":0,"borderWidth":0,"padding":0},"children":[{"type":"label","id":"dots","placement":{"x":120,"y":137,"width":240,"height":40},"style":{"font":"${font.zh_CN}","fontSize":32,"textColor":"#674536","textAlign":"center"},"labelProps":{"text":""}},{"type":"button","id":"digit1","placement":{"x":104,"y":194,"width":84,"height":48},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"digit1"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"1"}}]},{"type":"button","id":"digit2","placement":{"x":198,"y":194,"width":84,"height":48},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"digit2"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"2"}}]},{"type":"button","id":"digit3","placement":{"x":292,"y":194,"width":84,"height":48},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"digit3"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"3"}}]},{"type":"button","id":"digit4","placement":{"x":104,"y":251,"width":84,"height":48},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"digit4"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"4"}}]},{"type":"button","id":"digit5","placement":{"x":198,"y":251,"width":84,"height":48},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"digit5"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"5"}}]},{"type":"button","id":"digit6","placement":{"x":292,"y":251,"width":84,"height":48},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"digit6"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"6"}}]},{"type":"button","id":"digit7","placement":{"x":104,"y":308,"width":84,"height":48},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"digit7"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"7"}}]},{"type":"button","id":"digit8","placement":{"x":198,"y":308,"width":84,"height":48},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"digit8"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"8"}}]},{"type":"button","id":"digit9","placement":{"x":292,"y":308,"width":84,"height":48},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"digit9"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"9"}}]},{"type":"button","id":"erase","placement":{"x":104,"y":365,"width":84,"height":48},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"erase"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"删除"}}]},{"type":"button","id":"digit0","placement":{"x":198,"y":365,"width":84,"height":48},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"digit0"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"0"}}]},{"type":"button","id":"enter","placement":{"x":292,"y":365,"width":84,"height":48},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"enter"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"确定"}}]},{"type":"label","id":"hint","placement":{"x":130,"y":428,"width":220,"height":25},"style":{"font":"${font.zh_CN}","fontSize":16,"textColor":"#674536","textAlign":"center"},"labelProps":{"text":"请由家长操作"}}]},{"type":"container","id":"control","placement":{"x":0,"y":0,"width":480,"height":480},"commonProps":{"hidden":true,"scrollable":false},"bindings":{"commonProps.hidden":"hidden"},"style":{"bgOpacity":0,"borderWidth":0,"padding":0},"children":[{"type":"button","id":"mode","placement":{"x":105,"y":126,"width":270,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"mode"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"开启儿童模式"}}]},{"type":"button","id":"volume_minus","placement":{"x":104,"y":187,"width":48,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"volume_minus"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"-"}}]},{"type":"label","id":"volume","placement":{"x":158,"y":192,"width":164,"height":38},"style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536","textAlign":"center"},"labelProps":{"text":"音量上限 30%"}},{"type":"button","id":"volume_plus","placement":{"x":328,"y":187,"width":48,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"volume_plus"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"+"}}]},{"type":"button","id":"limit_minus","placement":{"x":104,"y":246,"width":48,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"limit_minus"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"-"}}]},{"type":"label","id":"limit","placement":{"x":158,"y":251,"width":164,"height":38},"style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536","textAlign":"center"},"labelProps":{"text":"每日 30 分钟"}},{"type":"button","id":"limit_plus","placement":{"x":328,"y":246,"width":48,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"limit_plus"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"+"}}]},{"type":"button","id":"apps","placement":{"x":105,"y":306,"width":270,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"apps"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"允许使用的应用"}}]},{"type":"button","id":"time","placement":{"x":105,"y":363,"width":270,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"time"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"休息时间 / PIN"}}]},{"type":"button","id":"lock","placement":{"x":140,"y":420,"width":200,"height":36},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"lock"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"完成并锁定"}}]}]},{"type":"container","id":"apps","placement":{"x":0,"y":0,"width":480,"height":480},"commonProps":{"hidden":true,"scrollable":false},"bindings":{"commonProps.hidden":"hidden"},"style":{"bgOpacity":0,"borderWidth":0,"padding":0},"children":[{"type":"button","id":"book","placement":{"x":52,"y":135,"width":182,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"book"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"听书：允许"}}]},{"type":"button","id":"songs","placement":{"x":246,"y":135,"width":182,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"songs"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"儿歌：允许"}}]},{"type":"button","id":"radio","placement":{"x":52,"y":195,"width":182,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"radio"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"电台：关闭"}}]},{"type":"button","id":"channels","placement":{"x":246,"y":195,"width":182,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"channels"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"频道白名单 0"}}]},{"type":"button","id":"weather","placement":{"x":52,"y":255,"width":182,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"weather"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"天气：允许"}}]},{"type":"button","id":"clock","placement":{"x":246,"y":255,"width":182,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"clock"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"时钟：允许"}}]},{"type":"button","id":"assistant","placement":{"x":52,"y":315,"width":182,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"assistant"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"小马助手：关闭"}}]},{"type":"button","id":"learning","placement":{"x":246,"y":315,"width":182,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"learning"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"学习/迷宫：关闭"}}]},{"type":"button","id":"back_apps","placement":{"x":140,"y":412,"width":200,"height":36},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"back_apps"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"返回"}}]}]},{"type":"container","id":"times","placement":{"x":0,"y":0,"width":480,"height":480},"commonProps":{"hidden":true,"scrollable":false},"bindings":{"commonProps.hidden":"hidden"},"style":{"bgOpacity":0,"borderWidth":0,"padding":0},"children":[{"type":"button","id":"night","placement":{"x":105,"y":126,"width":270,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"night"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"夜间休息：关闭"}}]},{"type":"button","id":"start_minus","placement":{"x":104,"y":185,"width":48,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"start_minus"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"-"}}]},{"type":"label","id":"start","placement":{"x":158,"y":190,"width":164,"height":38},"style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536","textAlign":"center"},"labelProps":{"text":"开始 21:00"}},{"type":"button","id":"start_plus","placement":{"x":328,"y":185,"width":48,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"start_plus"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"+"}}]},{"type":"button","id":"end_minus","placement":{"x":104,"y":242,"width":48,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"end_minus"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"-"}}]},{"type":"label","id":"end","placement":{"x":158,"y":247,"width":164,"height":38},"style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536","textAlign":"center"},"labelProps":{"text":"结束 08:00"}},{"type":"button","id":"end_plus","placement":{"x":328,"y":242,"width":48,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"end_plus"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"+"}}]},{"type":"button","id":"reset","placement":{"x":120,"y":299,"width":240,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"reset"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"重置今日时长"}}]},{"type":"button","id":"change","placement":{"x":120,"y":354,"width":240,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"change"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"修改家长 PIN"}}]},{"type":"button","id":"back_time","placement":{"x":140,"y":413,"width":200,"height":36},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"back_time"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"返回"}}]}]},{"type":"container","id":"channels","placement":{"x":0,"y":0,"width":480,"height":480},"commonProps":{"hidden":true,"scrollable":false},"bindings":{"commonProps.hidden":"hidden"},"style":{"bgOpacity":0,"borderWidth":0,"padding":0},"children":[{"type":"button","id":"channel0","placement":{"x":70,"y":130,"width":340,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"channel0"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":""}}],"bindings":{"commonProps.hidden":"hidden"}},{"type":"button","id":"channel1","placement":{"x":70,"y":182,"width":340,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"channel1"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":""}}],"bindings":{"commonProps.hidden":"hidden"}},{"type":"button","id":"channel2","placement":{"x":70,"y":234,"width":340,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"channel2"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":""}}],"bindings":{"commonProps.hidden":"hidden"}},{"type":"button","id":"channel3","placement":{"x":70,"y":286,"width":340,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"channel3"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":""}}],"bindings":{"commonProps.hidden":"hidden"}},{"type":"label","id":"live_notice","placement":{"x":55,"y":342,"width":370,"height":36},"style":{"font":"${font.zh_CN}","fontSize":17,"textColor":"#674536","textAlign":"center"},"labelProps":{"text":"直播可能插播节目或宣传"}},{"type":"button","id":"back_channels","placement":{"x":70,"y":400,"width":158,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"back_channels"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"返回"}}]},{"type":"button","id":"channel_next","placement":{"x":252,"y":400,"width":158,"height":44},"style":{"bgColor":"#f5d7b9","radius":14,"borderWidth":1,"borderColor":"#b88a69","padding":0},"events":[{"type":"clicked","action":"channel_next"}],"layout":{"type":"flex","mainAlign":"center","crossAlign":"center"},"children":[{"type":"label","id":"label","style":{"font":"${font.zh_CN}","fontSize":21,"textColor":"#674536"},"labelProps":{"text":"下一页"}}]}]},{"type":"label","id":"title","placement":{"x":120,"y":36,"width":240,"height":40},"style":{"font":"${font.zh_CN}","fontSize":28,"textColor":"#674536","textAlign":"center"},"labelProps":{"text":"儿童模式"}},{"type":"label","id":"status","placement":{"x":65,"y":84,"width":350,"height":40},"style":{"font":"${font.zh_CN}","fontSize":17,"textColor":"#674536","textAlign":"center"},"labelProps":{"text":"正在读取设置"}}]}
+{
+  "type": "viewScreen",
+  "id": "main",
+  "commonProps": {
+    "scrollable": false
+  },
+  "style": {
+    "bgColor": "#101714",
+    "padding": 0
+  },
+  "children": [
+    {
+      "type": "container",
+      "id": "gate",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false,
+        "hidden": false
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "style": {
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "dots",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 95,
+            "width": 428,
+            "height": 46
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "labelProps": {
+            "text": "------"
+          },
+          "style": {
+            "fontSize": 27,
+            "textColor": "#D5F588",
+            "textAlign": "center"
+          },
+          "bindings": {
+            "labelProps.text": "text"
+          }
+        },
+        {
+          "type": "button",
+          "id": "digit1",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 150,
+            "width": 138,
+            "height": 64
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 15,
+                "width": 130,
+                "height": 34
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "1"
+              },
+              "style": {
+                "fontSize": 24,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "digit1"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "digit2",
+          "placement": {
+            "mode": "absolute",
+            "x": 171,
+            "y": 150,
+            "width": 138,
+            "height": 64
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 15,
+                "width": 130,
+                "height": 34
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "2"
+              },
+              "style": {
+                "fontSize": 24,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "digit2"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "digit3",
+          "placement": {
+            "mode": "absolute",
+            "x": 316,
+            "y": 150,
+            "width": 138,
+            "height": 64
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 15,
+                "width": 130,
+                "height": 34
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "3"
+              },
+              "style": {
+                "fontSize": 24,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "digit3"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "digit4",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 222,
+            "width": 138,
+            "height": 64
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 15,
+                "width": 130,
+                "height": 34
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "4"
+              },
+              "style": {
+                "fontSize": 24,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "digit4"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "digit5",
+          "placement": {
+            "mode": "absolute",
+            "x": 171,
+            "y": 222,
+            "width": 138,
+            "height": 64
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 15,
+                "width": 130,
+                "height": 34
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "5"
+              },
+              "style": {
+                "fontSize": 24,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "digit5"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "digit6",
+          "placement": {
+            "mode": "absolute",
+            "x": 316,
+            "y": 222,
+            "width": 138,
+            "height": 64
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 15,
+                "width": 130,
+                "height": 34
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "6"
+              },
+              "style": {
+                "fontSize": 24,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "digit6"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "digit7",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 294,
+            "width": 138,
+            "height": 64
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 15,
+                "width": 130,
+                "height": 34
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "7"
+              },
+              "style": {
+                "fontSize": 24,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "digit7"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "digit8",
+          "placement": {
+            "mode": "absolute",
+            "x": 171,
+            "y": 294,
+            "width": 138,
+            "height": 64
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 15,
+                "width": 130,
+                "height": 34
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "8"
+              },
+              "style": {
+                "fontSize": 24,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "digit8"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "digit9",
+          "placement": {
+            "mode": "absolute",
+            "x": 316,
+            "y": 294,
+            "width": 138,
+            "height": 64
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 15,
+                "width": 130,
+                "height": 34
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "9"
+              },
+              "style": {
+                "fontSize": 24,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "digit9"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "erase",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 366,
+            "width": 138,
+            "height": 64
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 15,
+                "width": 130,
+                "height": 34
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "删除"
+              },
+              "style": {
+                "fontSize": 24,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "erase"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "digit0",
+          "placement": {
+            "mode": "absolute",
+            "x": 171,
+            "y": 366,
+            "width": 138,
+            "height": 64
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 15,
+                "width": 130,
+                "height": 34
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "0"
+              },
+              "style": {
+                "fontSize": 24,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "digit0"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "enter",
+          "placement": {
+            "mode": "absolute",
+            "x": 316,
+            "y": 366,
+            "width": 138,
+            "height": 64
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#D5F588",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 15,
+                "width": 130,
+                "height": 34
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "确定"
+              },
+              "style": {
+                "fontSize": 24,
+                "textColor": "#172411",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "enter"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "control",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false,
+        "hidden": true
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "style": {
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "summary",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 88,
+            "width": 428,
+            "height": 100
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 16,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "caption",
+              "placement": {
+                "mode": "absolute",
+                "x": 14,
+                "y": 15,
+                "width": 212,
+                "height": 31
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "儿童模式"
+              },
+              "style": {
+                "fontSize": 20,
+                "textColor": "#F3F6ED",
+                "textAlign": "left"
+              }
+            },
+            {
+              "type": "label",
+              "id": "usage",
+              "placement": {
+                "mode": "absolute",
+                "x": 14,
+                "y": 57,
+                "width": 398,
+                "height": 23
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "今日还可使用"
+              },
+              "style": {
+                "fontSize": 16,
+                "textColor": "#A7B2A9",
+                "textAlign": "left"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            },
+            {
+              "type": "container",
+              "id": "track",
+              "placement": {
+                "mode": "absolute",
+                "x": 14,
+                "y": 83,
+                "width": 398,
+                "height": 6
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "bgColor": "#304036",
+                "borderColor": "#304036",
+                "borderWidth": 1,
+                "radius": 4,
+                "padding": 0
+              },
+              "children": [
+                {
+                  "type": "container",
+                  "id": "fill",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 6
+                  },
+                  "commonProps": {
+                    "scrollable": false,
+                    "clickable": false
+                  },
+                  "style": {
+                    "bgColor": "#D5F588",
+                    "borderColor": "#304036",
+                    "borderWidth": 0,
+                    "radius": 4,
+                    "padding": 0
+                  },
+                  "children": [],
+                  "bindings": {
+                    "placement.width": "width"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "mode",
+          "placement": {
+            "mode": "absolute",
+            "x": 332,
+            "y": 101,
+            "width": 104,
+            "height": 39
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#273721",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 5,
+                "width": 96,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "已开启"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#D5F588",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text",
+                "style.textColor": "ink"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "mode"
+            }
+          ],
+          "bindings": {
+            "style.bgColor": "fill"
+          }
+        },
+        {
+          "type": "container",
+          "id": "cap",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 197,
+            "width": 208,
+            "height": 91
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 16,
+            "padding": 0
+          },
+          "children": []
+        },
+        {
+          "type": "label",
+          "id": "cap_caption",
+          "placement": {
+            "mode": "absolute",
+            "x": 39,
+            "y": 205,
+            "width": 179,
+            "height": 24
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "labelProps": {
+            "text": "音量上限"
+          },
+          "style": {
+            "fontSize": 16,
+            "textColor": "#A7B2A9",
+            "textAlign": "left"
+          }
+        },
+        {
+          "type": "button",
+          "id": "volume_minus",
+          "placement": {
+            "mode": "absolute",
+            "x": 38,
+            "y": 233,
+            "width": 44,
+            "height": 46
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#16221A",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 7,
+                "width": 36,
+                "height": 32
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "−"
+              },
+              "style": {
+                "fontSize": 22,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "volume_minus"
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "volume",
+          "placement": {
+            "mode": "absolute",
+            "x": 85,
+            "y": 239,
+            "width": 90,
+            "height": 32
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "labelProps": {
+            "text": "30%"
+          },
+          "style": {
+            "fontSize": 19,
+            "textColor": "#F3F6ED",
+            "textAlign": "center"
+          },
+          "bindings": {
+            "labelProps.text": "text"
+          }
+        },
+        {
+          "type": "button",
+          "id": "volume_plus",
+          "placement": {
+            "mode": "absolute",
+            "x": 178,
+            "y": 233,
+            "width": 44,
+            "height": 46
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#16221A",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 7,
+                "width": 36,
+                "height": 32
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "＋"
+              },
+              "style": {
+                "fontSize": 22,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "volume_plus"
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "duration",
+          "placement": {
+            "mode": "absolute",
+            "x": 246,
+            "y": 197,
+            "width": 208,
+            "height": 91
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 16,
+            "padding": 0
+          },
+          "children": []
+        },
+        {
+          "type": "label",
+          "id": "duration_caption",
+          "placement": {
+            "mode": "absolute",
+            "x": 259,
+            "y": 205,
+            "width": 179,
+            "height": 24
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "labelProps": {
+            "text": "每日时长"
+          },
+          "style": {
+            "fontSize": 16,
+            "textColor": "#A7B2A9",
+            "textAlign": "left"
+          }
+        },
+        {
+          "type": "button",
+          "id": "limit_minus",
+          "placement": {
+            "mode": "absolute",
+            "x": 258,
+            "y": 233,
+            "width": 44,
+            "height": 46
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#16221A",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 7,
+                "width": 36,
+                "height": 32
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "−"
+              },
+              "style": {
+                "fontSize": 22,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "limit_minus"
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "limit",
+          "placement": {
+            "mode": "absolute",
+            "x": 305,
+            "y": 239,
+            "width": 90,
+            "height": 32
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "labelProps": {
+            "text": "30 分钟"
+          },
+          "style": {
+            "fontSize": 19,
+            "textColor": "#F3F6ED",
+            "textAlign": "center"
+          },
+          "bindings": {
+            "labelProps.text": "text"
+          }
+        },
+        {
+          "type": "button",
+          "id": "limit_plus",
+          "placement": {
+            "mode": "absolute",
+            "x": 398,
+            "y": 233,
+            "width": 44,
+            "height": 46
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#16221A",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 7,
+                "width": 36,
+                "height": 32
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "＋"
+              },
+              "style": {
+                "fontSize": 22,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "limit_plus"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "apps",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 298,
+            "width": 428,
+            "height": 45
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 8,
+                "width": 420,
+                "height": 29
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "允许使用的应用  ›"
+              },
+              "style": {
+                "fontSize": 19,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "apps"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "time",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 352,
+            "width": 428,
+            "height": 45
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 8,
+                "width": 420,
+                "height": 29
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "休息时间与 PIN  ›"
+              },
+              "style": {
+                "fontSize": 19,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "time"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "lock",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 408,
+            "width": 428,
+            "height": 48
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#D5F588",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 9,
+                "width": 420,
+                "height": 30
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "完成并锁定"
+              },
+              "style": {
+                "fontSize": 20,
+                "textColor": "#172411",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "lock"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "apps",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false,
+        "hidden": true
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "style": {
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "button",
+          "id": "book",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 100,
+            "width": 208,
+            "height": 65
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 18,
+                "width": 200,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "听书"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "book"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "songs",
+          "placement": {
+            "mode": "absolute",
+            "x": 246,
+            "y": 100,
+            "width": 208,
+            "height": 65
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 18,
+                "width": 200,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "儿歌"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "songs"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "radio",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 173,
+            "width": 208,
+            "height": 65
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 18,
+                "width": 200,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "电台"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "radio"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "channels",
+          "placement": {
+            "mode": "absolute",
+            "x": 246,
+            "y": 173,
+            "width": 208,
+            "height": 65
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 18,
+                "width": 200,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "频道白名单"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "channels"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "weather",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 246,
+            "width": 208,
+            "height": 65
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 18,
+                "width": 200,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "天气"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "weather"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "clock",
+          "placement": {
+            "mode": "absolute",
+            "x": 246,
+            "y": 246,
+            "width": 208,
+            "height": 65
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 18,
+                "width": 200,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "时钟"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "clock"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "assistant",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 319,
+            "width": 208,
+            "height": 65
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 18,
+                "width": 200,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "小马助手"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "assistant"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "learning",
+          "placement": {
+            "mode": "absolute",
+            "x": 246,
+            "y": 319,
+            "width": 208,
+            "height": 65
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 18,
+                "width": 200,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "学习与迷宫"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "learning"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "back_apps",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 406,
+            "width": 428,
+            "height": 50
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 11,
+                "width": 420,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "返回"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "back_apps"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "times",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false,
+        "hidden": true
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "style": {
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "button",
+          "id": "night",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 101,
+            "width": 428,
+            "height": 51
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#273721",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 11,
+                "width": 420,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "夜间休息"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#D5F588",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "night"
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "start_card",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 163,
+            "width": 208,
+            "height": 91
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 16,
+            "padding": 0
+          },
+          "children": []
+        },
+        {
+          "type": "label",
+          "id": "start_card_caption",
+          "placement": {
+            "mode": "absolute",
+            "x": 39,
+            "y": 171,
+            "width": 179,
+            "height": 24
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "labelProps": {
+            "text": "开始时间"
+          },
+          "style": {
+            "fontSize": 16,
+            "textColor": "#A7B2A9",
+            "textAlign": "left"
+          }
+        },
+        {
+          "type": "button",
+          "id": "start_minus",
+          "placement": {
+            "mode": "absolute",
+            "x": 38,
+            "y": 199,
+            "width": 44,
+            "height": 46
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#16221A",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 7,
+                "width": 36,
+                "height": 32
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "−"
+              },
+              "style": {
+                "fontSize": 22,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "start_minus"
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "start",
+          "placement": {
+            "mode": "absolute",
+            "x": 85,
+            "y": 205,
+            "width": 90,
+            "height": 32
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "labelProps": {
+            "text": "21:00"
+          },
+          "style": {
+            "fontSize": 19,
+            "textColor": "#F3F6ED",
+            "textAlign": "center"
+          },
+          "bindings": {
+            "labelProps.text": "text"
+          }
+        },
+        {
+          "type": "button",
+          "id": "start_plus",
+          "placement": {
+            "mode": "absolute",
+            "x": 178,
+            "y": 199,
+            "width": 44,
+            "height": 46
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#16221A",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 7,
+                "width": 36,
+                "height": 32
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "＋"
+              },
+              "style": {
+                "fontSize": 22,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "start_plus"
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "end_card",
+          "placement": {
+            "mode": "absolute",
+            "x": 246,
+            "y": 163,
+            "width": 208,
+            "height": 91
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": false
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 16,
+            "padding": 0
+          },
+          "children": []
+        },
+        {
+          "type": "label",
+          "id": "end_card_caption",
+          "placement": {
+            "mode": "absolute",
+            "x": 259,
+            "y": 171,
+            "width": 179,
+            "height": 24
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "labelProps": {
+            "text": "结束时间"
+          },
+          "style": {
+            "fontSize": 16,
+            "textColor": "#A7B2A9",
+            "textAlign": "left"
+          }
+        },
+        {
+          "type": "button",
+          "id": "end_minus",
+          "placement": {
+            "mode": "absolute",
+            "x": 258,
+            "y": 199,
+            "width": 44,
+            "height": 46
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#16221A",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 7,
+                "width": 36,
+                "height": 32
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "−"
+              },
+              "style": {
+                "fontSize": 22,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "end_minus"
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "end",
+          "placement": {
+            "mode": "absolute",
+            "x": 305,
+            "y": 205,
+            "width": 90,
+            "height": 32
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "labelProps": {
+            "text": "08:00"
+          },
+          "style": {
+            "fontSize": 19,
+            "textColor": "#F3F6ED",
+            "textAlign": "center"
+          },
+          "bindings": {
+            "labelProps.text": "text"
+          }
+        },
+        {
+          "type": "button",
+          "id": "end_plus",
+          "placement": {
+            "mode": "absolute",
+            "x": 398,
+            "y": 199,
+            "width": 44,
+            "height": 46
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#16221A",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 7,
+                "width": 36,
+                "height": 32
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "＋"
+              },
+              "style": {
+                "fontSize": 22,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "end_plus"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "reset",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 269,
+            "width": 428,
+            "height": 49
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 10,
+                "width": 420,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "重置今日时长"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "reset"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "change",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 329,
+            "width": 428,
+            "height": 49
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 10,
+                "width": 420,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "修改家长 PIN"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "change"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "back_time",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 406,
+            "width": 428,
+            "height": 50
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 11,
+                "width": 420,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "返回"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "back_time"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "channels",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false,
+        "hidden": true
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "style": {
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "button",
+          "id": "channel0",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 91,
+            "width": 428,
+            "height": 53
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 12,
+                "width": 420,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": ""
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "channel0"
+            }
+          ],
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "button",
+          "id": "channel1",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 152,
+            "width": 428,
+            "height": 53
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 12,
+                "width": 420,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": ""
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "channel1"
+            }
+          ],
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "button",
+          "id": "channel2",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 213,
+            "width": 428,
+            "height": 53
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 12,
+                "width": 420,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": ""
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "channel2"
+            }
+          ],
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "button",
+          "id": "channel3",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 274,
+            "width": 428,
+            "height": 53
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 12,
+                "width": 420,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": ""
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "channel3"
+            }
+          ],
+          "bindings": {
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "label",
+          "id": "live_notice",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 343,
+            "width": 428,
+            "height": 32
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "labelProps": {
+            "text": "直播可能插播节目或宣传"
+          },
+          "style": {
+            "fontSize": 16,
+            "textColor": "#A7B2A9",
+            "textAlign": "left"
+          }
+        },
+        {
+          "type": "button",
+          "id": "back_channels",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 406,
+            "width": 206,
+            "height": 50
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 11,
+                "width": 198,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "返回"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "back_channels"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "channel_next",
+          "placement": {
+            "mode": "absolute",
+            "x": 246,
+            "y": 406,
+            "width": 208,
+            "height": 50
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 13,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 4,
+                "y": 11,
+                "width": 200,
+                "height": 28
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "labelProps": {
+                "text": "下一页"
+              },
+              "style": {
+                "fontSize": 18,
+                "textColor": "#F3F6ED",
+                "textAlign": "center"
+              },
+              "bindings": {
+                "labelProps.text": "text"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "channel_next"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "label",
+      "id": "title",
+      "placement": {
+        "mode": "absolute",
+        "x": 26,
+        "y": 16,
+        "width": 428,
+        "height": 38
+      },
+      "commonProps": {
+        "clickable": false
+      },
+      "labelProps": {
+        "text": "家长验证"
+      },
+      "style": {
+        "fontSize": 28,
+        "textColor": "#F3F6ED",
+        "textAlign": "left"
+      },
+      "bindings": {
+        "labelProps.text": "text"
+      }
+    },
+    {
+      "type": "label",
+      "id": "status",
+      "placement": {
+        "mode": "absolute",
+        "x": 26,
+        "y": 56,
+        "width": 428,
+        "height": 31
+      },
+      "commonProps": {
+        "clickable": false
+      },
+      "labelProps": {
+        "text": "请由家长操作"
+      },
+      "style": {
+        "fontSize": 16,
+        "textColor": "#A7B2A9",
+        "textAlign": "left"
+      },
+      "bindings": {
+        "labelProps.text": "text"
+      }
+    }
+  ]
+}

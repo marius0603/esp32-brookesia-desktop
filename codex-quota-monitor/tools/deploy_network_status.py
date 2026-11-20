@@ -23,11 +23,13 @@ APPS = {
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", default="COM5")
+    parser.add_argument("--weather-only", action="store_true", help="Update only Weather resources")
     args = parser.parse_args()
+    app_files = {"local.weather": APPS["local.weather"]} if args.weather_only else APPS
     versions = json.loads((ROOT / "versions.json").read_bytes())
     checksums = json.loads((ROOT / "packages/SHA256.json").read_bytes())
     payloads = {}
-    for app_id, names in APPS.items():
+    for app_id, names in app_files.items():
         version = versions["apps"][app_id]
         relative = f"packages/apps/{app_id}.debug.{version}.bpk"
         path = ROOT / relative
@@ -58,7 +60,7 @@ def main():
         deadline = time.monotonic() + 90
         while True:
             apps = {a["manifest"]["id"]: a for a in call("SystemCore", "ListApps")}
-            if APPS.keys() <= apps.keys():
+            if app_files.keys() <= apps.keys():
                 break
             if time.monotonic() >= deadline:
                 raise TimeoutError("Waiting for SD applications to become available")

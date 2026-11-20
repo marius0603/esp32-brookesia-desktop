@@ -1,0 +1,36 @@
+diff --git a/system/brookesia_system_core/src/app/manager.cpp b/system/brookesia_system_core/src/app/manager.cpp
+index ffb20aa..a68e746 100644
+--- a/system/brookesia_system_core/src/app/manager.cpp
++++ b/system/brookesia_system_core/src/app/manager.cpp
+@@ -1173,7 +1173,30 @@ std::expected<void, std::string> System::resume_app(AppId app_id)
+ 
+ std::expected<void, std::string> System::request_close_app(AppId app_id)
+ {
+-    return stop_app(app_id);
++    const auto owner = get_current_runtime_app_owner();
++    if (!owner || *owner != app_id) {
++        return stop_app(app_id);
++    }
++
++    // The input and lifecycle groups share the callback gate. Always enqueue
++    // a self-close so the script can return before its runtime is unloaded.
++    if (!impl_->task_scheduler_ || !impl_->task_scheduler_->is_running()) {
++        return std::unexpected("App close scheduler is unavailable");
++    }
++    auto record = impl_->get_record(app_id);
++    if (!record) return std::unexpected(record.error());
++    const auto runtime_id = (*record)->runtime_app_id;
++    auto close = [this, app_id, runtime_id]() {
++        auto current = impl_->get_record(app_id);
++        if (!current || (*current)->runtime_app_id != runtime_id) return;
++        if (auto result = stop_app(app_id); !result) {
++            BROOKESIA_LOGW("Failed to close runtime app: id(%1%), error(%2%)", app_id, result.error());
++        }
++    };
++    if (!impl_->task_scheduler_->post_delayed(std::move(close), 0, nullptr, SYSTEM_APP_TASK_GROUP)) {
++        return std::unexpected("Failed to queue runtime app close");
++    }
++    return {};
+ }
+ 
+ std::expected<void, std::string> System::show_app_loading(AppId app_id)

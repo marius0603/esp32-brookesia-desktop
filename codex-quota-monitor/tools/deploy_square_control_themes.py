@@ -11,6 +11,8 @@ from maintenance_client import SharedPowerDiagnosticClient
 
 ROOT = Path(__file__).resolve().parents[2]
 ASSETS = ROOT / 'packages/resources/square-control-themes'
+APP_UI = ROOT / 'packages/resources/square-apps-ui'
+FILES_APP = '/littlefs/apps/brookesia.general.files/res'
 FONT = ROOT / 'platform/super_s3_216/littlefs/system/fonts/desktop-theme-extra.ttf'
 SHELL = '/littlefs/system/super/shell'
 CONTROLS = '/littlefs/apps/brookesia.general.settings/res'
@@ -21,6 +23,7 @@ IMAGE_INDEX = SHELL + '/images/index.json'
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', default='COM5')
+    parser.add_argument('--apps-ui-only', action='store_true', help='Stage enlarged desktop and Files resources only')
     args = parser.parse_args()
     stamp = 'square-control-themes-' + str(time.time_ns())
     stage = '/sdcard/themes/' + stamp
@@ -34,8 +37,11 @@ def main():
             return call('Storage', method, **params)
 
         current = call('DeviceModes', 'GetState')
-        if current['firmware_version'] not in ('0.8.3-s3.84', '0.8.3-s3.85') or current['screen_locked']:
+        if current['firmware_version'] not in ('0.8.3-s3.84', '0.8.3-s3.85', '0.8.3-s3.86') or current['screen_locked']:
             raise SystemExit('Start the supported firmware and unlock the screen before installing these resources')
+        app_ui = current['firmware_version'] == '0.8.3-s3.86'
+        if args.apps_ui_only and not app_ui:
+            raise SystemExit('The Files layout requires firmware s3.86')
         local = Path(temp)
         originals = []
         files = {}
@@ -48,24 +54,33 @@ def main():
             path.write_bytes((json.dumps(doc, ensure_ascii=False, separators=(',', ':')) + '\n').encode())
             return path
 
-        assets = json.loads((ASSETS / 'shell/images/square-images.json').read_bytes())['images']
-        image_index = read_json(IMAGE_INDEX)
-        image_index['images'] = [item for item in image_index['images']
-                                 if not item['id'].startswith('square.')] + assets
-        for name in sorted({item['src'] for item in assets}):
-            files[SHELL + '/images/' + name] = ASSETS / 'shell/images' / name
-        fonts = read_json(FONT_INDEX)
-        if not any(entry['id'] == 'desktop_theme' for entry in fonts['fonts']):
-            fonts['fonts'].append({'id': 'desktop_theme', 'kind': 'file', 'src': FONT.name,
-                                   'languages': ['en', 'zh_CN'], 'fallbacks': ['${font.zh_CN}']})
-            files[FONT_INDEX] = modified('font-index.json', fonts)
-        files['/littlefs/system/fonts/' + FONT.name] = FONT
-        files[IMAGE_INDEX] = modified('image-index.json', image_index)
-        for source in ('shell/screens/app_launcher.json', 'shell/templates/launcher_app_button.json',
-                       'control/screens/settings_home.json', 'control/screens/display.json',
-                       'control/i18n/en.json', 'control/i18n/zh_CN.json'):
-            group, relative = source.split('/', 1)
-            files[(SHELL if group == 'shell' else CONTROLS) + '/' + relative] = ASSETS / source
+        if not args.apps_ui_only:
+            assets = json.loads((ASSETS / 'shell/images/square-images.json').read_bytes())['images']
+            image_index = read_json(IMAGE_INDEX)
+            image_index['images'] = [item for item in image_index['images']
+                                     if not item['id'].startswith('square.')] + assets
+            for name in sorted({item['src'] for item in assets}):
+                files[SHELL + '/images/' + name] = ASSETS / 'shell/images' / name
+            fonts = read_json(FONT_INDEX)
+            if not any(entry['id'] == 'desktop_theme' for entry in fonts['fonts']):
+                fonts['fonts'].append({'id': 'desktop_theme', 'kind': 'file', 'src': FONT.name,
+                                       'languages': ['en', 'zh_CN'], 'fallbacks': ['${font.zh_CN}']})
+                files[FONT_INDEX] = modified('font-index.json', fonts)
+            files['/littlefs/system/fonts/' + FONT.name] = FONT
+            files[IMAGE_INDEX] = modified('image-index.json', image_index)
+            for source in ('shell/screens/app_launcher.json', 'shell/templates/launcher_app_button.json',
+                           'control/screens/settings_home.json', 'control/screens/display.json',
+                           'control/i18n/en.json', 'control/i18n/zh_CN.json'):
+                group, relative = source.split('/', 1)
+                files[(SHELL if group == 'shell' else CONTROLS) + '/' + relative] = ASSETS / source
+
+        if app_ui:
+            for path in sorted(APP_UI.rglob('*')):
+                if not path.is_file():
+                    continue
+                group, relative = path.relative_to(APP_UI).as_posix().split('/', 1)
+                target = (SHELL if group == 'shell' else FILES_APP) + '/' + relative
+                files[target] = path
 
         capacity = storage('GetFileSystemCapacity', MountPoint='/littlefs')
         needed = sum(path.stat().st_size for path in files.values())

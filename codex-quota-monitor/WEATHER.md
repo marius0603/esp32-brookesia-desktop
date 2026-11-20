@@ -46,8 +46,7 @@ python codex-quota-monitor/tools/deploy_weather_solar.py --port COM5
 不循环重绘整个页面或重复解码整张图片。切到后台后停止动画定时器。
 纹理、图标由 tools/generate_weather_assets.py 和源资源中的代码绘制流程生成。
 所有 24 小时卡片同时使用真实天气码、温度和当地小时；首个卡片为当前观测时刻之后
-最近的整点。网络出口定位仅在 weather-settings.json 的 mode 为 auto 时启用，
-结果保留“网络出口推测”来源，失败回退上海；默认 shanghai 模式不请求定位服务。
+最近的整点。0.2.13 在总览右上角提供上海和青岛两个选项，城市文字与「天气」标题同为 28 px。旧自动定位设置迁移到默认上海，选中城市写入 weather-settings.json，两座城市的缓存独立保存。
 
 ## 构建与安装
 

@@ -1,0 +1,196 @@
+diff --git a/app/brookesia_app_files/src/app/lifecycle.ipp b/app/brookesia_app_files/src/app/lifecycle.ipp
+index 1bdaef0..cc7a2b1 100644
+--- a/app/brookesia_app_files/src/app/lifecycle.ipp
++++ b/app/brookesia_app_files/src/app/lifecycle.ipp
+@@ -61,6 +61,12 @@ std::expected<void, std::string> FileManagerApp::on_start(system::core::AppConte
+     bind_storage_service();
+     refresh_volume_capacities(context);
+     current_volume_index_.reset();
++    if (context.gui().get_view_frame(VOLUME_TABS) && !volumes_.empty()) {
++        const auto preferred = std::find_if(volumes_.begin(), volumes_.end(), [](const auto &entry) {
++            return entry.volume.root_path == "/sdcard";
++        });
++        current_volume_index_ = preferred == volumes_.end() ? 0 : preferred - volumes_.begin();
++    }
+     current_directory_.clear();
+     suppressed_entry_click_path_.reset();
+     current_page_ = Page::Browser;
+@@ -116,11 +122,22 @@ std::expected<void, std::string> FileManagerApp::on_action(
+         }
+         return navigate_back(context);
+     }
+-    if (action == ACTION_RENAME) {
++    if (action == ACTION_INTERNAL || action == ACTION_SD) {
++        const auto root = action == ACTION_SD ? "/sdcard" : "/littlefs";
++        const auto volume = std::find_if(volumes_.begin(), volumes_.end(), [root](const auto &entry) {
++            return entry.volume.root_path == root;
++        });
++        if (volume == volumes_.end()) return {};
++        selected_entry_.reset();
++        current_volume_index_ = volume - volumes_.begin();
++        current_directory_.clear();
++        return refresh_entries(context);
++    }
++    if (action == ACTION_RENAME || action == ACTION_INLINE_RENAME) {
+         request_rename(context);
+         return {};
+     }
+-    if (action == ACTION_DELETE) {
++    if (action == ACTION_DELETE || action == ACTION_INLINE_DELETE) {
+         request_delete(context);
+         return {};
+     }
+@@ -163,6 +180,13 @@ std::expected<void, std::string> FileManagerApp::subscribe_actions(system::core:
+         }
+     }
+ 
++    if (context.gui().get_view_frame(VOLUME_TABS)) {
++        for (const auto *action : {ACTION_INTERNAL, ACTION_SD, ACTION_INLINE_RENAME, ACTION_INLINE_DELETE}) {
++            auto result = context.gui().subscribe_action(action);
++            if (!result) return result;
++        }
++    }
++
+     entry_click_connection_ = context.gui().subscribe_action(ACTION_ENTRY_CLICK, [this](const gui::Event & event) {
+         if (!context_) {
+             return;
+diff --git a/app/brookesia_app_files/src/files_app.cpp b/app/brookesia_app_files/src/files_app.cpp
+index c6740d3..8642337 100644
+--- a/app/brookesia_app_files/src/files_app.cpp
++++ b/app/brookesia_app_files/src/files_app.cpp
+@@ -40,6 +40,12 @@ static constexpr const char *ACTION_ENTRY_CLICK = "files.entry.click";
+ static constexpr const char *ACTION_ENTRY_LONG = "files.entry.long";
+ static constexpr const char *ACTION_RENAME = "files.rename";
+ static constexpr const char *ACTION_DELETE = "files.delete";
++static constexpr const char *ACTION_INTERNAL = "files.volume.internal";
++static constexpr const char *ACTION_SD = "files.volume.sd";
++static constexpr const char *ACTION_INLINE_RENAME = "files.inline.rename";
++static constexpr const char *ACTION_INLINE_DELETE = "files.inline.delete";
++static constexpr const char *VOLUME_TABS = "/browser/page/volumes";
++static constexpr const char *INLINE_OPERATIONS = "/browser/page/actions";
+ static constexpr const char *ENTRY_TEMPLATE_ID = "file_entry";
+ static constexpr const char *LIST_CONTAINER_PATH = "/browser/page/list";
+ static constexpr const char *LIST_PATH = "/browser/page/list/items";
+diff --git a/app/brookesia_app_files/src/screen/browser.ipp b/app/brookesia_app_files/src/screen/browser.ipp
+index 71e8ef2..3f08e4b 100644
+--- a/app/brookesia_app_files/src/screen/browser.ipp
++++ b/app/brookesia_app_files/src/screen/browser.ipp
+@@ -97,27 +97,62 @@ std::expected<void, std::string> FileManagerApp::refresh_ui(system::core::AppCon
+         BROOKESIA_LOGW("Failed to refresh Files i18n: %1%", i18n_result.error());
+     }
+     std::vector<gui::BindingValueUpdate> updates;
++    const bool square = context.gui().get_view_frame(VOLUME_TABS).has_value();
++    const auto root = current_root();
++    const bool sd = root == "/sdcard";
++    const auto volume = find_current_volume();
++    const auto location = current_directory_.empty() ? tr("root_directory") : current_directory_.generic_string();
++    if (square) {
++        const std::string tabs = VOLUME_TABS;
++        const std::string actions = INLINE_OPERATIONS;
++        for (const auto &[tab, path] : {std::pair{"internal", "/littlefs"}, std::pair{"sd", "/sdcard"}}) {
++            const bool present = std::any_of(volumes_.begin(), volumes_.end(), [path](const auto &entry) {
++                return entry.volume.root_path == path;
++            });
++            const bool chosen = root == path;
++            const auto view = tabs + "/" + tab;
++            add_binding(updates, view, "commonProps.disabled", bool_text(!present));
++            add_binding(updates, view, "style.bgColor", chosen ? "#273721" : "#1B271F");
++            add_binding(updates, view + "/label", "style.textColor", present ? (chosen ? "#D5F588" : "#A7B2A9") : "#77877B");
++            add_binding(updates, view + "/label", "labelProps.text", tr(tab == std::string_view("sd") ? "sd_card" : "internal"));
++        }
++        const auto selected = can_operate_selected();
++        add_binding(updates, actions + "/note", "labelProps.text",
++                    selected ? tr("one_selected") : tr("selection_hint"));
++        for (auto action : {"rename", "delete"}) {
++            const auto button = actions + "/" + action;
++            add_binding(updates, button, "commonProps.disabled", bool_text(!selected));
++            add_binding(updates, button, "style.opacity", selected ? "255" : "108");
++            add_binding(updates, button + "/label", "labelProps.text", tr(action));
++        }
++    }
+     add_binding(
+         updates,
+         HEADER_TITLE_PATH,
+         "labelProps.text",
+-        current_volume_index_ ? volumes_[*current_volume_index_].display_name : tr("storage")
++        square ? tr("app_name") : volume ? volumes_[*volume].display_name : tr("storage")
+     );
+     add_binding(
+         updates,
+         HEADER_SUBTITLE_PATH,
+         "labelProps.text",
+-        current_volume_index_ ? ("/" + current_directory_.generic_string()) : tr("volumes_subtitle")
++        square && volume ? (sd ? tr("sd_card") : volumes_[*volume].display_name) + " / " + location :
++        volume ? ("/" + current_directory_.generic_string()) : tr("volumes_subtitle")
+     );
+     add_binding(
+         updates,
+         HEADER_COUNT_PATH,
+         "labelProps.text",
++        square && volume && !volumes_[*volume].capacity_text.empty() ? volumes_[*volume].capacity_text :
+         item_count_text(entries_.size(), tr("empty"), tr("items_suffix"))
+     );
+ 
+     for (const auto &entry : entries_) {
+         add_binding(updates, entry.view_path, "commonProps.hidden", "false");
++        if (square) {
++            const bool selected = selected_entry_ && selected_entry_->path == entry.path;
++            add_binding(updates, entry.view_path + "/body", "style.bgColor", selected ? "#273721" : "#1B271F");
++        }
+         add_binding(updates, join_path(entry.view_path, "body/icon"), "imageProps.src", entry.icon);
+         add_binding(updates, join_path(entry.view_path, "body/content/title"), "labelProps.text", entry.name);
+         add_binding(updates, join_path(entry.view_path, "body/content/detail"), "labelProps.text", entry.detail);
+@@ -135,6 +170,9 @@ std::expected<void, std::string> FileManagerApp::refresh_ui(system::core::AppCon
+ 
+ std::expected<void, std::string> FileManagerApp::navigate_back(system::core::AppContext &context)
+ {
++    if (selected_entry_ && context.gui().get_view_frame(INLINE_OPERATIONS)) {
++        return hide_operations(context);
++    }
+     if (!current_volume_index_) {
+         return context.system_service().request_close_app(context.app_id());
+     }
+diff --git a/app/brookesia_app_files/src/screen/operations.ipp b/app/brookesia_app_files/src/screen/operations.ipp
+index 7c4bfb4..7faff31 100644
+--- a/app/brookesia_app_files/src/screen/operations.ipp
++++ b/app/brookesia_app_files/src/screen/operations.ipp
+@@ -9,6 +9,11 @@ std::expected<void, std::string> FileManagerApp::show_operations(
+     const Entry &entry
+ )
+ {
++    if (context.gui().get_view_frame(INLINE_OPERATIONS)) {
++        if (selected_entry_ && selected_entry_->path == entry.path) selected_entry_.reset();
++        else selected_entry_ = entry;
++        return refresh_ui(context);
++    }
+     selected_entry_ = entry;
+     BROOKESIA_LOGI("Show File Manager operations: path(%1%)", entry.path.generic_string());
+     std::vector<gui::BindingValueUpdate> updates;
+@@ -44,6 +49,7 @@ std::expected<void, std::string> FileManagerApp::show_operations(
+ std::expected<void, std::string> FileManagerApp::hide_operations(system::core::AppContext &context)
+ {
+     selected_entry_.reset();
++    if (context.gui().get_view_frame(INLINE_OPERATIONS)) return refresh_ui(context);
+     auto flow_result = context.gui().trigger_screen_flow(FLOW_ID, ACTION_OPEN_BROWSER);
+     if (flow_result) {
+         current_page_ = Page::Browser;
+diff --git a/app/brookesia_app_files/src/storage/browser_entries.ipp b/app/brookesia_app_files/src/storage/browser_entries.ipp
+index d586ecd..699dde7 100644
+--- a/app/brookesia_app_files/src/storage/browser_entries.ipp
++++ b/app/brookesia_app_files/src/storage/browser_entries.ipp
+@@ -79,6 +79,7 @@ FileManagerApp::build_entries_for_current_location() const
+ std::expected<void, std::string> FileManagerApp::open_entry(system::core::AppContext &context, const Entry &entry)
+ {
+     if (entry.kind == EntryKind::Volume) {
++        selected_entry_.reset();
+         BROOKESIA_LOGI("Open File Manager volume: name(%1%), root(%2%)", entry.name, entry.path.generic_string());
+         current_volume_index_ = entry.volume_index;
+         current_directory_.clear();
+@@ -92,6 +93,7 @@ std::expected<void, std::string> FileManagerApp::open_entry(system::core::AppCon
+     if (!relative || relative->empty()) {
+         return std::unexpected("Failed to resolve directory: " + entry.path.generic_string());
+     }
++    selected_entry_.reset();
+     current_directory_ = relative->lexically_normal();
+     BROOKESIA_LOGI("Open File Manager directory: path(%1%)", entry.path.generic_string());
+     return refresh_entries(context);

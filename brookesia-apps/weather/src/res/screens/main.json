@@ -4976,29 +4976,40 @@
           }
         },
         {
-          "type": "label",
+          "type": "dropdown",
           "id": "city",
           "placement": {
             "mode": "absolute",
-            "x": 258,
-            "y": 24,
-            "width": 196,
-            "height": 29
+            "x": 300,
+            "y": 15,
+            "width": 154,
+            "height": 42
           },
-          "labelProps": {
-            "text": "上海"
-          },
-          "commonProps": {
-            "clickable": false
-          },
-          "style": {
-            "textColor": "#A7B2A9",
-            "fontSize": 16,
-            "textAlign": "right"
+          "dropdownProps": {
+            "options": [
+              "上海",
+              "青岛"
+            ],
+            "selectedIndex": 0
           },
           "bindings": {
-            "labelProps.text": "text"
-          }
+            "dropdownProps.selectedIndex": "selected"
+          },
+          "style": {
+            "bgColor": "#1B271F",
+            "textColor": "#F3F6ED",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 12,
+            "fontSize": 28,
+            "padding": 5
+          },
+          "events": [
+            {
+              "type": "valueChanged",
+              "action": "compact.city"
+            }
+          ]
         },
         {
           "type": "container",
@@ -5130,6 +5141,9 @@
                   },
                   "commonProps": {
                     "clickable": false
+                  },
+                  "bindings": {
+                    "commonProps.hidden": "hidden"
                   }
                 }
               ]
@@ -5508,7 +5522,10 @@
                     "labelProps.text": "text"
                   }
                 }
-              ]
+              ],
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              }
             }
           ]
         },
