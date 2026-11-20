@@ -2,21 +2,22 @@
   "upstream": "https://github.com/espressif/esp-brookesia.git",
   "commit": "68ac00e7aa9012cd8cbf0cbf6bee155801db0e8c",
   "esp_idf": "6.0.2",
-  "firmware": "0.8.3-s3.79",
+  "firmware": "0.8.3-s3.82",
   "toolkit": "1.0.1",
   "apps": {
     "local.radio": "0.1.5",
     "local.audiobook": "0.3.8",
     "local.codex.quota": "0.2.6",
     "local.flipclock": "0.2.6",
-    "local.weather": "0.2.11",
+    "local.weather": "0.2.12",
     "local.voiceassistant": "0.2.4",
     "local.childmode": "0.1.6",
     "local.lightlearning": "0.1.2",
     "local.virtualpet": "0.1.3",
     "local.nurserysongs": "0.1.4",
     "local.navigation": "0.2.2",
-    "local.gravitymaze": "0.1.8"
+    "local.gravitymaze": "0.1.8",
+    "local.quickcontrols": "0.1.1"
   },
   "device": "ESP32-S3-Touch-AMOLED-2.16",
   "theme": "cyberpunk-v1",
@@ -43,10 +44,10 @@
     "columns": 3,
     "rows": 3,
     "page_size": 9,
-    "item_width": 112,
-    "item_height": 112,
-    "gap": 18,
-    "icon_size": 92
+    "item_width": 136,
+    "item_height": 82,
+    "gap": 8,
+    "icon_size": 43
   },
   "lullaby_library": {
     "date": "2026-11-09",

@@ -13,10 +13,10 @@ ROOT = Path(__file__).resolve().parents[2]
 APP_ID = "local.weather"
 INSTALL_DIR = f"/sdcard/apps/{APP_ID}"
 IMAGE_INDEX = "res/images/index.json"
-UPDATE_FILES = ("app/main.js", "res/screens/main.json", "manifest.json")
+UPDATE_FILES = ("app/main.js", "res/screens/main.json", "res/root.json", "manifest.json")
 
 
-def read_release(version: str) -> tuple[dict[str, bytes], list[dict]]:
+def read_release(version: str, *, ui_only: bool = False) -> tuple[dict[str, bytes], list[dict]]:
     package = ROOT / f"packages/apps/{APP_ID}.debug.{version}.bpk"
     with zipfile.ZipFile(package) as archive:
         if archive.testzip() is not None:
@@ -25,6 +25,8 @@ def read_release(version: str) -> tuple[dict[str, bytes], list[dict]]:
         manifest = json.loads(files["manifest.json"])["package"]
         if (manifest["id"], manifest["version"]) != (APP_ID, version):
             raise ValueError("Weather package ID or version does not match")
+        if ui_only:
+            return files, []
         index = json.loads(archive.read(IMAGE_INDEX))
         tiles = [image for image in index["images"] if image["id"].startswith("sky_")]
         for tile in tiles:
@@ -39,9 +41,10 @@ def read_release(version: str) -> tuple[dict[str, bytes], list[dict]]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", required=True)
+    parser.add_argument("--ui-only", action="store_true", help="Keep the installed weather images and image index")
     args = parser.parse_args()
     version = json.loads((ROOT / "versions.json").read_text(encoding="utf-8"))["apps"][APP_ID]
-    files, tiles = read_release(version)
+    files, tiles = read_release(version, ui_only=args.ui_only)
     token = f"weather-{time.time_ns()}"
     root = "/sdcard/resource-backups"
     stage, saved = f"{root}/{token}-ready", f"{root}/{token}-previous"

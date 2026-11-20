@@ -43,7 +43,7 @@
       "commonProps": {
         "clickable": false,
         "scrollable": false,
-        "hidden": false
+        "hidden": true
       },
       "placement": {
         "mode": "absolute",
@@ -1891,7 +1891,8 @@
       "type": "container",
       "id": "content",
       "commonProps": {
-        "scrollable": false
+        "scrollable": false,
+        "hidden": true
       },
       "placement": {
         "mode": "absolute",
@@ -4806,10 +4807,839 @@
             "fontSize": 15,
             "textAlign": "center"
           },
-          "events": [{"type":"clicked","action":"refresh"}],
-            "labelProps": {
+          "events": [
+            {
+              "type": "clicked",
+              "action": "refresh"
+            }
+          ],
+          "labelProps": {
             "text": "未联网 · 刷新"
           }
+        }
+      ],
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      }
+    },
+    {
+      "type": "button",
+      "id": "compact_return",
+      "placement": {
+        "mode": "absolute",
+        "x": 359,
+        "y": 8,
+        "width": 98,
+        "height": 35
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": true,
+        "hidden": true
+      },
+      "style": {
+        "bgColor": "#1D2922",
+        "borderColor": "#304036",
+        "borderWidth": 1,
+        "radius": 14,
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "text",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 6,
+            "width": 98,
+            "height": 24
+          },
+          "labelProps": {
+            "text": "总览"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#F3F6ED",
+            "fontSize": 16,
+            "textAlign": "center"
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "clicked",
+          "action": "compact.overview"
+        }
+      ],
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      }
+    },
+    {
+      "type": "container",
+      "id": "compact",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false,
+        "hidden": false
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "style": {
+        "bgColor": "#101714",
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "button",
+          "id": "back",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 15,
+            "width": 66,
+            "height": 39
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1D2922",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 20,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "text",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 7,
+                "width": 66,
+                "height": 28
+              },
+              "labelProps": {
+                "text": "返回"
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "style": {
+                "textColor": "#F3F6ED",
+                "fontSize": 16,
+                "textAlign": "center"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "compact.back"
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 105,
+            "y": 19,
+            "width": 150,
+            "height": 37
+          },
+          "labelProps": {
+            "text": "天气"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#F3F6ED",
+            "fontSize": 28,
+            "textAlign": "left"
+          }
+        },
+        {
+          "type": "label",
+          "id": "city",
+          "placement": {
+            "mode": "absolute",
+            "x": 258,
+            "y": 24,
+            "width": 196,
+            "height": 29
+          },
+          "labelProps": {
+            "text": "上海"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#A7B2A9",
+            "fontSize": 16,
+            "textAlign": "right"
+          },
+          "bindings": {
+            "labelProps.text": "text"
+          }
+        },
+        {
+          "type": "container",
+          "id": "data",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 63,
+            "width": 428,
+            "height": 342
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "hero",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 0,
+                "width": 428,
+                "height": 167
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "bgColor": "#2C432E",
+                "borderColor": "#304036",
+                "borderWidth": 1,
+                "radius": 20,
+                "padding": 0
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "temperature",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 18,
+                    "y": 8,
+                    "width": 235,
+                    "height": 90
+                  },
+                  "labelProps": {
+                    "text": "--"
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#F3F6ED",
+                    "fontSize": 73,
+                    "textAlign": "left"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "condition",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 20,
+                    "y": 101,
+                    "width": 300,
+                    "height": 27
+                  },
+                  "labelProps": {
+                    "text": "等待天气"
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#F3F6ED",
+                    "fontSize": 22,
+                    "textAlign": "left"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "range",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 20,
+                    "y": 134,
+                    "width": 320,
+                    "height": 21
+                  },
+                  "labelProps": {
+                    "text": ""
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#D2DFCC",
+                    "fontSize": 15,
+                    "textAlign": "left"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text"
+                  }
+                },
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 306,
+                    "y": 34,
+                    "width": 99,
+                    "height": 99
+                  },
+                  "imageProps": {
+                    "innerAlign": "contain"
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "forecast",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 179,
+                "width": 428,
+                "height": 163
+              },
+              "commonProps": {
+                "scrollable": false,
+                "clickable": false
+              },
+              "style": {
+                "bgColor": "#19241C",
+                "borderColor": "#304036",
+                "borderWidth": 1,
+                "radius": 20,
+                "padding": 0
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "heading",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 15,
+                    "y": 12,
+                    "width": 190,
+                    "height": 25
+                  },
+                  "labelProps": {
+                    "text": "逐小时预报"
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#F3F6ED",
+                    "fontSize": 20,
+                    "textAlign": "left"
+                  }
+                },
+                {
+                  "type": "line",
+                  "id": "trace",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 0,
+                    "y": 47,
+                    "width": 396,
+                    "height": 94
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "lineProps": {
+                    "points": []
+                  },
+                  "bindings": {
+                    "lineProps.points": "points"
+                  },
+                  "style": {
+                    "lineColor": "#D5F588",
+                    "lineWidth": 3
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temp0",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 11,
+                    "y": 36,
+                    "width": 68,
+                    "height": 22
+                  },
+                  "labelProps": {
+                    "text": ""
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#D5F588",
+                    "fontSize": 15,
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text",
+                    "placement.y": "point_y"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "hour0",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 11,
+                    "y": 128,
+                    "width": 68,
+                    "height": 23
+                  },
+                  "labelProps": {
+                    "text": ""
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#A7B2A9",
+                    "fontSize": 14,
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temp1",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 78,
+                    "y": 36,
+                    "width": 68,
+                    "height": 22
+                  },
+                  "labelProps": {
+                    "text": ""
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#D5F588",
+                    "fontSize": 15,
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text",
+                    "placement.y": "point_y"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "hour1",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 78,
+                    "y": 128,
+                    "width": 68,
+                    "height": 23
+                  },
+                  "labelProps": {
+                    "text": ""
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#A7B2A9",
+                    "fontSize": 14,
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temp2",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 145,
+                    "y": 36,
+                    "width": 68,
+                    "height": 22
+                  },
+                  "labelProps": {
+                    "text": ""
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#D5F588",
+                    "fontSize": 15,
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text",
+                    "placement.y": "point_y"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "hour2",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 145,
+                    "y": 128,
+                    "width": 68,
+                    "height": 23
+                  },
+                  "labelProps": {
+                    "text": ""
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#A7B2A9",
+                    "fontSize": 14,
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temp3",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 212,
+                    "y": 36,
+                    "width": 68,
+                    "height": 22
+                  },
+                  "labelProps": {
+                    "text": ""
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#D5F588",
+                    "fontSize": 15,
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text",
+                    "placement.y": "point_y"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "hour3",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 212,
+                    "y": 128,
+                    "width": 68,
+                    "height": 23
+                  },
+                  "labelProps": {
+                    "text": ""
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#A7B2A9",
+                    "fontSize": 14,
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temp4",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 279,
+                    "y": 36,
+                    "width": 68,
+                    "height": 22
+                  },
+                  "labelProps": {
+                    "text": ""
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#D5F588",
+                    "fontSize": 15,
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text",
+                    "placement.y": "point_y"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "hour4",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 279,
+                    "y": 128,
+                    "width": 68,
+                    "height": 23
+                  },
+                  "labelProps": {
+                    "text": ""
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#A7B2A9",
+                    "fontSize": 14,
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "temp5",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 346,
+                    "y": 36,
+                    "width": 68,
+                    "height": 22
+                  },
+                  "labelProps": {
+                    "text": ""
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#D5F588",
+                    "fontSize": 15,
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text",
+                    "placement.y": "point_y"
+                  }
+                },
+                {
+                  "type": "label",
+                  "id": "hour5",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 346,
+                    "y": 128,
+                    "width": 68,
+                    "height": 23
+                  },
+                  "labelProps": {
+                    "text": ""
+                  },
+                  "commonProps": {
+                    "clickable": false
+                  },
+                  "style": {
+                    "textColor": "#A7B2A9",
+                    "fontSize": 14,
+                    "textAlign": "center"
+                  },
+                  "bindings": {
+                    "labelProps.text": "text"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "label",
+          "id": "source",
+          "placement": {
+            "mode": "absolute",
+            "x": 26,
+            "y": 434,
+            "width": 220,
+            "height": 23
+          },
+          "labelProps": {
+            "text": ""
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#A7B2A9",
+            "fontSize": 14,
+            "textAlign": "left"
+          },
+          "bindings": {
+            "labelProps.text": "text"
+          }
+        },
+        {
+          "type": "button",
+          "id": "refresh",
+          "placement": {
+            "mode": "absolute",
+            "x": 253,
+            "y": 423,
+            "width": 83,
+            "height": 43
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1D2922",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 14,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "text",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 7,
+                "width": 83,
+                "height": 34
+              },
+              "labelProps": {
+                "text": "刷新"
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "style": {
+                "textColor": "#F3F6ED",
+                "fontSize": 17,
+                "textAlign": "center"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "compact.refresh"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "id": "detail",
+          "placement": {
+            "mode": "absolute",
+            "x": 346,
+            "y": 423,
+            "width": 108,
+            "height": 43
+          },
+          "commonProps": {
+            "scrollable": false,
+            "clickable": true
+          },
+          "style": {
+            "bgColor": "#1D2922",
+            "borderColor": "#304036",
+            "borderWidth": 1,
+            "radius": 14,
+            "padding": 0
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "text",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 7,
+                "width": 108,
+                "height": 34
+              },
+              "labelProps": {
+                "text": "24 小时"
+              },
+              "commonProps": {
+                "clickable": false
+              },
+              "style": {
+                "textColor": "#F3F6ED",
+                "fontSize": 17,
+                "textAlign": "center"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "compact.details"
+            }
+          ]
         }
       ]
     }

@@ -1,0 +1,673 @@
+{
+  "type": "viewScreen",
+  "id": "main",
+  "commonProps": {
+    "scrollable": false
+  },
+  "style": {
+    "bgColor": "#101714",
+    "padding": 0
+  },
+  "children": [
+    {
+      "type": "label",
+      "id": "title",
+      "placement": {
+        "mode": "absolute",
+        "x": 105,
+        "y": 26,
+        "width": 270,
+        "height": 38
+      },
+      "labelProps": {
+        "text": "快捷控制"
+      },
+      "commonProps": {
+        "clickable": false
+      },
+      "style": {
+        "textColor": "#F3F6ED",
+        "fontSize": 28,
+        "textAlign": "center"
+      }
+    },
+    {
+      "type": "button",
+      "id": "back",
+      "placement": {
+        "mode": "absolute",
+        "x": 26,
+        "y": 20,
+        "width": 62,
+        "height": 48
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": true
+      },
+      "style": {
+        "bgColor": "#1D2922",
+        "borderColor": "#304036",
+        "borderWidth": 1,
+        "radius": 20,
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "text",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 9,
+            "width": 62,
+            "height": 33
+          },
+          "labelProps": {
+            "text": "返回"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#F3F6ED",
+            "fontSize": 17,
+            "textAlign": "center"
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "clicked",
+          "action": "back"
+        }
+      ]
+    },
+    {
+      "type": "label",
+      "id": "battery",
+      "placement": {
+        "mode": "absolute",
+        "x": 386,
+        "y": 32,
+        "width": 67,
+        "height": 25
+      },
+      "labelProps": {
+        "text": "--"
+      },
+      "commonProps": {
+        "clickable": false
+      },
+      "style": {
+        "textColor": "#A7B2A9",
+        "fontSize": 15,
+        "textAlign": "right"
+      },
+      "bindings": {
+        "labelProps.text": "text"
+      }
+    },
+    {
+      "type": "label",
+      "id": "status",
+      "placement": {
+        "mode": "absolute",
+        "x": 26,
+        "y": 435,
+        "width": 428,
+        "height": 28
+      },
+      "labelProps": {
+        "text": ""
+      },
+      "commonProps": {
+        "clickable": false
+      },
+      "style": {
+        "textColor": "#A7B2A9",
+        "fontSize": 15,
+        "textAlign": "center"
+      },
+      "bindings": {
+        "labelProps.text": "text"
+      }
+    },
+    {
+      "type": "button",
+      "id": "wifi",
+      "placement": {
+        "mode": "absolute",
+        "x": 26,
+        "y": 82,
+        "width": 207,
+        "height": 79
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": true
+      },
+      "style": {
+        "bgColor": "#1D2922",
+        "borderColor": "#304036",
+        "borderWidth": 1,
+        "radius": 20,
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 17,
+            "y": 13,
+            "width": 172,
+            "height": 28
+          },
+          "labelProps": {
+            "text": "Wi-Fi"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#F3F6ED",
+            "fontSize": 21,
+            "textAlign": "left"
+          },
+          "bindings": {
+            "style.textColor": "ink"
+          }
+        },
+        {
+          "type": "label",
+          "id": "state",
+          "placement": {
+            "mode": "absolute",
+            "x": 17,
+            "y": 47,
+            "width": 172,
+            "height": 24
+          },
+          "labelProps": {
+            "text": "--"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#A7B2A9",
+            "fontSize": 16,
+            "textAlign": "left"
+          },
+          "bindings": {
+            "labelProps.text": "text",
+            "style.textColor": "ink"
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "clicked",
+          "action": "wifi"
+        }
+      ],
+      "bindings": {
+        "style.bgColor": "fill"
+      }
+    },
+    {
+      "type": "button",
+      "id": "remote",
+      "placement": {
+        "mode": "absolute",
+        "x": 247,
+        "y": 82,
+        "width": 207,
+        "height": 79
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": true
+      },
+      "style": {
+        "bgColor": "#1D2922",
+        "borderColor": "#304036",
+        "borderWidth": 1,
+        "radius": 20,
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 17,
+            "y": 13,
+            "width": 172,
+            "height": 28
+          },
+          "labelProps": {
+            "text": "蓝牙遥控"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#F3F6ED",
+            "fontSize": 21,
+            "textAlign": "left"
+          },
+          "bindings": {
+            "style.textColor": "ink"
+          }
+        },
+        {
+          "type": "label",
+          "id": "state",
+          "placement": {
+            "mode": "absolute",
+            "x": 17,
+            "y": 47,
+            "width": 172,
+            "height": 24
+          },
+          "labelProps": {
+            "text": "--"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#A7B2A9",
+            "fontSize": 16,
+            "textAlign": "left"
+          },
+          "bindings": {
+            "labelProps.text": "text",
+            "style.textColor": "ink"
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "clicked",
+          "action": "remote"
+        }
+      ],
+      "bindings": {
+        "style.bgColor": "fill"
+      }
+    },
+    {
+      "type": "button",
+      "id": "quiet",
+      "placement": {
+        "mode": "absolute",
+        "x": 26,
+        "y": 172,
+        "width": 207,
+        "height": 79
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": true
+      },
+      "style": {
+        "bgColor": "#1D2922",
+        "borderColor": "#304036",
+        "borderWidth": 1,
+        "radius": 20,
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 17,
+            "y": 13,
+            "width": 172,
+            "height": 28
+          },
+          "labelProps": {
+            "text": "勿扰"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#F3F6ED",
+            "fontSize": 21,
+            "textAlign": "left"
+          },
+          "bindings": {
+            "style.textColor": "ink"
+          }
+        },
+        {
+          "type": "label",
+          "id": "state",
+          "placement": {
+            "mode": "absolute",
+            "x": 17,
+            "y": 47,
+            "width": 172,
+            "height": 24
+          },
+          "labelProps": {
+            "text": "--"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#A7B2A9",
+            "fontSize": 16,
+            "textAlign": "left"
+          },
+          "bindings": {
+            "labelProps.text": "text",
+            "style.textColor": "ink"
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "clicked",
+          "action": "quiet"
+        }
+      ],
+      "bindings": {
+        "style.bgColor": "fill"
+      }
+    },
+    {
+      "type": "button",
+      "id": "lock",
+      "placement": {
+        "mode": "absolute",
+        "x": 247,
+        "y": 172,
+        "width": 207,
+        "height": 79
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": true
+      },
+      "style": {
+        "bgColor": "#1D2922",
+        "borderColor": "#304036",
+        "borderWidth": 1,
+        "radius": 20,
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 17,
+            "y": 13,
+            "width": 172,
+            "height": 28
+          },
+          "labelProps": {
+            "text": "触屏锁"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#F3F6ED",
+            "fontSize": 21,
+            "textAlign": "left"
+          },
+          "bindings": {
+            "style.textColor": "ink"
+          }
+        },
+        {
+          "type": "label",
+          "id": "state",
+          "placement": {
+            "mode": "absolute",
+            "x": 17,
+            "y": 47,
+            "width": 172,
+            "height": 24
+          },
+          "labelProps": {
+            "text": "--"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#A7B2A9",
+            "fontSize": 16,
+            "textAlign": "left"
+          },
+          "bindings": {
+            "labelProps.text": "text",
+            "style.textColor": "ink"
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "clicked",
+          "action": "lock"
+        }
+      ],
+      "bindings": {
+        "style.bgColor": "fill"
+      }
+    },
+    {
+      "type": "container",
+      "id": "brightness",
+      "placement": {
+        "mode": "absolute",
+        "x": 26,
+        "y": 266,
+        "width": 428,
+        "height": 73
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false
+      },
+      "style": {
+        "bgColor": "#1D2922",
+        "borderColor": "#304036",
+        "borderWidth": 1,
+        "radius": 20,
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 17,
+            "y": 10,
+            "width": 230,
+            "height": 25
+          },
+          "labelProps": {
+            "text": "亮度"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#F3F6ED",
+            "fontSize": 19,
+            "textAlign": "left"
+          }
+        },
+        {
+          "type": "label",
+          "id": "value",
+          "placement": {
+            "mode": "absolute",
+            "x": 312,
+            "y": 10,
+            "width": 100,
+            "height": 25
+          },
+          "labelProps": {
+            "text": "--"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#D5F588",
+            "fontSize": 19,
+            "textAlign": "right"
+          },
+          "bindings": {
+            "labelProps.text": "text"
+          }
+        },
+        {
+          "type": "slider",
+          "id": "slider",
+          "placement": {
+            "mode": "absolute",
+            "x": 17,
+            "y": 39,
+            "width": 394,
+            "height": 25
+          },
+          "rangeProps": {
+            "min": 0,
+            "max": 100,
+            "value": 50
+          },
+          "bindings": {
+            "rangeProps.value": "value"
+          },
+          "style": {
+            "bgColor": "#435344",
+            "radius": 8
+          },
+          "events": [
+            {
+              "type": "released",
+              "action": "brightness"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "volume",
+      "placement": {
+        "mode": "absolute",
+        "x": 26,
+        "y": 349,
+        "width": 428,
+        "height": 73
+      },
+      "commonProps": {
+        "scrollable": false,
+        "clickable": false
+      },
+      "style": {
+        "bgColor": "#1D2922",
+        "borderColor": "#304036",
+        "borderWidth": 1,
+        "radius": 20,
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 17,
+            "y": 10,
+            "width": 230,
+            "height": 25
+          },
+          "labelProps": {
+            "text": "音量"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#F3F6ED",
+            "fontSize": 19,
+            "textAlign": "left"
+          }
+        },
+        {
+          "type": "label",
+          "id": "value",
+          "placement": {
+            "mode": "absolute",
+            "x": 312,
+            "y": 10,
+            "width": 100,
+            "height": 25
+          },
+          "labelProps": {
+            "text": "--"
+          },
+          "commonProps": {
+            "clickable": false
+          },
+          "style": {
+            "textColor": "#D5F588",
+            "fontSize": 19,
+            "textAlign": "right"
+          },
+          "bindings": {
+            "labelProps.text": "text"
+          }
+        },
+        {
+          "type": "slider",
+          "id": "slider",
+          "placement": {
+            "mode": "absolute",
+            "x": 17,
+            "y": 39,
+            "width": 394,
+            "height": 25
+          },
+          "rangeProps": {
+            "min": 0,
+            "max": 100,
+            "value": 50
+          },
+          "bindings": {
+            "rangeProps.value": "value"
+          },
+          "style": {
+            "bgColor": "#435344",
+            "radius": 8
+          },
+          "events": [
+            {
+              "type": "released",
+              "action": "volume"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

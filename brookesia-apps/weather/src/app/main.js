@@ -14,7 +14,9 @@ const SKY_PALETTES = {
   "snow_day":["#a5cbe7","#e3f1fa"], "snow_night":["#162d44","#081629"],
   "fog_day":["#a5b9c5","#d8e3e8"], "fog_night":["#202e3b","#0d1723"]
 };
-let gui, storage, http, wifi, timer, modes;
+let gui, storage, http, wifi, timer, modes, core;
+let hasCompact = false, compact = false;
+let compactKey = '';
 let screenAsleep=false, fxProbe=null;
 let mode = 'shanghai', location = SHANGHAI, data = null, receivedAt = 0;
 let connected = false, paused = false, pending = null, nextFetch = 0, failures = 0;
@@ -114,6 +116,66 @@ function stopTick() {
 }
 function startTick() {
   if (!tickTimer) tickTimer=call(timer,'StartPeriodic',{Name:'weather',IntervalMs:5000});
+}
+
+function showCompact(show) {
+  if (!hasCompact) return;
+  compact = show;
+  compactKey = '';
+  rendered = {};
+  stopFx();
+  fxScene = '';
+  updateBindings([
+    binding('/main/content', 'hidden', show),
+    binding('/main/backdrop', 'hidden', show),
+    binding('/main/sky_texture', 'hidden', show),
+    binding('/main/compact', 'hidden', !show),
+    binding('/main/compact_return', 'hidden', show)
+  ]);
+}
+
+function renderCompact() {
+  const path = '/main/compact';
+  const stale = !!data && (Date.now() - receivedAt >= STALE_MS || Date.now() < receivedAt);
+  const cached = !!data && (!connected || stale || !!error);
+  const key = JSON.stringify([receivedAt, location.city, status, cached]);
+  if (key === compactKey) return;
+  const updates = [
+    binding(path + '/city', 'text', location.city),
+    binding(path + '/source', 'text', cached ? '缓存天气' : status === '已更新' ? 'Open-Meteo' : status)
+  ];
+  if (data) {
+    const current = data.current;
+    const day = daylightNow().day;
+    const hours = hours24(data);
+    const temps = hours.map(hour => hour.temperature).filter(Number.isFinite);
+    const forecast = path + '/data/forecast';
+    const hero = path + '/data/hero';
+    const samples = [0, 2, 4, 6, 8, 10].map(index => hours[index]);
+    const sampleTemps = samples.map(hour => hour.temperature).filter(Number.isFinite);
+    updates.push(
+      binding(hero + '/temperature', 'text', num(current.temperature_2m) + '°'),
+      binding(hero + '/condition', 'text', condition(current.weather_code, day)),
+      binding(hero + '/range', 'text', temps.length ? '未来 24 小时  ' + num(Math.min(...temps)) + '° – ' + num(Math.max(...temps)) + '°' : '')
+    );
+    const low = Math.min(...sampleTemps);
+    const span = Math.max(2, Math.max(...sampleTemps) - low);
+    const points = [];
+    samples.forEach((hour, index) => {
+      const valid = Number.isFinite(hour.temperature);
+      const y = valid ? 72 - Math.round((hour.temperature - low) * 51 / span) : 72;
+      if (valid) points.push({x: 45 + 67 * index, y});
+      updates.push(binding(forecast + '/temp' + index, 'text', valid ? num(hour.temperature) + '°' : ''),
+        binding(forecast + '/temp' + index, 'point_y', 47 + y - 23),
+        binding(forecast + '/hour' + index, 'text', index === 0 ? '现在' : hour.time.slice(11, 16)));
+    });
+    updates.push(binding(forecast + '/trace', 'points', JSON.stringify(points)));
+    call(gui, 'SetViewSrc', {Path: hero + '/icon', Src: iconFor(current.weather_code, day)});
+  } else {
+    updates.push(binding(path + '/data/hero/condition', 'text', status));
+  }
+  for (let offset = 0; offset < updates.length; offset += 16) updateBindings(updates.slice(offset, offset + 16));
+  compactKey = key;
 }
 function applyScene() {
   if (paused) return;
@@ -228,6 +290,10 @@ function syncHourlyThemes(hours) {
   for(const item of changed)rendered[item[0]]=item[1];
 }
 function render() {
+  if (compact) {
+    if (!paused) renderCompact();
+    return;
+  }
   applyScene();
   const stale=!!data && (Date.now()-receivedAt>=STALE_MS || Date.now()<receivedAt);
   const networkLabel=status==='已更新'?(stale?'数据过期':'Open-Meteo'):status+(stale?' · 数据过期':'');
@@ -324,6 +390,12 @@ globalThis.brookesia_app = {
     for (const event of ['RequestCompleted','RequestFailed','RequestCanceled']) brookesia.subscribe_event(http,event);
     brookesia.subscribe_event(wifi,'GeneralEventHappened');
     call(gui,'SubscribeAction',{Action:'refresh'});
+    try { hasCompact = Boolean(call(gui, 'GetViewFrame', {Path: '/main/compact'})?.width); } catch (_) { hasCompact = false; }
+    if (hasCompact) {
+      core = brookesia.start_service('SystemCore');
+      for (const action of ['compact.back', 'compact.details', 'compact.overview', 'compact.refresh']) call(gui, 'SubscribeAction', {Action: action});
+      showCompact(true);
+    }
     const settings=read(SETTINGS); if (settings && settings.mode==='auto') mode='auto';
     const cache=read(CACHE);
     if (cache && cache.version===2 && cache.mode===mode) {
@@ -332,7 +404,16 @@ globalThis.brookesia_app = {
     stopFx();stopTick();fxScene='';paused=false;rendered={};render();startTick();tick();return true;
   },
   on_action(name) {
-    if(name==='refresh'&&!paused&&!pending){failures=0;nextFetch=0;tick();}
+    if((name==='refresh'||name==='compact.refresh')&&!paused&&!pending){failures=0;nextFetch=0;tick();}
+    if (!paused && hasCompact) {
+      if (name === 'compact.back') {
+        const app = call(core, 'GetActiveApp');
+        if (app?.manifest?.id === 'local.weather') call(core, 'RequestCloseApp', {AppId: app.app_id});
+      } else if (name === 'compact.details' || name === 'compact.overview') {
+        showCompact(name === 'compact.overview');
+        render();
+      }
+    }
     return true;
   },
   on_timer(id,name) { if(paused)return true;if (name==='weather_fx') animateFx(); else tick(); return true; },
@@ -345,7 +426,7 @@ globalThis.brookesia_app = {
     return true;
   },
   on_pause() { paused=true;stopFx();stopTick();cancelPending();persistState();return true; },
-  on_resume() { paused=false;failures=0;nextFetch=0;rendered={};fxScene='';render();startTick();tick();persistState();return true; },
+  on_resume() { paused=false;failures=0;nextFetch=0;rendered={};fxScene='';compactKey='';render();startTick();tick();persistState();return true; },
   on_stop() { paused=true;stopFx();stopTick();cancelPending();persistState();return true; }
 };
 

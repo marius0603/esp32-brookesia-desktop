@@ -7,14 +7,14 @@ const nodes={};
 const imageIndex=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/images/index.json'),'utf8')).images;
 const images=Object.fromEntries(imageIndex.map(asset=>[asset.id,asset]));
 // Binding fields supported by the target Brookesia GUI ABI for these effects.
-const supportedFxFields=new Set(['commonProps.hidden','style.bgColor','style.bgGradientColor','style.opacity','style.textColor','style.borderColor','placement.x','placement.y']);
+const supportedFxFields=new Set(['commonProps.hidden','style.bgColor','style.bgGradientColor','style.opacity','style.textColor','style.borderColor','placement.x','placement.y','labelProps.text','lineProps.points']);
 (function walk(node,parent=''){const p=parent+'/'+node.id;nodes[p]=node;for(const c of node.children||[])walk(c,p);})(JSON.parse(fs.readFileSync(path.join(__dirname,'../src/res/screens/main.json'),'utf8')));
 const fixture = {current:{time:'2026-10-18T20:00',temperature_2m:23.6,relative_humidity_2m:82,
   apparent_temperature:26.1,is_day:0,precipitation:0.1,weather_code:51,wind_speed_10m:3.06},
   hourly:{time:Array.from({length:25},(_,i)=>new Date(Date.UTC(2026,9,18,20+i)).toISOString().slice(0,16)),
     temperature_2m:Array(25).fill(24),weather_code:Array(25).fill(51),is_day:Array(25).fill(0)}};
 
-function harness(online=true, files={}) {
+function harness(online=true, files={}, compact=false) {
   let now=1792324800000, nextId=1;
   const calls=[], texts={};
   class Clock extends Date {static now(){return now;}}
@@ -33,6 +33,7 @@ function harness(online=true, files={}) {
       if (name==='FSReadText') {if (!(p.Path in files)) return JSON.stringify({success:false,error:'missing'});data=JSON.stringify(files[p.Path]);}
       if (name==='FSWriteText') files[p.Path]=JSON.parse(p.Data);
       if (name==='GetGeneralState') data=online?'Connected':'Started';
+      if (name==='GetViewFrame' && compact) data={width:480,height:480};
       if (name==='RequestAsync') data=nextId++;
       if (name==='StartPeriodic') data=99;
       if (name==='SetText') texts[p.Path]=p.Text;
@@ -48,6 +49,19 @@ function harness(online=true, files={}) {
 }
 let count=0;
 function test(name,fn) {fn();count++;console.log('ok '+name);}
+test('compact weather draws six live values and opens the original detail view',()=>{
+  const h=harness(true,{},true);
+  h.app.on_start();
+  h.complete(1);
+  const updates=h.calls.filter(call=>call.name==='SetBindings').flatMap(call=>call.p.Updates);
+  const trace=updates.findLast(update=>update.Path==='/main/compact/data/forecast/trace');
+  assert.deepEqual(JSON.parse(trace.Value).map(point=>point.x),[45,112,179,246,313,380]);
+  assert.equal(updates.findLast(update=>update.Path==='/main/compact/data/hero/temperature').Value,'24°');
+  assert.equal(h.calls.some(call=>call.name==='StartPeriodic' && call.p.Name==='weather_fx'),false);
+  h.app.on_action('compact.details');
+  assert.equal(h.texts['/main/content/temperature'],'23.6°C');
+  assert.equal(h.calls.some(call=>call.name==='StartPeriodic' && call.p.Name==='weather_fx'),true);
+});
 test('missing values and WMO codes',()=>{
   const h=harness();assert.equal(h.value('num(null)'), '--');assert.equal(h.value('num(0)'), '0');
   assert.equal(h.value('condition(0,0)'), '晴夜');assert.equal(h.value('condition(97,1)'), '强雷雨');

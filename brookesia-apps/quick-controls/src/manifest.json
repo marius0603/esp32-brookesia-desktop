@@ -1,0 +1,42 @@
+{
+  "package": {
+    "id": "local.quickcontrols",
+    "name": {
+      "en": "Quick Controls",
+      "zh_CN": "快捷控制"
+    },
+    "version": "0.1.1",
+    "visible": false,
+    "systems": [
+      "super"
+    ]
+  },
+  "runtime": {
+    "type": "JavaScript",
+    "entry": "app/main.js",
+    "resource_dir": "res",
+    "arguments": []
+  },
+  "services": [
+    {
+      "name": "DeviceModes",
+      "version": "0.1.0"
+    },
+    {
+      "name": "Wifi",
+      "version": "0.8.2"
+    },
+    {
+      "name": "Display",
+      "version": "0.8.2"
+    },
+    {
+      "name": "AudioPlayback",
+      "version": "0.8.2"
+    },
+    {
+      "name": "PhoneProvisioning",
+      "version": "0.1.0"
+    }
+  ]
+}
