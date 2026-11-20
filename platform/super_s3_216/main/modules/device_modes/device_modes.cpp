@@ -14,6 +14,8 @@
 #include "esp_lcd_panel_ops.h"
 #include "esp_lv_adapter.h"
 #include "esp_timer.h"
+#include "esp_system.h"
+#include "esp_log.h"
 #include "esp_app_desc.h"
 #include "esp_heap_caps.h"
 #include "nvs.h"
@@ -38,7 +40,7 @@ extern "C" unsigned brookesia_canvas_retries(),brookesia_canvas_before(),brookes
 using namespace esp_brookesia;
 using namespace esp_brookesia::service;
 namespace {
-constexpr uint32_t IDLE_MS = 600000;
+constexpr uint32_t IDLE_SECONDS = 600;
 std::atomic<bool> ready{false}, automatic{true}, dnd{true}, asleep{false};
 std::atomic<bool> wake_requested{false}, sleep_requested{false}, consume_touch{false};
 std::atomic<bool> dirty{false}, audio_dirty{false};
@@ -71,14 +73,20 @@ public:
                               .version="0.1.0",.dependencies={}}) {}
 private:
     bool on_start() override {
-        ready=true;return true;
+        ESP_LOGI("DeviceModes", "Reset reason %d", static_cast<int>(esp_reset_reason()));
+        ready = true;
+        return true;
     }
     boost::json::object state() {
         uint8_t brightness=0;auto backlight=hal::acquire_first_interface<hal::display::BacklightIface>();
         const bool brightness_valid=backlight && backlight->get_brightness(brightness);
+        const auto last_touch = last_touch_ms.load();
+        const auto uptime_ms = esp_timer_get_time() / 1000;
+        const auto idle_ms = static_cast<uint32_t>(uptime_ms) - last_touch;
         return {{"firmware_version",esp_app_get_description()->version},{"maze_canvas_cache",true},
+                {"reset_reason",static_cast<int>(esp_reset_reason())},{"uptime_ms",uptime_ms},
 {"desktop_theme_index",brookesia_board_desktop_theme()},{"desktop_theme_saved_index",desktop_theme.load()},{"desktop_theme_applied",desktop_theme_applied.load()},{"cyber_theme_available",brookesia_board_cyber_available()},
-                {"deep_sleep",board_deep_sleep_state()},{"auto_sleep_enabled",automatic.load()},{"timeout_seconds",600},
+                {"deep_sleep",board_deep_sleep_state()},{"auto_sleep_enabled",automatic.load()},{"timeout_seconds",IDLE_SECONDS},
                 {"auto_deep_sleep_minutes",deep_minutes.load()},{"auto_deep_sleep_audio_busy",local_audio::busy()},
                 {"auto_deep_sleep_remaining_seconds",idle_deep_sleep::remaining(now_ms(),deep_activity_ms.load(),deep_minutes.load()*60)},
                 {"preferences_loaded",preferences_loaded.load()},{"test_idle_deep_sleep",test_idle_deep.load()},
@@ -90,7 +98,7 @@ private:
                 {"manual_do_not_disturb",manual_dnd.load()},{"quiet_hours_enabled",quiet_enabled.load()},
                 {"quiet_start_minute",quiet_start.load()},{"quiet_end_minute",quiet_end.load()},
                 {"local_minute",local_minute()},{"clock_synced",local_minute()>=0},{"timezone","Asia/Shanghai"},
-                {"idle_seconds",(now_ms()-last_touch_ms.load())/1000},
+                {"idle_seconds",idle_ms < 0x80000000U ? idle_ms / 1000 : 0},
                 {"wake_touch_consumed",swallowed.load()},{"sleep_count",sleeps.load()},
                 {"wake_count",wakes.load()},{"panel_errors",panel_errors.load()},
                 {"pending_save",dirty.load()},{"audio_pending",audio_dirty.load()},
@@ -465,7 +473,9 @@ uint8_t theme=0;nvs_get_u8(h,"desktop_theme",&theme);desktop_theme=theme<=5?them
     }
     const bool waking=wake_requested.exchange(false) && !screen_locked.load();
     const bool sleeping=sleep_requested.exchange(false);
-    const bool target=screen_locked || (waking?false:(asleep || sleeping || (automatic && now_ms()-last_touch_ms.load()>=IDLE_MS)));
+    const auto last_touch = last_touch_ms.load();
+    const bool idle_expired = automatic && idle_deep_sleep::due(now_ms(), last_touch, IDLE_SECONDS);
+    const bool target = screen_locked || (!waking && (asleep || sleeping || idle_expired));
     if(target!=asleep && esp_lv_adapter_lock(30)==ESP_OK){
         void *handle=nullptr;
         const auto found=esp_board_manager_get_device_handle("display_lcd",&handle);

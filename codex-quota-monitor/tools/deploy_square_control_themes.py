@@ -34,8 +34,8 @@ def main():
             return call('Storage', method, **params)
 
         current = call('DeviceModes', 'GetState')
-        if current['firmware_version'] != '0.8.3-s3.84' or current['screen_locked']:
-            raise SystemExit('Start s3.84 and unlock the screen before installing these resources')
+        if current['firmware_version'] not in ('0.8.3-s3.84', '0.8.3-s3.85') or current['screen_locked']:
+            raise SystemExit('Start the supported firmware and unlock the screen before installing these resources')
         local = Path(temp)
         originals = []
         files = {}
