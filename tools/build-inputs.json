@@ -34,7 +34,8 @@
     "patches/deferred-runtime-close.patch",
     "patches/settings-touch-scroll.patch",
     "patches/themed-controls-center.patch",
-    "patches/invalid-wall-clock-placeholder.patch"
+    "patches/invalid-wall-clock-placeholder.patch",
+    "patches/settings-service-ui-lifetime.patch"
   ],
   "sha256": {
     "patches/brookesia-s3.patch": "75e0bb3f720b9bd442955f1b04ab4d6f1437c2cbdfa4359646f1176044bc0346",
@@ -62,7 +63,7 @@
     "patches/bounded-display-dma.patch": "b1e6eb13627718506036f14f94f0a9cb3bac0a893094068084707bb29152e290",
     "patches/persistent-display-dma.patch": "cc8c6cf3dbe36d4089abff0242a3f740cca31e111138ea88df3a341b09d8c264",
     "patches/aligned-display-strips.patch": "1629b23605921dd00fab60995969fd3ad5c5243cb540b9f20a64da4841d25dc2",
-    "platform/super_s3_216/CMakeLists.txt": "65aba04807fc52edb5a1c4823d3ab20a34647f1a71e86b5acbe48201ffdf3d79",
+    "platform/super_s3_216/CMakeLists.txt": "35c96b56940e4bb7c3338086f3b829944ab82c3bda9ae32c23462f8cc420ee8a",
     "platform/super_s3_216/main/modules/display.cpp": "ec4a62d2d3798dc322383f1dbf999c94c8088c25f17f9dbdbe9a7b7cffa01387",
     "platform/super_s3_216/main/modules/device_modes/device_modes.cpp": "7942275b5ec4f4ef2e435dbcfedc0d7cbfb9da74efc058570d315af64246d319",
     "platform/super_s3_216/main/modules/device_modes/resource_monitor.cpp": "0f4d6b9c6fa5d4247a4e74e3335a0c82a46d8080ec6f2c191149df38c558a85f",
@@ -88,7 +89,8 @@
     "brookesia-apps/voice-assistant/src/app/main.js": "1b854124a903c15e67d959ebf23a15f7c1dd855cf60fa9b477cc57fef9c642df",
     "brookesia-apps/codex-quota/src/app/main.js": "4d3731f084a974f5030f0c2bebbff2dcc62c958dbec081686e59faea9811c3bf",
     "patches/protected-text-writes.patch": "896ec71e8906d371f48d528cc3af9880f2c4ce2ec60397a863c1f92f6ce459a9",
-    "platform/super_s3_216/main/modules/audiobook/audiobook.cpp": "fe67e3223fcffcc95cd3ff2374e132c8a9d55adf6f70e9c0ca71a65d831c186a",
+    "platform/super_s3_216/main/modules/audiobook/audiobook.cpp": "47de8b345ab3890ba5e739b59f65717d96f665de8e8272bdce80940f6683fe9b",
+    "platform/super_s3_216/main/modules/audiobook/buffered_pcm.hpp": "cb1e2f6906dd5f504506e51017d57bd89280149499fc4d8ed235e8f59097fa76",
     "patches/pipelined-display-dma.patch": "0711cb1f50c389562afc0ba64e808b202eaa3d72394650321432344513c2645a",
     "patches/weather-cached-rows.patch": "7d9192afbe18e6e61c1c99ac287818d692fa2a4921bafbaed9aebd4a31980d2e",
     "platform/super_s3_216/main/modules/display.hpp": "2aa1a6c7756103010b8f7ba5edf227baabcea6e3379b26349ddb0cb2154dc776",
@@ -181,6 +183,7 @@
     "patches/invalid-wall-clock-placeholder.patch": "0b0cb45a8504a8d292e234c120bd057a2fda118a1a5c6013d6ff776968604bf7",
     "platform/super_s3_216/main/main.cpp": "0f3cee3a682433f2a688140a7637d32e741bb3ee7c23a611fe4ecf46b65a5d18",
     "platform/super_s3_216/main/modules/device_modes/clock_utc.cpp": "3f5acbbf2b0a0bd45642db0cb5f3acdf741947f64dd641e07857f30886243310",
-    "platform/super_s3_216/main/modules/device_modes/clock_utc.hpp": "ee4d05fb15b9457fcafdc04c5f7802daf579d3320925f07ecc7ddad3158c136f"
+    "platform/super_s3_216/main/modules/device_modes/clock_utc.hpp": "ee4d05fb15b9457fcafdc04c5f7802daf579d3320925f07ecc7ddad3158c136f",
+    "patches/settings-service-ui-lifetime.patch": "51e8972f464e529edc2b4f039a7fcee3c3447b1ff0b2f57af6c18876bd343ab8"
   }
 }

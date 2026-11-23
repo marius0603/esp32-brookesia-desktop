@@ -17,17 +17,30 @@ class StoryPcmBuffer {
 public:
     struct Header {uint32_t epoch,position,bytes;};
     using Writer=std::function<bool(const uint8_t *,size_t,uint32_t,uint32_t)>;
-    static constexpr size_t capacity=65536,max_pcm=8192,prefill=32768,stack_bytes=4096;
+    static constexpr size_t preferred_capacity=128*1024,minimum_capacity=64*1024;
+    static constexpr size_t max_pcm=8192,stack_bytes=4096;
+    // App workers can stay runnable throughout a page transition. Give PCM
+    // delivery priority over those workers; I2S writes and a full queue block.
+    static constexpr UBaseType_t decoder_priority=CONFIG_BROOKESIA_SYSTEM_CORE_WORKER_PRIORITY+1;
+    static constexpr UBaseType_t output_priority=decoder_priority+1;
+    static_assert(output_priority<configMAX_PRIORITIES);
     StoryPcmBuffer(Writer writer,std::atomic<bool> &paused,std::atomic<uint32_t> &epoch,
-                   std::atomic<uint32_t> &starvations,std::atomic<uint32_t> &write_gap,std::function<bool()> abort)
-        :writer_(std::move(writer)),paused_(paused),epoch_(epoch),starvations_(starvations),write_gap_(write_gap),abort_(std::move(abort)){}
+                   std::atomic<uint32_t> &starvations,std::atomic<uint32_t> &write_gap,std::function<bool()> abort,
+                   size_t capacity=minimum_capacity,UBaseType_t priority=6)
+        :writer_(std::move(writer)),paused_(paused),epoch_(epoch),starvations_(starvations),write_gap_(write_gap),
+         abort_(std::move(abort)),capacity_(capacity),priority_(priority){}
     bool start(){
-        ring_=xRingbufferCreateWithCaps(capacity,RINGBUF_TYPE_NOSPLIT,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);
+        constexpr auto caps=MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT;
+        ring_=xRingbufferCreateWithCaps(capacity_,RINGBUF_TYPE_NOSPLIT,caps);
+        if(!ring_ && capacity_>minimum_capacity){
+            capacity_=minimum_capacity;
+            ring_=xRingbufferCreateWithCaps(capacity_,RINGBUF_TYPE_NOSPLIT,caps);
+        }
         staging_=static_cast<uint8_t *>(heap_caps_malloc(sizeof(Header)+max_pcm,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT));
         if(!ring_ || !staging_)return false;
         live_=true;
         if(xTaskCreatePinnedToCore([](void *p){auto *self=static_cast<StoryPcmBuffer *>(p);self->consume();vTaskDelete(nullptr);},
-            "story_pcm",stack_bytes,this,6,nullptr,1)!=pdPASS){live_=false;return false;}
+            "story_pcm",stack_bytes,this,priority_,nullptr,1)!=pdPASS){live_=false;return false;}
         return true;
     }
     bool send(const int16_t *pcm,size_t bytes,uint32_t position,const std::function<bool()> &cancel){
@@ -36,7 +49,7 @@ public:
         std::memcpy(staging_,&h,sizeof(h));std::memcpy(staging_+sizeof(h),pcm,bytes);
         while(!quit_ && !failed_ && !cancel()){
             if(xRingbufferSend(ring_,staging_,sizeof(h)+bytes,pdMS_TO_TICKS(20))==pdTRUE){
-                prefilled_+=bytes;if(prefilled_>=prefill)primed_=true;return true;
+                prefilled_+=bytes;if(prefilled_>=capacity_/2)primed_=true;return true;
             }
         }
         return false;
@@ -47,11 +60,14 @@ public:
         while(live_)vTaskDelay(pdMS_TO_TICKS(5));
     }
     bool failed()const{return failed_;}
+    size_t capacity()const{return capacity_;}
     ~StoryPcmBuffer(){finish(false);if(ring_)vRingbufferDeleteWithCaps(ring_);heap_caps_free(staging_);}
 private:
     Writer writer_;std::atomic<bool> &paused_;std::atomic<uint32_t> &epoch_,&starvations_,&write_gap_;
     std::function<bool()> abort_;
     RingbufHandle_t ring_=nullptr;uint8_t *staging_=nullptr;size_t prefilled_=0;
+    size_t capacity_;
+    const UBaseType_t priority_;
     std::atomic<bool> live_{false},quit_{false},drain_{false},failed_{false},primed_{false};
     void consume(){
         while(!primed_ && !quit_ && !abort_())vTaskDelay(pdMS_TO_TICKS(5));

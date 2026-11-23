@@ -280,6 +280,7 @@ private:
     std::atomic<uint32_t> position_{0}, duration_{0}, bytes_{0};
     std::atomic<uint32_t> pcm_epoch_{0},starvations_{0},write_gap_us_{0},decode_max_us_{0};
     std::atomic<uint32_t> pcm_stack_free_{StoryPcmBuffer::stack_bytes};
+    std::atomic<uint32_t> pcm_buffer_bytes_{StoryPcmBuffer::preferred_capacity};
     std::atomic<uint32_t> test_decode_delay_ms_{0};
     std::atomic<bool> test_read_failure_{false};
     void state(const char *s, const char *error="") {
@@ -322,7 +323,7 @@ private:
         position_=0;duration_=0;bytes_=0;starvations_=0;write_gap_us_=0;decode_max_us_=0;++pcm_epoch_;cancel_=false;paused_=false;seek_=static_cast<int32_t>(start);live_=true;
         TaskHandle_t task=nullptr;
         if (xTaskCreatePinnedToCore([](void *ctx){static_cast<Audiobook *>(ctx)->run();vTaskDelete(nullptr);},
-              "audiobook",12288,this,4,&task,0)!=pdPASS) {
+              "audiobook",12288,this,StoryPcmBuffer::decoder_priority,&task,0)!=pdPASS) {
             local_audio::release(local_audio::Audiobook);live_=false;state("Error","Not enough internal RAM for audio task");return std::unexpected("Audio task allocation failed");
         }
         return {};
@@ -334,7 +335,7 @@ private:
         return {{"state",state_},{"path",path_},{"title",story_titles::title(path_)},{"error",error_},{"position",position_.load()},
                 {"play_mode",mode_names_[play_mode_.load()]},{"song_play_mode",mode_names_[song_mode_.load()]},{"speed",speed_percent_.load()/100.0},
                 {"duration",duration_.load()},{"bytes_written",bytes_.load()},{"active",live_.load()},
-                {"pcm_buffer_bytes",StoryPcmBuffer::capacity},{"pcm_starvations",starvations_.load()},{"write_gap_max_us",write_gap_us_.load()},{"decode_max_us",decode_max_us_.load()},{"pcm_stack_free_min_bytes",pcm_stack_free_.load()},{"test_decode_delay_ms",test_decode_delay_ms_.load()},
+                {"pcm_buffer_bytes",pcm_buffer_bytes_.load()},{"pcm_starvations",starvations_.load()},{"write_gap_max_us",write_gap_us_.load()},{"decode_max_us",decode_max_us_.load()},{"pcm_stack_free_min_bytes",pcm_stack_free_.load()},{"test_decode_delay_ms",test_decode_delay_ms_.load()},
                 {"sleep_minutes",sleep_minutes_},{"sleep_remaining_seconds",story_sleep::remaining(esp_timer_get_time()/1000,deadline_)},
                 {"sleep_active",deadline_!=0},{"sleep_fading",deadline_!=0 && gain_<1000},
                 {"sleep_finishing",sleep_due_.load()},{"sleep_completed",sleep_completed_},
@@ -421,8 +422,11 @@ private:
                 pcm_stack_free_=std::min(pcm_stack_free_.load(),uint32_t(uxTaskGetStackHighWaterMark(nullptr)));
                 bytes_+=size;if(position!=UINT32_MAX && epoch==pcm_epoch_)position_=position;
                 return true;
-            },paused_,pcm_epoch_,starvations_,write_gap_us_,interrupted);
-            return buffered->start();
+            },paused_,pcm_epoch_,starvations_,write_gap_us_,interrupted,
+                StoryPcmBuffer::preferred_capacity,StoryPcmBuffer::output_priority);
+            if(!buffered->start())return false;
+            pcm_buffer_bytes_=buffered->capacity();
+            return true;
         };
         const bool tone=path=="@tone";
         const bool diagnostic=path.starts_with("/sdcard/audiobooks/.storage-check/");
