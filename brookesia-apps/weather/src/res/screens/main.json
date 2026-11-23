@@ -34,7 +34,8 @@
         "innerAlign": "tile"
       },
       "bindings": {
-        "commonProps.hidden": "hidden"
+        "commonProps.hidden": "hidden",
+        "style.opacity": "opacity"
       }
     },
     {

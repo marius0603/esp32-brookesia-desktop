@@ -1,0 +1,427 @@
+diff --git a/system/brookesia_system_core/include/brookesia/system_core/square_desktop_palette.hpp b/system/brookesia_system_core/include/brookesia/system_core/square_desktop_palette.hpp
+new file mode 100644
+--- /dev/null
++++ b/system/brookesia_system_core/include/brookesia/system_core/square_desktop_palette.hpp
+@@ -0,0 +1,28 @@
++#pragma once
++
++#include <algorithm>
++#include <array>
++
++namespace esp_brookesia::system::core {
++
++struct SquareDesktopPalette {
++    const char *background;
++    const char *tile;
++    const char *edge;
++    const char *weather;
++    const char *controls;
++    const char *muted;
++    const char *accent;
++};
++
++inline const SquareDesktopPalette &square_desktop_palette(int selected)
++{
++    static constexpr std::array<SquareDesktopPalette, 4> palettes = {{
++        {"#101714", "#1B271F", "#304036", "#273721", "#1D2922", "#A7B2A9", "#D5F588"},
++        {"#0D1521", "#17293D", "#2B4560", "#203B53", "#1A2D43", "#A5B9CB", "#A3E6F3"},
++        {"#191321", "#2B203A", "#48375A", "#372649", "#31233F", "#BDAECB", "#DAC4FA"},
++        {"#201611", "#33241A", "#573C2D", "#492E1D", "#38261A", "#C7B2A5", "#F2CD92"},
++    }};
++    return palettes[std::clamp(selected - 2, 0, 3)];
++}
++}
+diff --git a/system/brookesia_system_super/src/shell_app_launcher.cpp b/system/brookesia_system_super/src/shell_app_launcher.cpp
+--- a/system/brookesia_system_super/src/shell_app_launcher.cpp
++++ b/system/brookesia_system_super/src/shell_app_launcher.cpp
+@@ -24,6 +24,7 @@
+ 
+ #include "private/shell_app.hpp"
+ #include "private/system_constants.hpp"
++#include "brookesia/system_core/square_desktop_palette.hpp"
+ #include "private/utils.hpp"
+ #include "private/shell_impl.hpp"
+ #include <cstdlib>
+@@ -370,24 +371,9 @@
+     const int selected = brookesia_board_desktop_theme ? brookesia_board_desktop_theme() : 0;
+     if (!force && selected == desktop_theme_applied_) return;
+ 
+-    struct Palette {
+-        const char *background;
+-        const char *tile;
+-        const char *edge;
+-        const char *weather;
+-        const char *controls;
+-        const char *muted;
+-        const char *accent;
+-    };
+-    static constexpr std::array<Palette, 4> palettes = {{
+-        {"#101714", "#1B271F", "#304036", "#273721", "#1D2922", "#A7B2A9", "#D5F588"},
+-        {"#0D1521", "#17293D", "#2B4560", "#203B53", "#1A2D43", "#A5B9CB", "#A3E6F3"},
+-        {"#191321", "#2B203A", "#48375A", "#372649", "#31233F", "#BDAECB", "#DAC4FA"},
+-        {"#201611", "#33241A", "#573C2D", "#492E1D", "#38261A", "#C7B2A5", "#F2CD92"},
+-    }};
+     constexpr auto header = "/launcher/content/square_header";
+     const bool square_layout = context_->gui().get_view_frame(header).has_value();
+-    const auto &palette = palettes[std::clamp(selected - 2, 0, 3)];
++    const auto &palette = core::square_desktop_palette(selected);
+     std::vector<gui::BindingValueUpdate> updates;
+     for (const auto &item : launcher_instance_to_app_) {
+         const auto app_id = item.second;
+diff --git a/gui/brookesia_gui_interface/include/brookesia/gui_interface/runtime.hpp b/gui/brookesia_gui_interface/include/brookesia/gui_interface/runtime.hpp
+--- a/gui/brookesia_gui_interface/include/brookesia/gui_interface/runtime.hpp
++++ b/gui/brookesia_gui_interface/include/brookesia/gui_interface/runtime.hpp
+@@ -200,6 +200,9 @@
+     std::expected<void, std::string> reapply_styles(DocumentId id);
+     // Read a color-token map from this document's resource constants and restyle it in place.
+     std::expected<void, std::string> set_document_palette(DocumentId id, std::string_view constant_path);
++    std::expected<void, std::string> set_app_palette(
++        DocumentId id, std::map<std::string, std::string> colors
++    );
+     std::expected<boost::json::value, std::string> get_constant_value(
+         DocumentId id,
+         std::string_view path
+diff --git a/gui/brookesia_gui_interface/src/private/runtime_impl.hpp b/gui/brookesia_gui_interface/src/private/runtime_impl.hpp
+--- a/gui/brookesia_gui_interface/src/private/runtime_impl.hpp
++++ b/gui/brookesia_gui_interface/src/private/runtime_impl.hpp
+@@ -1402,6 +1402,7 @@
+         boost::json::value constants;
+         Environment environment;
+         std::map<std::string, std::string> color_overrides;
++        bool use_app_palette = false;
+         bool environment_dirty = false;
+         bool styles_dirty = false;
+         bool live_preview_enabled = false;
+diff --git a/gui/brookesia_gui_interface/src/runtime.cpp b/gui/brookesia_gui_interface/src/runtime.cpp
+--- a/gui/brookesia_gui_interface/src/runtime.cpp
++++ b/gui/brookesia_gui_interface/src/runtime.cpp
+@@ -448,6 +448,20 @@
+     return reapply_styles(id);
+ }
+ 
++std::expected<void, std::string> Runtime::set_app_palette(
++    DocumentId id, std::map<std::string, std::string> colors
++)
++{
++    auto *tree = impl_->resolve_tree(id);
++    if (!tree) return std::unexpected("GUI document not loaded");
++    if (tree->use_app_palette && tree->color_overrides == colors) return {};
++    tree->use_app_palette = true;
++    tree->color_overrides = std::move(colors);
++    tree->definition_style_cache.clear();
++    tree->resolved_style_intern_cache.clear();
++    return reapply_styles(id);
++}
++
+ std::expected<void, std::string> Runtime::reapply_styles(DocumentId id)
+ {
+     return impl_->reapply_styles(id);
+diff --git a/gui/brookesia_gui_interface/src/runtime_style.cpp b/gui/brookesia_gui_interface/src/runtime_style.cpp
+--- a/gui/brookesia_gui_interface/src/runtime_style.cpp
++++ b/gui/brookesia_gui_interface/src/runtime_style.cpp
+@@ -266,6 +266,22 @@
+ {
+     ResolvedStyle resolved_style;
+     auto style_set = compose_style_set(tree, node);
++    if (tree.use_app_palette) {
++        // Existing apps use both color tokens and literal values from the
++        // original moss palette. Tint only known background roles.
++        auto &style = style_set.style;
++        const auto color = style.bg_color();
++        if (node.type == NodeType::Screen || color == "#101714") {
++            style.set_bg_color(tree.color_overrides.at("bg.base"));
++            if (style.bg_gradient_color()) {
++                style.set_bg_gradient_color(tree.color_overrides.at("surface.base"));
++            }
++        } else if (color == "#1B271F" || color == "#1b271f") {
++            style.set_bg_color(tree.color_overrides.at("surface.base"));
++        } else if (color == "#1D2922" || color == "#1d2922") {
++            style.set_bg_color(tree.color_overrides.at("surface.muted"));
++        }
++    }
+     resolve_style_set_color_fields(tree, style_set);
+     resolved_style.style = style_set.style;
+     resolved_style.state_styles = style_set.state_styles;
+diff --git a/system/brookesia_system_core/src/system/gui.cpp b/system/brookesia_system_core/src/system/gui.cpp
+--- a/system/brookesia_system_core/src/system/gui.cpp
++++ b/system/brookesia_system_core/src/system/gui.cpp
+@@ -14,9 +14,12 @@
+ #include "boost/json.hpp"
+ 
+ #include "brookesia/service_helper/system/storage.hpp"
++#include "brookesia/system_core/square_desktop_palette.hpp"
+ #include "private/utils.hpp"
+ #include "private/heap_trace.hpp"
+ #include "private/system/impl.hpp"
++
++extern "C" int brookesia_board_desktop_theme() __attribute__((weak));
+ 
+ namespace esp_brookesia::system::core {
+ 
+@@ -549,6 +552,30 @@
+     } else if (enable_idle_warm) {
+         gui_runtime_->request_idle_screen_warm(*record.document_id);
+     }
++    if (enable_idle_warm && brookesia_board_desktop_theme &&
++            environment_.width_px == 480 && environment_.height_px == 480) {
++        const auto &id = record.info.manifest.id;
++        // The desktop and Controls already manage their own themed surfaces.
++        if (id != "brookesia.system.super.shell" && id != "brookesia.general.settings" &&
++                id != "local.codex.quota" && id != "local.flipclock" &&
++                id != "local.gravitymaze" && id != "local.lightlearning" && id != "local.virtualpet") {
++            const auto &palette = square_desktop_palette(brookesia_board_desktop_theme());
++            auto applied = gui_runtime_->set_app_palette(*record.document_id, {
++                {"bg.base", palette.background}, {"bg.app", palette.background},
++                {"bg.overlay", palette.background}, {"surface.base", palette.tile},
++                {"surface.raised", palette.controls}, {"surface.muted", palette.controls},
++                {"surface.pressed", palette.weather}, {"border.default", palette.edge},
++                {"border.muted", palette.edge}, {"border.strong", palette.edge},
++                {"text.default", "#f3f6ed"}, {"text.muted", palette.muted},
++                {"text.subtle", palette.muted}, {"primary.fill", palette.accent},
++                {"primary.hover", palette.accent}, {"primary.soft", palette.weather},
++                {"primary.on", palette.background},
++            });
++            if (!applied) {
++                BROOKESIA_LOGW("Failed to apply desktop palette to app: %1%", applied.error());
++            }
++        }
++    }
+ #if defined(__EMSCRIPTEN__)
+     if (record.info.manifest.kind != AppKind::Native && record.document_id.has_value() &&
+             record.action_connections.empty()) {
+diff --git a/app/brookesia_app_store/package/res/screens/app_store.json b/app/brookesia_app_store/package/res/screens/app_store.json
+--- a/app/brookesia_app_store/package/res/screens/app_store.json
++++ b/app/brookesia_app_store/package/res/screens/app_store.json
+@@ -34,14 +34,13 @@
+                 {
+                     "type": "container",
+                     "id": "header",
+-                    "styleRefs": [
+-                        "app.card"
+-                    ],
+                     "commonProps": {
+                         "scrollable": false
+                     },
+                     "style": {
+-                        "padding": "${constant.appStore.layout.cardPadding}"
++                        "padding": "0dp",
++                        "borderWidth": "0dp",
++                        "bgColor": ""
+                     },
+                     "layout": {
+                         "type": "flex",
+@@ -88,7 +87,7 @@
+                                         "flexFlow": "column",
+                                         "mainAlign": "center",
+                                         "crossAlign": "stretch",
+-                                        "gap": "4dp"
++                                        "gap": "3dp"
+                                     },
+                                     "placement": {
+                                         "mode": "flow",
+@@ -192,9 +191,11 @@
+                                         }
+                                     ],
+                                     "style": {
+-                                        "bgColor": "${color.primary.fill}",
++                                        "bgColor": "${color.surface.base}",
+                                         "radius": "12dp",
+-                                        "padding": "0dp"
++                                        "padding": "0dp",
++                                        "borderColor": "${color.border.default}",
++                                        "borderWidth": "1dp"
+                                     },
+                                     "layout": {
+                                         "type": "flex",
+@@ -222,7 +223,7 @@
+                                                 "text": "${constant.appStore.i18n.action_refresh}"
+                                             },
+                                             "style": {
+-                                                "textColor": "${color.primary.on}",
++                                                "textColor": "${color.text.default}",
+                                                 "fontSize": "${constant.appStore.font.button}"
+                                             }
+                                         }
+@@ -268,7 +269,7 @@
+                                     ],
+                                     "style": {
+                                         "bgColor": "${color.primary.fill}",
+-                                        "radius": "${constant.appStore.layout.tabHeight}",
++                                        "radius": "10dp",
+                                         "padding": "0dp"
+                                     },
+                                     "layout": {
+@@ -278,8 +279,9 @@
+                                     },
+                                     "placement": {
+                                         "mode": "flow",
+-                                        "width": "${constant.appStore.layout.tabButtonWidth}",
+-                                        "height": "${constant.appStore.layout.tabHeight}"
++                                        "width": "1dp",
++                                        "height": "match",
++                                        "flexGrow": 1
+                                     },
+                                     "children": [
+                                         {
+@@ -319,7 +321,7 @@
+                                     ],
+                                     "style": {
+                                         "bgColor": "${color.primary.fill}",
+-                                        "radius": "${constant.appStore.layout.tabHeight}",
++                                        "radius": "10dp",
+                                         "padding": "0dp"
+                                     },
+                                     "layout": {
+@@ -329,8 +331,9 @@
+                                     },
+                                     "placement": {
+                                         "mode": "flow",
+-                                        "width": "${constant.appStore.layout.tabButtonWidth}",
+-                                        "height": "${constant.appStore.layout.tabHeight}"
++                                        "width": "1dp",
++                                        "height": "match",
++                                        "flexGrow": 1
+                                     },
+                                     "children": [
+                                         {
+@@ -370,7 +373,7 @@
+                                     ],
+                                     "style": {
+                                         "bgColor": "${color.primary.fill}",
+-                                        "radius": "${constant.appStore.layout.tabHeight}",
++                                        "radius": "10dp",
+                                         "padding": "0dp"
+                                     },
+                                     "layout": {
+@@ -380,8 +383,9 @@
+                                     },
+                                     "placement": {
+                                         "mode": "flow",
+-                                        "width": "${constant.appStore.layout.tabButtonWidth}",
+-                                        "height": "${constant.appStore.layout.tabHeight}"
++                                        "width": "1dp",
++                                        "height": "match",
++                                        "flexGrow": 1
+                                     },
+                                     "children": [
+                                         {
+@@ -404,7 +408,12 @@
+                                         }
+                                     ]
+                                 }
+-                            ]
++                            ],
++                            "style": {
++                                "bgColor": "${color.surface.base}",
++                                "radius": "13dp",
++                                "padding": "4dp"
++                            }
+                         }
+                     ]
+                 },
+@@ -418,11 +427,10 @@
+                     "bindings": {
+                         "commonProps.hidden": "commonProps.hidden"
+                     },
+-                    "styleRefs": [
+-                        "app.card"
+-                    ],
+                     "style": {
+-                        "padding": "${constant.appStore.layout.cardPadding}"
++                        "padding": "0dp",
++                        "borderWidth": "0dp",
++                        "bgColor": ""
+                     },
+                     "layout": {
+                         "type": "flex",
+@@ -434,7 +442,8 @@
+                     "placement": {
+                         "mode": "flow",
+                         "width": "match",
+-                        "height": "match"
++                        "height": "1dp",
++                        "flexGrow": 1
+                     },
+                     "children": [
+                         {
+diff --git a/app/brookesia_app_store/package/res/templates/app_store_item.json b/app/brookesia_app_store/package/res/templates/app_store_item.json
+--- a/app/brookesia_app_store/package/res/templates/app_store_item.json
++++ b/app/brookesia_app_store/package/res/templates/app_store_item.json
+@@ -14,7 +14,10 @@
+             "app.listItem"
+         ],
+         "style": {
+-            "padding": "0dp"
++            "padding": "0dp",
++            "radius": "${constant.appStore.layout.itemRadius}",
++            "borderWidth": "1dp",
++            "borderColor": "${color.border.default}"
+         },
+         "events": [
+             {
+@@ -115,7 +118,11 @@
+                                     "fontSize": "${constant.appStore.font.fallback}"
+                                 }
+                             }
+-                        ]
++                        ],
++                        "style": {
++                            "bgColor": "${color.surface.muted}",
++                            "radius": "14dp"
++                        }
+                     },
+                     {
+                         "type": "container",
+diff --git a/app/brookesia_app_store/package/res/constants/480x480.json b/app/brookesia_app_store/package/res/constants/480x480.json
+--- a/app/brookesia_app_store/package/res/constants/480x480.json
++++ b/app/brookesia_app_store/package/res/constants/480x480.json
+@@ -3,32 +3,32 @@
+     "data": {
+         "appStore": {
+             "layout": {
+-                "pagePadding": "12dp",
+-                "pageGap": "10dp",
+-                "headerButtonWidth": "96dp",
+-                "headerGap": "8dp",
+-                "tabHeight": "28dp",
++                "pagePadding": "18dp",
++                "pageGap": "12dp",
++                "headerButtonWidth": "84dp",
++                "headerGap": "10dp",
++                "tabHeight": "47dp",
+                 "tabButtonWidth": "80dp",
+-                "tabGap": "6dp",
++                "tabGap": "4dp",
+                 "cardPadding": "10dp",
+-                "cardGap": "8dp",
+-                "itemHeight": "96dp",
+-                "itemRadius": "10dp",
++                "cardGap": "9dp",
++                "itemHeight": "90dp",
++                "itemRadius": "16dp",
+                 "iconColumnWidth": "56dp",
+                 "iconBoxSize": "56dp",
+                 "iconSize": "44dp",
+-                "actionColumnWidth": "96dp",
+-                "actionButtonHeight": "34dp",
++                "actionColumnWidth": "92dp",
++                "actionButtonHeight": "40dp",
+                 "deleteWidth": "68dp"
+             },
+             "font": {
+-                "title": "24sp",
+-                "itemTitle": "16sp",
+-                "body": "12sp",
+-                "caption": "11sp",
++                "title": "32sp",
++                "itemTitle": "20sp",
++                "body": "14sp",
++                "caption": "12sp",
+                 "fallback": "26sp",
+-                "button": "13sp",
+-                "tab": "12sp"
++                "button": "15sp",
++                "tab": "16sp"
+             }
+         }
+     }

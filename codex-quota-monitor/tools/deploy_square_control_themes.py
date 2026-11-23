@@ -1,4 +1,4 @@
-"""Install the square desktop palettes and unified Controls resources over USB."""
+"""Install square desktop and native app UI resources over USB."""
 
 import argparse
 import hashlib
@@ -14,7 +14,9 @@ ROOT = Path(__file__).resolve().parents[2]
 ASSETS = ROOT / 'packages/resources/square-control-themes'
 APP_UI = ROOT / 'packages/resources/square-apps-ui'
 CONTROL_UI = ROOT / 'packages/resources/square-controls-center'
+STORE_UI = ROOT / 'packages/resources/square-app-store'
 FILES_APP = '/littlefs/apps/brookesia.general.files/res'
+STORE_APP = '/littlefs/apps/brookesia.general.app_store/res'
 FONT = ROOT / 'platform/super_s3_216/littlefs/system/fonts/desktop-theme-extra.ttf'
 SHELL = '/littlefs/system/super/shell'
 CONTROLS = '/littlefs/apps/brookesia.general.settings/res'
@@ -28,6 +30,7 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--apps-ui-only', action='store_true', help='Stage enlarged desktop and Files resources only')
     mode.add_argument('--controls-ui-only', action='store_true', help='Stage the redesigned Controls resources only')
+    mode.add_argument('--store-ui-only', action='store_true', help='Stage only App Store layout resources')
     args = parser.parse_args()
     stamp = 'square-control-themes-' + str(time.time_ns())
     stage = '/sdcard/themes/' + stamp
@@ -41,14 +44,19 @@ def main():
             return call('Storage', method, **params)
 
         current = call('DeviceModes', 'GetState')
-        if current['firmware_version'] not in ('0.8.3-s3.84', '0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88') or current['screen_locked']:
+        version = current['firmware_version']
+        if version not in ('0.8.3-s3.84', '0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88', '0.8.3-s3.89', '0.8.3-s3.90') or current['screen_locked']:
             raise SystemExit('Start the supported firmware and unlock the screen before installing these resources')
-        app_ui = current['firmware_version'] in ('0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88')
-        controls_ui = current['firmware_version'] == '0.8.3-s3.88'
+        app_ui = version in ('0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88', '0.8.3-s3.89', '0.8.3-s3.90')
+        controls_ui = version in ('0.8.3-s3.88', '0.8.3-s3.89', '0.8.3-s3.90')
+        store_ui = version == '0.8.3-s3.90'
+        full = not (args.apps_ui_only or args.controls_ui_only or args.store_ui_only)
         if args.apps_ui_only and not app_ui:
             raise SystemExit('The Files layout requires firmware s3.86')
         if args.controls_ui_only and not controls_ui:
             raise SystemExit('The redesigned Controls layout requires firmware s3.88')
+        if args.store_ui_only and not store_ui:
+            raise SystemExit('The redesigned App Store layout requires firmware s3.90')
         local = Path(temp)
         originals = []
         files = {}
@@ -61,7 +69,7 @@ def main():
             path.write_bytes((json.dumps(doc, ensure_ascii=False, separators=(',', ':')) + '\n').encode())
             return path
 
-        if not (args.apps_ui_only or args.controls_ui_only):
+        if full:
             assets = json.loads((ASSETS / 'shell/images/square-images.json').read_bytes())['images']
             image_index = read_json(IMAGE_INDEX)
             image_index['images'] = [item for item in image_index['images']
@@ -81,7 +89,7 @@ def main():
                 group, relative = source.split('/', 1)
                 files[(SHELL if group == 'shell' else CONTROLS) + '/' + relative] = ASSETS / source
 
-        if app_ui and not args.controls_ui_only:
+        if app_ui and (full or args.apps_ui_only):
             for path in sorted(APP_UI.rglob('*')):
                 if not path.is_file():
                     continue
@@ -89,12 +97,24 @@ def main():
                 target = (SHELL if group == 'shell' else FILES_APP) + '/' + relative
                 files[target] = path
 
-        if controls_ui and not args.apps_ui_only:
+        if controls_ui and (full or args.controls_ui_only):
             # Publish the root after its assets have been staged and verified.
             paths = sorted((p for p in CONTROL_UI.rglob('*') if p.is_file()),
                            key=lambda p: (p == CONTROL_UI / 'root.json', p))
             for path in paths:
                 files[CONTROLS + '/' + path.relative_to(CONTROL_UI).as_posix()] = path
+
+        if store_ui and (full or args.store_ui_only):
+            installed = call('SystemCore', 'ListApps')
+            store = next(app for app in installed if app['manifest']['id'] == 'brookesia.general.app_store')
+            if call('SystemCore', 'GetActiveApp').get('app_id') == store['app_id']:
+                raise SystemExit('Return to the desktop before updating App Store resources')
+            hashes = json.loads((ROOT / 'tools/build-inputs.json').read_bytes())['sha256']
+            for name in ('constants/480x480.json', 'screens/app_store.json', 'templates/app_store_item.json'):
+                source = STORE_UI / name
+                if hashlib.sha256(source.read_bytes()).hexdigest() != hashes[source.relative_to(ROOT).as_posix()]:
+                    raise SystemExit(f'App Store resource checksum mismatch: {name}')
+                files[f'{STORE_APP}/{name}'] = source
 
         capacity = storage('GetFileSystemCapacity', MountPoint='/littlefs')
         needed = sum(path.stat().st_size for path in files.values())

@@ -20,7 +20,7 @@ const SKY_PALETTES = {
 let gui, storage, http, wifi, timer, modes, core;
 let hasCompact = false, compact = false;
 let compactKey = '';
-let screenAsleep=false, fxProbe=null;
+let screenAsleep=false, fxProbe=null, themedBackground=false;
 let mode = 'shanghai', location = CITIES.shanghai, data = null, receivedAt = 0;
 let connected = false, paused = false, pending = null, nextFetch = 0, failures = 0;
 let lastRequest = 0, error = '', status = '未联网', rendered = {};
@@ -199,12 +199,13 @@ function applyScene() {
   const celestial=scene!=='idle' && scene!=='fog' && scene!=='storm' && code!==3;
   const stars=!day && (scene==='clear_night' || (scene==='cloudy_night' && code!==3));
   const light=day && scene!=='idle';
+  const darkInk=light && !themedBackground;
   const updates=[binding('/main','sky',c[0]),binding('/main','sky_bottom',c[1]),
-    binding('/main/backdrop/shade','opacity',light?12:45),
+    binding('/main/backdrop/shade','opacity',themedBackground?0:light?12:45),
     binding('/main/backdrop/rain','opacity',light?140:255),
-    binding('/main/content/temperature','ink',light?'#102f4d':'#ffffff'),
-    binding('/main/content/humidity','ink',light?'#183c55':'#c6e5ef'),
-    binding('/main/content/condition','ink',light?'#183c55':'#ffda83'),
+    binding('/main/content/temperature','ink',darkInk?'#102f4d':'#ffffff'),
+    binding('/main/content/humidity','ink',darkInk?'#183c55':'#c6e5ef'),
+    binding('/main/content/condition','ink',darkInk?'#183c55':'#ffda83'),
     binding('/main/backdrop/rain','hidden',!rain),binding('/main/backdrop/sun','hidden',!(day && celestial)),
     binding('/main/backdrop/moon','hidden',!(!day && celestial)),
     binding('/main/backdrop/stars','hidden',!stars),
@@ -215,7 +216,8 @@ function applyScene() {
     try {
       const skySrc='sky_'+(SKY_PALETTES[skyName]?skyName:'idle');
       call(gui,'SetViewSrc',{Path:'/main/sky_texture',Src:skySrc});
-      updates.push(binding('/main/sky_texture','hidden',false));
+      updates.push(binding('/main/sky_texture','hidden',false),
+        binding('/main/sky_texture','opacity',themedBackground?48:255));
       fxSky=skySrc;
     } catch (_) {
       // Keep the color fallback and the animation if a tile is unavailable.
@@ -420,7 +422,11 @@ function selectCity(index) {
 }
 globalThis.brookesia_app = {
   on_start() {
-    try{modes=brookesia.start_service('DeviceModes');}catch(_){}
+    themedBackground=false;
+    try{
+      modes=brookesia.start_service('DeviceModes');
+      themedBackground=Boolean(call(modes,'GetState')?.app_background_follows_theme);
+    }catch(_){}
     gui=brookesia.start_service('SystemGui'); storage=brookesia.start_service('Storage');
     wifi=brookesia.start_service('Wifi'); http=brookesia.start_service('Http'); timer=brookesia.start_service('SystemTimer');
     for (const event of ['RequestCompleted','RequestFailed','RequestCanceled']) brookesia.subscribe_event(http,event);
