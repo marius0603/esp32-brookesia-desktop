@@ -15,6 +15,12 @@ python tools/wechat_brief.py --body-file codex-quota-monitor/runtime/work-brief.
 
 当前工具通过常驻Gateway的`send` RPC发送：只有响应的`runId`与本次稳定请求标识一致、`channel`一致且存在`messageId`才确认成功，不能仅凭CLI退出码。当前安装版本的Gateway仅在通道发送成功后生成该回执。旧版`message send`路径使用的`payload.deliveryStatus=sent`不再作为新RPC的判据。相同工作ID不会自动重发；请求前先记录未确认状态，超时或进程中断时避免重复发送，应先现场检查微信再决定是否用新的ID重发。发送状态本地保存，不保存正文，不自动重试。
 
+### 2026-11-23 Codex 对话启动失败恢复
+
+微信显示 `OpenClaw couldn't finish this request` 时，网关记录了 Codex 进程启动 `ENOENT`。本机配置仍指向已被 Windows 应用更新替换的旧版本程序目录。核对 `Get-Command codex.exe` 和 `codex.exe --version` 后，更新 `plugins.entries.codex.config.appServer.command`，备份旧配置并安全重启网关。网关健康检查和一次关闭外部投递的独立 Codex 对话均通过。
+
+同日 09:51 的简报拒绝发生在微信接口的 `prepare failed` 阶段。简报发送直接使用 Gateway 的 `send` RPC，Codex 对话恢复不改变微信主动推送的会话限制。后续 Windows 应用更新后，如对话再次出现 `ENOENT`，先检查此程序路径。
+
 ### 2026-11-18 微信接口拒绝检测和实测恢复
 
 摇篮曲验收简报发送时本机 Gateway 健康检查通过。微信接口实际返回 `sendMessage ret=-2 errmsg=prepare failed`，旧脚本将它归为缺少回执。发送器现在将这条明确的拒绝记录为 `rejected / wechat_prepare_rejected`，日志只保存状态和耗时。相同工作 ID 保持防重复。
