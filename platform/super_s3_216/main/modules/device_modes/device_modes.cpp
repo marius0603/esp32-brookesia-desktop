@@ -194,7 +194,8 @@ private:
                         {"selected_text_rgb",lv_color_to_u32(lv_obj_get_style_text_color(list,LV_PART_SELECTED)) & 0xffffff}});
                 }
             }
-            if(layers.size()<32 && effective>0 && bg>0 && (kind[0]!='s' || color==0x020913 || color==0xffce65 || (w>=400 && (h>=400 || h==40)))){
+            const bool weather_card = (w == 428 && (h == 167 || h == 163)) || (w == 60 && h == 104);
+            if(layers.size()<32 && effective>0 && bg>0 && (kind[0]!='s' || color==0x020913 || color==0xffce65 || weather_card || (w>=400 && (h>=400 || h==40)))){
                 layers.push_back(boost::json::object{{"kind",kind},{"order",order},{"x",area.x1},{"y",area.y1},{"width",w},{"height",h},
                     {"opacity",opacity},{"effective_opacity",effective},{"background_opacity",bg},{"rgb",color}});
             }

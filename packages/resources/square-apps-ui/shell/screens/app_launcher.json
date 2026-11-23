@@ -93,7 +93,8 @@
                 "textAlign": "left"
               },
               "bindings": {
-                "labelProps.text": "text"
+                "labelProps.text": "text",
+                "style.textColor": "theme_text"
               }
             },
             {
@@ -220,6 +221,13 @@
                   "imageProps": {
                     "src": "${image.square.controls}",
                     "innerAlign": "contain"
+                  },
+                  "bindings": {
+                    "style.imageRecolor": "theme_ink"
+                  },
+                  "style": {
+                    "imageRecolor": "#F3F6ED",
+                    "imageRecolorOpacity": 255
                   }
                 },
                 {
@@ -242,6 +250,9 @@
                     "textColor": "#F3F6ED",
                     "fontSize": 21,
                     "textAlign": "center"
+                  },
+                  "bindings": {
+                    "style.textColor": "theme_text"
                   }
                 }
               ],

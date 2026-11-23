@@ -1,0 +1,132 @@
+diff --git a/system/brookesia_system_core/include/brookesia/system_core/square_desktop_palette.hpp b/system/brookesia_system_core/include/brookesia/system_core/square_desktop_palette.hpp
+--- a/system/brookesia_system_core/include/brookesia/system_core/square_desktop_palette.hpp
++++ b/system/brookesia_system_core/include/brookesia/system_core/square_desktop_palette.hpp
+@@ -13,16 +13,19 @@
+     const char *controls;
+     const char *muted;
+     const char *accent;
++    const char *text = "#F3F6ED";
+ };
+ 
+ inline const SquareDesktopPalette &square_desktop_palette(int selected)
+ {
+-    static constexpr std::array<SquareDesktopPalette, 4> palettes = {{
+-        {"#101714", "#1B271F", "#304036", "#273721", "#1D2922", "#A7B2A9", "#D5F588"},
++    static constexpr std::array<SquareDesktopPalette, 6> palettes = {{
++        {"#FFF1DF", "#FFF9EF", "#E5CAAF", "#F9E9D7", "#F9E9D7", "#785B4D", "#9F493B", "#604236"},
++        {"#0A1421", "#111D2D", "#2D4E66", "#132A3C", "#0D1725", "#AFCCD8", "#65EDFF", "#EDF5FF"},
++        {"#2F493A", "#384F42", "#4A6153", "#405548", "#3D5547", "#CCD9C9", "#DDF6A2"},
+         {"#0D1521", "#17293D", "#2B4560", "#203B53", "#1A2D43", "#A5B9CB", "#A3E6F3"},
+         {"#191321", "#2B203A", "#48375A", "#372649", "#31233F", "#BDAECB", "#DAC4FA"},
+         {"#201611", "#33241A", "#573C2D", "#492E1D", "#38261A", "#C7B2A5", "#F2CD92"},
+     }};
+-    return palettes[std::clamp(selected - 2, 0, 3)];
++    return palettes[std::clamp(selected, 0, 5)];
+ }
+ }
+diff --git a/system/brookesia_system_core/src/system/gui.cpp b/system/brookesia_system_core/src/system/gui.cpp
+--- a/system/brookesia_system_core/src/system/gui.cpp
++++ b/system/brookesia_system_core/src/system/gui.cpp
+@@ -8,6 +8,8 @@
+ #   define BROOKESIA_LOG_DISABLE_DEBUG_TRACE 1
+ #endif
+ #include <algorithm>
++#include <cstdio>
++#include <cstdlib>
+ #include <set>
+ #include <string_view>
+ 
+@@ -26,6 +28,22 @@
+ namespace {
+ 
+ constexpr uint32_t STORAGE_FS_TIMEOUT_MS = 5000;
++
++// Mix an in-family surface, matching the approved weather preview percentages.
++std::string weather_surface(const SquareDesktopPalette &palette, unsigned per_mille)
++{
++    const auto base = std::strtoul(palette.background + 1, nullptr, 16);
++    const auto ink = std::strtoul(palette.text + 1, nullptr, 16);
++    unsigned rgb = 0;
++    for (const int shift : {16, 8, 0}) {
++        const auto b = (base >> shift) & 0xff;
++        const auto f = (ink >> shift) & 0xff;
++        rgb |= static_cast<unsigned>(((1000 - per_mille) * b + per_mille * f + 500) / 1000) << shift;
++    }
++    char color[8];
++    std::snprintf(color, sizeof(color), "#%06X", rgb);
++    return color;
++}
+ 
+ std::string make_binding_update_key(std::string_view absolute_path, std::string_view key)
+ {
+@@ -559,17 +577,30 @@
+         if (id != "brookesia.system.super.shell" && id != "brookesia.general.settings" &&
+                 id != "local.codex.quota" && id != "local.flipclock" &&
+                 id != "local.gravitymaze" && id != "local.lightlearning" && id != "local.virtualpet") {
+-            const auto &palette = square_desktop_palette(brookesia_board_desktop_theme());
++            const int selected = brookesia_board_desktop_theme();
++            const bool weather = id == "local.weather";
++            // Legacy app screens still contain fixed light labels and graphics.
++            // Use a warm dark rendition for those screens in the classic theme.
++            const bool legacy_classic = selected == 0 && !weather && id != "brookesia.general.app_store";
++            static constexpr SquareDesktopPalette classic_legacy = {
++                "#362820", "#4A372D", "#685140", "#563A2B", "#46332A", "#DCBFA9", "#F5C8A4", "#FFF1DF"
++            };
++            const auto &palette = legacy_classic ? classic_legacy : square_desktop_palette(selected);
++            const bool light_classic = selected == 0 && !legacy_classic;
++            const std::string card = weather ? weather_surface(palette, 45) : palette.tile;
++            const std::string raised = weather ? weather_surface(palette, 70) : palette.controls;
++            const std::string edge = weather ? weather_surface(palette, 140) : palette.edge;
+             auto applied = gui_runtime_->set_app_palette(*record.document_id, {
+                 {"bg.base", palette.background}, {"bg.app", palette.background},
+-                {"bg.overlay", palette.background}, {"surface.base", palette.tile},
+-                {"surface.raised", palette.controls}, {"surface.muted", palette.controls},
+-                {"surface.pressed", palette.weather}, {"border.default", palette.edge},
+-                {"border.muted", palette.edge}, {"border.strong", palette.edge},
+-                {"text.default", "#f3f6ed"}, {"text.muted", palette.muted},
++                {"bg.overlay", weather ? weather_surface(palette, 20) : palette.background},
++                {"bg.gradient", weather ? weather_surface(palette, 20) : card},
++                {"surface.base", card}, {"surface.raised", raised}, {"surface.muted", raised},
++                {"surface.pressed", palette.weather}, {"border.default", edge},
++                {"border.muted", edge}, {"border.strong", edge},
++                {"text.default", palette.text}, {"text.muted", palette.muted},
+                 {"text.subtle", palette.muted}, {"primary.fill", palette.accent},
+                 {"primary.hover", palette.accent}, {"primary.soft", palette.weather},
+-                {"primary.on", palette.background},
++                {"primary.on", light_classic ? "#FFFFFF" : palette.background},
+             });
+             if (!applied) {
+                 BROOKESIA_LOGW("Failed to apply desktop palette to app: %1%", applied.error());
+diff --git a/system/brookesia_system_super/src/shell_app_launcher.cpp b/system/brookesia_system_super/src/shell_app_launcher.cpp
+--- a/system/brookesia_system_super/src/shell_app_launcher.cpp
++++ b/system/brookesia_system_super/src/shell_app_launcher.cpp
+@@ -387,6 +387,7 @@
+         if (square_layout) {
+             add_binding_update(updates, path, "theme_fill", palette.tile);
+             add_binding_update(updates, path, "theme_edge", palette.edge);
++            add_binding_update(updates, path + "/" + SUPER_LAUNCHER_LABEL_ID, "theme_text", palette.text);
+         } else {
+             add_binding_update(updates, path + "/" + SUPER_LAUNCHER_LABEL_ID,
+                                "theme_text", selected == 1 ? "#edf5ff" : "#664c40");
+@@ -397,6 +398,9 @@
+         add_binding_update(updates, "/launcher", "theme_fill", palette.background);
+         add_binding_update(updates, "/launcher/content", "theme_fill", palette.background);
+         add_binding_update(updates, head + "/date", "theme_text", palette.muted);
++        add_binding_update(updates, head + "/time", "theme_text", palette.text);
++        add_binding_update(updates, head + "/controls/title", "theme_text", palette.text);
++        add_binding_update(updates, head + "/controls/icon", "theme_ink", palette.text);
+         add_binding_update(updates, head + "/weather", "theme_fill", palette.weather);
+         add_binding_update(updates, head + "/weather", "theme_edge", palette.edge);
+         add_binding_update(updates, head + "/weather/temperature", "theme_text", palette.accent);
+diff --git a/gui/brookesia_gui_interface/src/runtime_style.cpp b/gui/brookesia_gui_interface/src/runtime_style.cpp
+--- a/gui/brookesia_gui_interface/src/runtime_style.cpp
++++ b/gui/brookesia_gui_interface/src/runtime_style.cpp
+@@ -274,7 +274,7 @@
+         if (node.type == NodeType::Screen || color == "#101714") {
+             style.set_bg_color(tree.color_overrides.at("bg.base"));
+             if (style.bg_gradient_color()) {
+-                style.set_bg_gradient_color(tree.color_overrides.at("surface.base"));
++                style.set_bg_gradient_color(tree.color_overrides.at("bg.gradient"));
+             }
+         } else if (color == "#1B271F" || color == "#1b271f") {
+             style.set_bg_color(tree.color_overrides.at("surface.base"));

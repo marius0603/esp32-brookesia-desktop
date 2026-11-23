@@ -14,7 +14,7 @@ const fixture = {current:{time:'2026-10-18T20:00',temperature_2m:23.6,relative_h
   hourly:{time:Array.from({length:25},(_,i)=>new Date(Date.UTC(2026,9,18,20+i)).toISOString().slice(0,16)),
     temperature_2m:Array(25).fill(24),weather_code:Array(25).fill(51),is_day:Array(25).fill(0)}};
 
-function harness(online=true, files={}, compact=false) {
+function harness(online=true, files={}, compact=false, device=null) {
   let now=1792324800000, nextId=1;
   const calls=[], texts={};
   class Clock extends Date {static now(){return now;}}
@@ -33,6 +33,7 @@ function harness(online=true, files={}, compact=false) {
       if (name==='FSReadText') {if (!(p.Path in files)) return JSON.stringify({success:false,error:'missing'});data=JSON.stringify(files[p.Path]);}
       if (name==='FSWriteText') files[p.Path]=JSON.parse(p.Data);
       if (name==='GetGeneralState') data=online?'Connected':'Started';
+      if (handle==='DeviceModes' && name==='GetState') data=device;
       if (name==='GetViewFrame' && compact) data={width:480,height:480};
       if (name==='RequestAsync') data=nextId++;
       if (name==='StartPeriodic') data=99;
@@ -61,6 +62,37 @@ test('compact weather draws six live values and opens the original detail view',
   h.app.on_action('compact.details');
   assert.equal(h.texts['/main/content/temperature'],'23.6°C');
   assert.equal(h.calls.some(call=>call.name==='StartPeriodic' && call.p.Name==='weather_fx'),true);
+});
+test('desktop colors cover overview, city choice and all hourly cards',()=>{
+  const overview='/main/compact';
+  const detail='/main/content';
+  const h=harness(true,{},true,{app_background_follows_theme:true});
+  const role=name=>'${color.'+name+'}';
+  for (const [suffix,field,name] of [
+    ['', 'bgColor','bg.base'], ['/city','bgColor','surface.base'],
+    ['/data/hero','bgColor','surface.raised'], ['/data/hero/temperature','textColor','primary.fill'],
+    ['/data/forecast','borderColor','border.default'], ['/data/forecast/trace','lineColor','primary.fill'],
+    ['/data/forecast/hour0','textColor','text.muted'], ['/refresh','bgColor','surface.muted']
+  ]) assert.equal(nodes[overview+suffix].style[field],role(name));
+  assert.equal(nodes[detail+'/hourly/h0'].style.bgColor,role('surface.base'));
+  h.app.on_start();
+  h.complete(1,solarFixture(0));
+  h.app.on_action('compact.details');
+  const read=(path,key)=>h.calls.filter(c=>c.name==='SetBindings').flatMap(c=>c.p.Updates)
+    .findLast(u=>u.Path===path && u.Key===key)?.Value;
+  assert.equal(read('/main','sky'),role('bg.base'));
+  assert.equal(read('/main','sky_bottom'),role('bg.overlay'));
+  assert.equal(read('/main/sky_texture','opacity'),'16');
+  assert.equal(read(detail+'/temperature','ink'),role('primary.fill'));
+  const surfaces=new Set();
+  for(let i=0;i<24;i++){
+    const card=detail+'/hourly/h'+i;
+    surfaces.add(read(card,'card_bg'));
+    assert.equal(read(card+'/temperature','ink'),role('primary.fill'));
+    assert.equal(read(card+'/condition','muted_ink'),role('text.muted'));
+  }
+  assert.deepEqual(surfaces,new Set([role('surface.base'),role('surface.raised')]));
+  assert.ok(h.value('fxTimer'));
 });
 test('missing values and WMO codes',()=>{
   const h=harness();assert.equal(h.value('num(null)'), '--');assert.equal(h.value('num(0)'), '0');

@@ -129,7 +129,7 @@
             },
             "bindings": {
               "labelProps.text": "name",
-              "style.borderColor": "theme_text"
+              "style.textColor": "theme_text"
             },
             "labelProps": {
               "text": ""

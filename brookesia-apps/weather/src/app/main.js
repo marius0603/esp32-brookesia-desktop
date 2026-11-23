@@ -27,6 +27,12 @@ let lastRequest = 0, error = '', status = '未联网', rendered = {};
 let fxDay=1, fxSky=null;
 let fxScene='', fxTimer=0, tickTimer=0, fxLastTick=0, fxElapsed=0, fxInterval=250, fxFrames=0, fxError='', fxValues={};
 
+const desktopColors = {
+  background: '${color.bg.base}', sky: '${color.bg.overlay}', card: '${color.surface.base}', raised: '${color.surface.raised}',
+  edge: '${color.border.default}', mutedEdge: '${color.border.muted}',
+  text: '${color.text.default}', muted: '${color.text.muted}', accent: '${color.primary.fill}'
+};
+
 function call(handle, name, args) {
   const result = JSON.parse(brookesia.call_function(handle, name, JSON.stringify(args || {})));
   if (!result.success) throw new Error(result.error || name);
@@ -200,12 +206,13 @@ function applyScene() {
   const stars=!day && (scene==='clear_night' || (scene==='cloudy_night' && code!==3));
   const light=day && scene!=='idle';
   const darkInk=light && !themedBackground;
-  const updates=[binding('/main','sky',c[0]),binding('/main','sky_bottom',c[1]),
+  const updates=[binding('/main','sky',themedBackground?desktopColors.background:c[0]),
+    binding('/main','sky_bottom',themedBackground?desktopColors.sky:c[1]),
     binding('/main/backdrop/shade','opacity',themedBackground?0:light?12:45),
     binding('/main/backdrop/rain','opacity',light?140:255),
-    binding('/main/content/temperature','ink',darkInk?'#102f4d':'#ffffff'),
-    binding('/main/content/humidity','ink',darkInk?'#183c55':'#c6e5ef'),
-    binding('/main/content/condition','ink',darkInk?'#183c55':'#ffda83'),
+    binding('/main/content/temperature','ink',themedBackground?desktopColors.accent:darkInk?'#102f4d':'#ffffff'),
+    binding('/main/content/humidity','ink',themedBackground?desktopColors.muted:darkInk?'#183c55':'#c6e5ef'),
+    binding('/main/content/condition','ink',themedBackground?desktopColors.text:darkInk?'#183c55':'#ffda83'),
     binding('/main/backdrop/rain','hidden',!rain),binding('/main/backdrop/sun','hidden',!(day && celestial)),
     binding('/main/backdrop/moon','hidden',!(!day && celestial)),
     binding('/main/backdrop/stars','hidden',!stars),
@@ -217,7 +224,7 @@ function applyScene() {
       const skySrc='sky_'+(SKY_PALETTES[skyName]?skyName:'idle');
       call(gui,'SetViewSrc',{Path:'/main/sky_texture',Src:skySrc});
       updates.push(binding('/main/sky_texture','hidden',false),
-        binding('/main/sky_texture','opacity',themedBackground?48:255));
+        binding('/main/sky_texture','opacity',themedBackground?16:255));
       fxSky=skySrc;
     } catch (_) {
       // Keep the color fallback and the animation if a tile is unavailable.
@@ -282,6 +289,11 @@ function persistState() {
     temperature:data?data.current.temperature_2m:null,ui_updated:!paused && !!data});
 }
 function hourlyTheme(day) {
+  if (themedBackground) {
+    return {background:day===0?desktopColors.card:desktopColors.raised,
+      edge:day===0?desktopColors.mutedEdge:desktopColors.edge,
+      ink:desktopColors.text, muted:desktopColors.muted, temperature:desktopColors.accent};
+  }
   return day===0?{background:'#102b42',edge:'#55728b',ink:'#e6effa',muted:'#abc8de'}:
     {background:'#fff5e5',edge:'#7693aa',ink:'#183c55',muted:'#35566e'};
 }
@@ -293,7 +305,8 @@ function syncHourlyThemes(hours) {
     if(rendered[key]===day)continue;
     const t=hourlyTheme(day),path='/main/content/hourly/h'+i;
     updates.push(binding(path,'card_bg',t.background),binding(path,'card_edge',t.edge),
-      binding(path+'/time','ink',t.ink),binding(path+'/temperature','ink',t.ink),binding(path+'/condition','muted_ink',t.muted));
+      binding(path+'/time','ink',t.ink),binding(path+'/temperature','ink',t.temperature || t.ink),
+      binding(path+'/condition','muted_ink',t.muted));
     changed.push([key,day]);
   }
   // Keep each request bounded, and repaint only cards whose daylight changes.
