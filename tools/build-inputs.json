@@ -37,7 +37,8 @@
     "patches/invalid-wall-clock-placeholder.patch",
     "patches/settings-service-ui-lifetime.patch",
     "patches/square-app-surfaces-and-store.patch",
-    "patches/six-desktop-weather-palettes.patch"
+    "patches/six-desktop-weather-palettes.patch",
+    "patches/restore-dark-moss-palette.patch"
   ],
   "sha256": {
     "patches/brookesia-s3.patch": "75e0bb3f720b9bd442955f1b04ab4d6f1437c2cbdfa4359646f1176044bc0346",
@@ -65,7 +66,7 @@
     "patches/bounded-display-dma.patch": "b1e6eb13627718506036f14f94f0a9cb3bac0a893094068084707bb29152e290",
     "patches/persistent-display-dma.patch": "cc8c6cf3dbe36d4089abff0242a3f740cca31e111138ea88df3a341b09d8c264",
     "patches/aligned-display-strips.patch": "1629b23605921dd00fab60995969fd3ad5c5243cb540b9f20a64da4841d25dc2",
-    "platform/super_s3_216/CMakeLists.txt": "62f42da92ef076a92f398a0a4f5b5938b7ec82d3a90cea49e59ad046ebef6e6e",
+    "platform/super_s3_216/CMakeLists.txt": "59e62aed8bc8c716301e4a178024d3887e29e65193a9ef645ed643e4baf85c25",
     "platform/super_s3_216/main/modules/display.cpp": "ec4a62d2d3798dc322383f1dbf999c94c8088c25f17f9dbdbe9a7b7cffa01387",
     "platform/super_s3_216/main/modules/device_modes/device_modes.cpp": "13b8d74796654a3ee50f128e85b5a816065f239cbe47ab9f02ddf1e70ae4b094",
     "platform/super_s3_216/main/modules/device_modes/resource_monitor.cpp": "0f4d6b9c6fa5d4247a4e74e3335a0c82a46d8080ec6f2c191149df38c558a85f",
@@ -159,7 +160,7 @@
     "patches/settings-touch-scroll.patch": "3bf45292a4c021abacb1a290fd28c893f0deac8a344e8c477865d979845e1855",
     "patches/themed-controls-center.patch": "dade1e615e84598d4f3ce3d629324affbd22cd220609ab2a9ef8b6c334c11816",
     "packages/resources/square-controls-center/constants/480x480.json": "327399d8da345e43b230283cea3712d002803c2a399d0af5994494555c165d16",
-    "packages/resources/square-controls-center/constants/controls-palettes.json": "922583b2d9852591f93bbd59a9455e2d24c41adee5eb31cc55c7ee8c86dce748",
+    "packages/resources/square-controls-center/constants/controls-palettes.json": "b9e4fb9657850d072f94ee5be7792fca8bdffb565aa0ec6fc18f45b4a268fef8",
     "packages/resources/square-controls-center/i18n/en.json": "6a57b5d59a86601569f5dd903b62ec3194bea40b47b13e68c1b6ddfb8447b660",
     "packages/resources/square-controls-center/i18n/zh_CN.json": "212ade2f4524f5ca692318d43debec9a12d04bd02967fe4815a0f5a1407ec2c3",
     "packages/resources/square-controls-center/images/control-back.png": "b409d989049053e1900d22d4e0cfeb4df55954793d991b0ce0611ed1b17faf92",
@@ -191,6 +192,7 @@
     "packages/resources/square-app-store/constants/480x480.json": "e961cc29bfa4a7fd437e02f7b4348b075c481fcb51b718e7c120f100a45c9e95",
     "packages/resources/square-app-store/screens/app_store.json": "f4b9567d87d30cc60bb71cf24abb8a51888ae61733c7e803c66a7cc76839768e",
     "packages/resources/square-app-store/templates/app_store_item.json": "b0e4b470e1f16c1d39494c88e15bb427bd1ae7f1f0eb28175f1b5e21de2404e5",
-    "patches/six-desktop-weather-palettes.patch": "274c3dfee18deaa7a74cf3a27eebee415411f7170398aea74cb00ac04e479ca8"
+    "patches/six-desktop-weather-palettes.patch": "274c3dfee18deaa7a74cf3a27eebee415411f7170398aea74cb00ac04e479ca8",
+    "patches/restore-dark-moss-palette.patch": "aefaee6730ee03c07f3411470e073db35f1608f44aeff2af7a04db5868765f5c"
   }
 }

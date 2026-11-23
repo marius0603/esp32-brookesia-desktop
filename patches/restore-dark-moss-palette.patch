@@ -1,0 +1,12 @@
+diff --git a/system/brookesia_system_core/include/brookesia/system_core/square_desktop_palette.hpp b/system/brookesia_system_core/include/brookesia/system_core/square_desktop_palette.hpp
+--- a/system/brookesia_system_core/include/brookesia/system_core/square_desktop_palette.hpp
++++ b/system/brookesia_system_core/include/brookesia/system_core/square_desktop_palette.hpp
+@@ -18,7 +18,7 @@ inline const SquareDesktopPalette &square_desktop_palette(int selected)
+     static constexpr std::array<SquareDesktopPalette, 6> palettes = {{
+         {"#FFF1DF", "#FFF9EF", "#E5CAAF", "#F9E9D7", "#F9E9D7", "#785B4D", "#9F493B", "#604236"},
+         {"#0A1421", "#111D2D", "#2D4E66", "#132A3C", "#0D1725", "#AFCCD8", "#65EDFF", "#EDF5FF"},
+-        {"#2F493A", "#384F42", "#4A6153", "#405548", "#3D5547", "#CCD9C9", "#DDF6A2"},
++        {"#101714", "#1B271F", "#304036", "#273721", "#1D2922", "#A7B2A9", "#D5F588"},
+         {"#0D1521", "#17293D", "#2B4560", "#203B53", "#1A2D43", "#A5B9CB", "#A3E6F3"},
+         {"#191321", "#2B203A", "#48375A", "#372649", "#31233F", "#BDAECB", "#DAC4FA"},
+         {"#201611", "#33241A", "#573C2D", "#492E1D", "#38261A", "#C7B2A5", "#F2CD92"},
