@@ -1,0 +1,422 @@
+{
+  "type": "viewScreen",
+  "id": "settings_header",
+  "commonProps": {
+    "clickable": false,
+    "scrollable": false
+  },
+  "style": {
+    "padding": 0
+  },
+  "children": [
+    {
+      "type": "container",
+      "id": "bar",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 74
+      },
+      "commonProps": {
+        "clickable": false,
+        "scrollable": false
+      },
+      "style": {
+        "padding": 0,
+        "bgColor": "${color.bg.base}"
+      },
+      "children": [
+        {
+          "type": "button",
+          "id": "back",
+          "placement": {
+            "mode": "absolute",
+            "x": 23,
+            "y": 18,
+            "width": 46,
+            "height": 46
+          },
+          "commonProps": {
+            "clickable": true,
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "bgColor": "${color.surface.base}",
+            "borderColor": "${color.border.default}",
+            "borderWidth": 1,
+            "radius": 13
+          },
+          "children": [
+            {
+              "type": "image",
+              "id": "icon",
+              "placement": {
+                "mode": "absolute",
+                "x": 11,
+                "y": 11,
+                "width": 24,
+                "height": 24
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "imageRecolor": "${color.primary.fill}",
+                "imageRecolorOpacity": 255
+              },
+              "imageProps": {
+                "src": "${image.controls.back}",
+                "innerAlign": "contain"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "settings.header.back"
+            }
+          ],
+          "stateStyles": {
+            "pressed": {
+              "bgColor": "${color.surface.pressed}"
+            }
+          },
+          "bindings": {
+            "commonProps.hidden": "commonProps.hidden"
+          }
+        },
+        {
+          "type": "label",
+          "id": "title",
+          "placement": {
+            "mode": "absolute",
+            "x": 82,
+            "y": 20,
+            "width": 375,
+            "height": 45
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "fontSize": 32,
+            "font": "${font.desktop_theme}",
+            "textColor": "${color.text.default}",
+            "textAlign": "left"
+          },
+          "labelProps": {
+            "text": "控制"
+          },
+          "bindings": {
+            "labelProps.text": "labelProps.text"
+          }
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "lock_dialog",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "clickable": true,
+        "scrollable": false,
+        "hidden": true
+      },
+      "style": {
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "scrim",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 480
+          },
+          "commonProps": {
+            "clickable": true,
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "bgColor": "#080B09",
+            "opacity": 195
+          }
+        },
+        {
+          "type": "container",
+          "id": "card",
+          "placement": {
+            "mode": "absolute",
+            "x": 55,
+            "y": 104,
+            "width": 370,
+            "height": 272
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "padding": 0,
+            "bgColor": "${color.surface.base}",
+            "borderColor": "${color.border.default}",
+            "borderWidth": 1,
+            "radius": 20
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "emblem",
+              "placement": {
+                "mode": "absolute",
+                "x": 20,
+                "y": 20,
+                "width": 46,
+                "height": 46
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "bgColor": "${color.warning.soft}",
+                "borderColor": "${color.warning.soft}",
+                "borderWidth": 1,
+                "radius": 12
+              },
+              "children": [
+                {
+                  "type": "image",
+                  "id": "icon",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 11,
+                    "y": 11,
+                    "width": 24,
+                    "height": 24
+                  },
+                  "commonProps": {
+                    "clickable": false,
+                    "scrollable": false
+                  },
+                  "style": {
+                    "padding": 0,
+                    "imageRecolor": "${color.warning.fill}",
+                    "imageRecolorOpacity": 255
+                  },
+                  "imageProps": {
+                    "src": "${image.controls.lock}",
+                    "innerAlign": "contain"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "label",
+              "id": "title",
+              "placement": {
+                "mode": "absolute",
+                "x": 20,
+                "y": 81,
+                "width": 330,
+                "height": 34
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "fontSize": 24,
+                "font": "${font.desktop_theme}",
+                "textColor": "${color.text.default}",
+                "textAlign": "left"
+              },
+              "labelProps": {
+                "text": "锁定触屏"
+              },
+              "bindings": {
+                "labelProps.text": "labelProps.text"
+              }
+            },
+            {
+              "type": "label",
+              "id": "help",
+              "placement": {
+                "mode": "absolute",
+                "x": 20,
+                "y": 126,
+                "width": 330,
+                "height": 62
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "fontSize": 18,
+                "font": "${font.desktop_theme}",
+                "textColor": "${color.text.muted}",
+                "textAlign": "left"
+              },
+              "labelProps": {
+                "text": "锁定后屏幕将熄灭。连续按两次音量＋可解锁。"
+              },
+              "bindings": {
+                "labelProps.text": "labelProps.text"
+              }
+            },
+            {
+              "type": "button",
+              "id": "cancel",
+              "placement": {
+                "mode": "absolute",
+                "x": 20,
+                "y": 200,
+                "width": 153,
+                "height": 50
+              },
+              "commonProps": {
+                "clickable": true,
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "bgColor": "${color.surface.muted}",
+                "borderColor": "${color.border.default}",
+                "borderWidth": 1,
+                "radius": 13
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "label",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 0,
+                    "y": 12,
+                    "width": 153,
+                    "height": 28
+                  },
+                  "commonProps": {
+                    "clickable": false,
+                    "scrollable": false
+                  },
+                  "style": {
+                    "padding": 0,
+                    "fontSize": 18,
+                    "font": "${font.desktop_theme}",
+                    "textColor": "${color.text.default}",
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "取消"
+                  },
+                  "bindings": {
+                    "labelProps.text": "labelProps.text"
+                  }
+                }
+              ],
+              "events": [
+                {
+                  "type": "clicked",
+                  "action": "settings.controls.lock.cancel"
+                }
+              ],
+              "stateStyles": {
+                "pressed": {
+                  "bgColor": "${color.surface.pressed}"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "id": "confirm",
+              "placement": {
+                "mode": "absolute",
+                "x": 197,
+                "y": 200,
+                "width": 153,
+                "height": 50
+              },
+              "commonProps": {
+                "clickable": true,
+                "scrollable": false
+              },
+              "style": {
+                "padding": 0,
+                "bgColor": "${color.warning.soft}",
+                "borderColor": "${color.warning.fill}",
+                "borderWidth": 1,
+                "radius": 13
+              },
+              "children": [
+                {
+                  "type": "label",
+                  "id": "label",
+                  "placement": {
+                    "mode": "absolute",
+                    "x": 0,
+                    "y": 12,
+                    "width": 153,
+                    "height": 28
+                  },
+                  "commonProps": {
+                    "clickable": false,
+                    "scrollable": false
+                  },
+                  "style": {
+                    "padding": 0,
+                    "fontSize": 18,
+                    "font": "${font.desktop_theme}",
+                    "textColor": "${color.warning.fill}",
+                    "textAlign": "center"
+                  },
+                  "labelProps": {
+                    "text": "确认锁定"
+                  },
+                  "bindings": {
+                    "labelProps.text": "labelProps.text"
+                  }
+                }
+              ],
+              "events": [
+                {
+                  "type": "clicked",
+                  "action": "settings.controls.lock.confirm"
+                }
+              ],
+              "stateStyles": {
+                "pressed": {
+                  "bgColor": "${color.surface.pressed}"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      }
+    }
+  ]
+}

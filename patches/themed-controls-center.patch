@@ -1,0 +1,340 @@
+diff --git a/gui/brookesia_gui_interface/include/brookesia/gui_interface/runtime.hpp b/gui/brookesia_gui_interface/include/brookesia/gui_interface/runtime.hpp
+index 4fcc5cd..beaf19c 100644
+--- a/gui/brookesia_gui_interface/include/brookesia/gui_interface/runtime.hpp
++++ b/gui/brookesia_gui_interface/include/brookesia/gui_interface/runtime.hpp
+@@ -198,6 +198,8 @@ public:
+     bool destroy_view(DocumentId id, std::string_view absolute_path);
+     std::expected<void, std::string> update(DocumentId id, std::string_view file_path, const Environment &environment);
+     std::expected<void, std::string> reapply_styles(DocumentId id);
++    // Read a color-token map from this document's resource constants and restyle it in place.
++    std::expected<void, std::string> set_document_palette(DocumentId id, std::string_view constant_path);
+     std::expected<boost::json::value, std::string> get_constant_value(
+         DocumentId id,
+         std::string_view path
+diff --git a/gui/brookesia_gui_interface/src/private/runtime_impl.hpp b/gui/brookesia_gui_interface/src/private/runtime_impl.hpp
+index b7463c9..d8ed146 100644
+--- a/gui/brookesia_gui_interface/src/private/runtime_impl.hpp
++++ b/gui/brookesia_gui_interface/src/private/runtime_impl.hpp
+@@ -1401,6 +1401,7 @@ public:
+         bool theme_sensitive = false;
+         boost::json::value constants;
+         Environment environment;
++        std::map<std::string, std::string> color_overrides;
+         bool environment_dirty = false;
+         bool styles_dirty = false;
+         bool live_preview_enabled = false;
+diff --git a/gui/brookesia_gui_interface/src/runtime_resources.cpp b/gui/brookesia_gui_interface/src/runtime_resources.cpp
+index ddcea23..98f2424 100644
+--- a/gui/brookesia_gui_interface/src/runtime_resources.cpp
++++ b/gui/brookesia_gui_interface/src/runtime_resources.cpp
+@@ -61,6 +61,9 @@ std::expected<std::string, std::string> Runtime::Impl::resolve_color_binding_val
+         return std::unexpected("Invalid color reference: " + std::string(value));
+     }
+ 
++    if (const auto override = tree.color_overrides.find(*color_path); override != tree.color_overrides.end()) {
++        return override->second;
++    }
+     const auto &theme_id = tree.environment.theme_id;
+     auto theme_it = global_themes.find(theme_id);
+     if (theme_it == global_themes.end()) {
+diff --git a/gui/brookesia_gui_interface/src/runtime.cpp b/gui/brookesia_gui_interface/src/runtime.cpp
+index 64d4131..1acb72a 100644
+--- a/gui/brookesia_gui_interface/src/runtime.cpp
++++ b/gui/brookesia_gui_interface/src/runtime.cpp
+@@ -424,6 +424,30 @@ std::expected<void, std::string> Runtime::update(DocumentId id, std::string_view
+     return impl_->update(this, id, file_path, environment);
+ }
+ 
++std::expected<void, std::string> Runtime::set_document_palette(DocumentId id, std::string_view constant_path)
++{
++    auto *tree = impl_->resolve_tree(id);
++    if (!tree) return std::unexpected("GUI document not loaded");
++    auto value = impl_->get_constant_value(id, constant_path);
++    if (!value) return std::unexpected(value.error());
++    const auto *colors = value->if_object();
++    if (!colors) return std::unexpected("Palette constant must be a color map");
++    std::map<std::string, std::string> overrides;
++    for (const auto &item : *colors) {
++        const auto *color = item.value().if_string();
++        if (!color || color->size() != 7 || (*color)[0] != '#' ||
++                std::string_view(color->data() + 1, 6).find_first_not_of("0123456789abcdefABCDEF") != std::string_view::npos) {
++            return std::unexpected("Palette colors must use #RRGGBB");
++        }
++        overrides.emplace(std::string(item.key()), std::string(*color));
++    }
++    if (tree->color_overrides == overrides) return {};
++    tree->color_overrides = std::move(overrides);
++    tree->definition_style_cache.clear();
++    tree->resolved_style_intern_cache.clear();
++    return reapply_styles(id);
++}
++
+ std::expected<void, std::string> Runtime::reapply_styles(DocumentId id)
+ {
+     return impl_->reapply_styles(id);
+diff --git a/system/brookesia_system_core/include/brookesia/system_core/app/gui_runtime.hpp b/system/brookesia_system_core/include/brookesia/system_core/app/gui_runtime.hpp
+index b7dfa38..14b6383 100644
+--- a/system/brookesia_system_core/include/brookesia/system_core/app/gui_runtime.hpp
++++ b/system/brookesia_system_core/include/brookesia/system_core/app/gui_runtime.hpp
+@@ -41,6 +41,7 @@ public:
+     std::expected<GuiBatchResult, std::string> execute_batch(const std::vector<GuiBatchCommand> &commands) const;
+     std::optional<std::string> get_binding_value(std::string_view absolute_path, std::string_view key) const;
+     std::expected<boost::json::value, std::string> get_constant_value(std::string_view path) const;
++    std::expected<void, std::string> set_document_palette(std::string_view constant_path) const;
+     std::expected<void, std::string> set_text(std::string_view absolute_path, std::string_view text) const;
+     std::expected<void, std::string> set_value(std::string_view absolute_path, int32_t value) const;
+     std::expected<void, std::string> set_checked(std::string_view absolute_path, bool checked) const;
+diff --git a/system/brookesia_system_core/src/app/app.cpp b/system/brookesia_system_core/src/app/app.cpp
+index 1438f5e..01f21fd 100644
+--- a/system/brookesia_system_core/src/app/app.cpp
++++ b/system/brookesia_system_core/src/app/app.cpp
+@@ -355,6 +355,23 @@ std::expected<boost::json::value, std::string> AppGuiRuntime::get_constant_value
+     return system_->gui_get_constant_value(app_id_, path);
+ }
+ 
++std::expected<void, std::string> AppGuiRuntime::set_document_palette(std::string_view constant_path) const
++{
++    if (!system_) return std::unexpected("System is not available");
++    auto &impl = *system_->impl_;
++    return impl.run_task_sync<std::expected<void, std::string>>(
++        SYSTEM_GUI_TASK_GROUP,
++        [&impl, app_id = app_id_, path = std::string(constant_path)]() -> std::expected<void, std::string> {
++            auto record = impl.get_record(app_id);
++            if (!record || !impl.gui_runtime_ || !(*record)->document_id) {
++                return std::unexpected("App GUI document is not loaded");
++            }
++            return impl.gui_runtime_->set_document_palette(*(*record)->document_id, path);
++        },
++        std::unexpected("Failed to post GUI palette update")
++    );
++}
++
+ std::expected<void, std::string> AppGuiRuntime::set_text(
+     std::string_view absolute_path,
+     std::string_view text
+diff --git a/gui/brookesia_gui_lvgl/src/event.cpp b/gui/brookesia_gui_lvgl/src/event.cpp
+index 33fcf28..a7b8331 100644
+--- a/gui/brookesia_gui_lvgl/src/event.cpp
++++ b/gui/brookesia_gui_lvgl/src/event.cpp
+@@ -109,6 +109,11 @@ static void bind_settings_touch(Record &record, const std::vector<EventBinding>
+     })) {
+         return;
+     }
++    if (record.type == NodeType::Slider && std::any_of(events.begin(), events.end(), [](const EventBinding &event) {
++        return event.action == "settings.controls.brightness" || event.action == "settings.controls.volume";
++    })) {
++        lv_obj_set_ext_click_area(record.object, 15);
++    }
+     record.settings_touch = std::make_unique<SettingsTouchGesture>();
+     for (const auto code : {LV_EVENT_PRESSED, LV_EVENT_PRESSING, LV_EVENT_PRESS_LOST,
+                             LV_EVENT_RELEASED, LV_EVENT_CLICKED}) {
+diff --git a/app/brookesia_app_settings/include/brookesia/app_settings/settings_app.hpp b/app/brookesia_app_settings/include/brookesia/app_settings/settings_app.hpp
+index fe1ee3c..3553133 100644
+--- a/app/brookesia_app_settings/include/brookesia/app_settings/settings_app.hpp
++++ b/app/brookesia_app_settings/include/brookesia/app_settings/settings_app.hpp
+@@ -127,6 +127,9 @@ private:
+     std::expected<void, std::string> subscribe_actions(system::core::AppContext &context);
+     std::expected<void, std::string> apply_locale(system::core::AppContext &context);
+     std::expected<void, std::string> refresh_header(system::core::AppContext &context);
++    void refresh_controls_palette(system::core::AppContext &context);
++    void show_controls_lock_prompt(system::core::AppContext &context);
++    void close_controls_lock_prompt(system::core::AppContext &context);
+     std::expected<void, std::string> refresh_theme_state(system::core::AppContext &context);
+     std::expected<void, std::string> refresh_language_state(system::core::AppContext &context);
+     std::expected<void, std::string> refresh_device_state(system::core::AppContext &context);
+diff --git a/app/brookesia_app_settings/src/private/settings_app_internal.hpp b/app/brookesia_app_settings/src/private/settings_app_internal.hpp
+index 81d00e2..a785aae 100644
+--- a/app/brookesia_app_settings/src/private/settings_app_internal.hpp
++++ b/app/brookesia_app_settings/src/private/settings_app_internal.hpp
+@@ -546,6 +546,9 @@ struct SettingsApp::Impl {
+     std::string pending_language_locale;
+     std::string pending_theme_id;
+     hal::InterfaceHandle<hal::system::GeneralIface> restart_iface;
++    bool square_controls_ui = false;
++    bool controls_lock_prompt_open = false;
++    int controls_palette_index = -1;
+     SettingsApp::RestartPromptKind restart_prompt_kind = SettingsApp::RestartPromptKind::None;
+     bool restart_in_progress = false;
+     system::core::TimerId pending_wifi_scan_retry_timer_id = system::core::INVALID_TIMER_ID;
+diff --git a/app/brookesia_app_settings/src/screen/common.ipp b/app/brookesia_app_settings/src/screen/common.ipp
+index 760ceb1..a9b3aa1 100644
+--- a/app/brookesia_app_settings/src/screen/common.ipp
++++ b/app/brookesia_app_settings/src/screen/common.ipp
+@@ -4,6 +4,37 @@
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
++void SettingsApp::refresh_controls_palette(system::core::AppContext &context)
++{
++    if (!impl_->square_controls_ui) return;
++    constexpr std::array<std::string_view, 6> palettes = {
++        "controls.palettes.classic", "controls.palettes.cyber", "controls.palettes.moss",
++        "controls.palettes.ocean", "controls.palettes.violet", "controls.palettes.brown",
++    };
++    const int selected = brookesia_board_desktop_theme ? brookesia_board_desktop_theme() : 2;
++    const int index = selected >= 0 && selected < static_cast<int>(palettes.size()) ? selected : 2;
++    if (impl_->controls_palette_index == index) return;
++    if (auto result = context.gui().set_document_palette(palettes[index]); result) {
++        impl_->controls_palette_index = index;
++    } else {
++        BROOKESIA_LOGW("Could not apply Controls palette: %1%", result.error());
++    }
++}
++
++void SettingsApp::show_controls_lock_prompt(system::core::AppContext &context)
++{
++    if (!impl_->square_controls_ui || !brookesia_board_lock_touch || impl_->controls_lock_prompt_open) return;
++    impl_->controls_lock_prompt_open = true;
++    (void)context.gui().set_binding_value("/settings_header/lock_dialog", "hidden", "false");
++}
++
++void SettingsApp::close_controls_lock_prompt(system::core::AppContext &context)
++{
++    if (!impl_->controls_lock_prompt_open) return;
++    impl_->controls_lock_prompt_open = false;
++    (void)context.gui().set_binding_value("/settings_header/lock_dialog", "hidden", "true");
++}
++
+ std::expected<void, std::string> SettingsApp::refresh_header(system::core::AppContext &context)
+ {
+     std::vector<gui::BindingValueUpdate> updates;
+@@ -11,7 +42,7 @@ std::expected<void, std::string> SettingsApp::refresh_header(system::core::AppCo
+         updates,
+         HEADER_BACK_PATH,
+         "commonProps.hidden",
+-        current_page_ == PAGE_HOME ? "true" : "false"
++        current_page_ == PAGE_HOME && !impl_->square_controls_ui ? "true" : "false"
+     );
+     add_binding_update(
+         updates,
+diff --git a/app/brookesia_app_settings/src/app/lifecycle.ipp b/app/brookesia_app_settings/src/app/lifecycle.ipp
+index 48303dd..e6f4f3e 100644
+--- a/app/brookesia_app_settings/src/app/lifecycle.ipp
++++ b/app/brookesia_app_settings/src/app/lifecycle.ipp
+@@ -122,6 +122,10 @@ std::expected<void, std::string> SettingsApp::on_start(system::core::AppContext
+     restart_prompt_kind_ = RestartPromptKind::None;
+     restart_in_progress_ = false;
+     current_page_ = PAGE_HOME;
++    impl_->square_controls_ui = context.gui().get_view_frame("/settings_home/page/main_list/about").has_value();
++    impl_->controls_palette_index = -1;
++    close_controls_lock_prompt(context);
++    refresh_controls_palette(context);
+     ++wifi_operation_generation_;
+     log_start_profile("init_state", stage_started_at, start_profile_started_at);
+ 
+@@ -264,6 +268,7 @@ std::expected<void, std::string> SettingsApp::on_stop(system::core::AppContext &
+     restart_in_progress_ = false;
+     reset_debug_entry_click_state();
+     hide_message_dialog_if_visible(context);
++    close_controls_lock_prompt(context);
+     cancel_wifi_keyboard_if_active(context);
+     if (wifi_refresh_animation_id_ != 0) {
+         (void)context.gui().stop_animation(wifi_refresh_animation_id_);
+@@ -311,6 +316,7 @@ std::expected<void, std::string> SettingsApp::on_timer(
+     BROOKESIA_LOG_TRACE_GUARD_WITH_THIS();
+     if(name=="quiet_hours_refresh"){
+         if(context_){
++            refresh_controls_palette(context);
+             if(current_page_==PAGE_SOUND)(void)refresh_sound_state(context);
+             if((current_page_==PAGE_WIFI || current_page_=="bluetooth") && brookesia_board_phone_provisioning_text){
+                 const std::string base=current_page_==PAGE_WIFI?"/wifi/page/phone_provisioning":"/bluetooth/page/phone_provisioning";
+@@ -392,6 +398,13 @@ std::expected<void, std::string> SettingsApp::on_action(
+     std::string effective_action_storage;
+     std::string_view effective_action = action;
+     if (action == ACTION_HEADER_BACK) {
++        if (impl_->controls_lock_prompt_open) {
++            close_controls_lock_prompt(context);
++            return {};
++        }
++        if (impl_->square_controls_ui && current_page_ == PAGE_HOME) {
++            return context.system_service().request_close_app(context.app_id());
++        }
+         effective_action = get_header_back_action_for_page(current_page_);
+     }
+     if (action == ACTION_OPEN_HOME && current_page_ == PAGE_WIFI_CONNECT) {
+@@ -645,7 +658,7 @@ std::expected<void, std::string> SettingsApp::subscribe_actions(system::core::Ap
+     }
+ 
+     std::vector<system::core::GuiActionHandlerSubscription> subscriptions;
+-    subscriptions.reserve(25);
++    subscriptions.reserve(27);
+     subscriptions.push_back({
+         .action = "settings.controls.brightness",
+         .handler = [this](const gui::Event &event) { handle_brightness_event(event); },
+@@ -656,7 +669,24 @@ std::expected<void, std::string> SettingsApp::subscribe_actions(system::core::Ap
+     });
+     subscriptions.push_back({
+         .action = "settings.controls.lock",
+-        .handler = [](const gui::Event &) {
++        .handler = [this](const gui::Event &) {
++            if (context_ && current_page_ == PAGE_HOME) {
++                if (impl_->square_controls_ui) show_controls_lock_prompt(*context_);
++                else if (brookesia_board_lock_touch) (void)brookesia_board_lock_touch();
++            }
++        },
++    });
++    subscriptions.push_back({
++        .action = "settings.controls.lock.cancel",
++        .handler = [this](const gui::Event &) {
++            if (context_) close_controls_lock_prompt(*context_);
++        },
++    });
++    subscriptions.push_back({
++        .action = "settings.controls.lock.confirm",
++        .handler = [this](const gui::Event &) {
++            if (!context_ || !impl_->controls_lock_prompt_open) return;
++            close_controls_lock_prompt(*context_);
+             if (brookesia_board_lock_touch) (void)brookesia_board_lock_touch();
+         },
+     });
+@@ -664,8 +694,10 @@ std::expected<void, std::string> SettingsApp::subscribe_actions(system::core::Ap
+         .action = "settings.controls.quiet",
+         .handler = [this](const gui::Event &event) {
+             const auto checked = event.get_bool("checked");
+-            if (context_ && checked && brookesia_board_set_do_not_disturb) {
+-                brookesia_board_set_do_not_disturb(*checked);
++            if (context_ && brookesia_board_set_do_not_disturb &&
++                    (checked || (impl_->square_controls_ui && brookesia_board_manual_dnd))) {
++                const bool enable = checked ? *checked : !brookesia_board_manual_dnd();
++                brookesia_board_set_do_not_disturb(enable);
+                 (void)refresh_sound_state(*context_);
+             }
+         },
+@@ -673,7 +705,10 @@ std::expected<void, std::string> SettingsApp::subscribe_actions(system::core::Ap
+     subscriptions.push_back({.action="settings.display.desktop_theme",.handler=[this](const gui::Event &event){
+         auto selected=event.get_int64("selectedIndex");
+         if(context_ && selected && *selected>=0 && *selected<=5 && brookesia_board_set_desktop_theme){
+-            if(!brookesia_board_set_desktop_theme(int(*selected)))BROOKESIA_LOGW("Desktop theme unavailable; install its SD resources and restart");
++            if (!brookesia_board_set_desktop_theme(int(*selected))) {
++                BROOKESIA_LOGW("Desktop theme unavailable; install its SD resources and restart");
++            }
++            refresh_controls_palette(*context_);
+             (void)refresh_display_state(*context_);
+         }
+     }});
+diff --git a/app/brookesia_app_settings/src/service/device.ipp b/app/brookesia_app_settings/src/service/device.ipp
+index c0f8963..d2ac07e 100644
+--- a/app/brookesia_app_settings/src/service/device.ipp
++++ b/app/brookesia_app_settings/src/service/device.ipp
+@@ -325,6 +325,10 @@ std::expected<void, std::string> SettingsApp::refresh_display_state(system::core
+         constexpr auto slider = "/settings_home/page/quick_controls/brightness/slider";
+         add_control_state_updates(updates, row, slider, enabled);
+         add_binding_update(updates, slider, "value", std::to_string(enabled ? device_ui_state_.brightness : 0));
++        if (impl_->square_controls_ui) {
++            add_binding_update(updates, std::string(row) + "/amount", "text",
++                               enabled ? std::to_string(device_ui_state_.brightness) + "%" : "—");
++        }
+     }
+     add_binding_update(updates,"/display/page/desktop_theme_card/choice","selected",std::to_string(brookesia_board_desktop_theme?brookesia_board_desktop_theme():0));
+     add_binding_update(updates,"/display/page/deep_sleep_card/after","selected",
+@@ -377,6 +381,10 @@ std::expected<void, std::string> SettingsApp::refresh_sound_state(system::core::
+         constexpr auto slider = "/settings_home/page/quick_controls/volume/slider";
+         add_control_state_updates(updates, row, slider, enabled);
+         add_binding_update(updates, slider, "value", std::to_string(enabled ? device_ui_state_.volume : 0));
++        if (impl_->square_controls_ui) {
++            add_binding_update(updates, std::string(row) + "/amount", "text",
++                               enabled ? std::to_string(device_ui_state_.volume) + "%" : "—");
++        }
+         add_binding_update(updates, "/settings_home/page/quick_controls/quiet/toggle", "checked",
+                            brookesia_board_manual_dnd && brookesia_board_manual_dnd() ? "true" : "false");
+     }

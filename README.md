@@ -4,7 +4,7 @@
 
 | 内容 | 版本与当前行为 |
 | --- | --- |
-| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.87；基础功能保留Flash、附加App脚本与资源使用SD；手机BLE加密配网与独立蓝牙遥控；方屏桌面提供墨绿、深海蓝、暮紫、暖棕四套色板及统一应用图标，顶部显示 CPU、RAM、音量和电量，时间和天气卡片旁设单一「控制」入口；图标原生预载、跟手分页并按拖动距离和松手速度吸附，每页3×3九个应用；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转；迷宫运动租约临时锁方向，超时自动释放 |
+| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.88；基础功能保留Flash、附加App脚本与资源使用SD；手机BLE加密配网与独立蓝牙遥控；方屏桌面提供墨绿、深海蓝、暮紫、暖棕四套色板及统一应用图标，顶部显示 CPU、RAM、音量和电量，时间和天气卡片旁设单一「控制」入口；图标原生预载、跟手分页并按拖动距离和松手速度吸附，每页3×3九个应用；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转；迷宫运动租约临时锁方向，超时自动释放 |
 | 额度显示 | 0.2.6，跟随系统深浅配色的双卡片、左侧大数字与紧跟百分号、右侧倒计时及独立天数、底部吃豆人轨道；保留60秒请求/15秒超时与Codex联动 |
 | 天气 | 0.2.13，墨绿总览显示实时温度和六个预报时点的曲线，可切换到原有 24 小时详情。可选择上海或青岛并记住选择，两地分别保存缓存，开发板直接联网；按城市日出日落决定昼夜，白天亮色天空/深色文字、夜间深色天空/浅色文字，再叠加天气动画；24小时卡片按预报时刻切换暖白/深蓝配色并以细边框区分 |
 | 听书 | 0.3.6，六档保持音高倍速、开机默认1倍；64KiB PCM缓冲修复周期性卡顿，手机与设备通过内存同步播放模式；30篇故事使用统一响度目标，移出月亮灯并分两批新增21篇中文朗读，保留双声道抵消修正；图标切换顺序播放、随机播放与单故事循环，自动保存模式；音量与锁屏置顶、Q版图标、中文书名、大号播放按钮、睡眠选择框、语音控制、章节与书签；连按两次音量＋解锁，最后2分钟声音/亮度渐弱，到时离线“晚安”并停播 |
@@ -130,13 +130,17 @@ s3.86 放大桌面温度、地点和「控制」入口。「文件」使用墨�
 
 s3.87 为「控制」的滑块、开关、选择框和菜单行增加手势判定。竖滑交给页面，轻点和横向拖动滑块保持原有操作。已装 s3.86 的设备只需升级应用分区。
 
+s3.88 使用 480×480 单屏控制首页，含亮度、音量、勿扰和六个设置入口。触屏锁定需要确认。控制页面和弹窗随桌面主题即时换色。已有 s3.87 的设备刷入应用分区后，运行 `deploy_square_control_themes.py --port COM5 --controls-ui-only` 并重启。
+
+设备启动时从板载 PCF85063ATL 恢复已保存的 UTC 时间，联网后由 SNTP 校准。设备还没有有效时间时，桌面显示「等待校时」。RTC 失去供电后需要重新校时。
+
 从早期版本升级到 s3.86，已装方屏主题的设备，通过 USB 运行 `deploy_square_control_themes.py --port COM5 --apps-ui-only` 、`deploy_network_status.py --port COM5 --weather-only` 和 `deploy_child_audio_ui.py`，然后重启加载桌面、文件、天气和儿童模式资源。
 
 固件在启动日志和 USB 的 DeviceModes.GetState 提供 ESP-IDF 复位原因编号 `reset_reason`，USB 状态也提供毫秒运行时间 `uptime_ms`。普通息屏沿用 10 分钟阈值，避免触摸与定时检查并行时误算空闲时间。
 
 ## 固件文件与备份
 
-`packages/apps` 保存可安装 BPK，当前听书为 [0.3.8](packages/apps/local.audiobook.debug.0.3.8.bpk)，小马助手为 [0.2.4](packages/apps/local.voiceassistant.debug.0.2.4.bpk)，儿歌为 [0.1.4](packages/apps/local.nurserysongs.debug.0.1.4.bpk)；`packages/firmware` 包含 [s3.87 应用分区固件](packages/firmware/brookesia-0.8.3-s3.87-app-only.zip) 及历史版本，更新步骤见 [资源监控](codex-quota-monitor/RESOURCE_MONITOR.md)。历史 [s3.58 更新包](packages/firmware/brookesia-0.8.3-s3.58-app-only.zip) 附带只用于核对的分区表。校验值见 `packages/SHA256.json`。
+`packages/apps` 保存可安装 BPK，当前听书为 [0.3.8](packages/apps/local.audiobook.debug.0.3.8.bpk)，小马助手为 [0.2.4](packages/apps/local.voiceassistant.debug.0.2.4.bpk)，儿歌为 [0.1.4](packages/apps/local.nurserysongs.debug.0.1.4.bpk)；`packages/firmware` 包含 [s3.88 应用分区固件](packages/firmware/brookesia-0.8.3-s3.88-app-only.zip) 及历史版本，更新步骤见 [资源监控](codex-quota-monitor/RESOURCE_MONITOR.md)。历史 [s3.58 更新包](packages/firmware/brookesia-0.8.3-s3.58-app-only.zip) 附带只用于核对的分区表。校验值见 `packages/SHA256.json`。
 它们不包含用户 NVS、Wi-Fi 数据或设备系统资源分区，不能当成任意新设备的完整恢复镜像。
 
 原电脑的恢复工具会检查完整备份和设备身份，新电脑没有备份时会拒绝直接烧录。这是已有防误刷机制。

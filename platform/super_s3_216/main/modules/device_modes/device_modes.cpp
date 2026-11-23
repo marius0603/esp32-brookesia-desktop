@@ -1,4 +1,5 @@
 #include "device_modes.hpp"
+#include "clock_utc.hpp"
 #include <atomic>
 #include <algorithm>
 #include <ctime>
@@ -85,6 +86,8 @@ private:
         const auto idle_ms = static_cast<uint32_t>(uptime_ms) - last_touch;
         return {{"firmware_version",esp_app_get_description()->version},{"maze_canvas_cache",true},
                 {"reset_reason",static_cast<int>(esp_reset_reason())},{"uptime_ms",uptime_ms},
+                {"clock_unix",std::time(nullptr)},{"clock_restored_from_rtc",board_clock::restored_from_rtc()},
+                {"clock_rtc_current",board_clock::rtc_current()},
 {"desktop_theme_index",brookesia_board_desktop_theme()},{"desktop_theme_saved_index",desktop_theme.load()},{"desktop_theme_applied",desktop_theme_applied.load()},{"cyber_theme_available",brookesia_board_cyber_available()},
                 {"deep_sleep",board_deep_sleep_state()},{"auto_sleep_enabled",automatic.load()},{"timeout_seconds",IDLE_SECONDS},
                 {"auto_deep_sleep_minutes",deep_minutes.load()},{"auto_deep_sleep_audio_busy",local_audio::busy()},
@@ -441,6 +444,7 @@ void story_brightness_poll() {
 void device_modes_poll(){
     if(!ready)return;
     resource_monitor::poll();
+    board_clock::poll();
     // Service start runs on a PSRAM-backed thread. Even NVS reads must run
     // here on the orientation worker's internal stack while flash cache pauses.
     if(!preferences_loaded){

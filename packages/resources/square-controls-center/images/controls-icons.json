@@ -1,0 +1,77 @@
+{
+  "type": "imageSet",
+  "images": [
+    {
+      "id": "controls.brightness",
+      "src": "control-brightness.png",
+      "width": 36,
+      "height": 36
+    },
+    {
+      "id": "controls.volume",
+      "src": "control-volume.png",
+      "width": 36,
+      "height": 36
+    },
+    {
+      "id": "controls.quiet",
+      "src": "control-quiet.png",
+      "width": 36,
+      "height": 36
+    },
+    {
+      "id": "controls.lock",
+      "src": "control-lock.png",
+      "width": 36,
+      "height": 36
+    },
+    {
+      "id": "controls.chevron",
+      "src": "control-chevron.png",
+      "width": 36,
+      "height": 36
+    },
+    {
+      "id": "controls.wifi",
+      "src": "control-wifi.png",
+      "width": 36,
+      "height": 36
+    },
+    {
+      "id": "controls.bluetooth",
+      "src": "control-bluetooth.png",
+      "width": 36,
+      "height": 36
+    },
+    {
+      "id": "controls.display",
+      "src": "control-display.png",
+      "width": 36,
+      "height": 36
+    },
+    {
+      "id": "controls.sound",
+      "src": "control-sound.png",
+      "width": 36,
+      "height": 36
+    },
+    {
+      "id": "controls.settings",
+      "src": "control-settings.png",
+      "width": 36,
+      "height": 36
+    },
+    {
+      "id": "controls.info",
+      "src": "control-info.png",
+      "width": 36,
+      "height": 36
+    },
+    {
+      "id": "controls.back",
+      "src": "control-back.png",
+      "width": 36,
+      "height": 36
+    }
+  ]
+}

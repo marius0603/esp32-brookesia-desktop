@@ -14,6 +14,7 @@
 #include "modules/display.hpp"
 #include "modules/child_mode/child_mode.hpp"
 #include "modules/device_modes/deep_sleep.hpp"
+#include "modules/device_modes/clock_utc.hpp"
 #include "modules/phone_provisioning/navigation.hpp"
 #include "modules/audio_ownership.hpp"
 #include "freertos/FreeRTOS.h"
@@ -46,6 +47,7 @@ extern "C" void app_main(void)
         auto &display = Display::get_instance();
         auto display_start_ret = display.start({});
         BROOKESIA_CHECK_FALSE_EXIT(display_start_ret, "Failed to start display");
+        board_clock::initialize();
         /* Start audio services */
         BROOKESIA_CHECK_FALSE_EXIT(
             GeneralServices::get_instance().start_audio_services(), "Failed to start audio services"

@@ -29,60 +29,62 @@ def main():
         'app_only': True, 'files': {}}
     sdkconfig = json.loads((build / 'config/sdkconfig.json').read_text(encoding='utf-8'))
     manifest['features'] = {'separate_websocket_tx_lock': bool(sdkconfig.get('ESP_WS_CLIENT_SEPARATE_TX_LOCK'))}
-    if desc['project_version'] in ('0.8.3-s3.64','0.8.3-s3.65','0.8.3-s3.66','0.8.3-s3.67','0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.64','0.8.3-s3.65','0.8.3-s3.66','0.8.3-s3.67','0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features'].update(phone_ble_remote=bool(sdkconfig.get('BT_NIMBLE_ENABLED') and sdkconfig.get('ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_1')),
             ble_controller_flash_code=bool(sdkconfig.get('BT_CTRL_RUN_IN_FLASH_ONLY')),phone_navigation=True,
             navigation_packet_bytes=256,navigation_stale_seconds=15,navigation_unknown_value=-1,
             navigation_sources=['offline_demo','sdk_simulation','amap_notification'],navigation_local_voice=True)
         assert manifest['features']['phone_ble_remote'] and manifest['features']['ble_controller_flash_code']
-    if desc['project_version'] in ('0.8.3-s3.66','0.8.3-s3.67','0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.66','0.8.3-s3.67','0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features'].update(navigation_psram_stack=True,internal_dma_reserve_bytes=sdkconfig['SPIRAM_MALLOC_RESERVE_INTERNAL'])
-    if desc['project_version'] in ('0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features'].update(canvas_allocation_retry=True,allocation_failure_diagnostics=True,largest_free_heap_diagnostics=True)
-    if desc['project_version'] in ('0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features'].update(launcher_full_width_refresh_on_scroll_end=True,launcher_margin_dma_cache_psram_bytes=122880)
-    if desc['project_version'] in ('0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features']['weather_full_width_dirty_rows']=True
-    if desc['project_version'] in ('0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features']['fast_mp3_seek_discard']=True
-    if desc['project_version'] in ('0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features'].update(independent_child_audio_permissions=True,child_radio_station_allowlist=True)
-    if desc['project_version'] in ('0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features'].update(radio_bounded_recovery=True,voice_bounded_recovery=True)
-    if desc['project_version'] in ('0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features'].update(staged_text_writes=True,audio_read_error_is_not_eof=True)
-    if desc['project_version'] in ('0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.68','0.8.3-s3.69','0.8.3-s3.70','0.8.3-s3.71','0.8.3-s3.72','0.8.3-s3.73','0.8.3-s3.74','0.8.3-s3.75','0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         generated=(build.parent/'components/gen_bmgr_codes/gen_board_device_config.c').read_text(encoding='utf-8')
         assert re.search(r'\.pclk_hz\s*=\s*80000000',generated),'QSPI frequency was not regenerated'
         manifest['features'].update(canvas_native_stride=True,canvas_rect_cache=True,display_dma_staging_bytes=4096,qspi_clock_hz=80000000)
-    if desc['project_version'] in ('0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.76','0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         peripherals = (build.parent/'components/gen_bmgr_codes/gen_board_periph_config.c').read_text(encoding='utf-8')
         assert re.search(r'\.max_transfer_sz\s*=\s*7680', peripherals), 'QSPI transfer size was not regenerated'
         manifest['features'].update(display_dma_staging_bytes=7680, display_dma_staging_buffers=2,
             display_dma_fallback_bytes=3840, display_spi_max_transfer_request=7680)
-    if desc['project_version'] in ('0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.77','0.8.3-s3.78','0.8.3-s3.79','0.8.3-s3.80','0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features'].update(weather_local_rendering=True, weather_row_cache_bytes=480*480*2)
-    if desc['project_version'] in ('0.8.3-s3.78', '0.8.3-s3.79', '0.8.3-s3.80', '0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.78', '0.8.3-s3.79', '0.8.3-s3.80', '0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         assert sdkconfig.get('LV_USE_SNAPSHOT')
         manifest['features']['launcher_scroll_snapshot'] = True
-    if desc['project_version'] in ('0.8.3-s3.79', '0.8.3-s3.80', '0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.79', '0.8.3-s3.80', '0.8.3-s3.81','0.8.3-s3.82','0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features']['launcher_release_snap'] = True
     if desc['project_version'] in ('0.8.3-s3.80', '0.8.3-s3.81'):
         manifest['features']['app_back_swipe'] = True
     if desc['project_version'] == '0.8.3-s3.81':
         manifest['features']['app_back_local_preview'] = True
-    if desc['project_version'] in ('0.8.3-s3.83', '0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.83', '0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features']['square_shortcut_launch_overlay'] = True
-    if desc['project_version'] in ('0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features'].update(reset_reason_and_uptime=True, safe_display_idle_timer=True)
-    if desc['project_version'] in ('0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features'].update(square_files_browser=True, enlarged_desktop_header=True,
                                     deferred_runtime_close=True)
-    if desc['project_version'] == '0.8.3-s3.87':
+    if desc['project_version'] in ('0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features']['settings_scroll_gesture_guard'] = True
-    if desc['project_version'] in ('0.8.3-s3.84', '0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] == '0.8.3-s3.88':
+        manifest['features'].update(themed_controls_center=True, onboard_rtc_clock=True)
+    if desc['project_version'] in ('0.8.3-s3.84', '0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features'].update(square_desktop_palettes=True, square_status_bar=True, unified_controls=True, weather_refresh_probe_guard=True)
-    if desc['project_version'] in ('0.8.3-s3.82', '0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+    if desc['project_version'] in ('0.8.3-s3.82', '0.8.3-s3.83','0.8.3-s3.84','0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
         manifest['features']['square_ui_launcher'] = True
     if desc['project_version'] in ('0.8.3-s3.40','0.8.3-s3.41','0.8.3-s3.42','0.8.3-s3.43','0.8.3-s3.44','0.8.3-s3.45','0.8.3-s3.46','0.8.3-s3.47','0.8.3-s3.48','0.8.3-s3.49','0.8.3-s3.50','0.8.3-s3.51','0.8.3-s3.53','0.8.3-s3.54','0.8.3-s3.55','0.8.3-s3.56','0.8.3-s3.57','0.8.3-s3.58'):
         manifest['features'].update(buffered_story_pcm=True,pitch_preserving_story_speed=True,default_story_speed=1.0)
@@ -157,7 +159,7 @@ def main():
                         name='settings/'+path.relative_to(ROOT/'packages/resources/bluetooth-settings-s3.34').as_posix();payload=path.read_bytes();archive.writestr(name,payload);manifest['files'][name]={'bytes':len(payload),'sha256':hashlib.sha256(payload).hexdigest()}
                 archive.writestr('settings/wifi.json',data)
                 manifest['files']['settings/wifi.json']={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
-        if desc['project_version'] in ('0.8.3-s3.84', '0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87'):
+        if desc['project_version'] in ('0.8.3-s3.84', '0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
             resources = ROOT / 'packages/resources/square-control-themes'
             entries = {'square-control-themes/' + p.relative_to(resources).as_posix(): p
                        for p in sorted(resources.rglob('*')) if p.is_file()}
@@ -167,11 +169,19 @@ def main():
                 payload = source.read_bytes()
                 archive.writestr(name, payload)
                 manifest['files'][name] = {'bytes': len(payload), 'sha256': hashlib.sha256(payload).hexdigest()}
-        if desc['project_version'] in ('0.8.3-s3.86', '0.8.3-s3.87'):
+        if desc['project_version'] in ('0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88'):
             overlay = ROOT / 'packages/resources/square-apps-ui'
             for source in sorted(overlay.rglob('*')):
                 if source.is_file():
                     name = 'square-apps-ui/' + source.relative_to(overlay).as_posix()
+                    payload = source.read_bytes()
+                    archive.writestr(name, payload)
+                    manifest['files'][name] = {'bytes': len(payload), 'sha256': hashlib.sha256(payload).hexdigest()}
+        if desc['project_version'] == '0.8.3-s3.88':
+            controls = ROOT / 'packages/resources/square-controls-center'
+            for source in sorted(controls.rglob('*')):
+                if source.is_file():
+                    name = 'square-controls-center/' + source.relative_to(controls).as_posix()
                     payload = source.read_bytes()
                     archive.writestr(name, payload)
                     manifest['files'][name] = {'bytes': len(payload), 'sha256': hashlib.sha256(payload).hexdigest()}
@@ -191,8 +201,10 @@ def main():
             'The partition table is included for comparison; the updater writes only the application.\n'
             'NVS, LittleFS, installed apps and SD contents are preserved.\n'
             'After reboot install the matching application packages described in the release documentation.\n'
+            + ('For an upgrade from s3.87, deploy the Controls resources with tools/deploy_square_control_themes.py --controls-ui-only, then restart.\n'
+               if desc['project_version'] == '0.8.3-s3.88' else '')
             + ('For a first installation of the square desktop run tools/deploy_square_control_themes.py over USB after flashing, then reboot to load the desktop and Controls resources.\n'
-               if desc['project_version'] in ('0.8.3-s3.84', '0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87') else '')
+               if desc['project_version'] in ('0.8.3-s3.84', '0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88') else '')
             + ('For s3.50/s3.51 run tools/deploy_nine_grid_launcher.py before flashing, preserving original icon sizes and custom resources.\n' if desc['project_version'] in ('0.8.3-s3.50','0.8.3-s3.51','0.8.3-s3.53','0.8.3-s3.54','0.8.3-s3.55','0.8.3-s3.56','0.8.3-s3.57','0.8.3-s3.58') else '')
             + ('Before updating to s3.30, run tools/deploy_phone_launcher.py to install the native-scroll launcher document.\n'
                'launcher/app_launcher.json is a separate filesystem resource, not a Flash partition image.\n'

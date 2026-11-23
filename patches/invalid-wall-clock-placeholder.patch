@@ -1,0 +1,47 @@
+diff --git a/system/brookesia_system_super/src/shell_status.cpp b/system/brookesia_system_super/src/shell_status.cpp
+index 767d216..d3428cd 100644
+--- a/system/brookesia_system_super/src/shell_status.cpp
++++ b/system/brookesia_system_super/src/shell_status.cpp
+@@ -82,10 +82,11 @@ std::string bool_to_binding(bool value)
+     return value ? "true" : "false";
+ }
+ 
+-std::string make_clock_text()
++constexpr std::time_t EarliestClockTime = 1735689600; // 2025-01-01 UTC
++
++std::string make_clock_text(std::time_t time)
+ {
+-    const auto now = std::chrono::system_clock::now();
+-    const auto time = std::chrono::system_clock::to_time_t(now);
++    if (time < EarliestClockTime) return "--:--";
+     std::tm local_time{};
+ #if defined(_WIN32)
+     localtime_s(&local_time, &time);
+@@ -269,7 +270,8 @@ void ShellApp::refresh_status_clock()
+     if (context_ == nullptr) {
+         return;
+     }
+-    const auto clock_text = make_clock_text();
++    const auto now = std::time(nullptr);
++    const auto clock_text = make_clock_text(now);
+     auto result = context_->gui().set_binding_value(SUPER_STATUS_CLOCK_PATH, "clock_text", clock_text);
+     constexpr auto header = "/launcher/content/square_header";
+     if (foreground_is_shell_ && launcher_populated_ && context_->gui().get_view_frame(header)) {
+@@ -293,7 +295,6 @@ void ShellApp::refresh_status_clock()
+                 }
+             }
+         }
+-        const auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+         std::tm local{};
+ #if defined(_WIN32)
+         localtime_s(&local, &now);
+@@ -301,7 +302,8 @@ void ShellApp::refresh_status_clock()
+         localtime_r(&now, &local);
+ #endif
+         static constexpr const char *weekdays[] = {"日", "一", "二", "三", "四", "五", "六"};
+-        const auto date = std::to_string(local.tm_mon + 1) + "月" +
++        const auto date = now < EarliestClockTime ? "等待校时" :
++                          std::to_string(local.tm_mon + 1) + "月" +
+                           std::to_string(local.tm_mday) + "日  周" + weekdays[local.tm_wday];
+         (void)context_->gui().set_binding_values({
+             {"/launcher/content/square_header/time", "text", clock_text},
