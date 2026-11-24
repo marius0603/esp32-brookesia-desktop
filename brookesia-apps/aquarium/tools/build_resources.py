@@ -13,7 +13,7 @@ from build_wallpaper_render import rle_pixels
 
 ART = APP / "art"
 RES = APP / "src/res"
-BAND_HEIGHT = 120
+BAND_HEIGHT = 60
 FISH = [
     ("gold", 78, 68, 1),
     ("moon", 105, 105, -1),
@@ -126,8 +126,13 @@ def main():
     export("launcher_icon", icon.resize((92, 92), Image.Resampling.NEAREST), ".png")
     write_json(images_dir / "index.json", {"type": "imageSet", "images": images})
 
-    nodes = [picture(f"backdrop{band}", f"day{band}", 0, y, 480, BAND_HEIGHT)
-             for band, y in enumerate(range(0, 480, BAND_HEIGHT))]
+    gold_height = sizes["gold"][1]
+    row_refresh = container("goldRows", 0, FISH[0][2] * 3 - gold_height // 2, 480, gold_height,
+                            bindings={"placement.y": "y", "placement.height": "h", "style.bgColor": "color"})
+    row_refresh["style"]["bgColor"] = "#000000"
+    nodes = [row_refresh]
+    nodes.extend(picture(f"backdrop{band}", f"day{band}", 0, y, 480, BAND_HEIGHT)
+                 for band, y in enumerate(range(0, 480, BAND_HEIGHT)))
     bubble = container("bubble", 394, 345, 7, 7)
     bubble["bindings"] = {"placement.y": "y"}
     bubble["style"].update(radius=4, borderWidth=1, borderColor="#87C8BC")

@@ -17,9 +17,15 @@ visit(screen);
 assert.equal(views.get('/main/water').placement.height, 440);
 assert.equal(views.get('/main/sheet').commonProps.hidden, true);
 assert.equal([...views.keys()].filter(id => /^\/main\/fish\d$/.test(id)).length, 6);
-for (let band = 0; band < 4; band++) {
+const goldRows = views.get('/main/goldRows');
+assert.equal(screen.children[0], goldRows);
+assert.equal(goldRows.placement.x, 0);
+assert.equal(goldRows.placement.width, 480);
+assert.equal(goldRows.style.bgOpacity, 0);
+assert.equal(goldRows.commonProps.clickable, false);
+for (let band = 0; band < 8; band++) {
   const {y, width, height} = views.get('/main/backdrop' + band).placement;
-  assert.deepEqual([y, width, height], [band * 120, 480, 120]);
+  assert.deepEqual([y, width, height], [band * 60, 480, 60]);
 }
 for (const [id, resource] of images) {
   const file = fs.readFileSync(path.join(src, 'res/images', resource.src));
@@ -97,12 +103,26 @@ vm.runInContext(fs.readFileSync(path.join(src, 'app/main.js'), 'utf8'), context)
 const app = context.brookesia_app;
 const action = (name, value) => app.on_action(name, '/main/water', JSON.stringify(value));
 const tap = (x, y) => { action('waterPress', { x, y }); action('waterRelease', { x, y }); };
-const advance = count => { for (let i = 0; i < count; i++) { now += 50; app.on_timer(); } };
 const x = () => Number(positions.get('/main/fish0:x'));
 const y = () => Number(positions.get('/main/fish0:y'));
+const goldSource = () => sources.get('/main/fish0');
+const rowBinding = key => positions.get('/main/goldRows:' + key);
+function advance(count) {
+  for (let i = 0; i < count; i++) {
+    const prior = { x: x(), y: y(), pose: goldSource(), color: rowBinding('color') };
+    now += 50;
+    app.on_timer();
+    const changed = x() !== prior.x || y() !== prior.y || goldSource() !== prior.pose;
+    if (changed) {
+      assert.equal(Number(rowBinding('y')), Math.min(y(), prior.y));
+      assert.equal(Number(rowBinding('h')), 117 + Math.abs(y() - prior.y));
+      assert.notEqual(rowBinding('color'), prior.color, 'Position and pose both invalidate full rows');
+    } else assert.equal(rowBinding('color'), prior.color);
+  }
+}
 const visible = view => positions.get('/main/' + view + ':hidden') === 'false';
 function assertBackdrop(mode) {
-  for (let band = 0; band < 4; band++) assert.equal(sources.get('/main/backdrop' + band), mode + band);
+  for (let band = 0; band < 8; band++) assert.equal(sources.get('/main/backdrop' + band), mode + band);
 }
 app.on_start();
 assert(timer);

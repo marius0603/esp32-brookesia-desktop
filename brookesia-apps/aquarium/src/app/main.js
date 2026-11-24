@@ -3,6 +3,7 @@
 
 const SETTINGS = '/littlefs/aquarium-settings.json';
 const RETURN_EDGE = 440;
+const BACKDROP_BANDS = 8;
 const NOTES = {
   gold: '好奇 · 喜欢靠近水波',
   moon: '慢热 · 常停在水草附近',
@@ -36,7 +37,7 @@ function readLight() {
 
 function draw(now) {
   const elapsed = Math.max(0, now - started);
-  const updates = [], commands = [], next = {};
+  const updates = [], commands = [], next = { ...rendered };
   const pathOf = node => '/main/' + node;
   function changed(node, key, value) {
     const address = node + ':' + key;
@@ -49,7 +50,7 @@ function draw(now) {
   function image(node, src) {
     if (changed(node, 'src', src)) commands.push({ Name: 'SetViewSrc', Params: { Path: pathOf(node), Src: src } });
   }
-  for (let band = 0; band < 4; band++) image('backdrop' + band, (night ? 'night' : 'day') + band);
+  for (let band = 0; band < BACKDROP_BANDS; band++) image('backdrop' + band, (night ? 'night' : 'day') + band);
   bind('light/label', 'text', night ? '夜景' : '日景');
   bind('sheet', 'hidden', !panel);
   bind('sheet/description', 'text', NOTES[selected]);
@@ -74,6 +75,15 @@ function draw(now) {
     const phase = Math.floor((elapsed + i * 43) / (night ? 370 : 265)) % 2;
     image(node, item.kind + '_' + (item.facing > 0 ? 'r' : 'l') + phase);
   });
+  // CO5300 can leave seams on partial-width writes. Invalidate complete rows
+  // behind both the old and new goldfish rectangles, including pose-only changes.
+  if (['x', 'y', 'src'].some(key => rendered['fish0:' + key] !== next['fish0:' + key])) {
+    const y = next['fish0:y'];
+    const oldY = rendered['fish0:y'] ?? y;
+    bind('goldRows', 'y', Math.min(y, oldY));
+    bind('goldRows', 'h', SPECIES.gold.height + Math.abs(y - oldY));
+    bind('goldRows', 'color', rendered['goldRows:color'] === '#000000' ? '#243C50' : '#000000');
+  }
   if (updates.length) commands.unshift({ Name: 'SetBindings', Params: { Updates: updates } });
   if (commands.length) {
     const result = call(gui, 'ExecuteBatch', { Commands: commands });

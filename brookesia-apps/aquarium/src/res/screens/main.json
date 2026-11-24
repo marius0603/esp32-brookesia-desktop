@@ -10,6 +10,32 @@
   },
   "children": [
     {
+      "type": "container",
+      "id": "goldRows",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 146,
+        "width": 480,
+        "height": 117
+      },
+      "commonProps": {
+        "clickable": false,
+        "scrollable": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0,
+        "bgColor": "#000000"
+      },
+      "bindings": {
+        "placement.y": "y",
+        "placement.height": "h",
+        "style.bgColor": "color"
+      }
+    },
+    {
       "type": "image",
       "id": "backdrop0",
       "placement": {
@@ -17,7 +43,7 @@
         "x": 0,
         "y": 0,
         "width": 480,
-        "height": 120
+        "height": 60
       },
       "commonProps": {
         "clickable": false,
@@ -39,9 +65,9 @@
       "placement": {
         "mode": "absolute",
         "x": 0,
-        "y": 120,
+        "y": 60,
         "width": 480,
-        "height": 120
+        "height": 60
       },
       "commonProps": {
         "clickable": false,
@@ -63,9 +89,9 @@
       "placement": {
         "mode": "absolute",
         "x": 0,
-        "y": 240,
+        "y": 120,
         "width": 480,
-        "height": 120
+        "height": 60
       },
       "commonProps": {
         "clickable": false,
@@ -87,9 +113,9 @@
       "placement": {
         "mode": "absolute",
         "x": 0,
-        "y": 360,
+        "y": 180,
         "width": 480,
-        "height": 120
+        "height": 60
       },
       "commonProps": {
         "clickable": false,
@@ -102,6 +128,102 @@
       },
       "imageProps": {
         "src": "${image.day3}",
+        "innerAlign": "center"
+      }
+    },
+    {
+      "type": "image",
+      "id": "backdrop4",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 240,
+        "width": 480,
+        "height": 60
+      },
+      "commonProps": {
+        "clickable": false,
+        "scrollable": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "imageProps": {
+        "src": "${image.day4}",
+        "innerAlign": "center"
+      }
+    },
+    {
+      "type": "image",
+      "id": "backdrop5",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 300,
+        "width": 480,
+        "height": 60
+      },
+      "commonProps": {
+        "clickable": false,
+        "scrollable": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "imageProps": {
+        "src": "${image.day5}",
+        "innerAlign": "center"
+      }
+    },
+    {
+      "type": "image",
+      "id": "backdrop6",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 360,
+        "width": 480,
+        "height": 60
+      },
+      "commonProps": {
+        "clickable": false,
+        "scrollable": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "imageProps": {
+        "src": "${image.day6}",
+        "innerAlign": "center"
+      }
+    },
+    {
+      "type": "image",
+      "id": "backdrop7",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 420,
+        "width": 480,
+        "height": 60
+      },
+      "commonProps": {
+        "clickable": false,
+        "scrollable": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "imageProps": {
+        "src": "${image.day7}",
         "innerAlign": "center"
       }
     },

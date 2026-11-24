@@ -5,56 +5,112 @@
       "id": "day0",
       "src": "day0.bin",
       "width": 480,
-      "height": 120,
+      "height": 60,
       "preload": true
     },
     {
       "id": "day1",
       "src": "day1.bin",
       "width": 480,
-      "height": 120,
+      "height": 60,
       "preload": true
     },
     {
       "id": "day2",
       "src": "day2.bin",
       "width": 480,
-      "height": 120,
+      "height": 60,
       "preload": true
     },
     {
       "id": "day3",
       "src": "day3.bin",
       "width": 480,
-      "height": 120,
+      "height": 60,
+      "preload": true
+    },
+    {
+      "id": "day4",
+      "src": "day4.bin",
+      "width": 480,
+      "height": 60,
+      "preload": true
+    },
+    {
+      "id": "day5",
+      "src": "day5.bin",
+      "width": 480,
+      "height": 60,
+      "preload": true
+    },
+    {
+      "id": "day6",
+      "src": "day6.bin",
+      "width": 480,
+      "height": 60,
+      "preload": true
+    },
+    {
+      "id": "day7",
+      "src": "day7.bin",
+      "width": 480,
+      "height": 60,
       "preload": true
     },
     {
       "id": "night0",
       "src": "night0.bin",
       "width": 480,
-      "height": 120,
+      "height": 60,
       "preload": true
     },
     {
       "id": "night1",
       "src": "night1.bin",
       "width": 480,
-      "height": 120,
+      "height": 60,
       "preload": true
     },
     {
       "id": "night2",
       "src": "night2.bin",
       "width": 480,
-      "height": 120,
+      "height": 60,
       "preload": true
     },
     {
       "id": "night3",
       "src": "night3.bin",
       "width": 480,
-      "height": 120,
+      "height": 60,
+      "preload": true
+    },
+    {
+      "id": "night4",
+      "src": "night4.bin",
+      "width": 480,
+      "height": 60,
+      "preload": true
+    },
+    {
+      "id": "night5",
+      "src": "night5.bin",
+      "width": 480,
+      "height": 60,
+      "preload": true
+    },
+    {
+      "id": "night6",
+      "src": "night6.bin",
+      "width": 480,
+      "height": 60,
+      "preload": true
+    },
+    {
+      "id": "night7",
+      "src": "night7.bin",
+      "width": 480,
+      "height": 60,
       "preload": true
     },
     {
