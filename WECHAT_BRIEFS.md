@@ -15,6 +15,12 @@ python tools/wechat_brief.py --body-file codex-quota-monitor/runtime/work-brief.
 
 当前工具通过常驻Gateway的`send` RPC发送：只有响应的`runId`与本次稳定请求标识一致、`channel`一致且存在`messageId`才确认成功，不能仅凭CLI退出码。当前安装版本的Gateway仅在通道发送成功后生成该回执。旧版`message send`路径使用的`payload.deliveryStatus=sent`不再作为新RPC的判据。相同工作ID不会自动重发；请求前先记录未确认状态，超时或进程中断时避免重复发送，应先现场检查微信再决定是否用新的ID重发。发送状态本地保存，不保存正文，不自动重试。
 
+### Codex 桌面启动检查
+
+当前 Windows 用户的登录启动项运行 `CodexWeChatStartup.exe`。它识别实际的 Codex 桌面主进程，每个新进程运行一次 `tools/wechat_startup_check.py`。检查使用已配置账号，核对 Gateway、微信通道、代理到微信服务的连通性，以及最近一次入站记录和发送回执。检查不需要聊天内容，也不发测试消息。异常时在本机提示，结果写入私有目录的 `codex-wechat-status.json`。
+
+最近的收发记录可以确认此前的真实投递。本轮启动检查的在线状态不代表微信此刻一定接受主动发送。重新打开已经在运行的桌面窗口不产生新进程时，沿用该次启动检查的结果。
+
 ### 2026-11-24 微信启动连接与简报就绪检查
 
 当天日志分别记录了对微信域名的 `ENOTFOUND` 和微信发送接口返回的 `ret=-2 / prepare failed`。拒收时网关已在线。现有微信绑定接收新消息后刷新会话上下文，电子宠物简报补发取得回执。
