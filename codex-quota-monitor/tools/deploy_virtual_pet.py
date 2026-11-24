@@ -1,79 +1,89 @@
-"""Install the pet BPK and hash-verified SD frames, preserving existing device data."""
-import argparse,hashlib,json,re,time,zipfile
-from datetime import datetime
+"""Install and verify the self-contained pet BPK, keeping a rollback copy."""
+import argparse
+import hashlib
+import json
 from pathlib import Path
-from deploy_audiobook_sleep import StoryClient
-ROOT=Path(__file__).resolve().parents[2]
-APP=ROOT/'brookesia-apps/virtual-pet'
-IMAGE_INDEX='/littlefs/system/super/shell/images/index.json'
+import time
+import zipfile
+
+from deploy_clock_widgets import tree_hash
+from maintenance_client import SharedPowerDiagnosticClient
+
+ROOT = Path(__file__).resolve().parents[2]
+RUNTIME = ROOT / "codex-quota-monitor/runtime"
+APP_ID = "local.virtualpet"
+INSTALL_DIR = f"/sdcard/apps/{APP_ID}"
+SLEEP_CONFIG = "/sdcard/pets/xiaoli/schedule.json"
+
+
+def read_package():
+    version = json.loads((ROOT / "versions.json").read_bytes())["apps"][APP_ID]
+    name = f"packages/apps/{APP_ID}.debug.{version}.bpk"
+    package = ROOT / name
+    hashes = json.loads((ROOT / "packages/SHA256.json").read_bytes())
+    assert hashlib.sha256(package.read_bytes()).hexdigest() == hashes[name]
+    with zipfile.ZipFile(package) as archive:
+        assert archive.testzip() is None
+        files = {path: archive.read(path) for path in archive.namelist()}
+    manifest = json.loads(files["manifest.json"])["package"]
+    assert (manifest["id"], manifest["version"]) == (APP_ID, version)
+    return package, version, files
+
+
 def main():
- p=argparse.ArgumentParser();p.add_argument('--port',required=True);a=p.parse_args()
- content=APP/'content';manifest=json.loads((content/'manifest.json').read_text(encoding='utf-8'))
- for name,meta in manifest['files'].items():
-  assert re.fullmatch(r'(frames/)?[a-z0-9_-]+\.(bin|json)',name),name
-  data=(content/name).read_bytes();assert len(data)==meta['bytes'] and hashlib.sha256(data).hexdigest()==meta['sha256']
- stamp=datetime.now().strftime('%Y%m%d-%H%M%S');stage='virtual-pet-'+stamp
- folder=ROOT/'codex-quota-monitor/runtime'/stage;folder.mkdir(parents=True)
- backup='/sdcard/resource-backups/'+stage;report={'passed':False,'backup':backup,'uploaded':[]}
- version=json.loads((APP/'src/manifest.json').read_text(encoding='utf-8'))['package']['version']
- package=ROOT/('packages/apps/local.virtualpet.debug.'+version+'.bpk')
- with StoryClient(a.port,timeout=40) as c:
-  c.hello()
-  def f(s,n,args=None):return c.call(s,n,args or {})['result']
-  def storage(n,args):return f('Storage',n,args)
-  modes=f('DeviceModes','GetState');assert not modes['screen_locked'],'Unlock with double volume+ before installing'
-  assert not f('Audiobook','GetState')['sleep_active'],'Let the active story sleep timer finish first'
-  f('DeviceModes','Wake')
-  report.update(volume=f('AudioPlayback','GetVolume'),tracks=f('Audiobook','List')['tracks'],theme=modes['desktop_theme_index'],apps=[x['manifest']['id'] for x in f('SystemCore','ListApps')])
-  report['preferences']={}
-  for path in ('/littlefs/audiobook-bookmark.json','/littlefs/audiobook-play-mode.json'):
-   report['preferences'][path]=storage('FSReadText',{'Path':path}) if storage('FSStat',{'Path':path})['exists'] else None
-  original=storage('FSReadText',{'Path':IMAGE_INDEX});(folder/'shell-images-before.json').write_text(original,encoding='utf-8')
-  (folder/'preservation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-  storage('FSMkdir',{'Path':backup});storage('FSCopyTree',{'From':IMAGE_INDEX,'To':backup+'/shell-images.json','Overwrite':False})
-  target='/sdcard/pets/xiaoli'
-  if storage('FSStat',{'Path':target})['exists']:storage('FSCopyTree',{'From':target,'To':backup+'/pet-content','Overwrite':False})
-  app=next((x for x in f('SystemCore','ListApps') if x['manifest']['id']=='local.virtualpet'),None)
-  if app:
-   if app['state'] in ('Running','Paused','Starting'):f('SystemCore','StopApp',{'AppId':app['app_id']})
-   old_path='/sdcard/apps/local.virtualpet'
-   if not storage('FSStat',{'Path':old_path})['exists']:old_path='/littlefs/apps/local.virtualpet'
-   storage('FSCopyTree',{'From':old_path,'To':backup+'/app','Overwrite':False})
-  def upload(local,remote):
-   staged=stage+'/'+str(len(report['uploaded']))+'-'+local.name
-   result=c.transfer('put',local,'sd-themes/'+staged,False)
-   assert result['ok'] and result['sha256']==hashlib.sha256(local.read_bytes()).hexdigest()
-   storage('FSCopyTree',{'From':'/sdcard/themes/'+staged,'To':remote,'Overwrite':True})
-   assert storage('FSStat',{'Path':remote})['size']==local.stat().st_size
-   report['uploaded'].append(remote)
-  for name in manifest['files']:
-   # Keep a user-edited schedule on upgrades.
-   if name=='schedule.json' and storage('FSStat',{'Path':target+'/'+name})['exists']:continue
-   upload(content/name,target+'/'+name)
-  upload(content/'manifest.json',target+'/manifest.json')
-  images=json.loads(original);images['images']=[i for i in images['images'] if i['id']!='cyber.local.virtualpet']
-  images['images'].append({'id':'cyber.local.virtualpet','src':target+'/launcher.bin','width':92,'height':92,'preload':True})
-  local=folder/'shell-images.json';local.write_text(json.dumps(images,ensure_ascii=False,separators=(',',':'))+'\n',encoding='utf-8');upload(local,IMAGE_INDEX)
-  assert json.loads(storage('FSReadText',{'Path':IMAGE_INDEX}))==images
-  layout=f('SystemCore','GetStorageLayout');report['storage_layout_before']=layout
-  # The installer supports External storage; use it for this app, then restore policy.
-  f('SystemCore','SetDefaultInstallStorage',{'Target':'External'})
-  try:
-   assert storage('GetFileSystemCapacity',{'MountPoint':'/littlefs'})['free_bytes']>=package.stat().st_size+32768
-   result=c.transfer('install_bpk',package,None,False);assert result['ok']
-  finally:
-   f('SystemCore','SetDefaultInstallStorage',{'Target':layout['default_install_target'],'PreferredExternalId':layout.get('preferred_external_id','')})
-  pet=next(x for x in f('SystemCore','ListApps') if x['manifest']['id']=='local.virtualpet')
-  assert pet['manifest']['version']==version
-  report['installed_app']=pet
-  for path,old in report['preferences'].items():
-   if old is not None:assert storage('FSReadText',{'Path':path})==old
-  assert f('AudioPlayback','GetVolume')==report['volume'] and f('Audiobook','List')['tracks']==report['tracks']
-  assert f('DeviceModes','GetState')['desktop_theme_index']==report['theme']
-  assert re.fullmatch(r'virtual-pet-\d{8}-\d{6}',stage)
-  storage('FSRemove',{'Path':'/sdcard/themes/'+stage})
-  report['passed']=True
-  (folder/'deployment.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-  (ROOT/'codex-quota-monitor/runtime/virtual-pet-latest.json').write_text(json.dumps({'folder':str(folder)}),encoding='utf-8')
- print('Pet app and native SD frames installed; existing stories, volume, theme and preferences preserved. Restart once to reload desktop resources.')
-if __name__=='__main__':main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--port", required=True)
+    args = parser.parse_args()
+    package, version, files = read_package()
+    stamp = f"/sdcard/resource-backups/virtual-pet-{time.time_ns()}"
+    with SharedPowerDiagnosticClient(args.port, timeout=35) as client:
+        client.hello()
+
+        def call(service, function, **params):
+            return client.call_timeout(service, function, params)["result"]
+
+        def exists(path):
+            return call("Storage", "FSStat", Path=path)["exists"]
+
+        def digest(path):
+            return call("SdResources", "InspectTree", Path=path)["sha256"]
+
+        assert not call("DeviceModes", "GetState")["screen_locked"]
+        existing = next((app for app in call("SystemCore", "ListApps")
+                         if app["manifest"]["id"] == APP_ID), None)
+        if existing:
+            if existing["state"] in ("Running", "Paused", "Starting"):
+                call("SystemCore", "StopApp", AppId=existing["app_id"])
+            previous = INSTALL_DIR if exists(INSTALL_DIR) else f"/littlefs/apps/{APP_ID}"
+            assert exists(previous)
+            call("Storage", "FSCopyTree", From=previous, To=stamp + "/app", Overwrite=False)
+            if previous == INSTALL_DIR:
+                assert digest(previous) == digest(stamp + "/app")
+            else:
+                assert call("Storage", "FSReadText", Path=previous + "/manifest.json") == call(
+                    "Storage", "FSReadText", Path=stamp + "/app/manifest.json"
+                )
+
+        sleep_config = call("Storage", "FSReadText", Path=SLEEP_CONFIG) if exists(SLEEP_CONFIG) else None
+        layout = call("SystemCore", "GetStorageLayout")
+        try:
+            call("SystemCore", "SetDefaultInstallStorage", Target="External")
+            assert client.transfer("install_bpk", package, None, False)["ok"]
+        finally:
+            call("SystemCore", "SetDefaultInstallStorage", Target=layout["default_install_target"],
+                 PreferredExternalId=layout.get("preferred_external_id", ""))
+        installed = next(app for app in call("SystemCore", "ListApps") if app["manifest"]["id"] == APP_ID)
+        assert installed["manifest"]["version"] == version
+        assert digest(INSTALL_DIR) == tree_hash(files)
+        if sleep_config is not None:
+            assert call("Storage", "FSReadText", Path=SLEEP_CONFIG) == sleep_config
+    RUNTIME.mkdir(exist_ok=True)
+    (RUNTIME / "virtual-pet-deployment.json").write_text(
+        json.dumps({"version": version, "backup": stamp if existing else None,
+                    "installed_tree_sha256": tree_hash(files)}, indent=2) + "\n", encoding="utf-8"
+    )
+    print(f"Pet {version} installed and verified on SD. Previous app retained for rollback.", flush=True)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,99 +1,202 @@
-"""Exercise all native pet frames, restore the release BPK and check background resume."""
-import argparse,json,re,time,zipfile
-from pathlib import Path
-from deploy_audiobook_sleep import StoryClient
-from deploy_learning import install_app
-ROOT=Path(__file__).resolve().parents[2]
-RUNTIME=ROOT/'codex-quota-monitor/runtime'
-VERSION=json.loads((ROOT/'versions.json').read_text(encoding='utf-8'))['apps']['local.virtualpet']
-RELEASE=ROOT/('packages/apps/local.virtualpet.debug.'+VERSION+'.bpk')
-def capture(c,raw):
- original=c.serial.readline
- def readline(*args,**kwargs):
-  while True:
-   data=original(*args,**kwargs);raw.extend(data)
-   if re.fullmatch(rb'I PET_(FRAME_OK:pet_[a-z]+_\d|STEP_OK:\d+:[a-z]+:(true|false))\r?\n',data):continue
-   return data
- c.serial.readline=readline
+"""Verify released pet resources and replay gesture payloads on the board."""
+import argparse
+import hashlib
+import json
+import time
+
+from deploy_virtual_pet import APP_ID, INSTALL_DIR, RUNTIME, read_package
+from deploy_clock_widgets import tree_hash
+from maintenance_client import SharedPowerDiagnosticClient
+
+
+REPLAY = r"""
+const qaDay = Date.parse('2026-11-24T09:00:00+08:00');
+const qaPoint = { x: 170, y: 180 };
+const qaDrag = { x: 291, y: 89 };
+const qaReport = {};
+const qaSteps = [
+  ['idle', 0, now => tick(now), 'eye_open', 70, 150, 30],
+  ['tap', 100, now => {
+    act('facePress', qaPoint, now);
+    act('faceRelease', qaPoint, now);
+  }, 'eye_happy', 70, 180, 30],
+  ['doubleTap', 270, now => {
+    act('facePress', qaPoint, now);
+    act('faceRelease', qaPoint, now);
+  }, 'eye_surprised', 70, 120, 20],
+  ['holdStart', 1500, now => {
+    tick(now);
+    act('facePress', qaPoint, now);
+  }, 'eye_open', 70, 150, 30],
+  ['hold', 2050, now => tick(now), 'eye_calm', 70, 200, 50],
+  ['holdRelease', 2100, now => act('faceRelease', qaPoint, now), 'eye_calm', 70, 200, 50],
+  ['drag', 2800, now => {
+    act('facePress', qaPoint, now);
+    act('faceMove', qaDrag, now);
+    for (let i = 0; i < 4; i++) tick(now + i * 45);
+  }, 'eye_open', 110, 120, 20],
+  ['recenter', 3040, now => {
+    act('faceRelease', qaDrag, now);
+    for (let i = 1; i < 4; i++) tick(now + i * 45);
+  }, 'eye_open', 70, 150, 30],
+  ['returnStrip', 3300, now => {
+    act('facePress', { x: 240, y: 455 }, now);
+    act('faceMove', { x: 240, y: 320 }, now);
+    act('faceRelease', { x: 240, y: 320 }, now);
+    if (press) throw Error('Pet intercepted bottom swipe');
+    tick(now);
+  }, 'eye_open', 70, 150, 30],
+  ['blink', 3900, now => tick(now), 'eye_blink', 70, 200, 30],
+  ['sleep', 13 * 3600000, now => {
+    tick(now);
+    act('facePress', qaPoint, now);
+    act('faceRelease', qaPoint, now);
+  }, 'eye_sleep', 70, 210, 50],
+];
+let qaIndex = 0;
+globalThis.brookesia_app.on_timer = function () {
+  if (qaIndex >= qaSteps.length) return true;
+  let error = '';
+  try {
+    if (qaIndex === 0) sleep = { start: 1320, end: 420 };
+    const [label, elapsed, run, asset, x, y, ears] = qaSteps[qaIndex++];
+    run(qaDay + elapsed);
+    const left = call(gui, 'GetViewFrame', { Path: '/main/left' });
+    const right = call(gui, 'GetViewFrame', { Path: '/main/right' });
+    const crown = call(gui, 'GetViewFrame', { Path: '/main/crown' });
+    const mouth = call(gui, 'GetViewFrame', { Path: '/main/mouth' });
+    if (rendered.eye !== asset || left.x !== x || right.x !== x + 210 ||
+        left.y !== y || right.y !== y || crown.y !== ears || mouth.width !== 80) {
+      throw Error(label + ': ' + JSON.stringify({ rendered, left, right, crown, mouth }));
+    }
+    qaReport[label] = [left.x, left.y, crown.y, rendered.eye];
+  } catch (failure) {
+    error = String(failure);
+    qaIndex = qaSteps.length;
+  }
+  if (qaIndex === qaSteps.length) {
+    const storage = brookesia.start_service('Storage');
+    call(storage, 'FSWriteText', { Path: __REPORT_PATH__, Data: JSON.stringify({ steps: qaReport, error }) });
+  }
+  return true;
+};
+"""
+
+
+def wait(read, ready, seconds=35):
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        try:
+            result = read()
+        except RuntimeError as exc:
+            if str(exc) != "call_failed: GUI busy":
+                raise
+        else:
+            if ready(result):
+                return result
+        time.sleep(0.25)
+    raise TimeoutError(f"Timed out waiting for {read.__name__}")
+
+
 def main():
- p=argparse.ArgumentParser();p.add_argument('--port',required=True);a=p.parse_args()
- test=RUNTIME/'virtual-pet-test.bpk';log=RUNTIME/'virtual-pet-usb.log';raw=bytearray()
- with zipfile.ZipFile(RELEASE) as src,zipfile.ZipFile(test,'w',zipfile.ZIP_DEFLATED) as dst:
-  for name in src.namelist():
-   data=src.read(name)
-   if name=='app/main.js':
-    s=data.decode('utf-8')
-    needle="cache.src=src;frames++;";assert s.count(needle)==1
-    s=s.replace(needle,needle+"console.log('I PET_FRAME_OK:'+src);")
-    needle="on_timer(){if(!hidden){foreground();tick();}return true;}";assert s.count(needle)==1
-    replacement="""on_timer(){if(!hidden){foreground();tick();globalThis.petTest=(globalThis.petTest||0)+1;const t=globalThis.petTest;
-if(t===2||t===4||t===6)showPose('pet_idle_'+(t/2-1),Date.now());
-if(t===40)interact('feed');if(t===72)interact('pet');if(t===104)interact('schedule');if(t===112)interact('sleepPreview');if(t===184)interact('schedule');if(t===192)interact('back');
-if([40,72,104,112,184,192,240].includes(t))console.log('I PET_STEP_OK:'+t+':'+mode+':'+panel);
-}return true;}"""
-    data=s.replace(needle,replacement).encode('utf-8')
-   dst.writestr(name,data)
- report={'passed':False}
- try:
-  install_app(a.port,test)
-  with StoryClient(a.port,timeout=35) as c:
-   capture(c,raw);c.hello()
-   def f(s,n,args=None):return c.call(s,n,args or {})['result']
-   deadline=time.monotonic()+80
-   while True:
-    apps=f('SystemCore','ListApps')
-    if any(x['app_id']==1 and x['state']=='Running' for x in apps):break
-    assert time.monotonic()<deadline,'Desktop not ready';time.sleep(1)
-   pet=next(x for x in apps if x['manifest']['id']=='local.virtualpet')
-   f('DeviceModes','Wake');f('SystemCore','StartApp',{'AppId':pet['app_id']})
-   profile_before=f('DeviceModes','ProfileRefresh',{'Force':False});started=time.monotonic()
-   c.goodbye();c.serial.timeout=.2
-   end=time.monotonic()+55
-   while time.monotonic()<end:
-    raw.extend(c.serial.read(max(1,c.serial.in_waiting)))
-    if b'PET_STEP_OK:240:' in raw:break
-   expected=['pet_idle_0','pet_idle_1','pet_idle_2','pet_eat_0','pet_eat_1','pet_eat_2','pet_sleep_0','pet_sleep_1']
-   assert all(('PET_FRAME_OK:'+frame).encode() in raw for frame in expected),'Some native frames did not display'
-   assert all(('PET_STEP_OK:'+str(n)+':').encode() in raw for n in (40,72,104,112,184,192,240)),'Some interactions failed'
-   assert not any(x in raw for x in (b'Guru Meditation',b'assert failed:',b'Rebooting...',b'ESP-ROM:')),'Device restarted'
-   c.serial.timeout=35;c.hello()
-   profile_after=f('DeviceModes','ProfileRefresh',{'Force':False});elapsed=time.monotonic()-started
-   active=f('SystemCore','GetActiveApp');assert active['app_id']==pet['app_id'] and active['state']=='Running' and not active['last_error'],active
-   state=json.loads(f('Storage','FSReadText',{'Path':'/sdcard/pets/xiaoli/state.json'}))
-   assert state['clock_synced'] and state['frames']>=8
-   report.update(frames_checked=expected,interactions_checked=['feed','pet','schedule','sleepPreview','back'],memory=f('LocalVoice','GetState').get('free_psram_bytes'),render_profile={'before':profile_before,'after':profile_after,'test_seconds':round(elapsed,2),'refreshes':profile_after['refresh_count']-profile_before['refresh_count']})
- finally:
-  log.write_bytes(raw)
-  with StoryClient(a.port,timeout=35) as c:
-   capture(c,raw);c.hello()
-   pet=next((x for x in c.call('SystemCore','ListApps',{})['result'] if x['manifest']['id']=='local.virtualpet'),None)
-   if pet and pet['state'] in ('Running','Paused','Starting'):c.call('SystemCore','StopApp',{'AppId':pet['app_id']})
-  install_app(a.port,RELEASE)
- with StoryClient(a.port,timeout=35) as c:
-  capture(c,raw);c.hello()
-  def f(s,n,args=None):return c.call(s,n,args or {})['result']
-  apps=f('SystemCore','ListApps');pet=next(x for x in apps if x['manifest']['id']=='local.virtualpet');clock=next(x for x in apps if x['manifest']['id']=='local.flipclock')
-  app_path='/sdcard/apps/local.virtualpet'
-  assert f('Storage','FSStat',{'Path':app_path+'/manifest.json'})['exists'],'Pet should be installed on SD'
-  f('SystemCore','StartApp',{'AppId':pet['app_id']});time.sleep(6)
-  f('DeviceModes','Wake')
-  before=json.loads(f('Storage','FSReadText',{'Path':'/sdcard/pets/xiaoli/state.json'}))
-  f('SystemCore','StartApp',{'AppId':clock['app_id']});time.sleep(2)
-  paused=json.loads(f('Storage','FSReadText',{'Path':'/sdcard/pets/xiaoli/state.json'}));assert paused['paused'],paused
-  paused_memory=f('LocalVoice','GetState')['free_psram_bytes']
-  f('SystemCore','StartApp',{'AppId':pet['app_id']});time.sleep(6)
-  resumed=json.loads(f('Storage','FSReadText',{'Path':'/sdcard/pets/xiaoli/state.json'}));assert not resumed['paused'] and not resumed['config_fallback'],resumed
-  active=f('SystemCore','GetActiveApp');assert active['app_id']==pet['app_id'] and active['state']=='Running' and not active['last_error'],active
-  with zipfile.ZipFile(RELEASE) as z:
-   for name in ('app/main.js','res/images/index.json','manifest.json'):
-    assert f('Storage','FSReadText',{'Path':app_path+'/'+name}).replace('\r\n','\n')==z.read(name).decode().replace('\r\n','\n')
-  latest=json.loads((RUNTIME/'virtual-pet-latest.json').read_text(encoding='utf-8'));preserved=json.loads((Path(latest['folder'])/'preservation.json').read_text(encoding='utf-8'))
-  assert f('AudioPlayback','GetVolume')==preserved['volume'] and f('Audiobook','List')['tracks']==preserved['tracks']
-  assert f('DeviceModes','GetState')['desktop_theme_index']==preserved['theme']
-  for path,old in preserved['preferences'].items():
-   if old is not None:assert f('Storage','FSReadText',{'Path':path})==old
-  report.update(passed=True,release_restored=True,pause_resume=True,paused_psram_free=paused_memory,stories=len(preserved['tracks']),volume=preserved['volume'],theme=preserved['theme'])
- log.write_bytes(raw)
- (RUNTIME/'virtual-pet-verification.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
- print(json.dumps(report,ensure_ascii=True))
-if __name__=='__main__':main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--port", required=True)
+    args = parser.parse_args()
+    _, version, files = read_package()
+    stamp = f"pet-verify-{time.time_ns()}"
+    backup = f"/sdcard/resource-backups/{stamp}"
+    script = files["app/main.js"].decode()
+    end = "\n})();\n"
+    assert script.endswith(end)
+    report_path = backup + "/result.json"
+    probe = REPLAY.replace("__REPORT_PATH__", json.dumps(report_path))
+    RUNTIME.mkdir(parents=True, exist_ok=True)
+    staged = RUNTIME / f"{stamp}.js"
+    staged.write_bytes((script[:-len(end)] + probe + end).encode())
+
+    with SharedPowerDiagnosticClient(args.port, timeout=12) as client:
+        client.hello()
+
+        def call(service, function, **params):
+            return client.call_timeout(service, function, params, 15000)["result"]
+
+        def state():
+            return call("DeviceModes", "GetState")
+
+        def active():
+            return call("SystemCore", "GetActiveApp")
+
+        def layers():
+            return call("DeviceModes", "GetWeatherLayers")["layers"]
+
+        def verify_release():
+            tree = call("SdResources", "InspectTree", Path=INSTALL_DIR)
+            assert tree["sha256"] == tree_hash(files), "Installed pet differs from the release"
+
+        apps = {app["manifest"]["id"]: app for app in call("SystemCore", "ListApps")}
+        pet = apps[APP_ID]
+        assert pet["manifest"]["version"] == version
+        pet_id = pet["app_id"]
+        shell_id = apps["brookesia.system.super.shell"]["app_id"]
+
+        def open_pet():
+            call("SystemCore", "StartApp", AppId=pet_id)
+            front = wait(active, lambda app: app.get("app_id") == pet_id and app.get("state") == "Running")
+            assert not front.get("last_error")
+            wait(layers, lambda nodes: any(n.get("rgb") == 0 and n.get("width", 0) >= 450 and
+                 n.get("height", 0) >= 450 and n.get("background_opacity", 0) >= 200 for n in nodes))
+
+        def close_pet():
+            if active().get("app_id") == pet_id:
+                call("SystemCore", "RequestCloseApp", AppId=pet_id)
+            wait(active, lambda app: app.get("app_id") in (None, shell_id))
+
+        initial = state()
+        assert not initial["screen_locked"]
+        assert active().get("app_id") in (None, pet_id, shell_id)
+        call("DeviceModes", "Wake")
+        close_pet()
+        verify_release()
+        open_pet()
+        close_pet()
+        print("Release opens with a black full-screen background and returns to the launcher.", flush=True)
+
+        target = INSTALL_DIR + "/app/main.js"
+        saved = backup + "/main.js"
+        call("SystemCore", "StopApp", AppId=pet_id)
+        call("Storage", "FSCopyTree", From=target, To=saved, Overwrite=False)
+        remote = stamp + ".bin"
+        result = client.transfer("put", staged, "sd-themes/" + remote, False)
+        assert result["ok"] and result["sha256"] == hashlib.sha256(staged.read_bytes()).hexdigest()
+        remote_path = "/sdcard/themes/" + remote
+        try:
+            call("Storage", "FSCopyTree", From=remote_path, To=target, Overwrite=True)
+            open_pet()
+
+            def report_ready():
+                return call("Storage", "FSStat", Path=report_path)
+
+            wait(report_ready, lambda info: info["exists"])
+            report = json.loads(call("Storage", "FSReadText", Path=report_path))
+            assert not report["error"], report
+            assert len(report["steps"]) == 11, report
+            print("Gesture and view checks passed: " + ", ".join(report["steps"]), flush=True)
+        finally:
+            try:
+                close_pet()
+                call("SystemCore", "StopApp", AppId=pet_id)
+            finally:
+                call("Storage", "FSCopyTree", From=saved, To=target, Overwrite=True)
+                verify_release()
+                call("Storage", "FSRemove", Path=remote_path)
+
+        open_pet()
+        final = state()
+        assert final["uptime_ms"] > initial["uptime_ms"]
+        assert final["reset_reason"] == initial["reset_reason"]
+        assert final["desktop_theme_index"] == initial["desktop_theme_index"]
+        print("Exact release tree restored and reopened. Device did not reset.", flush=True)
+
+
+if __name__ == "__main__":
+    main()

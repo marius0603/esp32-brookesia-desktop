@@ -9,60 +9,88 @@
       "preload": true
     },
     {
-      "id": "pet_idle_0",
-      "src": "/sdcard/pets/xiaoli/frames/idle-0.bin",
+      "id": "crown",
+      "src": "crown.bin",
       "width": 320,
-      "height": 320,
-      "preload": false
+      "height": 90,
+      "preload": true
     },
     {
-      "id": "pet_idle_1",
-      "src": "/sdcard/pets/xiaoli/frames/idle-1.bin",
-      "width": 320,
-      "height": 320,
-      "preload": false
+      "id": "eye_open",
+      "src": "eye_open.bin",
+      "width": 130,
+      "height": 140,
+      "preload": true
     },
     {
-      "id": "pet_idle_2",
-      "src": "/sdcard/pets/xiaoli/frames/idle-2.bin",
-      "width": 320,
-      "height": 320,
-      "preload": false
+      "id": "eye_blink",
+      "src": "eye_blink.bin",
+      "width": 130,
+      "height": 140,
+      "preload": true
     },
     {
-      "id": "pet_eat_0",
-      "src": "/sdcard/pets/xiaoli/frames/eat-0.bin",
-      "width": 320,
-      "height": 320,
-      "preload": false
+      "id": "eye_happy",
+      "src": "eye_happy.bin",
+      "width": 130,
+      "height": 140,
+      "preload": true
     },
     {
-      "id": "pet_eat_1",
-      "src": "/sdcard/pets/xiaoli/frames/eat-1.bin",
-      "width": 320,
-      "height": 320,
-      "preload": false
+      "id": "eye_sleep",
+      "src": "eye_sleep.bin",
+      "width": 130,
+      "height": 140,
+      "preload": true
     },
     {
-      "id": "pet_eat_2",
-      "src": "/sdcard/pets/xiaoli/frames/eat-2.bin",
-      "width": 320,
-      "height": 320,
-      "preload": false
+      "id": "eye_calm",
+      "src": "eye_calm.bin",
+      "width": 130,
+      "height": 140,
+      "preload": true
     },
     {
-      "id": "pet_sleep_0",
-      "src": "/sdcard/pets/xiaoli/frames/sleep-0.bin",
-      "width": 320,
-      "height": 320,
-      "preload": false
+      "id": "eye_surprised",
+      "src": "eye_surprised.bin",
+      "width": 130,
+      "height": 140,
+      "preload": true
     },
     {
-      "id": "pet_sleep_1",
-      "src": "/sdcard/pets/xiaoli/frames/sleep-1.bin",
-      "width": 320,
-      "height": 320,
-      "preload": false
+      "id": "mouth_idle",
+      "src": "mouth_idle.bin",
+      "width": 80,
+      "height": 50,
+      "preload": true
+    },
+    {
+      "id": "mouth_happy",
+      "src": "mouth_happy.bin",
+      "width": 80,
+      "height": 50,
+      "preload": true
+    },
+    {
+      "id": "mouth_sleep",
+      "src": "mouth_sleep.bin",
+      "width": 80,
+      "height": 50,
+      "preload": true
+    },
+    {
+      "id": "mouth_calm",
+      "src": "mouth_calm.bin",
+      "width": 80,
+      "height": 50,
+      "preload": true
+    },
+    {
+      "id": "mouth_surprised",
+      "src": "mouth_surprised.bin",
+      "width": 80,
+      "height": 50,
+      "preload": true
     }
   ]
 }

@@ -1,80 +1,162 @@
-const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
-const root=path.join(__dirname,'..');
-const raw=fs.readFileSync(path.join(root,'src/app/main.js'),'utf8');
-const source=raw.replace(/\n\}\)\(\);\s*$/,'\nglobalThis.__test={validate,scheduled,clock,pose,read:()=>({mode,frames,hidden,panel,override,configError})};\n})();');
-const doc=JSON.parse(fs.readFileSync(path.join(root,'src/res/screens/main.json'),'utf8')),views=new Map(),actions=new Set();
-(function visit(n,p=''){p+='/'+n.id;views.set(p,n);for(const e of n.events||[]){assert(!actions.has(e.action),'Duplicate action '+e.action);actions.add(e.action);}for(const c of n.children||[])visit(c,p);})(doc);
-const images=JSON.parse(fs.readFileSync(path.join(root,'src/res/images/index.json'),'utf8')).images;
-const ids=new Set(images.map(i=>i.id));
-assert(images.filter(i=>i.id.startsWith('pet_')).every(i=>!i.preload),'Frames must not all preload with the document');
-const pinned=new Set();
-const config=JSON.parse(fs.readFileSync(path.join(root,'content/schedule.json'),'utf8'));
-const at=s=>Date.parse('2026-10-29T'+s+':00+08:00');
-let now=at('10:00'),writes=[],calls=[],texts={},timers=new Set(),next=0,active='local.virtualpet';
-class Clock extends Date {static now(){return now;}}
-function create(bad=false){
- const ctx=vm.createContext({Date:Clock,brookesia:{start_service:n=>n,call_function(h,n,j){
-  const a=JSON.parse(j);calls.push({h,n,a});let data=null;
-  if(h==='SystemGui'&&a.Path)assert(views.has(a.Path),'Unknown view '+a.Path);
-  if(n==='SetBinding')assert(Object.values(views.get(a.Path).bindings||{}).includes(a.Key),'Unknown binding');
-  if(n==='SetBindings')for(const u of a.Updates){assert(views.has(u.Path));assert(Object.values(views.get(u.Path).bindings||{}).includes(u.Key));}
-  if(n==='SetViewSrc')assert(ids.has(a.Src),'Unknown image '+a.Src);
-  if(n==='SetText')texts[a.Path]=a.Text;
-  if(n==='SubscribeAction')assert(actions.has(a.Action),'Unreachable action');
-  if(n==='FSReadText')data=bad?'{}':JSON.stringify(config);
-  if(n==='GetActiveApp')data={manifest:{id:active}};
-  if(n==='FSWriteText')writes.push(JSON.parse(a.Data));
-  if(n==='StartPeriodic'){data=++next;timers.add(data);}
-  if(n==='Stop')timers.delete(a.TimerId);
-  if(n==='StartViewAnimation'){assert(['y','opacity'].includes(a.Animation.property));data=++next;}
-  if(n==='ExecuteBatch')data={Success:true,Results:a.Commands.map(command=>{const reply=JSON.parse(this.call_function(h,command.Name,JSON.stringify(command.Params)));return {Name:command.Name,Success:reply.success,Data:command.Name==='StartViewAnimation'?{AnimationId:reply.data}:reply.data};})};
-  if(n==='PreloadImages'||n==='ReleaseImages')for(const id of a.Ids){
-   assert(ids.has(id));
-   if(n==='PreloadImages'){assert(!pinned.has(id),'Duplicate preload reference');pinned.add(id);}
-   else{assert(pinned.delete(id),'Unbalanced release');}
-  }
-  assert(pinned.size<=3,'At most three animation frames pinned');
-  return JSON.stringify({success:true,data});
- }}});
- vm.runInContext(source,ctx);return ctx;
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+
+const src = path.join(__dirname, '../src');
+const source = fs.readFileSync(path.join(src, 'app/main.js'), 'utf8');
+const screen = JSON.parse(fs.readFileSync(path.join(src, 'res/screens/main.json'), 'utf8'));
+const views = new Map(screen.children.map(view => ['/main/' + view.id, view]));
+const touch = views.get('/main/touch');
+const images = JSON.parse(fs.readFileSync(path.join(src, 'res/images/index.json'), 'utf8')).images;
+const ids = new Set(images.map(image => image.id));
+const at = time => Date.parse('2026-11-24T' + time + '+08:00');
+
+assert.equal(screen.style.bgColor, '#000000');
+assert.equal(views.size, 5);
+assert.equal(touch.placement.height, 440);
+assert.equal(images.length, 13);
+for (const image of images.filter(asset => asset.id !== 'launcher_icon')) {
+  const native = fs.readFileSync(path.join(src, 'res/images', image.src));
+  assert.equal(native[0], 0x19);
+  assert.equal(native[1], 0x12);
+  assert.equal(native.readUInt16LE(4), image.width);
+  assert.equal(native.readUInt16LE(6), image.height);
+  assert.equal(image.preload, true);
 }
-const c=create();c.brookesia_app.on_start();assert.equal(c.__test.read().mode,'idle');assert.equal(timers.size,1);
-for(const [time,mode,label] of [['00:00','sleep','睡个好觉'],['06:59','sleep','睡个好觉'],['07:00','idle','陪你一起'],['07:29','idle','陪你一起'],['07:30','eat','吃早餐'],['07:59','eat','吃早餐'],['08:00','idle','陪你一起'],['12:00','eat','吃午餐'],['12:30','idle','陪你一起'],['18:30','eat','吃晚餐'],['19:00','idle','陪你一起'],['21:59','idle','陪你一起'],['22:00','sleep','睡个好觉'],['23:59','sleep','睡个好觉']]){
- const s=c.__test.scheduled(at(time));assert.equal(s.mode,mode,time);assert.equal(s.label,label,time);
+
+function device(initial, config) {
+  let now = initial, batches = 0;
+  const positions = new Map(), sprites = new Map(), timers = new Set();
+  class Clock extends Date { static now() { return now; } }
+  const context = vm.createContext({
+    Date: Clock,
+    brookesia: {
+      start_service: name => name,
+      call_function(service, name, json) {
+        const args = JSON.parse(json);
+        let data;
+        switch (name) {
+          case 'FSReadText': data = JSON.stringify(config); break;
+          case 'SubscribeAction': assert(touch.events.some(event => event.action === args.Action)); break;
+          case 'StartPeriodic':
+            data = 1;
+            assert(!timers.has(data));
+            timers.add(data);
+            assert(args.IntervalMs >= 40);
+            break;
+          case 'Stop':
+            if (!timers.delete(args.TimerId)) {
+              return JSON.stringify({ success: false, error_message: 'Failed to stop timer' });
+            }
+            break;
+          case 'ExecuteBatch':
+            assert.equal(service, 'SystemGui');
+            ++batches;
+            for (const command of args.Commands) {
+              const params = command.Params;
+              if (command.Name === 'SetBindings') {
+                for (const update of params.Updates) {
+                  assert(Object.values(views.get(update.Path).bindings).includes(update.Key));
+                  positions.set(update.Path + ':' + update.Key, Number(update.Value));
+                }
+              } else {
+                assert.equal(command.Name, 'SetViewSrc');
+                assert(views.has(params.Path) && ids.has(params.Src));
+                sprites.set(params.Path, params.Src);
+              }
+            }
+            data = { Success: true };
+            break;
+          default: throw Error('Unexpected service action ' + name);
+        }
+        return JSON.stringify({ success: true, data });
+      },
+    },
+  });
+  vm.runInContext(source, context);
+  const app = context.brookesia_app;
+  app.on_start();
+  return {
+    app, timers,
+    batches: () => batches,
+    eye: () => sprites.get('/main/left'),
+    x: () => positions.get('/main/left:x'),
+    y: () => positions.get('/main/left:y'),
+    action: (which, x = 170, y = 180) => app.on_action('face' + which, '/main/touch', JSON.stringify({ x, y })),
+    advance(ms) { now += ms; app.on_timer(); },
+    go(time) { now = at(time); app.on_timer(); },
+  };
 }
-assert.equal(c.__test.scheduled(0).label,'等待校时');
-assert.equal(c.__test.scheduled(NaN).mode,'idle');
-assert.equal(c.__test.clock(at('12:34')).time,'12:34');
-for(const mode of ['idle','happy','eat','sleep'])for(let n=0;n<100;n++)assert(ids.has(c.__test.pose(mode,n*125)));
-const writesBefore=writes.length;
-const preloadsBefore=calls.filter(c=>c.n==='PreloadImages').length;
-for(let n=0;n<200;n++){now+=50;c.brookesia_app.on_timer();}
-assert(c.__test.read().frames>=4,'Animation advances');assert.equal(writes.length,writesBefore,'No per-frame storage writes');
-assert.equal(calls.filter(c=>c.n==='PreloadImages').length,preloadsBefore,'No per-frame SD reads or preloads');
-assert(calls.some(c=>c.n==='StartViewAnimation'&&c.a.Animation.property==='opacity'),'Native pose tween');
-assert(calls.some(c=>c.n==='StartViewAnimation'&&c.a.Animation.property==='y'&&c.a.Animation.playback),'Native breathing loop');
-c.brookesia_app.on_action('feed');assert.equal(c.__test.read().mode,'eat');
-assert.deepEqual([...pinned],['pet_eat_0','pet_eat_1','pet_eat_2']);
-const eatCommands=calls.filter(c=>c.n==='ExecuteBatch').at(-1).a.Commands;
-assert(!eatCommands.some(c=>c.Name==='StartViewAnimation'),'No overlapping eating poses');
-assert(eatCommands.some(c=>c.Name==='SetBindings'&&c.Params.Updates.some(u=>u.Key==='opacity'&&u.Value==='0')),'Only one eating layer is visible');
-now+=12000;c.brookesia_app.on_timer();assert.equal(c.__test.read().mode,'idle');
-c.brookesia_app.on_action('pet');assert.equal(c.__test.read().mode,'happy');
-now=at('22:01');c.brookesia_app.on_timer();assert.equal(c.__test.read().mode,'sleep','Night overrides daytime interaction');
-c.brookesia_app.on_action('feed');assert.equal(c.__test.read().mode,'sleep');
-now=at('14:00');c.brookesia_app.on_timer();c.brookesia_app.on_action('schedule');assert(c.__test.read().panel);
-c.brookesia_app.on_action('sleepPreview');assert.equal(c.__test.read().mode,'sleep');assert(!c.__test.read().panel);
-assert.deepEqual([...pinned],['pet_sleep_0','pet_sleep_1']);
-now+=12000;c.brookesia_app.on_timer();assert.equal(c.__test.read().mode,'idle','Preview expires');
-c.brookesia_app.on_action('feed');now-=1000;c.brookesia_app.on_timer();assert.equal(c.__test.read().mode,'idle','Clock correction clears transient state');
-active='local.flipclock';now+=1000;c.brookesia_app.on_timer();assert(writes.at(-1).paused,'Foreground loss suspends pet even without lifecycle callback');
-const awayFrames=c.__test.read().frames;now+=2000;c.brookesia_app.on_timer();assert.equal(c.__test.read().frames,awayFrames);
-active='local.virtualpet';now+=1000;c.brookesia_app.on_timer();assert(!writes.at(-1).paused);assert.equal(timers.size,1);
-c.brookesia_app.on_pause();assert.equal(timers.size,0);assert.equal(pinned.size,0);const before=calls.length;c.brookesia_app.on_timer();assert.equal(calls.length,before);
-now=at('07:35');c.brookesia_app.on_resume();assert.equal(c.__test.read().mode,'eat');assert.equal(timers.size,1);assert.equal(c.__test.read().override,null);
-c.brookesia_app.on_stop();assert.equal(timers.size,0);assert.equal(pinned.size,0);
-const malformed=JSON.parse(JSON.stringify(config));malformed.sleep.end=1440;assert.throws(()=>c.__test.validate(malformed));
-malformed.sleep.end=420;malformed.meals[0].duration=100;assert.throws(()=>c.__test.validate(malformed));
-const fallback=create(true);fallback.brookesia_app.on_start();assert(fallback.__test.read().configError);fallback.brookesia_app.on_stop();
-assert.equal(pinned.size,0);
-console.log('Pet passed: schedules, animation groups limited to three frames, balanced image ownership, no per-frame preloads, interactions and lifecycle.');
+
+const pet = device(at('10:00:00'), {});
+assert.equal(pet.eye(), 'eye_open');
+const first = pet.batches();
+pet.advance(900);
+assert.equal(pet.batches(), first, 'An unchanged frame must avoid GUI calls');
+pet.action('Press'); pet.action('Release');
+assert.equal(pet.eye(), 'eye_happy');
+pet.advance(200);
+pet.action('Press'); pet.action('Release');
+assert.equal(pet.eye(), 'eye_surprised');
+pet.advance(1100);
+assert.equal(pet.eye(), 'eye_open');
+pet.action('Press');
+pet.advance(540);
+assert.equal(pet.eye(), 'eye_calm');
+pet.action('Release');
+assert.equal(pet.eye(), 'eye_calm');
+pet.advance(550);
+assert.equal(pet.eye(), 'eye_open');
+pet.action('Press'); pet.action('Move', 291, 89);
+for (let i = 0; i < 4; i++) pet.advance(45);
+assert.equal(pet.x(), 110);
+assert.equal(pet.y(), 120);
+pet.action('Release', 291, 89);
+for (let i = 0; i < 4; i++) pet.advance(45);
+assert.equal(pet.x(), 70);
+assert.equal(pet.y(), 150);
+pet.action('Press'); pet.action('Move', 64, 250);
+pet.advance(45);
+assert(pet.x() < 70);
+pet.action('Cancel');
+assert.equal(pet.x(), 70);
+pet.action('Press', 240, 455); pet.action('Move', 240, 325); pet.action('Release', 240, 325);
+assert.equal(pet.eye(), 'eye_open', 'System return strip cannot start a pet gesture');
+pet.go('11:00:00');
+pet.advance(3800);
+assert.equal(pet.eye(), 'eye_blink');
+pet.advance(180);
+assert.equal(pet.eye(), 'eye_open');
+pet.go('22:00:00');
+assert.equal(pet.eye(), 'eye_sleep');
+pet.action('Press'); pet.action('Release');
+assert.equal(pet.eye(), 'eye_sleep');
+pet.go('06:59:59');
+assert.equal(pet.eye(), 'eye_sleep');
+pet.go('07:00:00');
+assert.equal(pet.eye(), 'eye_open');
+pet.app.on_pause();
+assert.equal(pet.timers.size, 0);
+const paused = pet.batches();
+pet.action('Press'); pet.advance(1000);
+assert.equal(pet.batches(), paused);
+pet.app.on_resume();
+assert.equal(pet.timers.size, 1);
+pet.app.on_resume();
+assert.equal(pet.timers.size, 1);
+pet.timers.clear(); // The native app manager can tear down timers before on_stop.
+pet.app.on_stop();
+assert.equal(pet.timers.size, 0);
+pet.app.on_resume();
+assert.equal(pet.timers.size, 1);
+pet.app.on_stop();
+assert.equal(pet.timers.size, 0);
+
+const custom = device(at('10:01:00'), { utc_offset_minutes: 480, sleep: { start: 600, end: 620 } });
+assert.equal(custom.eye(), 'eye_sleep', 'Previous custom sleep windows still work');
+custom.go('10:20:00');
+assert.equal(custom.eye(), 'eye_open');
+const unsynced = device(0, {});
+assert.equal(unsynced.eye(), 'eye_open');
+console.log('Pet passed: sprite assets, tap, double tap, hold, drag, cancellation, return strip, blink, sleep and app lifecycle.');

@@ -12,7 +12,7 @@
 | 顶部状态 | s3.61桌面左上CPU/RAM并列，音量、电量紧跟其右；四项独立定宽，数字变化不挤动相邻状态；透明底、主题配色，进入App隐藏，返回恢复；CPU约1秒刷新，RAM含内部/PSRAM堆，电池仍30秒缓存。详见[资源监控](codex-quota-monitor/RESOURCE_MONITOR.md) |
 | 电台 | 0.1.5，儿童模式按家长选择的频道白名单播放；播放页提供锁屏，播放继续、双击音量加解锁；八路真实频道、分类收藏与播放定时，原创圆角底框小马收音机图标，设备直接Wi-Fi播放；本轮7台各2分钟、6台零断粮，Naps短顿；苏州台停顿暂缓；s3.45已验证手机BLE播放控制、调音及定时。详见[电台应用](brookesia-apps/radio/README.md) |
 | 时钟 | 0.2.6，短划32px即可切换、略斜容错及底边返回保留；保留大号时分翻页和金属指针；猫咪款为六位时分秒原生翻页，顶端Wi-Fi/电池图标、28号日期左/天气图标温度右，全宽猫咪场景及底部分页圆点；局部动画、按城市日出日落切昼夜，左右滑动并记忆。见[时钟表盘](brookesia-apps/flip-clock/README.md) |
-| 电子宠物 | 0.1.3，按当前动作预载最多三张帧，原创小马“小栗”的眨眼、吃饭与睡觉动画，原生呼吸，吃饭单层显示避免重影；按北京时间三餐和跨夜睡觉，支持喂食、陪伴、作息查看和临时睡觉预览；本地运行，资源存SD卡 |
+| 电子宠物 | 0.1.4，黑底蓝色全屏像素脸，保留小马长耳朵与斜鬃毛。支持轻点微笑、双击惊讶、长按眯眼及拖动跟手，按北京时间自动入睡。应用包包含原生点阵资源 |
 | 小马助手 | 0.2.4，顶部显示自带音量，简洁对话卡片与说话/发送大按钮，移除音量加减、断开、停止及录音测试按键；电脑 Qwen3-ASR → DS → Qwen3-TTS，可切换小智，保留实体音量与勿扰 |
 | 离线语音 | 0.1.0 试验版，先说“你好小智”，本机处理八类命令；存在漏识别，童声准确率尚未验证；SD 模型与中文剩余时间提示，不上传命令录音 |
 | 儿童模式 | 0.1.6，家长 PIN、听书/儿歌/电台独立开关及电台频道白名单、音量上限、每日时长和可选夜间休息；“学习/迷宫”共用原轻学习授权位 |
@@ -39,7 +39,7 @@ SD 文件故障、读写和重启恢复见 [SD 应用存储](codex-quota-monitor
 离线命令词、模型部署与童声验证范围见 [OFFLINE_VOICE.md](codex-quota-monitor/OFFLINE_VOICE.md)。
 轻学习安装、录音说明及 JSON 内容包格式见 [LEARNING.md](codex-quota-monitor/LEARNING.md)。
 桌面翻页和时钟恢复修复、资源安装顺序及回退见 [PHONE_LAUNCHER.md](codex-quota-monitor/PHONE_LAUNCHER.md)。
-电子宠物形象、作息、SD动画资源及安装说明见 [小栗](brookesia-apps/virtual-pet/README.md)。
+电子宠物表情、手势和安装说明见 [小栗](brookesia-apps/virtual-pet/README.md)。
 当前系统属于官方开发分支的本地 S3 适配，未恢复微雪出厂 AIChats 等完整应用。
 
 ## 在另一台 Windows 电脑开始
@@ -74,7 +74,7 @@ npm --prefix tools/brookesia-toolkit install
 .\start.ps1
 ```
 
-其他应用目录是 `codex-quota`、`weather`、`audiobook`、`voice-assistant`、`child-mode`、`light-learning`、`virtual-pet`；打包文件名以各自 `src/manifest.json` 的版本为准。电子宠物先用专用部署器安装SD资源，再安装小型应用包，见应用说明。
+其他应用目录是 `codex-quota`、`weather`、`audiobook`、`voice-assistant`、`child-mode`、`light-learning`、`virtual-pet`；打包文件名以各自 `src/manifest.json` 的版本为准。电子宠物使用专用部署器把自带点阵资源的应用包安装至 SD，见应用说明。
 安装 App 无需重刷系统。听书需要 s3.3 固件提供的 Audiobook 服务；时钟依赖已有 PNG 解码与 SNTP。
 小马助手 0.2.2 需要 s3.25 原生服务。默认电脑模式，点击“电脑模式/小智模式”按钮可切换；小智首次使用仍需在平台添加设备。点击说话，等待按钮显示“发送”后开始说话，再次点击发送；最长30秒，录音先完整缓存在设备内存中，再上传电脑。
 电脑端 Node.js 从 PATH 查找，也可通过 `QUOTA_NODE` 指定。
