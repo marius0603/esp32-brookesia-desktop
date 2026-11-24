@@ -16,13 +16,16 @@ function visit(node, parent = '') {
 visit(screen);
 assert.equal(views.get('/main/water').placement.height, 440);
 assert.equal(views.get('/main/sheet').commonProps.hidden, true);
-assert.equal([...views.keys()].filter(id => /^\/main\/fish\d$/.test(id)).length, 6);
-const goldRows = views.get('/main/goldRows');
-assert.equal(screen.children[0], goldRows);
-assert.equal(goldRows.placement.x, 0);
-assert.equal(goldRows.placement.width, 480);
-assert.equal(goldRows.style.bgOpacity, 0);
-assert.equal(goldRows.commonProps.clickable, false);
+assert.equal([...views.keys()].filter(id => /^\/main\/fish\d$/.test(id)).length, 7);
+const groups = { gold: [0], moon: [1], school: [2, 3, 4, 5], jelly: [6] };
+for (const [i, kind] of Object.keys(groups).entries()) {
+  const rows = views.get('/main/' + kind + 'Rows');
+  assert.equal(screen.children[i], rows);
+  assert.equal(rows.placement.x, 0);
+  assert.equal(rows.placement.width, 480);
+  assert.equal(rows.style.bgOpacity, 0);
+  assert.equal(rows.commonProps.clickable, false);
+}
 for (let band = 0; band < 8; band++) {
   const {y, width, height} = views.get('/main/backdrop' + band).placement;
   assert.deepEqual([y, width, height], [band * 60, 480, 60]);
@@ -31,7 +34,7 @@ for (const [id, resource] of images) {
   const file = fs.readFileSync(path.join(src, 'res/images', resource.src));
   assert(file.length > 100);
   assert(resource.preload);
-  if (id === 'launcher_icon' || /^gold_[lr][01]$/.test(id)) {
+  if (id === 'launcher_icon' || /^(gold_[lr]|moon_[lr]|jelly)[01]$/.test(id)) {
     assert.equal(path.extname(resource.src), '.png');
     assert.equal(file.subarray(1, 4).toString(), 'PNG');
     assert.equal(file.readUInt32BE(16), resource.width);
@@ -39,7 +42,7 @@ for (const [id, resource] of images) {
     assert.equal(file[25], 6, 'RGBA preserves the transparent tail edge');
   } else {
     const hasAlpha = !/^(day|night)\d$/.test(id);
-    const compressed = !hasAlpha || /^moon_[lr]1$/.test(id);
+    const compressed = !hasAlpha;
     assert.equal(file[0], 0x19);
     assert.equal(file[1], hasAlpha ? 0x14 : 0x12);
     assert.equal(file.readUInt16LE(2), compressed ? 8 : 0);
@@ -103,21 +106,37 @@ vm.runInContext(fs.readFileSync(path.join(src, 'app/main.js'), 'utf8'), context)
 const app = context.brookesia_app;
 const action = (name, value) => app.on_action(name, '/main/water', JSON.stringify(value));
 const tap = (x, y) => { action('waterPress', { x, y }); action('waterRelease', { x, y }); };
-const x = () => Number(positions.get('/main/fish0:x'));
-const y = () => Number(positions.get('/main/fish0:y'));
-const goldSource = () => sources.get('/main/fish0');
-const rowBinding = key => positions.get('/main/goldRows:' + key);
+const fishState = (i = 0) => {
+  const id = '/main/fish' + i;
+  return { x: Number(positions.get(id + ':x')), y: Number(positions.get(id + ':y')), pose: sources.get(id) };
+};
+const x = () => fishState().x;
+const y = () => fishState().y;
+const rowBinding = (kind, key) => positions.get('/main/' + kind + 'Rows:' + key);
 function advance(count) {
   for (let i = 0; i < count; i++) {
-    const prior = { x: x(), y: y(), pose: goldSource(), color: rowBinding('color') };
+    const prior = Array.from({ length: 7 }, (_, index) => fishState(index));
+    const paints = Object.fromEntries(Object.keys(groups).map(kind => [kind, rowBinding(kind, 'color')]));
     now += 50;
     app.on_timer();
-    const changed = x() !== prior.x || y() !== prior.y || goldSource() !== prior.pose;
-    if (changed) {
-      assert.equal(Number(rowBinding('y')), Math.min(y(), prior.y));
-      assert.equal(Number(rowBinding('h')), 117 + Math.abs(y() - prior.y));
-      assert.notEqual(rowBinding('color'), prior.color, 'Position and pose both invalidate full rows');
-    } else assert.equal(rowBinding('color'), prior.color);
+    for (const [kind, members] of Object.entries(groups)) {
+      const changedRows = [];
+      for (const member of members) {
+        const current = fishState(member);
+        const last = prior[member];
+        if (current.x !== last.x || current.y !== last.y || current.pose !== last.pose) {
+          const height = views.get('/main/fish' + member).placement.height;
+          changedRows.push([Math.min(current.y, last.y), Math.max(current.y, last.y) + height]);
+        }
+      }
+      if (changedRows.length) {
+        const top = Math.min(...changedRows.map(row => row[0]));
+        const bottom = Math.max(...changedRows.map(row => row[1]));
+        assert.equal(Number(rowBinding(kind, 'y')), top);
+        assert.equal(Number(rowBinding(kind, 'h')), bottom - top);
+        assert.notEqual(rowBinding(kind, 'color'), paints[kind], 'Every moving species invalidates full rows');
+      } else assert.equal(rowBinding(kind, 'color'), paints[kind]);
+    }
   }
 }
 const visible = view => positions.get('/main/' + view + ':hidden') === 'false';
@@ -128,10 +147,17 @@ app.on_start();
 assert(timer);
 assertBackdrop('day');
 assert.equal(stored, '');
-const original = x(), initialSource = sources.get('/main/fish0');
+const originalGold = fishState(), initialJelly = fishState(6);
 advance(7);
-assert(x() > original);
-assert.notEqual(sources.get('/main/fish0'), initialSource, 'Fish alternates tail poses');
+assert(x() > originalGold.x);
+assert.notEqual(fishState().pose, originalGold.pose, 'Fish alternates tail poses');
+assert.notEqual(fishState(6).y, initialJelly.y, 'Jellyfish bobs vertically');
+assert.notEqual(fishState(6).pose, initialJelly.pose, 'Jellyfish pulses its bell');
+const openedJelly = fishState(6);
+tap(openedJelly.x + 30, openedJelly.y + 33);
+assert(visible('sheet'));
+assert.match(words.get('/main/sheet/description'), /伞盖/);
+action('dismiss');
 
 const beforeTap = x();
 tap(100, 167);
@@ -146,6 +172,8 @@ assert(visible('sheet'));
 assert.match(words.get('/main/sheet/description'), /好奇/);
 action('moon');
 assert.match(words.get('/main/sheet/description'), /慢热/);
+action('jelly');
+assert.match(words.get('/main/sheet/description'), /漂浮/);
 action('dismiss');
 assert(!visible('sheet'));
 action('waterPress', {x: 240, y: 458});
@@ -172,4 +200,4 @@ app.on_start();
 assertBackdrop('night');
 app.on_stop();
 assert(!timer);
-console.log('Aquarium passed: six fish, animation, water response, fish book, night preference and lifecycle.');
+console.log('Aquarium passed: seven creatures, jellyfish, full-width refresh, water response, catalog and lifecycle.');

@@ -36,6 +36,84 @@
       }
     },
     {
+      "type": "container",
+      "id": "moonRows",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 255,
+        "width": 480,
+        "height": 120
+      },
+      "commonProps": {
+        "clickable": false,
+        "scrollable": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0,
+        "bgColor": "#000000"
+      },
+      "bindings": {
+        "placement.y": "y",
+        "placement.height": "h",
+        "style.bgColor": "color"
+      }
+    },
+    {
+      "type": "container",
+      "id": "schoolRows",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 82,
+        "width": 480,
+        "height": 88
+      },
+      "commonProps": {
+        "clickable": false,
+        "scrollable": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0,
+        "bgColor": "#000000"
+      },
+      "bindings": {
+        "placement.y": "y",
+        "placement.height": "h",
+        "style.bgColor": "color"
+      }
+    },
+    {
+      "type": "container",
+      "id": "jellyRows",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 120,
+        "width": 480,
+        "height": 66
+      },
+      "commonProps": {
+        "clickable": false,
+        "scrollable": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0,
+        "bgColor": "#000000"
+      },
+      "bindings": {
+        "placement.y": "y",
+        "placement.height": "h",
+        "style.bgColor": "color"
+      }
+    },
+    {
       "type": "image",
       "id": "backdrop0",
       "placement": {
@@ -451,6 +529,34 @@
       }
     },
     {
+      "type": "image",
+      "id": "fish6",
+      "placement": {
+        "mode": "absolute",
+        "x": 93,
+        "y": 120,
+        "width": 60,
+        "height": 66
+      },
+      "commonProps": {
+        "clickable": false,
+        "scrollable": false
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "imageProps": {
+        "src": "${image.jelly0}",
+        "innerAlign": "center"
+      },
+      "bindings": {
+        "placement.x": "x",
+        "placement.y": "y"
+      }
+    },
+    {
       "type": "container",
       "id": "water",
       "placement": {
@@ -691,7 +797,7 @@
             "mode": "absolute",
             "x": 22,
             "y": 50,
-            "width": 134,
+            "width": 101,
             "height": 48
           },
           "commonProps": {
@@ -714,7 +820,7 @@
                 "mode": "absolute",
                 "x": 0,
                 "y": 10,
-                "width": 134,
+                "width": 101,
                 "height": 30
               },
               "style": {
@@ -743,9 +849,9 @@
           "id": "moon",
           "placement": {
             "mode": "absolute",
-            "x": 173,
+            "x": 133,
             "y": 50,
-            "width": 134,
+            "width": 101,
             "height": 48
           },
           "commonProps": {
@@ -768,7 +874,7 @@
                 "mode": "absolute",
                 "x": 0,
                 "y": 10,
-                "width": 134,
+                "width": 101,
                 "height": 30
               },
               "style": {
@@ -797,9 +903,9 @@
           "id": "school",
           "placement": {
             "mode": "absolute",
-            "x": 324,
+            "x": 244,
             "y": 50,
-            "width": 134,
+            "width": 101,
             "height": 48
           },
           "commonProps": {
@@ -822,7 +928,7 @@
                 "mode": "absolute",
                 "x": 0,
                 "y": 10,
-                "width": 134,
+                "width": 101,
                 "height": 30
               },
               "style": {
@@ -840,6 +946,60 @@
             {
               "type": "clicked",
               "action": "school"
+            }
+          ],
+          "bindings": {
+            "style.bgColor": "color"
+          }
+        },
+        {
+          "type": "container",
+          "id": "jelly",
+          "placement": {
+            "mode": "absolute",
+            "x": 355,
+            "y": 50,
+            "width": 101,
+            "height": 48
+          },
+          "commonProps": {
+            "clickable": true,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 255,
+            "padding": 0,
+            "borderWidth": 1,
+            "bgColor": "#0B353E",
+            "radius": 6,
+            "borderColor": "#467D78"
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 10,
+                "width": 101,
+                "height": 30
+              },
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 22,
+                "textColor": "#dcf4e6",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "水母"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "jelly"
             }
           ],
           "bindings": {

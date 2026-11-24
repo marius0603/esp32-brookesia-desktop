@@ -8,15 +8,18 @@ const NOTES = {
   gold: '好奇 · 喜欢靠近水波',
   moon: '慢热 · 常停在水草附近',
   school: '合群 · 会和同伴一起转向',
+  jelly: '随水漂浮 · 伞盖会缓慢收放',
 };
 const SPECIES = {
   gold: { width: 150, height: 117, speed: 30, top: 60, bottom: 378 },
   moon: { width: 114, height: 120, speed: 18, top: 75, bottom: 370 },
   school: { width: 50, height: 28, speed: 32, top: 66, bottom: 365 },
+  jelly: { width: 60, height: 66, top: 77, bottom: 337 },
 };
 const START = [
   ['gold', 234, 204, 1], ['moon', 315, 315, -1],
   ['school', 333, 129, 1], ['school', 372, 156, 1], ['school', 402, 120, 1], ['school', 363, 96, 1],
+  ['jelly', 123, 153, 1],
 ];
 const ACTIONS = ['waterPress', 'waterRelease', 'waterCancel', 'light', 'book', 'dismiss', ...Object.keys(NOTES)];
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -38,6 +41,7 @@ function readLight() {
 function draw(now) {
   const elapsed = Math.max(0, now - started);
   const updates = [], commands = [], next = { ...rendered };
+  const rowBounds = {};
   const pathOf = node => '/main/' + node;
   function changed(node, key, value) {
     const address = node + ':' + key;
@@ -45,10 +49,14 @@ function draw(now) {
     return rendered[address] !== value;
   }
   function bind(node, key, value) {
-    if (changed(node, key, value)) updates.push({ Path: pathOf(node), Key: key, Value: String(value) });
+    if (!changed(node, key, value)) return false;
+    updates.push({ Path: pathOf(node), Key: key, Value: String(value) });
+    return true;
   }
   function image(node, src) {
-    if (changed(node, 'src', src)) commands.push({ Name: 'SetViewSrc', Params: { Path: pathOf(node), Src: src } });
+    if (!changed(node, 'src', src)) return false;
+    commands.push({ Name: 'SetViewSrc', Params: { Path: pathOf(node), Src: src } });
+    return true;
   }
   for (let band = 0; band < BACKDROP_BANDS; band++) image('backdrop' + band, (night ? 'night' : 'day') + band);
   bind('light/label', 'text', night ? '夜景' : '日景');
@@ -70,19 +78,30 @@ function draw(now) {
   fish.forEach((item, i) => {
     const sprite = SPECIES[item.kind];
     const node = 'fish' + i;
-    bind(node, 'x', Math.round(item.x - sprite.width / 2));
-    bind(node, 'y', Math.round(item.y - sprite.height / 2));
-    const phase = Math.floor((elapsed + i * 43) / (night ? 370 : 265)) % 2;
-    image(node, item.kind + '_' + (item.facing > 0 ? 'r' : 'l') + phase);
+    const y = Math.round(item.y - sprite.height / 2);
+    const movedX = bind(node, 'x', Math.round(item.x - sprite.width / 2));
+    const movedY = bind(node, 'y', y);
+    const jelly = item.kind === 'jelly';
+    const period = jelly ? (night ? 820 : 570) : (night ? 370 : 265);
+    const phase = Math.floor((elapsed + i * 43) / period) % 2;
+    const source = jelly ? 'jelly' + phase : item.kind + '_' + (item.facing > 0 ? 'r' : 'l') + phase;
+    const changedPose = image(node, source);
+    if (movedX || movedY || changedPose) {
+      const oldY = rendered[node + ':y'] ?? y;
+      const bounds = rowBounds[item.kind];
+      rowBounds[item.kind] = {
+        top: Math.min(y, oldY, bounds?.top ?? Infinity),
+        bottom: Math.max(Math.max(y, oldY) + sprite.height, bounds?.bottom ?? -Infinity),
+      };
+    }
   });
-  // CO5300 can leave seams on partial-width writes. Invalidate complete rows
-  // behind both the old and new goldfish rectangles, including pose-only changes.
-  if (['x', 'y', 'src'].some(key => rendered['fish0:' + key] !== next['fish0:' + key])) {
-    const y = next['fish0:y'];
-    const oldY = rendered['fish0:y'] ?? y;
-    bind('goldRows', 'y', Math.min(y, oldY));
-    bind('goldRows', 'h', SPECIES.gold.height + Math.abs(y - oldY));
-    bind('goldRows', 'color', rendered['goldRows:color'] === '#000000' ? '#243C50' : '#000000');
+  // CO5300 can leave seams on partial-width writes. Repaint complete rows
+  // behind moving sprites, grouping the school to avoid overlapping updates.
+  for (const [kind, bounds] of Object.entries(rowBounds)) {
+    const node = kind + 'Rows';
+    bind(node, 'y', bounds.top);
+    bind(node, 'h', bounds.bottom - bounds.top);
+    bind(node, 'color', rendered[node + ':color'] === '#000000' ? '#243C50' : '#000000');
   }
   if (updates.length) commands.unshift({ Name: 'SetBindings', Params: { Updates: updates } });
   if (commands.length) {
@@ -97,10 +116,17 @@ function swim(now, delta) {
   const leader = fish[2];
   const leaderX = leader.x, leaderY = leader.y, schoolDirection = leader.cruise;
   const attract = ripple && now - ripple.at < 3100;
+  const pace = night ? 0.57 : 1;
   fish.forEach((item, i) => {
     const sprite = SPECIES[item.kind];
     const margin = sprite.width / 2 + 7;
-    const pace = night ? 0.57 : 1;
+    if (item.kind === 'jelly') {
+      const drift = Math.sin(time * .34 + .6) * 6;
+      const buoyancy = (item.home + Math.sin(time * .66) * 27 - item.y) * 1.4;
+      item.x = clamp(item.x + drift * delta * pace, margin, 480 - margin);
+      item.y = clamp(item.y + buoyancy * delta * pace, sprite.top, sprite.bottom);
+      return;
+    }
     let vx = item.cruise * sprite.speed;
     let destY = item.home + Math.sin(time * (item.kind === 'moon' ? .59 : .83) + i) * (night ? 11 : 23);
     if (item.kind === 'school' && i > 2) {

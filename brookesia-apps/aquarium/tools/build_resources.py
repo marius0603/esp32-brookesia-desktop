@@ -21,8 +21,9 @@ FISH = [
     ("school", 124, 52, 1),
     ("school", 134, 40, 1),
     ("school", 121, 32, 1),
+    ("jelly", 41, 51, 1),
 ]
-FISH_SCALE = {"gold": 3, "moon": 3, "school": 2}
+FISH_SCALE = {"gold": 3, "moon": 3, "school": 2, "jelly": 2}
 
 
 def write_native_image(image, path, compressed):
@@ -109,11 +110,12 @@ def main():
                 size = (art.width * scale, art.height * scale)
                 sizes[kind] = size
                 expanded = art.resize(size, Image.Resampling.NEAREST)
-                # Keep both goldfish poses on the same per-pixel alpha path.
-                extension = ".png" if kind == "gold" else ".bin"
-                compressed = kind == "moon" and phase == 1
-                export(f"{kind}_r{phase}", expanded, extension, compressed)
-                export(f"{kind}_l{phase}", ImageOps.mirror(expanded), extension, compressed)
+                if kind == "jelly":
+                    export(f"jelly{phase}", expanded, ".png")
+                else:
+                    extension = ".bin" if kind == "school" else ".png"
+                    export(f"{kind}_r{phase}", expanded, extension, compressed=False)
+                    export(f"{kind}_l{phase}", ImageOps.mirror(expanded), extension, compressed=False)
 
     icon = Image.new("RGBA", (46, 46))
     pen = ImageDraw.Draw(icon)
@@ -126,11 +128,13 @@ def main():
     export("launcher_icon", icon.resize((92, 92), Image.Resampling.NEAREST), ".png")
     write_json(images_dir / "index.json", {"type": "imageSet", "images": images})
 
-    gold_height = sizes["gold"][1]
-    row_refresh = container("goldRows", 0, FISH[0][2] * 3 - gold_height // 2, 480, gold_height,
-                            bindings={"placement.y": "y", "placement.height": "h", "style.bgColor": "color"})
-    row_refresh["style"]["bgColor"] = "#000000"
-    nodes = [row_refresh]
+    nodes = []
+    for kind, (_, height) in sizes.items():
+        rows = [y * 3 - height // 2 for species, _, y, _ in FISH if species == kind]
+        row_refresh = container(kind + "Rows", 0, min(rows), 480, max(rows) - min(rows) + height,
+                                bindings={"placement.y": "y", "placement.height": "h", "style.bgColor": "color"})
+        row_refresh["style"]["bgColor"] = "#000000"
+        nodes.append(row_refresh)
     nodes.extend(picture(f"backdrop{band}", f"day{band}", 0, y, 480, BAND_HEIGHT)
                  for band, y in enumerate(range(0, 480, BAND_HEIGHT)))
     bubble = container("bubble", 394, 345, 7, 7)
@@ -146,8 +150,8 @@ def main():
     nodes.append(ripple)
     for i, (kind, x, y, facing) in enumerate(FISH):
         w, h = sizes[kind]
-        nodes.append(picture("fish" + str(i), f"{kind}_{'r' if facing > 0 else 'l'}0",
-                             x*3-w//2, y*3-h//2, w, h, True))
+        source = "jelly0" if kind == "jelly" else f"{kind}_{'r' if facing > 0 else 'l'}0"
+        nodes.append(picture(f"fish{i}", source, x * 3 - w // 2, y * 3 - h // 2, w, h, True))
 
     touch = container("water", 0, 0, 480, 440)
     touch["commonProps"].update(clickable=True, pressLock=True)
@@ -159,8 +163,8 @@ def main():
     lighting["children"][0]["bindings"] = {"labelProps.text": "text"}
     nodes.extend([touch, lighting, button("book", "鱼册", 374, 390, 82)])
 
-    options = [button(name, text, x, 50, 134) for name, text, x in (
-        ("gold", "金鳞", 22), ("moon", "月影", 173), ("school", "蓝线", 324))]
+    options = [button(name, text, 22 + i * 111, 50, 101) for i, (name, text) in enumerate((
+        ("gold", "金鳞"), ("moon", "月影"), ("school", "蓝线"), ("jelly", "水母")))]
     for option in options:
         option["bindings"] = {"style.bgColor": "color"}
     description = label("description", "好奇 · 喜欢靠近水波", 22, 112, 430, 32)

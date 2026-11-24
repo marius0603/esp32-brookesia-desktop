@@ -143,28 +143,28 @@
     },
     {
       "id": "moon_r0",
-      "src": "moon_r0.bin",
+      "src": "moon_r0.png",
       "width": 114,
       "height": 120,
       "preload": true
     },
     {
       "id": "moon_l0",
-      "src": "moon_l0.bin",
+      "src": "moon_l0.png",
       "width": 114,
       "height": 120,
       "preload": true
     },
     {
       "id": "moon_r1",
-      "src": "moon_r1.bin",
+      "src": "moon_r1.png",
       "width": 114,
       "height": 120,
       "preload": true
     },
     {
       "id": "moon_l1",
-      "src": "moon_l1.bin",
+      "src": "moon_l1.png",
       "width": 114,
       "height": 120,
       "preload": true
@@ -195,6 +195,20 @@
       "src": "school_l1.bin",
       "width": 50,
       "height": 28,
+      "preload": true
+    },
+    {
+      "id": "jelly0",
+      "src": "jelly0.png",
+      "width": 60,
+      "height": 66,
+      "preload": true
+    },
+    {
+      "id": "jelly1",
+      "src": "jelly1.png",
+      "width": 60,
+      "height": 66,
       "preload": true
     },
     {
