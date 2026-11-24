@@ -194,5 +194,6 @@
   "packages/firmware/brookesia-0.8.3-s3.91-app-only.zip": "438e7b17156d6d80def726762908ab1ad929b5372039b8c63b301c5ac020bfb1",
   "packages/firmware/brookesia-0.8.3-s3.92-app-only.zip": "f480e1a5735dbfe412e31c86596efdbdb3ccaa5b08f9723cce886420d664d134",
   "packages/apps/local.virtualpet.debug.0.1.4.bpk": "a003f13a11f1f4591cf1d7b156f2a81b4b6be3e6e3b7d25f4d9720e4126c9bdc",
-  "packages/apps/local.aquarium.debug.0.1.0.bpk": "9e54c77bd803b75025463460a96cb3ba4c0d9dbe9b80165d40f38fa9ac1b7f18"
+  "packages/apps/local.aquarium.debug.0.1.0.bpk": "9e54c77bd803b75025463460a96cb3ba4c0d9dbe9b80165d40f38fa9ac1b7f18",
+  "packages/apps/local.aquarium.debug.0.1.1.bpk": "4493a6aaa0e141bc0955ebbc94cb32c4a964fa6802af4f6e16d07af7ed39a12c"
 }

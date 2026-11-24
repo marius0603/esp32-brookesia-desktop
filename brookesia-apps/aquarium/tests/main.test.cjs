@@ -24,14 +24,16 @@ for (let band = 0; band < 4; band++) {
 for (const [id, resource] of images) {
   const file = fs.readFileSync(path.join(src, 'res/images', resource.src));
   assert(file.length > 100);
-  if (id === 'launcher_icon') {
+  assert(resource.preload);
+  if (id === 'launcher_icon' || /^gold_[lr][01]$/.test(id)) {
+    assert.equal(path.extname(resource.src), '.png');
     assert.equal(file.subarray(1, 4).toString(), 'PNG');
     assert.equal(file.readUInt32BE(16), resource.width);
     assert.equal(file.readUInt32BE(20), resource.height);
+    assert.equal(file[25], 6, 'RGBA preserves the transparent tail edge');
   } else {
     const hasAlpha = !/^(day|night)\d$/.test(id);
-    const compressed = !hasAlpha || /^(gold|moon)_[lr]1$/.test(id);
-    assert(resource.preload);
+    const compressed = !hasAlpha || /^moon_[lr]1$/.test(id);
     assert.equal(file[0], 0x19);
     assert.equal(file[1], hasAlpha ? 0x14 : 0x12);
     assert.equal(file.readUInt16LE(2), compressed ? 8 : 0);

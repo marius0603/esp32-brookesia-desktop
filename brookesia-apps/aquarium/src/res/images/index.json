@@ -59,28 +59,28 @@
     },
     {
       "id": "gold_r0",
-      "src": "gold_r0.bin",
+      "src": "gold_r0.png",
       "width": 150,
       "height": 117,
       "preload": true
     },
     {
       "id": "gold_l0",
-      "src": "gold_l0.bin",
+      "src": "gold_l0.png",
       "width": 150,
       "height": 117,
       "preload": true
     },
     {
       "id": "gold_r1",
-      "src": "gold_r1.bin",
+      "src": "gold_r1.png",
       "width": 150,
       "height": 117,
       "preload": true
     },
     {
       "id": "gold_l1",
-      "src": "gold_l1.bin",
+      "src": "gold_l1.png",
       "width": 150,
       "height": 117,
       "preload": true

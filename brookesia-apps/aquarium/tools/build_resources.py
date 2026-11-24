@@ -109,9 +109,11 @@ def main():
                 size = (art.width * scale, art.height * scale)
                 sizes[kind] = size
                 expanded = art.resize(size, Image.Resampling.NEAREST)
-                compressed = kind != "school" and phase == 1
-                export(f"{kind}_r{phase}", expanded, ".bin", compressed)
-                export(f"{kind}_l{phase}", ImageOps.mirror(expanded), ".bin", compressed)
+                # Keep both goldfish poses on the same per-pixel alpha path.
+                extension = ".png" if kind == "gold" else ".bin"
+                compressed = kind == "moon" and phase == 1
+                export(f"{kind}_r{phase}", expanded, extension, compressed)
+                export(f"{kind}_l{phase}", ImageOps.mirror(expanded), extension, compressed)
 
     icon = Image.new("RGBA", (46, 46))
     pen = ImageDraw.Draw(icon)
