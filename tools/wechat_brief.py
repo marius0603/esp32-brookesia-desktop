@@ -67,14 +67,24 @@ def send(config_path, body, event_id, dry_run=False, timeout_seconds=180):
         return subprocess.run([config['node'], config['cli'], *args], capture_output=True,
                               text=True, encoding='utf-8', errors='replace', timeout=timeout, env=env)
     started = time.monotonic()
-    try:
-        health = run(['gateway', 'health', '--json', '--timeout', '10000'], 30)
-        healthy = health.returncode == 0 and find_response(health.stdout, lambda d: d.get('ok') is True)
-    except (OSError, subprocess.SubprocessError) as error:
-        audit('health', status='not_sent', error=type(error).__name__)
-        return {'status': 'not_sent', 'reason': 'gateway_unavailable'}
-    timings['health_seconds'] = round(time.monotonic() - started, 2)
-    audit('health', status='ready' if healthy else 'not_sent', **timings)
+    healthy = False
+    for attempt in (1, 2):
+        detail = {}
+        try:
+            health = run(['gateway', 'health', '--json', '--timeout', '10000'], 30)
+            healthy = health.returncode == 0 and find_response(health.stdout, lambda d: d.get('ok') is True)
+        except subprocess.TimeoutExpired:
+            detail['error'] = 'TimeoutExpired'
+        except (OSError, subprocess.SubprocessError) as error:
+            audit('health', status='not_sent', attempt=attempt, error=type(error).__name__)
+            return {'status': 'not_sent', 'reason': 'gateway_unavailable'}
+        timings['health_seconds'] = round(time.monotonic() - started, 2)
+        status = 'ready' if healthy else 'retrying' if attempt == 1 else 'not_sent'
+        audit('health', status=status, attempt=attempt, **timings, **detail)
+        if healthy:
+            break
+        if attempt == 1:
+            time.sleep(2)
     if not healthy:
         return {'status': 'not_sent', 'reason': 'gateway_unavailable', **timings}
 

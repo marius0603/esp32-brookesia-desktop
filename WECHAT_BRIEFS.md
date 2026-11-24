@@ -15,6 +15,14 @@ python tools/wechat_brief.py --body-file codex-quota-monitor/runtime/work-brief.
 
 当前工具通过常驻Gateway的`send` RPC发送：只有响应的`runId`与本次稳定请求标识一致、`channel`一致且存在`messageId`才确认成功，不能仅凭CLI退出码。当前安装版本的Gateway仅在通道发送成功后生成该回执。旧版`message send`路径使用的`payload.deliveryStatus=sent`不再作为新RPC的判据。相同工作ID不会自动重发；请求前先记录未确认状态，超时或进程中断时避免重复发送，应先现场检查微信再决定是否用新的ID重发。发送状态本地保存，不保存正文，不自动重试。
 
+### 2026-11-24 微信启动连接与简报就绪检查
+
+当天日志分别记录了对微信域名的 `ENOTFOUND` 和微信发送接口返回的 `ret=-2 / prepare failed`。拒收时网关已在线。现有微信绑定接收新消息后刷新会话上下文，电子宠物简报补发取得回执。
+
+Windows 登录启动的包装器给本机代理最多 30 秒就绪时间，并让微信 iLink 和模型连接使用已有代理，回环流量保持直连。本机 CordC 原来没有登录自启项，已为当前 Windows 用户添加最小化启动的快捷方式。简报发送前的网关健康检查失败时增加一次探测，已提交的发送请求仍沿用现有去重和回执判定。
+
+停止旧网关后，从现有 Windows 登录入口启动了新进程，验证了 Gateway RPC、代理连接和微信原绑定自动加载。此次重启的是网关，整台电脑冷启动仍待实测。微信平台在长期没有会话消息时仍可能拒绝主动推送。 [腾讯插件问题记录](https://github.com/Tencent/openclaw-weixin/issues/389)
+
 ### 2026-11-23 Codex 对话启动失败恢复
 
 微信显示 `OpenClaw couldn't finish this request` 时，网关记录了 Codex 进程启动 `ENOENT`。本机配置仍指向已被 Windows 应用更新替换的旧版本程序目录。核对 `Get-Command codex.exe` 和 `codex.exe --version` 后，更新 `plugins.entries.codex.config.appServer.command`，备份旧配置并安全重启网关。网关健康检查和一次关闭外部投递的独立 Codex 对话均通过。

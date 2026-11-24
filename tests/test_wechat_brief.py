@@ -23,16 +23,26 @@ class WechatBriefTests(unittest.TestCase):
  def test_unavailable_gateway_does_not_consume_event(self):
   with tempfile.TemporaryDirectory() as d:
    p=self.config(d)
-   with patch.object(brief.subprocess,'run',return_value=subprocess.CompletedProcess([],1,'','')) as run:
-    self.assertEqual(brief.send(p,'完成','id')['status'],'not_sent');run.assert_called_once()
+   with patch.object(brief.time,'sleep'),patch.object(brief.subprocess,'run',return_value=subprocess.CompletedProcess([],1,'','')) as run:
+    self.assertEqual(brief.send(p,'完成','id')['status'],'not_sent');self.assertEqual(run.call_count,2)
    self.assertFalse((p.parent/'brief-deliveries.json').exists())
    with patch.object(brief.subprocess,'run',side_effect=self.dispatch):self.assertEqual(brief.send(p,'完成','id')['status'],'sent')
  def test_health_timeout_cannot_dispatch(self):
   with tempfile.TemporaryDirectory() as d:
    p=self.config(d)
-   with patch.object(brief.subprocess,'run',side_effect=subprocess.TimeoutExpired('node',30)):
+   with patch.object(brief.time,'sleep'),patch.object(brief.subprocess,'run',side_effect=subprocess.TimeoutExpired('node',30)):
     self.assertEqual(brief.send(p,'完成','id')['status'],'not_sent')
    self.assertFalse((p.parent/'brief-deliveries.json').exists())
+ def test_cold_health_timeout_retries_before_one_send(self):
+  commands=[]
+  def run(cmd,**kw):
+   commands.append('health' if 'health' in cmd else 'send')
+   if len(commands)==1:raise subprocess.TimeoutExpired('node',30)
+   return self.dispatch(cmd,**kw)
+  with tempfile.TemporaryDirectory() as d:
+   with patch.object(brief.time,'sleep'),patch.object(brief.subprocess,'run',side_effect=run):
+    self.assertEqual(brief.send(self.config(d),'完成','id')['status'],'sent')
+  self.assertEqual(commands,['health','health','send'])
  def test_send_timeout_never_automatically_resends(self):
   with tempfile.TemporaryDirectory() as d:
    p=self.config(d)
