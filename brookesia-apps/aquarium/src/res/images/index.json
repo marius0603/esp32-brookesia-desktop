@@ -1,0 +1,152 @@
+{
+  "type": "imageSet",
+  "images": [
+    {
+      "id": "day0",
+      "src": "day0.bin",
+      "width": 480,
+      "height": 120,
+      "preload": true
+    },
+    {
+      "id": "day1",
+      "src": "day1.bin",
+      "width": 480,
+      "height": 120,
+      "preload": true
+    },
+    {
+      "id": "day2",
+      "src": "day2.bin",
+      "width": 480,
+      "height": 120,
+      "preload": true
+    },
+    {
+      "id": "day3",
+      "src": "day3.bin",
+      "width": 480,
+      "height": 120,
+      "preload": true
+    },
+    {
+      "id": "night0",
+      "src": "night0.bin",
+      "width": 480,
+      "height": 120,
+      "preload": true
+    },
+    {
+      "id": "night1",
+      "src": "night1.bin",
+      "width": 480,
+      "height": 120,
+      "preload": true
+    },
+    {
+      "id": "night2",
+      "src": "night2.bin",
+      "width": 480,
+      "height": 120,
+      "preload": true
+    },
+    {
+      "id": "night3",
+      "src": "night3.bin",
+      "width": 480,
+      "height": 120,
+      "preload": true
+    },
+    {
+      "id": "gold_r0",
+      "src": "gold_r0.bin",
+      "width": 150,
+      "height": 117,
+      "preload": true
+    },
+    {
+      "id": "gold_l0",
+      "src": "gold_l0.bin",
+      "width": 150,
+      "height": 117,
+      "preload": true
+    },
+    {
+      "id": "gold_r1",
+      "src": "gold_r1.bin",
+      "width": 150,
+      "height": 117,
+      "preload": true
+    },
+    {
+      "id": "gold_l1",
+      "src": "gold_l1.bin",
+      "width": 150,
+      "height": 117,
+      "preload": true
+    },
+    {
+      "id": "moon_r0",
+      "src": "moon_r0.bin",
+      "width": 114,
+      "height": 120,
+      "preload": true
+    },
+    {
+      "id": "moon_l0",
+      "src": "moon_l0.bin",
+      "width": 114,
+      "height": 120,
+      "preload": true
+    },
+    {
+      "id": "moon_r1",
+      "src": "moon_r1.bin",
+      "width": 114,
+      "height": 120,
+      "preload": true
+    },
+    {
+      "id": "moon_l1",
+      "src": "moon_l1.bin",
+      "width": 114,
+      "height": 120,
+      "preload": true
+    },
+    {
+      "id": "school_r0",
+      "src": "school_r0.bin",
+      "width": 50,
+      "height": 28,
+      "preload": true
+    },
+    {
+      "id": "school_l0",
+      "src": "school_l0.bin",
+      "width": 50,
+      "height": 28,
+      "preload": true
+    },
+    {
+      "id": "school_r1",
+      "src": "school_r1.bin",
+      "width": 50,
+      "height": 28,
+      "preload": true
+    },
+    {
+      "id": "school_l1",
+      "src": "school_l1.bin",
+      "width": 50,
+      "height": 28,
+      "preload": true
+    },
+    {
+      "id": "launcher_icon",
+      "src": "launcher_icon.png",
+      "width": 92,
+      "height": 92,
+      "preload": true
+    }
+  ]
+}
