@@ -25,7 +25,7 @@ FISH = [
 ]
 FISH_SCALE = {"gold": 3, "moon": 3, "school": 2, "jelly": 2}
 GRASS_BOXES = [(0, 93, 54, 159), (119, 99, 160, 160)]
-GRASS_COLORS = [("#133e39", "#226d51", "#448b62"), ("#102d40", "#173b50", "#265365")]
+GRASS_COLORS = [("#185345", "#1c8977", "#65b04e"), ("#193c48", "#216075", "#4b8993")]
 
 
 def rgb565(image):
@@ -212,9 +212,13 @@ def main():
         {"type": event, "action": name}
         for event, name in (("pressed", "waterPress"), ("released", "waterRelease"), ("pressLost", "waterCancel"))
     ]
-    lighting = button("light", "日景", 24, 24, 72)
+    lighting = button("light", "日景", 18, 16, 68, 46)
     lighting["children"][0]["bindings"] = {"labelProps.text": "text"}
-    nodes.extend([touch, lighting, button("book", "鱼册", 374, 390, 82)])
+    book = button("book", "鱼册", 18, 68, 68, 46)
+    for control in (lighting, book):
+        control["style"].update(bgColor="#072B36", borderColor="#15515C", radius=9)
+        control["children"][0]["style"]["textColor"] = "#BFE8C6"
+    nodes.extend([touch, lighting, book])
 
     options = [button(name, text, 22 + i * 111, 50, 101) for i, (name, text) in enumerate((
         ("gold", "金鳞"), ("moon", "月影"), ("school", "蓝线"), ("jelly", "水母")))]

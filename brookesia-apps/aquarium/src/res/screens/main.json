@@ -677,10 +677,10 @@
       "id": "light",
       "placement": {
         "mode": "absolute",
-        "x": 24,
-        "y": 24,
-        "width": 72,
-        "height": 48
+        "x": 18,
+        "y": 16,
+        "width": 68,
+        "height": 46
       },
       "commonProps": {
         "clickable": true,
@@ -690,9 +690,9 @@
         "bgOpacity": 255,
         "padding": 0,
         "borderWidth": 1,
-        "bgColor": "#0B353E",
-        "radius": 6,
-        "borderColor": "#467D78"
+        "bgColor": "#072B36",
+        "radius": 9,
+        "borderColor": "#15515C"
       },
       "children": [
         {
@@ -702,13 +702,13 @@
             "mode": "absolute",
             "x": 0,
             "y": 10,
-            "width": 72,
+            "width": 68,
             "height": 30
           },
           "style": {
             "font": "${font.zh_CN}",
             "fontSize": 22,
-            "textColor": "#dcf4e6",
+            "textColor": "#BFE8C6",
             "textAlign": "center"
           },
           "labelProps": {
@@ -731,10 +731,10 @@
       "id": "book",
       "placement": {
         "mode": "absolute",
-        "x": 374,
-        "y": 390,
-        "width": 82,
-        "height": 48
+        "x": 18,
+        "y": 68,
+        "width": 68,
+        "height": 46
       },
       "commonProps": {
         "clickable": true,
@@ -744,9 +744,9 @@
         "bgOpacity": 255,
         "padding": 0,
         "borderWidth": 1,
-        "bgColor": "#0B353E",
-        "radius": 6,
-        "borderColor": "#467D78"
+        "bgColor": "#072B36",
+        "radius": 9,
+        "borderColor": "#15515C"
       },
       "children": [
         {
@@ -756,13 +756,13 @@
             "mode": "absolute",
             "x": 0,
             "y": 10,
-            "width": 82,
+            "width": 68,
             "height": 30
           },
           "style": {
             "font": "${font.zh_CN}",
             "fontSize": 22,
-            "textColor": "#dcf4e6",
+            "textColor": "#BFE8C6",
             "textAlign": "center"
           },
           "labelProps": {

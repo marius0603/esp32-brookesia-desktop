@@ -15,6 +15,12 @@ function visit(node, parent = '') {
 }
 visit(screen);
 assert.equal(views.get('/main/water').placement.height, 440);
+const lightButton = views.get('/main/light').placement;
+const bookButton = views.get('/main/book').placement;
+assert.equal(bookButton.x, lightButton.x);
+assert.equal(bookButton.width, lightButton.width);
+assert.equal(bookButton.height, lightButton.height);
+assert.equal(bookButton.y, lightButton.y + lightButton.height + 6);
 assert.equal(views.get('/main/sheet').commonProps.hidden, true);
 assert.equal(views.get('/main/legacy/bubble').bindings['placement.y'], 'y');
 const legacy = views.get('/main/legacy');
