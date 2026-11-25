@@ -2,10 +2,13 @@
   "package": {
     "id": "local.aquarium",
     "name": {"en": "Pocket Aquarium", "zh_CN": "口袋鱼缸"},
-    "version": "0.1.3",
+    "version": "0.1.4",
     "visible": true,
     "systems": ["super"]
   },
   "runtime": {"type": "JavaScript", "entry": "app/main.js", "resource_dir": "res", "arguments": []},
-  "services": [{"name": "Storage", "version": "0.8.3"}]
+  "services": [
+    {"name": "Storage", "version": "0.8.3"},
+    {"name": "DeviceModes", "version": "0.1.0"}
+  ]
 }

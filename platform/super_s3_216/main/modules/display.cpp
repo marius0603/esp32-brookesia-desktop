@@ -41,7 +41,8 @@ extern "C" int brookesia_board_user_volume();
 extern "C" bool brookesia_board_volume_muted();
 extern "C" int brookesia_board_battery_status();
 extern "C" bool brookesia_board_desktop_visible();
-extern "C" bool brookesia_board_weather_visible();
+extern "C" unsigned brookesia_board_row_cache_app_id();
+extern "C" bool brookesia_board_aquarium_visible();
 extern "C" unsigned brookesia_panel_wide_desktop_draws();
 extern "C" bool brookesia_board_screen_asleep();
 extern "C" int brookesia_board_desktop_theme();
@@ -192,61 +193,74 @@ struct RefreshStats {
 } refresh_stats;
 
 uint32_t launcher_settled_refreshes = 0;
-uint32_t weather_full_row_invalidations = 0;
-uint32_t weather_cached_flushes = 0;
-constexpr int WEATHER_WIDTH = 480;
-constexpr int WEATHER_HEIGHT = 480;
-constexpr size_t WEATHER_ROW_BYTES = WEATHER_WIDTH * 2;
+uint32_t row_cache_full_row_invalidations = 0;
+uint32_t row_cache_padded_flushes = 0;
+uint32_t row_cache_batched_frames = 0;
+uint64_t row_cache_output_pixels = 0;
+constexpr int ROW_CACHE_WIDTH = 480;
+constexpr int ROW_CACHE_HEIGHT = 480;
+constexpr size_t ROW_CACHE_ROW_BYTES = ROW_CACHE_WIDTH * 2;
+constexpr size_t ROW_CACHE_BYTES = ROW_CACHE_ROW_BYTES * ROW_CACHE_HEIGHT;
+constexpr uint32_t ROW_CACHE_CAPS = MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT;
+constexpr int64_t ROW_CACHE_RETRY_US = 500000;
 
 // The LVGL port and display events use the same adapter lock. Only source
 // handovers come from another task, so they post a reset for the next LVGL call.
-std::atomic<bool> weather_output_changed{false};
-struct WeatherRows {
+std::atomic<bool> row_cache_output_changed{false};
+struct DisplayRows {
+    unsigned app_id = 0;
     lv_obj_t *screen = nullptr;
     std::unique_ptr<uint8_t, decltype(&heap_caps_free)> pixels{nullptr, heap_caps_free};
-    std::bitset<WEATHER_HEIGHT> valid_rows;
-    bool allocation_attempted = false;
-    bool deferred_for_audio = false;
+    std::bitset<ROW_CACHE_HEIGHT> valid_rows;
+    int pending_start = ROW_CACHE_HEIGHT;
+    int pending_end = 0;
+    int64_t next_allocation_check = 0;
+    bool prime_pending = false;
     bool repaint = false;
-} weather_rows;
+} display_rows;
 
-bool sync_weather_rows(lv_display_t *display)
+bool sync_display_rows(lv_display_t *display)
 {
-    auto *screen = brookesia_board_weather_visible() &&
-                   lv_display_get_horizontal_resolution(display) == WEATHER_WIDTH &&
-                   lv_display_get_vertical_resolution(display) == WEATHER_HEIGHT &&
+    const auto app_id = brookesia_board_row_cache_app_id();
+    auto *screen = app_id &&
+                   lv_display_get_horizontal_resolution(display) == ROW_CACHE_WIDTH &&
+                   lv_display_get_vertical_resolution(display) == ROW_CACHE_HEIGHT &&
                    lv_display_get_color_format(display) == LV_COLOR_FORMAT_RGB565
                    ? lv_display_get_screen_active(display) : nullptr;
-    const bool output_changed = weather_output_changed.exchange(false);
-    if (screen != weather_rows.screen) {
-        weather_rows = {};
-        weather_rows.screen = screen;
+    const bool output_changed = row_cache_output_changed.exchange(false);
+    if (screen != display_rows.screen || app_id != display_rows.app_id) {
+        display_rows = {};
+        display_rows.screen = screen;
+        display_rows.app_id = app_id;
+        display_rows.repaint = screen != nullptr;
     } else if (output_changed && screen) {
-        weather_rows.valid_rows.reset();
-        weather_rows.repaint = true;
+        display_rows.valid_rows.reset();
+        display_rows.repaint = true;
+        display_rows.prime_pending = true;
     }
     return screen != nullptr;
 }
 
-bool rendering_weather_frame = false;
+bool rendering_frame = false;
 
-void round_weather_refresh(lv_event_t *event)
+void round_cached_rows(lv_event_t *event)
 {
     // LVGL also emits INVALIDATE_AREA for its internal draw-buffer height probe.
     // Expanding that probe to a full screen can leave the flush loop with zero rows.
-    if (rendering_weather_frame) return;
+    if (rendering_frame) return;
     auto *display = static_cast<lv_display_t *>(lv_event_get_target(event));
     auto *area = static_cast<lv_area_t *>(lv_event_get_param(event));
-    if (!sync_weather_rows(display) || !area) return;
-    if (weather_rows.repaint) {
+    if (!sync_display_rows(display) || !area) return;
+    if (display_rows.repaint) {
         // A source handover or failed present may have left stale pixels.
-        *area = {0, 0, WEATHER_WIDTH - 1, WEATHER_HEIGHT - 1};
-        ++weather_full_row_invalidations;
-    } else if (!weather_rows.valid_rows.all() && (area->x1 != 0 || area->x2 != WEATHER_WIDTH - 1)) {
+        *area = {0, 0, ROW_CACHE_WIDTH - 1, ROW_CACHE_HEIGHT - 1};
+        display_rows.repaint = false;
+        ++row_cache_full_row_invalidations;
+    } else if (!display_rows.valid_rows.all() && (area->x1 != 0 || area->x2 != ROW_CACHE_WIDTH - 1)) {
         // Prime the shadow from complete rows. This is also the low-memory path.
         area->x1 = 0;
-        area->x2 = WEATHER_WIDTH - 1;
-        ++weather_full_row_invalidations;
+        area->x2 = ROW_CACHE_WIDTH - 1;
+        ++row_cache_full_row_invalidations;
     }
 }
 
@@ -482,6 +496,11 @@ void render_event(lv_event_t *event)
             ++refresh_stats.count;
         }
         refresh_stats.started = 0;
+        auto *display = static_cast<lv_display_t *>(lv_event_get_target(event));
+        if (sync_display_rows(display) && display_rows.pixels && display_rows.prime_pending) {
+            display_rows.prime_pending = false;
+            if (!display_rows.valid_rows.all()) lv_obj_invalidate(display_rows.screen);
+        }
     } else if (code == LV_EVENT_FLUSH_START) {
         ++refresh_stats.strips;
         const auto *area = static_cast<const lv_area_t *>(lv_event_get_param(event));
@@ -497,9 +516,11 @@ void render_event(lv_event_t *event)
         refresh_stats.wait_started = 0;
     }
     if (code == LV_EVENT_RENDER_START || code == LV_EVENT_RENDER_READY) {
-        rendering_weather_frame = code == LV_EVENT_RENDER_START;
+        rendering_frame = code == LV_EVENT_RENDER_START;
     }
     if (code == LV_EVENT_RENDER_START) {
+        display_rows.pending_start = ROW_CACHE_HEIGHT;
+        display_rows.pending_end = 0;
         render_stats.started_us = esp_timer_get_time();
     } else if (lv_event_get_code(event) == LV_EVENT_RENDER_READY && render_stats.started_us != 0) {
         const auto elapsed = esp_timer_get_time() - render_stats.started_us;
@@ -538,76 +559,92 @@ extern "C" void brookesia_board_square_wifi_status(bool visible, bool connected)
 
 extern "C" void brookesia_board_lvgl_output_changed()
 {
-    weather_output_changed.store(true);
+    row_cache_output_changed.store(true);
 }
 
 extern "C" void brookesia_board_lvgl_flush_failed(lv_display_t *display)
 {
-    if (sync_weather_rows(display)) {
-        weather_rows.valid_rows.reset();
-        weather_rows.repaint = true;
+    if (sync_display_rows(display)) {
+        display_rows.valid_rows.reset();
+        display_rows.repaint = true;
+        display_rows.prime_pending = true;
     }
 }
 
-extern "C" bool brookesia_board_prepare_lvgl_flush(
-    lv_display_t *display, int *x_start, int y_start, int *x_end, int y_end, const void **pixels
+extern "C" esp_err_t brookesia_board_prepare_lvgl_flush(
+    lv_display_t *display, int *x_start, int *y_start, int *x_end, int *y_end, const void **pixels
 )
 {
-    if (!sync_weather_rows(display)) return true;
-    if (*x_start < 0 || *x_end > WEATHER_WIDTH || *x_start >= *x_end ||
-            y_start < 0 || y_end > WEATHER_HEIGHT || y_start >= y_end || !*pixels) {
-        return false;
+    if (!sync_display_rows(display)) return ESP_OK;
+    const int top = *y_start, bottom = *y_end;
+    if (*x_start < 0 || *x_end > ROW_CACHE_WIDTH || *x_start >= *x_end ||
+            top < 0 || bottom > ROW_CACHE_HEIGHT || top >= bottom || !*pixels) {
+        return ESP_ERR_INVALID_STATE;
     }
 
-    const bool full_width = *x_start == 0 && *x_end == WEATHER_WIDTH;
-    const bool full_frame = full_width && y_start == 0 && y_end == WEATHER_HEIGHT;
-    if (full_frame) weather_rows.repaint = false;
-    if (!weather_rows.allocation_attempted) {
-        // Weather assets and locally streamed audio share the SD card during
-        // app entry. Keep the original rendering path until playback is idle.
-        if (local_audio::audiobook_busy.load()) {
-            weather_rows.deferred_for_audio = true;
-            return full_width;
+    const bool full_width = *x_start == 0 && *x_end == ROW_CACHE_WIDTH;
+    const bool full_frame = full_width && top == 0 && bottom == ROW_CACHE_HEIGHT;
+    const auto output_pixels = uint64_t(ROW_CACHE_WIDTH) * (bottom - top);
+    if (full_frame) display_rows.repaint = false;
+    const auto now = esp_timer_get_time();
+    if (!display_rows.pixels && now >= display_rows.next_allocation_check) {
+        // App handover can briefly fragment PSRAM. Keep sending full rows
+        // until there is room for a shadow buffer, then prime it once.
+        display_rows.next_allocation_check = now + ROW_CACHE_RETRY_US;
+        if (!local_audio::audiobook_busy.load() && heap_caps_get_largest_free_block(ROW_CACHE_CAPS) >= ROW_CACHE_BYTES) {
+            display_rows.pixels.reset(static_cast<uint8_t *>(heap_caps_malloc(ROW_CACHE_BYTES, ROW_CACHE_CAPS)));
+            display_rows.prime_pending = bool(display_rows.pixels);
         }
-        weather_rows.allocation_attempted = true;
-        weather_rows.pixels.reset(static_cast<uint8_t *>(
-            heap_caps_malloc(WEATHER_ROW_BYTES * WEATHER_HEIGHT, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT)));
-        if (weather_rows.pixels) {
-            weather_rows.repaint |= weather_rows.deferred_for_audio && !full_frame;
-        } else {
-            ESP_LOGW("S3_PERF", "Weather row cache unavailable; rendering complete rows");
-        }
-        weather_rows.deferred_for_audio = false;
     }
-    if (!full_width && !weather_rows.valid_rows.all()) {
+    if (!full_width && !display_rows.valid_rows.all()) {
         // A rectangle can have been queued just before an output handover.
         // Wait for freshly painted rows before using it to form a full row.
-        weather_rows.repaint = true;
-        return false;
+        display_rows.repaint = true;
+        return ESP_ERR_NOT_ALLOWED;
     }
-    if (!weather_rows.pixels) return true;
+    if (!display_rows.pixels) {
+        row_cache_output_pixels += output_pixels;
+        return ESP_OK;
+    }
 
-    auto *rows = weather_rows.pixels.get() + y_start * WEATHER_ROW_BYTES;
+    const bool batch = rendering_frame && brookesia_board_aquarium_visible() && display_rows.valid_rows.all();
+    auto *rows = display_rows.pixels.get() + top * ROW_CACHE_ROW_BYTES;
     if (full_width) {
-        std::memcpy(rows, *pixels, (y_end - y_start) * WEATHER_ROW_BYTES);
-        for (int y = y_start; y < y_end; ++y) weather_rows.valid_rows.set(y);
+        std::memcpy(rows, *pixels, (bottom - top) * ROW_CACHE_ROW_BYTES);
+        for (int y = top; y < bottom; ++y) display_rows.valid_rows.set(y);
     } else {
         const size_t dirty_bytes = (*x_end - *x_start) * 2;
         auto *dst = rows + *x_start * 2;
         const auto *src = static_cast<const uint8_t *>(*pixels);
-        for (int y = y_start; y < y_end; ++y) {
+        for (int y = top; y < bottom; ++y) {
             std::memcpy(dst, src, dirty_bytes);
-            dst += WEATHER_ROW_BYTES;
+            dst += ROW_CACHE_ROW_BYTES;
             src += dirty_bytes;
         }
         // CO5300 still receives complete rows, including the cached pixels
         // outside the rectangle that LVGL just drew.
         *pixels = rows;
         *x_start = 0;
-        *x_end = WEATHER_WIDTH;
-        ++weather_cached_flushes;
+        *x_end = ROW_CACHE_WIDTH;
+        ++row_cache_padded_flushes;
     }
-    return true;
+    if (batch) {
+        // Merge overlapping LVGL rectangles before touching the panel. The
+        // adapter releases skipped draw buffers without waiting for DMA.
+        display_rows.pending_start = std::min(display_rows.pending_start, top);
+        display_rows.pending_end = std::max(display_rows.pending_end, bottom);
+        if (!lv_display_flush_is_last(display)) return ESP_ERR_NOT_ALLOWED;
+        *x_start = 0;
+        *x_end = ROW_CACHE_WIDTH;
+        *y_start = display_rows.pending_start;
+        *y_end = display_rows.pending_end;
+        *pixels = display_rows.pixels.get() + *y_start * ROW_CACHE_ROW_BYTES;
+        row_cache_output_pixels += uint64_t(ROW_CACHE_WIDTH) * (*y_end - *y_start);
+        ++row_cache_batched_frames;
+        return ESP_OK;
+    }
+    row_cache_output_pixels += output_pixels;
+    return ESP_OK;
 }
 
 extern "C" void brookesia_board_attach_launcher_pager(lv_obj_t *pager)
@@ -783,8 +820,11 @@ boost::json::object board_display_profile(bool force_refresh)
             {"launcher_wide_dma_transfers",brookesia_panel_wide_desktop_draws()},
             {"launcher_cache_ready",!launcher_snapshot.tiles.empty() && !launcher_assets_changed.load()},
             {"launcher_cached_scrolls",launcher_cached_scrolls},
-            {"weather_full_row_invalidations",weather_full_row_invalidations},
-            {"weather_cached_flushes",weather_cached_flushes},{"weather_cache_ready",weather_rows.valid_rows.all()},
+            {"weather_full_row_invalidations",row_cache_full_row_invalidations},
+            {"weather_cached_flushes",row_cache_padded_flushes},{"weather_cache_ready",display_rows.valid_rows.all()},
+            {"row_cache_ready",display_rows.valid_rows.all()},
+            {"row_cache_output_pixels",row_cache_output_pixels},{"row_cache_padded_flushes",row_cache_padded_flushes},
+            {"row_cache_batched_frames",row_cache_batched_frames},
             {"refresh_count",refresh_stats.count},{"last_refresh_us",refresh_stats.last_us},
             {"max_refresh_us",refresh_stats.max_us},{"last_strips",refresh_stats.last_strips},
             {"flush_callback_us",refresh_stats.last_flush_us},{"flushed_pixels",refresh_stats.last_pixels},
@@ -870,7 +910,7 @@ bool Display::start_lvgl_display_source(int core_id)
     BROOKESIA_CHECK_FALSE_RETURN(source.start(config), false, "Failed to start LVGL Display source");
 
     esp_lv_adapter_lock(-1);
-    lv_display_add_event_cb(source.display(), round_weather_refresh, LV_EVENT_INVALIDATE_AREA, nullptr);
+    lv_display_add_event_cb(source.display(), round_cached_rows, LV_EVENT_INVALIDATE_AREA, nullptr);
     lv_display_add_event_cb(source.display(), render_event, LV_EVENT_RENDER_START, nullptr);
     lv_display_add_event_cb(source.display(), render_event, LV_EVENT_RENDER_READY, nullptr);
     for (auto code : {LV_EVENT_REFR_START, LV_EVENT_REFR_READY, LV_EVENT_FLUSH_START, LV_EVENT_FLUSH_FINISH,

@@ -45,11 +45,11 @@ def main():
 
         current = call('DeviceModes', 'GetState')
         version = current['firmware_version']
-        if version not in ('0.8.3-s3.84', '0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88', '0.8.3-s3.89', '0.8.3-s3.90', '0.8.3-s3.91', '0.8.3-s3.92') or current['screen_locked']:
+        if version not in ('0.8.3-s3.84', '0.8.3-s3.85', '0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88', '0.8.3-s3.89', '0.8.3-s3.90', '0.8.3-s3.91', '0.8.3-s3.92', '0.8.3-s3.93') or current['screen_locked']:
             raise SystemExit('Start the supported firmware and unlock the screen before installing these resources')
-        app_ui = version in ('0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88', '0.8.3-s3.89', '0.8.3-s3.90', '0.8.3-s3.91', '0.8.3-s3.92')
-        controls_ui = version in ('0.8.3-s3.88', '0.8.3-s3.89', '0.8.3-s3.90', '0.8.3-s3.91', '0.8.3-s3.92')
-        store_ui = version in ('0.8.3-s3.90', '0.8.3-s3.91', '0.8.3-s3.92')
+        app_ui = version in ('0.8.3-s3.86', '0.8.3-s3.87', '0.8.3-s3.88', '0.8.3-s3.89', '0.8.3-s3.90', '0.8.3-s3.91', '0.8.3-s3.92', '0.8.3-s3.93')
+        controls_ui = version in ('0.8.3-s3.88', '0.8.3-s3.89', '0.8.3-s3.90', '0.8.3-s3.91', '0.8.3-s3.92', '0.8.3-s3.93')
+        store_ui = version in ('0.8.3-s3.90', '0.8.3-s3.91', '0.8.3-s3.92', '0.8.3-s3.93')
         full = not (args.apps_ui_only or args.controls_ui_only or args.store_ui_only)
         if args.apps_ui_only and not app_ui:
             raise SystemExit('The Files layout requires firmware s3.86')
@@ -96,7 +96,7 @@ def main():
                 group, relative = path.relative_to(APP_UI).as_posix().split('/', 1)
                 target = (SHELL if group == 'shell' else FILES_APP) + '/' + relative
                 files[target] = path
-            if version in ('0.8.3-s3.91', '0.8.3-s3.92'):
+            if version in ('0.8.3-s3.91', '0.8.3-s3.92', '0.8.3-s3.93'):
                 template = 'templates/launcher_app_button.json'
                 files[f'{SHELL}/{template}'] = ASSETS / 'shell' / template
 

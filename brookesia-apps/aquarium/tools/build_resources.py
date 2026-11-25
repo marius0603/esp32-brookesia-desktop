@@ -138,7 +138,6 @@ def main():
     nodes.extend(picture(f"backdrop{band}", f"day{band}", 0, y, 480, BAND_HEIGHT)
                  for band, y in enumerate(range(0, 480, BAND_HEIGHT)))
     bubble = container("bubble", 394, 345, 7, 7)
-    bubble["bindings"] = {"placement.y": "y"}
     bubble["style"].update(radius=4, borderWidth=1, borderColor="#87C8BC")
     nodes.append(bubble)
     ripple = container("ripple", 0, 0, 20, 20, bindings={

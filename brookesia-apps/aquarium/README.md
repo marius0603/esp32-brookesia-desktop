@@ -19,4 +19,6 @@ python codex-quota-monitor/tools/package_aquarium.py
 python codex-quota-monitor/tools/deploy_aquarium.py --port COM5
 ```
 
-用设备的实际串口替换 `COM5`。BPK 通过现有安装器写入 SD，无需重刷固件。已在 `0.8.3-s3.92` 上验证。日夜偏好保存在 `/littlefs/aquarium-settings.json`。
+用设备的实际串口替换 `COM5`。BPK 通过现有安装器写入 SD。日夜偏好保存在 `/littlefs/aquarium-settings.json`。
+
+0.1.4 在 s3.93 上使用固件的显示行缓存。水草、岩石、光束和装饰气泡固定。空闲时只重绘鱼和水母移动过的区域，点水面时更新水纹。切换日夜时更新底图。屏幕始终接收完整行，较早固件上由应用请求整行重画。

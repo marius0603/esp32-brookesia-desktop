@@ -85,6 +85,7 @@ private:
         const auto uptime_ms = esp_timer_get_time() / 1000;
         const auto idle_ms = static_cast<uint32_t>(uptime_ms) - last_touch;
         return {{"firmware_version",esp_app_get_description()->version},{"maze_canvas_cache",true},
+                {"aquarium_row_cache",true},
                 {"reset_reason",static_cast<int>(esp_reset_reason())},{"uptime_ms",uptime_ms},
                 {"clock_unix",std::time(nullptr)},{"clock_restored_from_rtc",board_clock::restored_from_rtc()},
                 {"clock_rtc_current",board_clock::rtc_current()},{"app_background_follows_theme",true},

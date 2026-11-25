@@ -392,13 +392,17 @@ extern "C" const char *brookesia_child_launch_error(const char *id) {
 extern "C" unsigned brookesia_child_revision(){return revision;}
 namespace {
 std::atomic<bool> desktop_visible{true};
-std::atomic<bool> weather_visible{false};
+std::atomic<unsigned> row_cache_app_id{0};
+std::atomic<bool> aquarium_visible{false};
 }
 extern "C" bool brookesia_board_desktop_visible(){return desktop_visible.load();}
-extern "C" bool brookesia_board_weather_visible(){return weather_visible.load();}
+extern "C" unsigned brookesia_board_row_cache_app_id(){return row_cache_app_id.load();}
+extern "C" bool brookesia_board_aquarium_visible(){return aquarium_visible.load();}
 extern "C" void brookesia_child_foreground(const char *id,unsigned app_id) {
     desktop_visible=!id || !*id || std::strcmp(id,"brookesia.system.super.shell")==0;
-    weather_visible=id && std::strcmp(id,"local.weather")==0;
+    const bool aquarium=id && std::strcmp(id,"local.aquarium")==0;
+    aquarium_visible=aquarium;
+    row_cache_app_id=(aquarium || (id && std::strcmp(id,"local.weather")==0)) ? app_id : 0;
     foreground=child_policy::app_bit(id);foreground_id=app_id;
 }
 extern "C" int brookesia_child_cap_volume(int requested) {

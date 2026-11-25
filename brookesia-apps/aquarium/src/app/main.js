@@ -24,6 +24,7 @@ const START = [
 const ACTIONS = ['waterPress', 'waterRelease', 'waterCancel', 'light', 'book', 'dismiss', ...Object.keys(NOTES)];
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 let gui, timer, storage;
+let cachedRows = false;
 let timerId = 0, paused = true, night = false, panel = false, selected = 'gold';
 let fish = [], touch = null, ripple = null, lastTick = 0, started = 0, rendered = {};
 
@@ -65,7 +66,6 @@ function draw(now) {
   for (const name of Object.keys(NOTES)) {
     bind('sheet/' + name, 'color', name === selected ? '#23564F' : '#103740');
   }
-  bind('bubble', 'y', 388 - Math.floor(elapsed / (night ? 68 : 43)) % 305);
   const rippleAge = ripple ? now - ripple.at : Infinity;
   bind('ripple', 'hidden', rippleAge >= 680);
   if (rippleAge < 680) {
@@ -86,7 +86,7 @@ function draw(now) {
     const phase = Math.floor((elapsed + i * 43) / period) % 2;
     const source = jelly ? 'jelly' + phase : item.kind + '_' + (item.facing > 0 ? 'r' : 'l') + phase;
     const changedPose = image(node, source);
-    if (movedX || movedY || changedPose) {
+    if (!cachedRows && (movedX || movedY || changedPose)) {
       const oldY = rendered[node + ':y'] ?? y;
       const bounds = rowBounds[item.kind];
       rowBounds[item.kind] = {
@@ -239,6 +239,9 @@ globalThis.brookesia_app = {
     gui = brookesia.start_service('SystemGui');
     timer = brookesia.start_service('SystemTimer');
     storage = brookesia.start_service('Storage');
+    try {
+      cachedRows = call(brookesia.start_service('DeviceModes'), 'GetState').aquarium_row_cache === true;
+    } catch (_) { cachedRows = false; }
     night = readLight();
     fish = START.map(([kind, x, y, facing]) => ({ kind, x, y, home: y, facing, cruise: facing }));
     for (const action of ACTIONS) call(gui, 'SubscribeAction', { Action: action });

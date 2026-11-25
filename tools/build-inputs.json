@@ -38,7 +38,8 @@
     "patches/settings-service-ui-lifetime.patch",
     "patches/square-app-surfaces-and-store.patch",
     "patches/six-desktop-weather-palettes.patch",
-    "patches/restore-dark-moss-palette.patch"
+    "patches/restore-dark-moss-palette.patch",
+    "patches/row-cache-frame-batching.patch"
   ],
   "sha256": {
     "patches/brookesia-s3.patch": "75e0bb3f720b9bd442955f1b04ab4d6f1437c2cbdfa4359646f1176044bc0346",
@@ -52,7 +53,7 @@
     "phone-remote/tools/downloads.json": "f4dca27ac3cb2d5b30d308eafae0ae106e9108809f3d0d0f595664f98f0e8e1d",
     "phone-remote/tools/requirements-signing.txt": "8b5c18678b29b5e8e0fb586a35ac1dce3ccd9da321e8f12ace0e118350b4e568",
     "platform/super_s3_216/sdkconfig.reproducible": "909bf7e7e565b5dc1e9f02f20b954daf34b6a07272a44b976fb3b2aae30593e0",
-    "versions.json": "f16a596a9c533c966685fe095e7f01007796e020c927670ca587bcbc90da88c5",
+    "versions.json": "ddca27deac93c8aaf9cb5a79eee7ffcbd838069afa18ba5068355fa1ec4a4606",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.c": "52a51002bd22aac5c2105187c27cd393a34f13143c8ae97b0964ad27dec1c1ea",
     "platform/super_s3_216/main/modules/audiobook/sonic/sonic.h": "a2fc087b68c25141e2fb7ab56e71b111bee79cf311fcc850d492eb574c0eeffe",
     "patches/transparent-launcher.patch": "b9cbe446371691db2c9e4674b73293646b63ca003a24f59a5c0a2646ce871732",
@@ -66,9 +67,9 @@
     "patches/bounded-display-dma.patch": "b1e6eb13627718506036f14f94f0a9cb3bac0a893094068084707bb29152e290",
     "patches/persistent-display-dma.patch": "cc8c6cf3dbe36d4089abff0242a3f740cca31e111138ea88df3a341b09d8c264",
     "patches/aligned-display-strips.patch": "1629b23605921dd00fab60995969fd3ad5c5243cb540b9f20a64da4841d25dc2",
-    "platform/super_s3_216/CMakeLists.txt": "59e62aed8bc8c716301e4a178024d3887e29e65193a9ef645ed643e4baf85c25",
-    "platform/super_s3_216/main/modules/display.cpp": "ec4a62d2d3798dc322383f1dbf999c94c8088c25f17f9dbdbe9a7b7cffa01387",
-    "platform/super_s3_216/main/modules/device_modes/device_modes.cpp": "13b8d74796654a3ee50f128e85b5a816065f239cbe47ab9f02ddf1e70ae4b094",
+    "platform/super_s3_216/CMakeLists.txt": "5458e428276bd444798ad118990d64e8fe3c77d038ad50772023c6f64fc2bab0",
+    "platform/super_s3_216/main/modules/display.cpp": "a96534257a704811cc3b48cceff803efc2d6f31d3b59c8861541340e9e40e172",
+    "platform/super_s3_216/main/modules/device_modes/device_modes.cpp": "c11fb1f16b36a47021a34774cb74bb667d7e89b501fba2d9679cb256740fd540",
     "platform/super_s3_216/main/modules/device_modes/resource_monitor.cpp": "0f4d6b9c6fa5d4247a4e74e3335a0c82a46d8080ec6f2c191149df38c558a85f",
     "platform/super_s3_216/main/modules/device_modes/resource_monitor.hpp": "7e58ab09e3c1ed3bef7ead2f4cad2715e365bd2c19aa5b3ec80a2dc3ddd082a4",
     "platform/super_s3_216/main/modules/device_modes/resource_math.hpp": "1c41257f73bc36729829e95ec5e3f419c8849be4583b79eabfa69af9539fb020",
@@ -79,7 +80,7 @@
     "brookesia-apps/audiobook/src/app/main.js": "3bd233517858f74f62b7e14c5c25eb655a7c117b4327d996cee3d2cc385315b6",
     "brookesia-apps/radio/src/app/main.js": "06ffaa4cf69e31491da916ff138e5a64a5c0f6b3128b333d517c3ea8d57e0f43",
     "platform/super_s3_216/main/modules/child_mode/policy.hpp": "1ce9988df7c93bff0c189272f618e66c7a065ab051dec3b0c2789ed507d0c881",
-    "platform/super_s3_216/main/modules/child_mode/child_mode.cpp": "5ce67d324020688787713f65344933816b2ac476645c7389468190a019f6c094",
+    "platform/super_s3_216/main/modules/child_mode/child_mode.cpp": "d9c014f24638348abfb4e897269482eb0be20715ae805458626f81ce2d8ccb92",
     "platform/super_s3_216/main/modules/radio/radio.cpp": "51bb79a30866425c0d7ddb5dffb909429a1f6202a44a07ffce1d88115ee8a52b",
     "patches/cached-canvas-rect.patch": "418fc9e760ff738136c8c3640f3d165a3aea764be80c8d10e49430b5f34cae23",
     "patches/qspi-display-80mhz.patch": "7af506c58f054cedd7fee83c6dc15e62c84b62c8269f506778ff940ae305a98c",
@@ -193,6 +194,7 @@
     "packages/resources/square-app-store/screens/app_store.json": "f4b9567d87d30cc60bb71cf24abb8a51888ae61733c7e803c66a7cc76839768e",
     "packages/resources/square-app-store/templates/app_store_item.json": "b0e4b470e1f16c1d39494c88e15bb427bd1ae7f1f0eb28175f1b5e21de2404e5",
     "patches/six-desktop-weather-palettes.patch": "274c3dfee18deaa7a74cf3a27eebee415411f7170398aea74cb00ac04e479ca8",
-    "patches/restore-dark-moss-palette.patch": "aefaee6730ee03c07f3411470e073db35f1608f44aeff2af7a04db5868765f5c"
+    "patches/restore-dark-moss-palette.patch": "aefaee6730ee03c07f3411470e073db35f1608f44aeff2af7a04db5868765f5c",
+    "patches/row-cache-frame-batching.patch": "83cab4bba0f07f56274e7779c3a390de03521688bd109abf723eb1cb855abdd1"
   }
 }

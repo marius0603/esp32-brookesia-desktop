@@ -325,9 +325,6 @@
         "borderWidth": 1,
         "radius": 4,
         "borderColor": "#87C8BC"
-      },
-      "bindings": {
-        "placement.y": "y"
       }
     },
     {

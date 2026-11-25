@@ -1,0 +1,29 @@
+diff --git a/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp b/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp
+--- a/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp
++++ b/gui/brookesia_gui_lvgl/src/port/esp/display_source.cpp
+@@ -21,8 +21,8 @@
+ #include "port/private/threading.hpp"
+ #include "private/utils.hpp"
+ 
+-extern "C" bool brookesia_board_prepare_lvgl_flush(
+-    lv_display_t *display, int *x_start, int y_start, int *x_end, int y_end, const void **pixels
++extern "C" esp_err_t brookesia_board_prepare_lvgl_flush(
++    lv_display_t *display, int *x_start, int *y_start, int *x_end, int *y_end, const void **pixels
+ ) __attribute__((weak));
+ extern "C" void brookesia_board_lvgl_flush_failed(lv_display_t *display) __attribute__((weak));
+ extern "C" void brookesia_board_lvgl_output_changed() __attribute__((weak));
+@@ -635,9 +635,11 @@
+     auto *self = static_cast<DisplaySourceImpl *>(user_ctx);
+     BROOKESIA_CHECK_NULL_RETURN(self, ESP_ERR_INVALID_ARG, "LVGL Display source callback context is null");
+ 
+-    if (brookesia_board_prepare_lvgl_flush &&
+-            !brookesia_board_prepare_lvgl_flush(disp, &x_start, y_start, &x_end, y_end, &color_map)) {
+-        return ESP_ERR_INVALID_STATE;
++    if (brookesia_board_prepare_lvgl_flush) {
++        const auto result = brookesia_board_prepare_lvgl_flush(disp, &x_start, &y_start, &x_end, &y_end, &color_map);
++        if (result != ESP_OK) {
++            return result;
++        }
+     }
+     auto ret = self->submit_frame(x_start, y_start, x_end, y_end, color_map);
+     if (ret != ESP_OK && brookesia_board_lvgl_flush_failed) {
