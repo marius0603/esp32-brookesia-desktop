@@ -17,6 +17,13 @@ visit(screen);
 assert.equal(views.get('/main/water').placement.height, 440);
 assert.equal(views.get('/main/sheet').commonProps.hidden, true);
 assert.equal(views.get('/main/bubble').bindings, undefined);
+const surface = views.get('/main/nativeSurface');
+assert.equal(surface.frameViewProps.colorFormat, 'RGB565');
+assert.equal(surface.commonProps.hidden, true);
+assert(screen.children.indexOf(surface) < screen.children.indexOf(views.get('/main/water')));
+const packedScene = fs.readFileSync(path.join(src, 'res/scene.bin'));
+assert.equal(packedScene.subarray(0, 4).toString(), 'AQF1');
+assert.equal(packedScene.length, 4 + 4 * 160 * 160 + 6 * (50 * 39 + 38 * 40 + 25 * 14 + 30 * 33));
 assert.equal([...views.keys()].filter(id => /^\/main\/fish\d$/.test(id)).length, 7);
 const groups = { gold: [0], moon: [1], school: [2, 3, 4, 5], jelly: [6] };
 for (const [i, kind] of Object.keys(groups).entries()) {
@@ -60,6 +67,7 @@ for (const [id, resource] of images) {
 
 let now = 100000, stored = '', timer = false, batches = 0, rowUpdates = 0, backdropUpdates = 0;
 let firmwareRowCache = false;
+let firmwareNative = false, nativeActive = false, nativeNight = false, nativeTap = '';
 const positions = new Map(), sources = new Map(), words = new Map();
 class Clock extends Date { static now() { return now; } }
 const context = vm.createContext({
@@ -73,7 +81,22 @@ const context = vm.createContext({
         case 'SubscribeAction': assert(actions.has(args.Action)); break;
         case 'GetState':
           assert.equal(service, 'DeviceModes');
-          data = firmwareRowCache ? { aquarium_row_cache: true } : {};
+          data = { aquarium_row_cache: firmwareRowCache, aquarium_native_render: firmwareNative };
+          break;
+        case 'AquariumStart':
+          assert(firmwareNative);
+          nativeActive = true;
+          nativeNight = args.Night;
+          data = true;
+          break;
+        case 'AquariumStop': nativeActive = false; break;
+        case 'AquariumLight':
+          assert(nativeActive);
+          nativeNight = args.Night;
+          break;
+        case 'AquariumTap':
+          assert(nativeActive);
+          data = nativeTap;
           break;
         case 'StartPeriodic':
           assert(!timer && args.IntervalMs === 50);
@@ -220,4 +243,25 @@ assertBackdrop('night');
 assert.equal(backdropUpdates, staticBackdrop, 'Swimming leaves background assets untouched');
 assert.equal(rowUpdates, fallbackUpdates, 'The firmware cache owns full-row output');
 app.on_stop();
-console.log('Aquarium passed: cached and fallback rows, seven creatures, water response, catalog and lifecycle.');
+firmwareNative = true;
+app.on_start();
+assert(nativeActive && nativeNight);
+assert(!timer, 'The native animation does not start a JavaScript frame timer');
+assert(visible('nativeSurface'));
+const nativeBatches = batches;
+advance(6);
+assert.equal(batches, nativeBatches, 'The native animation submits no JavaScript frame updates');
+nativeTap = 'jelly';
+tap(120, 153);
+assert.match(words.get('/main/sheet/description'), /伞盖/);
+action('dismiss');
+action('light');
+assert(!nativeNight);
+assert.equal(words.get('/main/light/label'), '日景');
+app.on_pause();
+assert(!nativeActive);
+app.on_resume();
+assert(nativeActive && !nativeNight);
+app.on_stop();
+assert(!nativeActive);
+console.log('Aquarium passed: native lifecycle and controls, cached and fallback rows, seven creatures and catalog.');

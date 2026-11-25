@@ -199,5 +199,7 @@
   "packages/apps/local.aquarium.debug.0.1.2.bpk": "5b10feb6a53c748487174276af4a166f26fb6fbcc2efd0f189d14a3974f1b38e",
   "packages/apps/local.aquarium.debug.0.1.3.bpk": "b93cfa1ee2e49c021ab2ecf49686eaf29be8d090f12c9bc389cade6958524cf5",
   "packages/apps/local.aquarium.debug.0.1.4.bpk": "5ce5d8598d01d9fcd3b5e91b949b9dbc1eca3fcb61c31b94e99d2e397ed149d1",
-  "packages/firmware/brookesia-0.8.3-s3.93-app-only.zip": "c6d354943fca6dc70cae2121462b3fd5d4a6eff509f290f505494932e0c74b31"
+  "packages/firmware/brookesia-0.8.3-s3.93-app-only.zip": "c6d354943fca6dc70cae2121462b3fd5d4a6eff509f290f505494932e0c74b31",
+  "packages/apps/local.aquarium.debug.0.1.5.bpk": "11b212631f1c4f4201274f86c3448ca2227ac337034f3540eeadad17d409c0d9",
+  "packages/firmware/brookesia-0.8.3-s3.94-app-only.zip": "8b15ecbc5f056169794c4bb87c61f7c32dc657f9e5347b52bf9c0ca63c649980"
 }

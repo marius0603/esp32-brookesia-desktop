@@ -2,7 +2,7 @@
   "upstream": "https://github.com/espressif/esp-brookesia.git",
   "commit": "68ac00e7aa9012cd8cbf0cbf6bee155801db0e8c",
   "esp_idf": "6.0.2",
-  "firmware": "0.8.3-s3.93",
+  "firmware": "0.8.3-s3.94",
   "toolkit": "1.0.1",
   "apps": {
     "local.radio": "0.1.5",
@@ -14,7 +14,7 @@
     "local.childmode": "0.1.7",
     "local.lightlearning": "0.1.2",
     "local.virtualpet": "0.1.4",
-    "local.aquarium": "0.1.4",
+    "local.aquarium": "0.1.5",
     "local.nurserysongs": "0.1.4",
     "local.navigation": "0.2.2",
     "local.gravitymaze": "0.1.8",

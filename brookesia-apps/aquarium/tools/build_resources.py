@@ -26,16 +26,20 @@ FISH = [
 FISH_SCALE = {"gold": 3, "moon": 3, "school": 2, "jelly": 2}
 
 
-def write_native_image(image, path, compressed):
-    width, height = image.size
+def rgb565(image):
     rgb = image.convert("RGB").tobytes()
     pixels = array("H", ((red >> 3) << 11 | (green >> 2) << 5 | (blue >> 3)
                          for red, green, blue in zip(rgb[::3], rgb[1::3], rgb[2::3])))
     if sys.byteorder != "little":
         pixels.byteswap()
+    return pixels.tobytes()
+
+
+def write_native_image(image, path, compressed):
+    width, height = image.size
     alpha = image.getchannel("A").tobytes() if image.mode == "RGBA" else b""
     color_format = 0x14 if alpha else 0x12
-    raw = pixels.tobytes() + alpha
+    raw = rgb565(image) + alpha
     header = struct.pack("<BBHHHHH", 0x19, color_format, 8 if compressed else 0,
                          width, height, width * 2, 0)
     if compressed:
@@ -87,6 +91,7 @@ def main():
     images_dir = RES / "images"
     images_dir.mkdir(parents=True, exist_ok=True)
     images = []
+    packed_scene = bytearray(b"AQF1")
 
     def export(name, art, extension, compressed=True):
         filename = name + extension
@@ -99,6 +104,8 @@ def main():
 
     for light in ("day", "night"):
         with Image.open(ART / (light + ".png")) as art:
+            assert art.size == (160, 160)
+            packed_scene.extend(rgb565(art))
             scene = art.convert("RGB").resize((480, 480), Image.Resampling.NEAREST)
             for band, y in enumerate(range(0, 480, BAND_HEIGHT)):
                 export(f"{light}{band}", scene.crop((0, y, 480, y + BAND_HEIGHT)), ".bin")
@@ -107,6 +114,10 @@ def main():
     for kind, scale in FISH_SCALE.items():
         for phase in range(2):
             with Image.open(ART / f"{kind}{phase}.png") as art:
+                assert art.size == {"gold": (50, 39), "moon": (38, 40),
+                                    "school": (25, 14), "jelly": (30, 33)}[kind]
+                packed_scene.extend(rgb565(art))
+                packed_scene.extend(art.getchannel("A").tobytes())
                 size = (art.width * scale, art.height * scale)
                 sizes[kind] = size
                 expanded = art.resize(size, Image.Resampling.NEAREST)
@@ -116,6 +127,7 @@ def main():
                     extension = ".bin" if kind == "school" else ".png"
                     export(f"{kind}_r{phase}", expanded, extension, compressed=False)
                     export(f"{kind}_l{phase}", ImageOps.mirror(expanded), extension, compressed=False)
+    (RES / "scene.bin").write_bytes(packed_scene)
 
     icon = Image.new("RGBA", (46, 46))
     pen = ImageDraw.Draw(icon)
@@ -152,6 +164,12 @@ def main():
         source = "jelly0" if kind == "jelly" else f"{kind}_{'r' if facing > 0 else 'l'}0"
         nodes.append(picture(f"fish{i}", source, x * 3 - w // 2, y * 3 - h // 2, w, h, True))
 
+    surface = container("nativeSurface", 0, 0, 480, 480, bindings={"commonProps.hidden": "hidden"})
+    surface["type"] = "frameView"
+    surface["frameViewProps"] = {"autoRegisterOutput": False, "outputName": "local.aquarium.surface",
+                                 "colorFormat": "RGB565"}
+    surface["commonProps"]["hidden"] = True
+    nodes.append(surface)
     touch = container("water", 0, 0, 480, 440)
     touch["commonProps"].update(clickable=True, pressLock=True)
     touch["events"] = [

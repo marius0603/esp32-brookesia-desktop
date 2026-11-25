@@ -2,7 +2,7 @@
   "package": {
     "id": "local.aquarium",
     "name": {"en": "Pocket Aquarium", "zh_CN": "口袋鱼缸"},
-    "version": "0.1.4",
+    "version": "0.1.5",
     "visible": true,
     "systems": ["super"]
   },

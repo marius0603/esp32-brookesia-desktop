@@ -22,6 +22,7 @@
 #include "nvs.h"
 #include "lvgl.h"
 #include "../display.hpp"
+#include "../aquarium/aquarium.hpp"
 #include "deep_sleep.hpp"
 #include "idle_deep_sleep.hpp"
 #include "screen_lock.hpp"
@@ -85,7 +86,7 @@ private:
         const auto uptime_ms = esp_timer_get_time() / 1000;
         const auto idle_ms = static_cast<uint32_t>(uptime_ms) - last_touch;
         return {{"firmware_version",esp_app_get_description()->version},{"maze_canvas_cache",true},
-                {"aquarium_row_cache",true},
+                {"aquarium_row_cache",true},{"aquarium_native_render",true},
                 {"reset_reason",static_cast<int>(esp_reset_reason())},{"uptime_ms",uptime_ms},
                 {"clock_unix",std::time(nullptr)},{"clock_restored_from_rtc",board_clock::restored_from_rtc()},
                 {"clock_rtc_current",board_clock::rtc_current()},{"app_background_follows_theme",true},
@@ -213,6 +214,11 @@ private:
                 {"GetLauncherProfile","Read the last controlled desktop page sweep",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Frame timing"}},
                 {"GetWeatherLayers","Read visible native layer opacity for weather diagnostics",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Visible surfaces"}},
                 {"GetState","Get screen and sound mode state",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Modes"}},
+                {"AquariumStart","Start the mounted aquarium animation",{{"Night","Use night artwork",FunctionValueType::Boolean}},false,std::nullopt,FunctionReturnSchema{FunctionValueType::Boolean,"Native surface started"}},
+                {"AquariumStop","Stop the mounted aquarium animation",{}},
+                {"AquariumLight","Select aquarium lighting",{{"Night","Use night artwork",FunctionValueType::Boolean}}},
+                {"AquariumTap","Hit test a creature or create a ripple",{{"X","Horizontal pixel",FunctionValueType::Number},{"Y","Vertical pixel",FunctionValueType::Number}},false,std::nullopt,FunctionReturnSchema{FunctionValueType::String,"Creature key"}},
+                {"AquariumProfile","Read aquarium rendering and behavior counters",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Aquarium counters"}},
                 {"GetResourceUsage","Read cached per-second CPU and heap RAM use",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"CPU and memory"}},
                 {"GetNavigationState","Read volatile phone navigation; expires after 15 seconds",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Navigation"}},
                 {"SetAutoSleep","Enable ten minute inactivity timeout",{{"Enabled","Enabled",FunctionValueType::Boolean}}},
@@ -252,6 +258,21 @@ private:
                     return {.success=true,.data=FunctionValue(std::move(result))};}},
                 {"GetWeatherLayers",[this](FunctionParameterMap &&)->FunctionResult{return visual_layers();}},
                 {"GetState",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(state())};}},
+                {"AquariumStart",[](FunctionParameterMap &&p)->FunctionResult{
+                    return {.success=true,.data=FunctionValue(aquarium::start(std::get<bool>(p.at("Night"))))};}},
+                {"AquariumStop",[](FunctionParameterMap &&)->FunctionResult{
+                    return {.success=aquarium::stop(),.error_message="Aquarium stop failed"};}},
+                {"AquariumLight",[](FunctionParameterMap &&p)->FunctionResult{
+                    return {.success=aquarium::light(std::get<bool>(p.at("Night"))),.error_message="Aquarium lighting unavailable"};}},
+                {"AquariumTap",[](FunctionParameterMap &&p)->FunctionResult{
+                    const double x=std::get<double>(p.at("X")), y=std::get<double>(p.at("Y"));
+                    if(!std::isfinite(x)||!std::isfinite(y)||x<0||x>=480||y<0||y>=440)
+                        return {.success=false,.error_message="Aquarium tap outside the water"};
+                    const char *target=aquarium::tap(int(x),int(y));
+                    if(!target) return {.success=false,.error_message="Aquarium is not active"};
+                    return {.success=true,.data=FunctionValue(std::string(target))};}},
+                {"AquariumProfile",[](FunctionParameterMap &&)->FunctionResult{
+                    return {.success=true,.data=FunctionValue(aquarium::profile())};}},
                 {"GetResourceUsage",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(resource_usage())};}},
                 {"GetNavigationState",[](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(phone_navigation::snapshot())};}},
                 {"SetAutoSleep",[](FunctionParameterMap &&p)->FunctionResult{brookesia_board_set_auto_sleep(std::get<bool>(p.at("Enabled")));return {.success=true};}},

@@ -1,0 +1,24 @@
+diff --git a/gui/brookesia_gui_lvgl/src/props.cpp b/gui/brookesia_gui_lvgl/src/props.cpp
+--- a/gui/brookesia_gui_lvgl/src/props.cpp
++++ b/gui/brookesia_gui_lvgl/src/props.cpp
+@@ -14,6 +14,9 @@
+ #elif __has_include("src/misc/cache/instance/lv_image_cache.h")
+ #   include "src/misc/cache/instance/lv_image_cache.h"
+ #endif
++
++extern "C" bool brookesia_board_attach_native_frame(const char *name, lv_obj_t *surface)
++    __attribute__((weak));
+ 
+ namespace esp_brookesia::gui::lvgl {
+ using namespace props_detail;
+@@ -333,6 +336,10 @@
+     }
+ 
+     const auto output_name = resolve_frame_view_output_name(record, props);
++    if (!props.auto_register_output && brookesia_board_attach_native_frame &&
++            brookesia_board_attach_native_frame(output_name.c_str(), record.object)) {
++        return;
++    }
+     if (!props.auto_register_output && output_name.empty()) {
+         BROOKESIA_LOGE("FrameView outputName is required when autoRegisterOutput is false: node='%1%'",
+                        impl.build_absolute_path(record));

@@ -23,7 +23,8 @@ const START = [
 ];
 const ACTIONS = ['waterPress', 'waterRelease', 'waterCancel', 'light', 'book', 'dismiss', ...Object.keys(NOTES)];
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-let gui, timer, storage;
+let gui, timer, storage, modes;
+let nativeAvailable = false, nativeRendering = false;
 let cachedRows = false;
 let timerId = 0, paused = true, night = false, panel = false, selected = 'gold';
 let fish = [], touch = null, ripple = null, lastTick = 0, started = 0, rendered = {};
@@ -59,14 +60,17 @@ function draw(now) {
     commands.push({ Name: 'SetViewSrc', Params: { Path: pathOf(node), Src: src } });
     return true;
   }
-  for (let band = 0; band < BACKDROP_BANDS; band++) image('backdrop' + band, (night ? 'night' : 'day') + band);
+  bind('nativeSurface', 'hidden', !nativeRendering);
+  if (!nativeRendering) {
+    for (let band = 0; band < BACKDROP_BANDS; band++) image('backdrop' + band, (night ? 'night' : 'day') + band);
+  }
   bind('light/label', 'text', night ? '夜景' : '日景');
   bind('sheet', 'hidden', !panel);
   bind('sheet/description', 'text', NOTES[selected]);
   for (const name of Object.keys(NOTES)) {
     bind('sheet/' + name, 'color', name === selected ? '#23564F' : '#103740');
   }
-  const rippleAge = ripple ? now - ripple.at : Infinity;
+  const rippleAge = !nativeRendering && ripple ? now - ripple.at : Infinity;
   bind('ripple', 'hidden', rippleAge >= 680);
   if (rippleAge < 680) {
     const diameter = 16 + Math.floor(rippleAge / 9);
@@ -75,7 +79,7 @@ function draw(now) {
     bind('ripple', 'x', Math.round(ripple.x - diameter / 2));
     bind('ripple', 'y', Math.round(ripple.y - diameter / 2));
   }
-  fish.forEach((item, i) => {
+  if (!nativeRendering) fish.forEach((item, i) => {
     const sprite = SPECIES[item.kind];
     const node = 'fish' + i;
     const y = Math.round(item.y - sprite.height / 2);
@@ -177,6 +181,11 @@ function tap(point, now) {
     panel = false;
     return;
   }
+  if (nativeRendering) {
+    const target = call(modes, 'AquariumTap', { X: point.x, Y: point.y });
+    if (target && Object.prototype.hasOwnProperty.call(NOTES, target)) openBook(target);
+    return;
+  }
   const chosen = fish.find(item => {
     const sprite = SPECIES[item.kind];
     return Math.abs(item.x - point.x) < sprite.width * .28 &&
@@ -189,7 +198,9 @@ function tap(point, now) {
 function action(name, payload, now) {
   if (paused) return;
   if (name === 'light') {
-    night = !night;
+    const next = !night;
+    if (nativeRendering) call(modes, 'AquariumLight', { Night: next });
+    night = next;
     draw(now);
     try { call(storage, 'FSWriteText', { Path: SETTINGS, Data: JSON.stringify({ night }) }); } catch (_) {}
     return;
@@ -219,13 +230,21 @@ function resume() {
   panel = false;
   started = lastTick = Date.now();
   rendered = {};
+  if (nativeAvailable) {
+    try { nativeRendering = call(modes, 'AquariumStart', { Night: night }) === true; }
+    catch (_) { nativeRendering = false; }
+  }
   draw(started);
-  timerId = call(timer, 'StartPeriodic', { Name: 'aquarium', IntervalMs: 50 });
+  if (!nativeRendering) timerId = call(timer, 'StartPeriodic', { Name: 'aquarium', IntervalMs: 50 });
 }
 
 function pause() {
   paused = true;
   touch = ripple = null;
+  if (nativeRendering) {
+    nativeRendering = false;
+    try { call(modes, 'AquariumStop'); } catch (_) {}
+  }
   if (timerId) {
     const existing = timerId;
     timerId = 0;
@@ -240,15 +259,18 @@ globalThis.brookesia_app = {
     timer = brookesia.start_service('SystemTimer');
     storage = brookesia.start_service('Storage');
     try {
-      cachedRows = call(brookesia.start_service('DeviceModes'), 'GetState').aquarium_row_cache === true;
-    } catch (_) { cachedRows = false; }
+      modes = brookesia.start_service('DeviceModes');
+      const state = call(modes, 'GetState');
+      cachedRows = state.aquarium_row_cache === true;
+      nativeAvailable = state.aquarium_native_render === true;
+    } catch (_) { cachedRows = nativeAvailable = false; }
     night = readLight();
     fish = START.map(([kind, x, y, facing]) => ({ kind, x, y, home: y, facing, cruise: facing }));
     for (const action of ACTIONS) call(gui, 'SubscribeAction', { Action: action });
     resume();
     return true;
   },
-  on_timer() { tick(Date.now()); return true; },
+  on_timer() { if (!nativeRendering) tick(Date.now()); return true; },
   on_action(name, path, payload) { action(name, payload, Date.now()); return true; },
   on_pause() { pause(); return true; },
   on_resume() { resume(); return true; },

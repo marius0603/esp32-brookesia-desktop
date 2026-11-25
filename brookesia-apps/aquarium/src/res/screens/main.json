@@ -554,6 +554,35 @@
       }
     },
     {
+      "type": "frameView",
+      "id": "nativeSurface",
+      "placement": {
+        "mode": "absolute",
+        "x": 0,
+        "y": 0,
+        "width": 480,
+        "height": 480
+      },
+      "commonProps": {
+        "clickable": false,
+        "scrollable": false,
+        "hidden": true
+      },
+      "style": {
+        "bgOpacity": 0,
+        "padding": 0,
+        "borderWidth": 0
+      },
+      "bindings": {
+        "commonProps.hidden": "hidden"
+      },
+      "frameViewProps": {
+        "autoRegisterOutput": false,
+        "outputName": "local.aquarium.surface",
+        "colorFormat": "RGB565"
+      }
+    },
+    {
       "type": "container",
       "id": "water",
       "placement": {
