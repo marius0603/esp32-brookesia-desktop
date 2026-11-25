@@ -4,6 +4,9 @@
 const SETTINGS = '/littlefs/aquarium-settings.json';
 const RETURN_EDGE = 440;
 const BACKDROP_BANDS = 8;
+const BUBBLE_DIAMETER = 7;
+const NATIVE_RETRY_MS = 300;
+const NATIVE_RETRY_LIMIT_MS = 3000;
 const NOTES = {
   gold: '好奇 · 喜欢靠近水波',
   moon: '慢热 · 常停在水草附近',
@@ -25,6 +28,7 @@ const ACTIONS = ['waterPress', 'waterRelease', 'waterCancel', 'light', 'book', '
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 let gui, timer, storage, modes;
 let nativeAvailable = false, nativeRendering = false;
+let nativeRetryAt = 0;
 let cachedRows = false;
 let timerId = 0, paused = true, night = false, panel = false, selected = 'gold';
 let fish = [], touch = null, ripple = null, lastTick = 0, started = 0, rendered = {};
@@ -61,8 +65,15 @@ function draw(now) {
     return true;
   }
   bind('nativeSurface', 'hidden', !nativeRendering);
-  if (!nativeRendering) {
-    for (let band = 0; band < BACKDROP_BANDS; band++) image('backdrop' + band, (night ? 'night' : 'day') + band);
+  const legacyVisible = !nativeRendering && !nativeRetryAt;
+  bind('legacy', 'hidden', !legacyVisible);
+  if (legacyVisible) {
+    for (let band = 0; band < BACKDROP_BANDS; band++) image('legacy/backdrop' + band, (night ? 'night' : 'day') + band);
+    const y = 388 - Math.floor(elapsed / (night ? 68 : 43)) % 305;
+    const oldY = rendered['legacy/bubble:y'] ?? y;
+    if (bind('legacy/bubble', 'y', y) && !cachedRows) {
+      rowBounds.bubble = { top: Math.min(y, oldY), bottom: Math.max(y, oldY) + BUBBLE_DIAMETER };
+    }
   }
   bind('light/label', 'text', night ? '夜景' : '日景');
   bind('sheet', 'hidden', !panel);
@@ -70,18 +81,18 @@ function draw(now) {
   for (const name of Object.keys(NOTES)) {
     bind('sheet/' + name, 'color', name === selected ? '#23564F' : '#103740');
   }
-  const rippleAge = !nativeRendering && ripple ? now - ripple.at : Infinity;
-  bind('ripple', 'hidden', rippleAge >= 680);
+  const rippleAge = legacyVisible && ripple ? now - ripple.at : Infinity;
+  bind('legacy/ripple', 'hidden', rippleAge >= 680);
   if (rippleAge < 680) {
     const diameter = 16 + Math.floor(rippleAge / 9);
-    bind('ripple', 'w', diameter);
-    bind('ripple', 'h', diameter);
-    bind('ripple', 'x', Math.round(ripple.x - diameter / 2));
-    bind('ripple', 'y', Math.round(ripple.y - diameter / 2));
+    bind('legacy/ripple', 'w', diameter);
+    bind('legacy/ripple', 'h', diameter);
+    bind('legacy/ripple', 'x', Math.round(ripple.x - diameter / 2));
+    bind('legacy/ripple', 'y', Math.round(ripple.y - diameter / 2));
   }
-  if (!nativeRendering) fish.forEach((item, i) => {
+  if (legacyVisible) fish.forEach((item, i) => {
     const sprite = SPECIES[item.kind];
-    const node = 'fish' + i;
+    const node = 'legacy/fish' + i;
     const y = Math.round(item.y - sprite.height / 2);
     const movedX = bind(node, 'x', Math.round(item.x - sprite.width / 2));
     const movedY = bind(node, 'y', y);
@@ -102,7 +113,7 @@ function draw(now) {
   // CO5300 can leave seams on partial-width writes. Repaint complete rows
   // behind moving sprites, grouping the school to avoid overlapping updates.
   for (const [kind, bounds] of Object.entries(rowBounds)) {
-    const node = kind + 'Rows';
+    const node = 'legacy/' + kind + 'Rows';
     bind(node, 'y', bounds.top);
     bind(node, 'h', bounds.bottom - bounds.top);
     bind(node, 'color', rendered[node + ':color'] === '#000000' ? '#243C50' : '#000000');
@@ -160,6 +171,14 @@ function swim(now, delta) {
 
 function tick(now) {
   if (paused) return;
+  if (nativeRetryAt) {
+    if (now < nativeRetryAt) return;
+    startNative(now);
+    if (nativeRendering) stopTimer();
+    lastTick = now;
+    draw(now);
+    return;
+  }
   if (now < lastTick || now - lastTick > 5000) {
     ripple = null;
     touch = null;
@@ -224,33 +243,40 @@ function action(name, payload, now) {
   draw(now);
 }
 
+function startNative(now) {
+  try { nativeRendering = call(modes, 'AquariumStart', { Night: night }) === true; }
+  catch (_) { nativeRendering = false; }
+  nativeRetryAt = !nativeRendering && now - started < NATIVE_RETRY_LIMIT_MS ? now + NATIVE_RETRY_MS : 0;
+}
+
 function resume() {
   if (!paused) return;
   paused = false;
   panel = false;
   started = lastTick = Date.now();
   rendered = {};
-  if (nativeAvailable) {
-    try { nativeRendering = call(modes, 'AquariumStart', { Night: night }) === true; }
-    catch (_) { nativeRendering = false; }
-  }
+  if (nativeAvailable) startNative(started);
   draw(started);
   if (!nativeRendering) timerId = call(timer, 'StartPeriodic', { Name: 'aquarium', IntervalMs: 50 });
 }
 
+function stopTimer() {
+  if (!timerId) return;
+  const existing = timerId;
+  timerId = 0;
+  // SystemCore can dispose the timer before on_stop.
+  try { call(timer, 'Stop', { TimerId: existing }); } catch (_) {}
+}
+
 function pause() {
   paused = true;
+  nativeRetryAt = 0;
   touch = ripple = null;
   if (nativeRendering) {
     nativeRendering = false;
     try { call(modes, 'AquariumStop'); } catch (_) {}
   }
-  if (timerId) {
-    const existing = timerId;
-    timerId = 0;
-    // SystemCore can dispose the timer before on_stop.
-    try { call(timer, 'Stop', { TimerId: existing }); } catch (_) {}
-  }
+  stopTimer();
 }
 
 globalThis.brookesia_app = {

@@ -24,6 +24,8 @@ FISH = [
     ("jelly", 41, 51, 1),
 ]
 FISH_SCALE = {"gold": 3, "moon": 3, "school": 2, "jelly": 2}
+GRASS_BOXES = [(0, 93, 54, 159), (119, 99, 160, 160)]
+GRASS_COLORS = [("#133e39", "#226d51", "#448b62"), ("#102d40", "#173b50", "#265365")]
 
 
 def rgb565(image):
@@ -33,6 +35,31 @@ def rgb565(image):
     if sys.byteorder != "little":
         pixels.byteswap()
     return pixels.tobytes()
+
+
+def write_grass():
+    themes = ("day", "night")
+    originals = [Image.open(ART / f"{theme}.png").convert("RGB") for theme in themes]
+    underlays = [Image.open(ART / f"under-grass-{theme}.png").convert("RGBA") for theme in themes]
+    palette = Image.new("RGB", (3, 2))
+    colors = [tuple(bytes.fromhex(color[1:])) for row in GRASS_COLORS for color in row]
+    palette.putdata(colors)
+    day_indices = {color: i + 1 for i, color in enumerate(colors[:3])}
+    rgb_backings = [rgb565(underlay) for underlay in underlays]
+    masks, underpaint = bytearray(), bytearray()
+    for left, top, right, bottom in GRASS_BOXES:
+        for y in range(top, bottom):
+            for x in range(left, right):
+                ink = day_indices.get(originals[0].getpixel((x, y)), 0)
+                assert all(layer.getpixel((x, y))[3] == (255 if ink else 0) for layer in underlays)
+                masks.append(ink)
+                if ink:
+                    assert originals[1].getpixel((x, y)) == colors[ink + 2]
+                    offset = (y * 160 + x) * 2
+                    for pixels in rgb_backings:
+                        underpaint.extend(pixels[offset:offset + 2])
+    assert sum(bool(ink) for ink in masks) == sum(rgb in day_indices for rgb in originals[0].getdata())
+    (RES / "grass.bin").write_bytes(b"AQG1" + rgb565(palette) + masks + underpaint)
 
 
 def write_native_image(image, path, compressed):
@@ -128,6 +155,7 @@ def main():
                     export(f"{kind}_r{phase}", expanded, extension, compressed=False)
                     export(f"{kind}_l{phase}", ImageOps.mirror(expanded), extension, compressed=False)
     (RES / "scene.bin").write_bytes(packed_scene)
+    write_grass()
 
     icon = Image.new("RGBA", (46, 46))
     pen = ImageDraw.Draw(icon)
@@ -147,9 +175,13 @@ def main():
                                 bindings={"placement.y": "y", "placement.height": "h", "style.bgColor": "color"})
         row_refresh["style"]["bgColor"] = "#000000"
         nodes.append(row_refresh)
+    bubble_rows = container("bubbleRows", 0, 388, 480, 7,
+                            bindings={"placement.y": "y", "placement.height": "h", "style.bgColor": "color"})
+    bubble_rows["style"]["bgColor"] = "#000000"
+    nodes.append(bubble_rows)
     nodes.extend(picture(f"backdrop{band}", f"day{band}", 0, y, 480, BAND_HEIGHT)
                  for band, y in enumerate(range(0, 480, BAND_HEIGHT)))
-    bubble = container("bubble", 394, 345, 7, 7)
+    bubble = container("bubble", 394, 388, 7, 7, bindings={"placement.y": "y"})
     bubble["style"].update(radius=4, borderWidth=1, borderColor="#87C8BC")
     nodes.append(bubble)
     ripple = container("ripple", 0, 0, 20, 20, bindings={
@@ -164,6 +196,10 @@ def main():
         source = "jelly0" if kind == "jelly" else f"{kind}_{'r' if facing > 0 else 'l'}0"
         nodes.append(picture(f"fish{i}", source, x * 3 - w // 2, y * 3 - h // 2, w, h, True))
 
+    legacy = container("legacy", 0, 0, 480, 480, children=nodes,
+                       bindings={"commonProps.hidden": "hidden"})
+    legacy["commonProps"]["hidden"] = True
+    nodes = [legacy]
     surface = container("nativeSurface", 0, 0, 480, 480, bindings={"commonProps.hidden": "hidden"})
     surface["type"] = "frameView"
     surface["frameViewProps"] = {"autoRegisterOutput": False, "outputName": "local.aquarium.surface",

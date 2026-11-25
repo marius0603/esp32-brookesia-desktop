@@ -11,331 +11,13 @@
   "children": [
     {
       "type": "container",
-      "id": "goldRows",
-      "placement": {
-        "mode": "absolute",
-        "x": 0,
-        "y": 146,
-        "width": 480,
-        "height": 117
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0,
-        "bgColor": "#000000"
-      },
-      "bindings": {
-        "placement.y": "y",
-        "placement.height": "h",
-        "style.bgColor": "color"
-      }
-    },
-    {
-      "type": "container",
-      "id": "moonRows",
-      "placement": {
-        "mode": "absolute",
-        "x": 0,
-        "y": 255,
-        "width": 480,
-        "height": 120
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0,
-        "bgColor": "#000000"
-      },
-      "bindings": {
-        "placement.y": "y",
-        "placement.height": "h",
-        "style.bgColor": "color"
-      }
-    },
-    {
-      "type": "container",
-      "id": "schoolRows",
-      "placement": {
-        "mode": "absolute",
-        "x": 0,
-        "y": 82,
-        "width": 480,
-        "height": 88
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0,
-        "bgColor": "#000000"
-      },
-      "bindings": {
-        "placement.y": "y",
-        "placement.height": "h",
-        "style.bgColor": "color"
-      }
-    },
-    {
-      "type": "container",
-      "id": "jellyRows",
-      "placement": {
-        "mode": "absolute",
-        "x": 0,
-        "y": 120,
-        "width": 480,
-        "height": 66
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0,
-        "bgColor": "#000000"
-      },
-      "bindings": {
-        "placement.y": "y",
-        "placement.height": "h",
-        "style.bgColor": "color"
-      }
-    },
-    {
-      "type": "image",
-      "id": "backdrop0",
+      "id": "legacy",
       "placement": {
         "mode": "absolute",
         "x": 0,
         "y": 0,
         "width": 480,
-        "height": 60
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.day0}",
-        "innerAlign": "center"
-      }
-    },
-    {
-      "type": "image",
-      "id": "backdrop1",
-      "placement": {
-        "mode": "absolute",
-        "x": 0,
-        "y": 60,
-        "width": 480,
-        "height": 60
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.day1}",
-        "innerAlign": "center"
-      }
-    },
-    {
-      "type": "image",
-      "id": "backdrop2",
-      "placement": {
-        "mode": "absolute",
-        "x": 0,
-        "y": 120,
-        "width": 480,
-        "height": 60
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.day2}",
-        "innerAlign": "center"
-      }
-    },
-    {
-      "type": "image",
-      "id": "backdrop3",
-      "placement": {
-        "mode": "absolute",
-        "x": 0,
-        "y": 180,
-        "width": 480,
-        "height": 60
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.day3}",
-        "innerAlign": "center"
-      }
-    },
-    {
-      "type": "image",
-      "id": "backdrop4",
-      "placement": {
-        "mode": "absolute",
-        "x": 0,
-        "y": 240,
-        "width": 480,
-        "height": 60
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.day4}",
-        "innerAlign": "center"
-      }
-    },
-    {
-      "type": "image",
-      "id": "backdrop5",
-      "placement": {
-        "mode": "absolute",
-        "x": 0,
-        "y": 300,
-        "width": 480,
-        "height": 60
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.day5}",
-        "innerAlign": "center"
-      }
-    },
-    {
-      "type": "image",
-      "id": "backdrop6",
-      "placement": {
-        "mode": "absolute",
-        "x": 0,
-        "y": 360,
-        "width": 480,
-        "height": 60
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.day6}",
-        "innerAlign": "center"
-      }
-    },
-    {
-      "type": "image",
-      "id": "backdrop7",
-      "placement": {
-        "mode": "absolute",
-        "x": 0,
-        "y": 420,
-        "width": 480,
-        "height": 60
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.day7}",
-        "innerAlign": "center"
-      }
-    },
-    {
-      "type": "container",
-      "id": "bubble",
-      "placement": {
-        "mode": "absolute",
-        "x": 394,
-        "y": 345,
-        "width": 7,
-        "height": 7
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 1,
-        "radius": 4,
-        "borderColor": "#87C8BC"
-      }
-    },
-    {
-      "type": "container",
-      "id": "ripple",
-      "placement": {
-        "mode": "absolute",
-        "x": 0,
-        "y": 0,
-        "width": 20,
-        "height": 20
+        "height": 480
       },
       "commonProps": {
         "clickable": false,
@@ -345,212 +27,585 @@
       "style": {
         "bgOpacity": 0,
         "padding": 0,
-        "borderWidth": 2,
-        "radius": 32767,
-        "borderColor": "#A5EAD8"
+        "borderWidth": 0
       },
+      "children": [
+        {
+          "type": "container",
+          "id": "goldRows",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 146,
+            "width": 480,
+            "height": 117
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0,
+            "bgColor": "#000000"
+          },
+          "bindings": {
+            "placement.y": "y",
+            "placement.height": "h",
+            "style.bgColor": "color"
+          }
+        },
+        {
+          "type": "container",
+          "id": "moonRows",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 255,
+            "width": 480,
+            "height": 120
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0,
+            "bgColor": "#000000"
+          },
+          "bindings": {
+            "placement.y": "y",
+            "placement.height": "h",
+            "style.bgColor": "color"
+          }
+        },
+        {
+          "type": "container",
+          "id": "schoolRows",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 82,
+            "width": 480,
+            "height": 88
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0,
+            "bgColor": "#000000"
+          },
+          "bindings": {
+            "placement.y": "y",
+            "placement.height": "h",
+            "style.bgColor": "color"
+          }
+        },
+        {
+          "type": "container",
+          "id": "jellyRows",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 120,
+            "width": 480,
+            "height": 66
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0,
+            "bgColor": "#000000"
+          },
+          "bindings": {
+            "placement.y": "y",
+            "placement.height": "h",
+            "style.bgColor": "color"
+          }
+        },
+        {
+          "type": "container",
+          "id": "bubbleRows",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 388,
+            "width": 480,
+            "height": 7
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0,
+            "bgColor": "#000000"
+          },
+          "bindings": {
+            "placement.y": "y",
+            "placement.height": "h",
+            "style.bgColor": "color"
+          }
+        },
+        {
+          "type": "image",
+          "id": "backdrop0",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 0,
+            "width": 480,
+            "height": 60
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.day0}",
+            "innerAlign": "center"
+          }
+        },
+        {
+          "type": "image",
+          "id": "backdrop1",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 60,
+            "width": 480,
+            "height": 60
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.day1}",
+            "innerAlign": "center"
+          }
+        },
+        {
+          "type": "image",
+          "id": "backdrop2",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 120,
+            "width": 480,
+            "height": 60
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.day2}",
+            "innerAlign": "center"
+          }
+        },
+        {
+          "type": "image",
+          "id": "backdrop3",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 180,
+            "width": 480,
+            "height": 60
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.day3}",
+            "innerAlign": "center"
+          }
+        },
+        {
+          "type": "image",
+          "id": "backdrop4",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 240,
+            "width": 480,
+            "height": 60
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.day4}",
+            "innerAlign": "center"
+          }
+        },
+        {
+          "type": "image",
+          "id": "backdrop5",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 300,
+            "width": 480,
+            "height": 60
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.day5}",
+            "innerAlign": "center"
+          }
+        },
+        {
+          "type": "image",
+          "id": "backdrop6",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 360,
+            "width": 480,
+            "height": 60
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.day6}",
+            "innerAlign": "center"
+          }
+        },
+        {
+          "type": "image",
+          "id": "backdrop7",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 420,
+            "width": 480,
+            "height": 60
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.day7}",
+            "innerAlign": "center"
+          }
+        },
+        {
+          "type": "container",
+          "id": "bubble",
+          "placement": {
+            "mode": "absolute",
+            "x": 394,
+            "y": 388,
+            "width": 7,
+            "height": 7
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 1,
+            "radius": 4,
+            "borderColor": "#87C8BC"
+          },
+          "bindings": {
+            "placement.y": "y"
+          }
+        },
+        {
+          "type": "container",
+          "id": "ripple",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 0,
+            "width": 20,
+            "height": 20
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false,
+            "hidden": true
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 2,
+            "radius": 32767,
+            "borderColor": "#A5EAD8"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y",
+            "placement.width": "w",
+            "placement.height": "h",
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "image",
+          "id": "fish0",
+          "placement": {
+            "mode": "absolute",
+            "x": 159,
+            "y": 146,
+            "width": 150,
+            "height": 117
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.gold_r0}",
+            "innerAlign": "center"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y"
+          }
+        },
+        {
+          "type": "image",
+          "id": "fish1",
+          "placement": {
+            "mode": "absolute",
+            "x": 258,
+            "y": 255,
+            "width": 114,
+            "height": 120
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.moon_l0}",
+            "innerAlign": "center"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y"
+          }
+        },
+        {
+          "type": "image",
+          "id": "fish2",
+          "placement": {
+            "mode": "absolute",
+            "x": 308,
+            "y": 115,
+            "width": 50,
+            "height": 28
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.school_r0}",
+            "innerAlign": "center"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y"
+          }
+        },
+        {
+          "type": "image",
+          "id": "fish3",
+          "placement": {
+            "mode": "absolute",
+            "x": 347,
+            "y": 142,
+            "width": 50,
+            "height": 28
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.school_r0}",
+            "innerAlign": "center"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y"
+          }
+        },
+        {
+          "type": "image",
+          "id": "fish4",
+          "placement": {
+            "mode": "absolute",
+            "x": 377,
+            "y": 106,
+            "width": 50,
+            "height": 28
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.school_r0}",
+            "innerAlign": "center"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y"
+          }
+        },
+        {
+          "type": "image",
+          "id": "fish5",
+          "placement": {
+            "mode": "absolute",
+            "x": 338,
+            "y": 82,
+            "width": 50,
+            "height": 28
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.school_r0}",
+            "innerAlign": "center"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y"
+          }
+        },
+        {
+          "type": "image",
+          "id": "fish6",
+          "placement": {
+            "mode": "absolute",
+            "x": 93,
+            "y": 120,
+            "width": 60,
+            "height": 66
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.jelly0}",
+            "innerAlign": "center"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y"
+          }
+        }
+      ],
       "bindings": {
-        "placement.x": "x",
-        "placement.y": "y",
-        "placement.width": "w",
-        "placement.height": "h",
         "commonProps.hidden": "hidden"
-      }
-    },
-    {
-      "type": "image",
-      "id": "fish0",
-      "placement": {
-        "mode": "absolute",
-        "x": 159,
-        "y": 146,
-        "width": 150,
-        "height": 117
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.gold_r0}",
-        "innerAlign": "center"
-      },
-      "bindings": {
-        "placement.x": "x",
-        "placement.y": "y"
-      }
-    },
-    {
-      "type": "image",
-      "id": "fish1",
-      "placement": {
-        "mode": "absolute",
-        "x": 258,
-        "y": 255,
-        "width": 114,
-        "height": 120
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.moon_l0}",
-        "innerAlign": "center"
-      },
-      "bindings": {
-        "placement.x": "x",
-        "placement.y": "y"
-      }
-    },
-    {
-      "type": "image",
-      "id": "fish2",
-      "placement": {
-        "mode": "absolute",
-        "x": 308,
-        "y": 115,
-        "width": 50,
-        "height": 28
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.school_r0}",
-        "innerAlign": "center"
-      },
-      "bindings": {
-        "placement.x": "x",
-        "placement.y": "y"
-      }
-    },
-    {
-      "type": "image",
-      "id": "fish3",
-      "placement": {
-        "mode": "absolute",
-        "x": 347,
-        "y": 142,
-        "width": 50,
-        "height": 28
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.school_r0}",
-        "innerAlign": "center"
-      },
-      "bindings": {
-        "placement.x": "x",
-        "placement.y": "y"
-      }
-    },
-    {
-      "type": "image",
-      "id": "fish4",
-      "placement": {
-        "mode": "absolute",
-        "x": 377,
-        "y": 106,
-        "width": 50,
-        "height": 28
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.school_r0}",
-        "innerAlign": "center"
-      },
-      "bindings": {
-        "placement.x": "x",
-        "placement.y": "y"
-      }
-    },
-    {
-      "type": "image",
-      "id": "fish5",
-      "placement": {
-        "mode": "absolute",
-        "x": 338,
-        "y": 82,
-        "width": 50,
-        "height": 28
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.school_r0}",
-        "innerAlign": "center"
-      },
-      "bindings": {
-        "placement.x": "x",
-        "placement.y": "y"
-      }
-    },
-    {
-      "type": "image",
-      "id": "fish6",
-      "placement": {
-        "mode": "absolute",
-        "x": 93,
-        "y": 120,
-        "width": 60,
-        "height": 66
-      },
-      "commonProps": {
-        "clickable": false,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 0,
-        "padding": 0,
-        "borderWidth": 0
-      },
-      "imageProps": {
-        "src": "${image.jelly0}",
-        "innerAlign": "center"
-      },
-      "bindings": {
-        "placement.x": "x",
-        "placement.y": "y"
       }
     },
     {

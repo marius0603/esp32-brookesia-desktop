@@ -16,7 +16,9 @@ function visit(node, parent = '') {
 visit(screen);
 assert.equal(views.get('/main/water').placement.height, 440);
 assert.equal(views.get('/main/sheet').commonProps.hidden, true);
-assert.equal(views.get('/main/bubble').bindings, undefined);
+assert.equal(views.get('/main/legacy/bubble').bindings['placement.y'], 'y');
+const legacy = views.get('/main/legacy');
+assert.equal(legacy.commonProps.hidden, true);
 const surface = views.get('/main/nativeSurface');
 assert.equal(surface.frameViewProps.colorFormat, 'RGB565');
 assert.equal(surface.commonProps.hidden, true);
@@ -24,18 +26,24 @@ assert(screen.children.indexOf(surface) < screen.children.indexOf(views.get('/ma
 const packedScene = fs.readFileSync(path.join(src, 'res/scene.bin'));
 assert.equal(packedScene.subarray(0, 4).toString(), 'AQF1');
 assert.equal(packedScene.length, 4 + 4 * 160 * 160 + 6 * (50 * 39 + 38 * 40 + 25 * 14 + 30 * 33));
-assert.equal([...views.keys()].filter(id => /^\/main\/fish\d$/.test(id)).length, 7);
+const grass = fs.readFileSync(path.join(src, 'res/grass.bin'));
+assert.equal(grass.subarray(0, 4).toString(), 'AQG1');
+const mask = grass.subarray(16, 16 + 54 * 66 + 41 * 61);
+assert(mask.every(ink => ink <= 3));
+assert(mask.some(ink => ink > 0));
+assert.equal(grass.length, 16 + mask.length + 4 * mask.filter(Boolean).length);
+assert.equal([...views.keys()].filter(id => /^\/main\/legacy\/fish\d$/.test(id)).length, 7);
 const groups = { gold: [0], moon: [1], school: [2, 3, 4, 5], jelly: [6] };
 for (const [i, kind] of Object.keys(groups).entries()) {
-  const rows = views.get('/main/' + kind + 'Rows');
-  assert.equal(screen.children[i], rows);
+  const rows = views.get('/main/legacy/' + kind + 'Rows');
+  assert.equal(legacy.children[i], rows);
   assert.equal(rows.placement.x, 0);
   assert.equal(rows.placement.width, 480);
   assert.equal(rows.style.bgOpacity, 0);
   assert.equal(rows.commonProps.clickable, false);
 }
 for (let band = 0; band < 8; band++) {
-  const {y, width, height} = views.get('/main/backdrop' + band).placement;
+  const {y, width, height} = views.get('/main/legacy/backdrop' + band).placement;
   assert.deepEqual([y, width, height], [band * 60, 480, 60]);
 }
 for (const [id, resource] of images) {
@@ -67,6 +75,7 @@ for (const [id, resource] of images) {
 
 let now = 100000, stored = '', timer = false, batches = 0, rowUpdates = 0, backdropUpdates = 0;
 let firmwareRowCache = false;
+let nativeStartAvailable = true;
 let firmwareNative = false, nativeActive = false, nativeNight = false, nativeTap = '';
 const positions = new Map(), sources = new Map(), words = new Map();
 class Clock extends Date { static now() { return now; } }
@@ -85,9 +94,9 @@ const context = vm.createContext({
           break;
         case 'AquariumStart':
           assert(firmwareNative);
-          nativeActive = true;
+          nativeActive = nativeStartAvailable;
           nativeNight = args.Night;
-          data = true;
+          data = nativeStartAvailable;
           break;
         case 'AquariumStop': nativeActive = false; break;
         case 'AquariumLight':
@@ -121,7 +130,7 @@ const context = vm.createContext({
             } else {
               assert.equal(command.Name, 'SetViewSrc');
               assert(views.has(p.Path) && images.has(p.Src));
-              if (p.Path.startsWith('/main/backdrop')) backdropUpdates++;
+              if (p.Path.startsWith('/main/legacy/backdrop')) backdropUpdates++;
               sources.set(p.Path, p.Src);
             }
           }
@@ -138,12 +147,12 @@ const app = context.brookesia_app;
 const action = (name, value) => app.on_action(name, '/main/water', JSON.stringify(value));
 const tap = (x, y) => { action('waterPress', { x, y }); action('waterRelease', { x, y }); };
 const fishState = (i = 0) => {
-  const id = '/main/fish' + i;
+  const id = '/main/legacy/fish' + i;
   return { x: Number(positions.get(id + ':x')), y: Number(positions.get(id + ':y')), pose: sources.get(id) };
 };
 const x = () => fishState().x;
 const y = () => fishState().y;
-const rowBinding = (kind, key) => positions.get('/main/' + kind + 'Rows:' + key);
+const rowBinding = (kind, key) => positions.get('/main/legacy/' + kind + 'Rows:' + key);
 function advance(count) {
   for (let i = 0; i < count; i++) {
     const prior = Array.from({ length: 7 }, (_, index) => fishState(index));
@@ -156,7 +165,7 @@ function advance(count) {
         const current = fishState(member);
         const last = prior[member];
         if (current.x !== last.x || current.y !== last.y || current.pose !== last.pose) {
-          const height = views.get('/main/fish' + member).placement.height;
+          const height = views.get('/main/legacy/fish' + member).placement.height;
           changedRows.push([Math.min(current.y, last.y), Math.max(current.y, last.y) + height]);
         }
       }
@@ -172,14 +181,17 @@ function advance(count) {
 }
 const visible = view => positions.get('/main/' + view + ':hidden') === 'false';
 function assertBackdrop(mode) {
-  for (let band = 0; band < 8; band++) assert.equal(sources.get('/main/backdrop' + band), mode + band);
+  for (let band = 0; band < 8; band++) assert.equal(sources.get('/main/legacy/backdrop' + band), mode + band);
 }
 app.on_start();
 assert(timer);
 assertBackdrop('day');
 assert.equal(stored, '');
 const originalGold = fishState(), initialJelly = fishState(6);
+const initialBubble = Number(positions.get('/main/legacy/bubble:y'));
 advance(7);
+assert(Number(positions.get('/main/legacy/bubble:y')) < initialBubble, 'Legacy bubble rises');
+assert.equal(Number(rowBinding('bubble', 'y')), Number(positions.get('/main/legacy/bubble:y')));
 assert(x() > originalGold.x);
 assert.notEqual(fishState().pose, originalGold.pose, 'Fish alternates tail poses');
 assert.notEqual(fishState(6).y, initialJelly.y, 'Jellyfish bobs vertically');
@@ -192,11 +204,11 @@ action('dismiss');
 
 const beforeTap = x();
 tap(100, 167);
-assert(visible('ripple'));
+assert(visible('legacy/ripple'));
 advance(9);
 assert(x() < beforeTap, 'Nearby curious fish approaches the disturbance');
 advance(80);
-assert(!visible('ripple'));
+assert(!visible('legacy/ripple'));
 
 tap(x() + 75, y() + 58);
 assert(visible('sheet'));
@@ -209,10 +221,10 @@ action('dismiss');
 assert(!visible('sheet'));
 action('waterPress', {x: 240, y: 458});
 action('waterRelease', {x: 240, y: 340});
-assert(!visible('ripple'), 'An upward edge swipe is left to the launcher');
+assert(!visible('legacy/ripple'), 'An upward edge swipe is left to the launcher');
 action('waterPress', {x: 65, y: 85});
 action('waterRelease', {x: 65, y: 140});
-assert(!visible('ripple'), 'A drag is not misread as a tap');
+assert(!visible('legacy/ripple'), 'A drag is not misread as a tap');
 
 action('light');
 assertBackdrop('night');
@@ -248,6 +260,7 @@ app.on_start();
 assert(nativeActive && nativeNight);
 assert(!timer, 'The native animation does not start a JavaScript frame timer');
 assert(visible('nativeSurface'));
+assert(!visible('legacy'));
 const nativeBatches = batches;
 advance(6);
 assert.equal(batches, nativeBatches, 'The native animation submits no JavaScript frame updates');
@@ -264,4 +277,21 @@ app.on_resume();
 assert(nativeActive && !nativeNight);
 app.on_stop();
 assert(!nativeActive);
+nativeStartAvailable = false;
+app.on_start();
+assert(timer && !visible('legacy') && !visible('nativeSurface'));
+nativeStartAvailable = true;
+now += 300;
+app.on_timer();
+assert(nativeActive && !timer && !visible('legacy') && visible('nativeSurface'));
+app.on_stop();
+nativeStartAvailable = false;
+app.on_start();
+for (let i = 0; i < 10; i++) {
+  now += 300;
+  app.on_timer();
+}
+assert(timer && visible('legacy') && !visible('nativeSurface'));
+assertBackdrop('day');
+app.on_stop();
 console.log('Aquarium passed: native lifecycle and controls, cached and fallback rows, seven creatures and catalog.');

@@ -18,9 +18,12 @@ extern "C" bool brookesia_board_screen_asleep();
 
 namespace {
 constexpr int width = 480, height = 480, background_width = width / 3;
+constexpr int band_height = 60, canvas_bands = height / band_height;
+constexpr size_t band_bytes = width * band_height * sizeof(uint16_t);
 constexpr int animation_ms = 40, behavior_ms = 120;
 constexpr int background_bytes = background_width * background_width * 2;
 constexpr const char *asset_path = "/sdcard/apps/local.aquarium/res/scene.bin";
+constexpr const char *grass_path = "/sdcard/apps/local.aquarium/res/grass.bin";
 constexpr uint32_t ram_caps = MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT;
 
 struct Species {
@@ -38,8 +41,8 @@ constexpr size_t asset_bytes = 4 + 2 * background_bytes +
 struct Rect {
     int x, y, right, bottom;
     bool operator==(const Rect &) const = default;
-    bool empty() const { return right <= x || bottom <= y; }
-    int size() const { return empty() ? 0 : (right - x) * (bottom - y); }
+    constexpr bool empty() const { return right <= x || bottom <= y; }
+    constexpr int size() const { return empty() ? 0 : (right - x) * (bottom - y); }
 };
 Rect intersect(Rect a, Rect b)
 {
@@ -51,6 +54,20 @@ Rect unite(Rect a, Rect b)
     if (b.empty()) return a;
     return {std::min(a.x,b.x),std::min(a.y,b.y),std::max(a.right,b.right),std::max(a.bottom,b.bottom)};
 }
+
+// These crops use the original 160 by 160 artwork coordinates.
+constexpr std::array grass_boxes{Rect{0,93,54,159}, Rect{119,99,160,160}};
+constexpr size_t grass_header = 4 + 6 * sizeof(uint16_t);
+constexpr size_t grass_cells = grass_boxes[0].size() + grass_boxes[1].size();
+struct GrassRow {
+    int first = 0, end = 0, bend = 0;
+};
+struct Bubble {
+    int x, y, radius;
+    Rect bounds() const { return {x-radius,y-radius,x+radius+1,y+radius+1}; }
+    bool operator==(const Bubble &) const = default;
+};
+constexpr size_t bubble_count = 3;
 
 struct Fish {
     int kind;
@@ -77,12 +94,19 @@ struct LvglLock {
 
 using Pixels = std::unique_ptr<uint16_t, decltype(&heap_caps_free)>;
 using Assets = std::unique_ptr<uint8_t, decltype(&heap_caps_free)>;
+struct CanvasBand {
+    lv_obj_t *view = nullptr;
+    Pixels pixels{nullptr, heap_caps_free};
+    lv_image_dsc_t image{};
+};
 struct Scene {
     lv_obj_t *surface = nullptr;
     lv_timer_t *animation = nullptr, *behavior = nullptr;
-    Pixels pixels{nullptr, heap_caps_free};
+    std::array<CanvasBand, canvas_bands> canvas{};
     Assets assets{nullptr, heap_caps_free};
-    lv_image_dsc_t image{};
+    Assets grass{nullptr, heap_caps_free};
+    std::array<std::array<GrassRow, background_width>, grass_boxes.size()> grass_rows{};
+    std::array<Bubble, bubble_count> bubbles{};
     std::array<Fish, initial.size()> fish = initial;
     std::array<Pose, initial.size()> previous{};
     Rect previous_ripple{};
@@ -90,8 +114,14 @@ struct Scene {
     int64_t started = 0, last_motion = 0, ripple_at = 0;
     uint64_t painted_pixels = 0;
     uint32_t frames = 0, decisions = 0, last_paint_us = 0;
+    uint32_t grass_moves = 0, bubble_moves = 0;
     bool night = false, dirty_all = true;
 } scene;
+
+uint16_t *row_pixels(int y)
+{
+    return scene.canvas[y / band_height].pixels.get() + (y % band_height) * width;
+}
 
 uint16_t blend(uint16_t below, uint16_t above, int alpha)
 {
@@ -108,15 +138,101 @@ void clean(bool deleting = false)
     if (scene.animation) lv_timer_delete(scene.animation);
     if (scene.behavior) lv_timer_delete(scene.behavior);
     scene.animation = scene.behavior = nullptr;
-    if (scene.pixels) {
-        if (scene.surface && !deleting) {
-            lv_obj_add_flag(scene.surface, LV_OBJ_FLAG_HIDDEN);
-            lv_image_set_src(scene.surface, nullptr);
-        }
-        lv_image_cache_drop(&scene.image);
-        scene.pixels.reset();
-        scene.assets.reset();
+    if (scene.surface && !deleting) lv_obj_add_flag(scene.surface, LV_OBJ_FLAG_HIDDEN);
+    for (auto &band : scene.canvas) {
+        if (band.view && !deleting) lv_obj_delete(band.view);
+        if (band.pixels) lv_image_cache_drop(&band.image);
+        band = {};
     }
+    scene.assets.reset();
+    scene.grass.reset();
+}
+
+bool build_canvas()
+{
+    for (int i = 0; i < canvas_bands; ++i) {
+        auto &band = scene.canvas[i];
+        if (heap_caps_get_largest_free_block(ram_caps) < band_bytes) lv_image_cache_drop(nullptr);
+        band.pixels.reset(static_cast<uint16_t *>(heap_caps_malloc(band_bytes, ram_caps)));
+        if (!band.pixels) return false;
+        band.view = lv_image_create(scene.surface);
+        if (!band.view) return false;
+        lv_obj_set_pos(band.view, 0, i * band_height);
+        lv_obj_set_size(band.view, width, band_height);
+        lv_obj_remove_flag(band.view, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_remove_flag(band.view, LV_OBJ_FLAG_SCROLLABLE);
+        band.image.header.magic = LV_IMAGE_HEADER_MAGIC;
+        band.image.header.cf = LV_COLOR_FORMAT_RGB565;
+        band.image.header.w = width;
+        band.image.header.h = band_height;
+        band.image.header.stride = width * 2;
+        band.image.data_size = band_bytes;
+        band.image.data = reinterpret_cast<const uint8_t *>(band.pixels.get());
+    }
+    return true;
+}
+
+Assets read_grass()
+{
+    Assets result{nullptr, heap_caps_free};
+    const std::unique_ptr<FILE, decltype(&std::fclose)> file(std::fopen(grass_path, "rb"), std::fclose);
+    if (!file || std::fseek(file.get(), 0, SEEK_END) != 0) return result;
+    const auto bytes = std::ftell(file.get());
+    if (bytes < long(grass_header + grass_cells) || bytes > long(grass_header + grass_cells * 5) ||
+        std::fseek(file.get(), 0, SEEK_SET) != 0) return result;
+    result.reset(static_cast<uint8_t *>(heap_caps_malloc(bytes, ram_caps)));
+    if (!result || std::fread(result.get(), 1, bytes, file.get()) != size_t(bytes) ||
+        std::memcmp(result.get(), "AQG1", 4) != 0) return Assets{nullptr, heap_caps_free};
+    const auto *mask = result.get() + grass_header;
+    const auto ink = std::count_if(mask, mask + grass_cells, [](uint8_t value) { return value != 0; });
+    if (!ink || bytes != long(grass_header + grass_cells + ink * 4) ||
+        std::any_of(mask, mask + grass_cells, [](uint8_t value) { return value > 3; })) {
+        result.reset();
+    }
+    return result;
+}
+
+void mount_grass()
+{
+    scene.grass_rows = {};
+    if (!scene.grass) return;
+    const auto *mask = scene.grass.get() + grass_header;
+    const auto *underpaint = mask + grass_cells;
+    auto *day = scene.assets.get() + 4;
+    for (size_t group = 0; group < grass_boxes.size(); ++group) {
+        const auto box = grass_boxes[group];
+        for (int y = box.y; y < box.bottom; ++y) {
+            auto &row = scene.grass_rows[group][y];
+            row.first = box.right;
+            for (int x = box.x; x < box.right; ++x) {
+                if (!*mask++) continue;
+                row.first = std::min(row.first, x);
+                row.end = x + 1;
+                auto *base = day + (y * background_width + x) * 2;
+                std::memcpy(base, underpaint, 2);
+                std::memcpy(base + background_bytes, underpaint + 2, 2);
+                underpaint += 4;
+            }
+        }
+    }
+}
+
+Rect move_grass(size_t group, float sway)
+{
+    const auto box = grass_boxes[group];
+    const float height = box.bottom - box.y - 1;
+    Rect changed{};
+    for (int y = box.y; y < box.bottom; ++y) {
+        auto &row = scene.grass_rows[group][y];
+        if (row.first >= row.end) continue;
+        const float height_fraction = (box.bottom - 1 - y) / height;
+        const int bend = std::lround(sway * height_fraction * height_fraction);
+        if (bend == row.bend) continue;
+        changed = unite(changed, {(row.first + std::min(bend, row.bend)) * 3, y * 3,
+                                  (row.end + std::max(bend, row.bend)) * 3, (y + 1) * 3});
+        row.bend = bend;
+    }
+    return changed;
 }
 
 bool foreground()
@@ -190,7 +306,7 @@ void draw_sprite(Rect dirty, const Pose &pose, int kind)
     const auto *alpha = reinterpret_cast<const uint8_t *>(source + spec.w * spec.h);
     for (int y = area.y; y < area.bottom; ++y) {
         const int base = (y - pose.area.y) / spec.scale * spec.w;
-        auto *dst = scene.pixels.get() + y * width;
+        auto *dst = row_pixels(y);
         for (int x = area.x; x < area.right;) {
             const int u = (x - pose.area.x) / spec.scale;
             const int at = base + (pose.mirror ? spec.w - 1 - u : u);
@@ -205,17 +321,44 @@ void draw_sprite(Rect dirty, const Pose &pose, int kind)
     }
 }
 
-void draw_ring(Rect dirty, int x, int y, int radius, uint16_t color)
+void draw_ring(Rect dirty, int x, int y, int radius, uint16_t color, int stroke = 2)
 {
     const Rect area = intersect(dirty, {x-radius,y-radius,x+radius+1,y+radius+1});
-    const int inner = (radius - 2) * (radius - 2), outer = radius * radius;
+    const int inner = (radius - stroke) * (radius - stroke), outer = radius * radius;
     for (int row = area.y; row < area.bottom; ++row) {
         const int dy = (row - y) * (row - y);
-        auto *dst = scene.pixels.get() + row * width;
+        auto *dst = row_pixels(row);
         for (int col = area.x; col < area.right; ++col) {
             const int distance = (col - x) * (col - x) + dy;
             if (distance >= inner && distance <= outer) dst[col] = color;
         }
+    }
+}
+
+void draw_grass(Rect dirty)
+{
+    if (!scene.grass) return;
+    const auto *palette = reinterpret_cast<const uint16_t *>(scene.grass.get() + 4) + (scene.night ? 3 : 0);
+    const auto *mask = scene.grass.get() + grass_header;
+    for (size_t group = 0; group < grass_boxes.size(); ++group) {
+        const auto box = grass_boxes[group];
+        const int stride = box.right - box.x;
+        for (int y = std::max(dirty.y, box.y * 3); y < std::min(dirty.bottom, box.bottom * 3); ++y) {
+            const int source_y = y / 3;
+            const auto &row = scene.grass_rows[group][source_y];
+            const int left = std::max(dirty.x, (row.first + row.bend) * 3);
+            const int right = std::min(dirty.right, (row.end + row.bend) * 3);
+            const auto *src = mask + (source_y - box.y) * stride;
+            auto *dst = row_pixels(y);
+            for (int x = left; x < right;) {
+                const int world_x = x / 3;
+                const int end = std::min(right, (world_x + 1) * 3);
+                const auto ink = src[world_x - row.bend - box.x];
+                if (ink) std::fill(dst + x, dst + end, palette[ink - 1]);
+                x = end;
+            }
+        }
+        mask += box.size();
     }
 }
 
@@ -228,12 +371,16 @@ void repaint(Rect dirty, const std::array<Pose, initial.size()> &poses, int ripp
         (scene.night ? background_bytes : 0));
     for (int y = dirty.y; y < dirty.bottom; ++y) {
         const auto *src = background + y / 3 * background_width;
-        auto *dst = scene.pixels.get() + y * width;
+        auto *dst = row_pixels(y);
         for (int x = dirty.x; x < dirty.right; ++x) dst[x] = src[x / 3];
     }
-    draw_ring(dirty, 397, 348, 3, 0x8637);
+    for (const auto &bubble : scene.bubbles) {
+        const auto color = scene.night ? 0x4BD0 : 0x7DF5;
+        draw_ring(dirty, bubble.x, bubble.y, bubble.radius, color, 1);
+    }
     if (ripple_radius) draw_ring(dirty, scene.ripple_x, scene.ripple_y, ripple_radius, 0xA75B);
     for (size_t i = 0; i < poses.size(); ++i) draw_sprite(dirty, poses[i], scene.fish[i].kind);
+    draw_grass(dirty);
     scene.painted_pixels += uint32_t((dirty.right - dirty.x) * (dirty.bottom - dirty.y));
     lv_area_t canvas{};
     lv_obj_get_coords(scene.surface, &canvas);
@@ -249,7 +396,7 @@ void animate(int64_t now)
     scene.last_motion = now;
     const auto elapsed_ms = (now - scene.started) / 1000;
     std::array<Pose, initial.size()> poses{};
-    std::array<Rect, initial.size() + 1> dirty{};
+    std::array<Rect, initial.size() + 1 + 2 * bubble_count + grass_boxes.size()> dirty{};
     for (size_t i = 0; i < scene.fish.size(); ++i) {
         auto &fish = scene.fish[i];
         const auto &spec = species[fish.kind];
@@ -267,7 +414,29 @@ void animate(int64_t now)
     const int radius = ripple_age < 680000 ? 8 + int(ripple_age / 18000) : 0;
     const Rect ripple = radius ? Rect{scene.ripple_x-radius,scene.ripple_y-radius,
                                      scene.ripple_x+radius+1,scene.ripple_y+radius+1} : Rect{};
-    if (scene.previous_ripple != ripple) dirty.back() = unite(scene.previous_ripple, ripple);
+    size_t next = initial.size();
+    if (scene.previous_ripple != ripple) dirty[next] = unite(scene.previous_ripple, ripple);
+    ++next;
+    const float t = elapsed_ms * .001f;
+    bool bubbles_moved = false;
+    for (size_t i = 0; i < scene.bubbles.size(); ++i) {
+        const Bubble bubble{397 + int(i) * 8 + int(std::lround(5 * std::sin(t * .9f + i * 1.7f))),
+                            396 - int((elapsed_ms / (43 + i * 9) + i * 83) % 304), 2 + int(i % 2)};
+        const auto old = scene.bubbles[i];
+        if (bubble != old) {
+            dirty[next] = bubble.bounds();
+            if (old.radius) dirty[next + 1] = old.bounds();
+            bubbles_moved = true;
+        }
+        scene.bubbles[i] = bubble;
+        next += 2;
+    }
+    scene.bubble_moves += bubbles_moved;
+    if (scene.grass) {
+        dirty[next] = move_grass(0, 4.8f * std::sin(t * 1.17f));
+        dirty[next + 1] = move_grass(1, -5.1f * std::sin(t * .93f));
+        scene.grass_moves += !dirty[next].empty() || !dirty[next + 1].empty();
+    }
     if (scene.dirty_all) {
         repaint({0,0,width,height}, poses, radius);
         scene.dirty_all = false;
@@ -323,33 +492,32 @@ bool start(bool night)
                        std::fgetc(file) == EOF && std::memcmp(assets.get(), "AQF1", 4) == 0;
     std::fclose(file);
     if (!valid) return false;
+    auto grass = read_grass();
     LvglLock lock;
     if (!lock.held || !scene.surface) return false;
     clean();
-    scene.pixels.reset(static_cast<uint16_t *>(heap_caps_malloc(width * height * 2, ram_caps)));
-    if (!scene.pixels) return false;
+    if (!build_canvas()) {
+        clean();
+        return false;
+    }
     scene.assets = std::move(assets);
+    scene.grass = std::move(grass);
+    mount_grass();
     scene.fish = initial;
     scene.previous = {};
     for (size_t i = 0; i < scene.fish.size(); ++i) scene.previous[i].mirror = scene.fish[i].direction < 0;
     scene.night = night;
     scene.dirty_all = true;
     scene.previous_ripple = {};
+    scene.bubbles = {};
     scene.ripple_at = 0;
     scene.started = scene.last_motion = esp_timer_get_time();
     scene.frames = scene.decisions = scene.last_paint_us = 0;
+    scene.grass_moves = scene.bubble_moves = 0;
     scene.painted_pixels = 0;
-    scene.image = {};
-    scene.image.header.magic = LV_IMAGE_HEADER_MAGIC;
-    scene.image.header.cf = LV_COLOR_FORMAT_RGB565;
-    scene.image.header.w = width;
-    scene.image.header.h = height;
-    scene.image.header.stride = width * 2;
-    scene.image.data_size = width * height * 2;
-    scene.image.data = reinterpret_cast<const uint8_t *>(scene.pixels.get());
     decide(scene.started);
     animate(scene.started);
-    lv_image_set_src(scene.surface, &scene.image);
+    for (auto &band : scene.canvas) lv_image_set_src(band.view, &band.image);
     scene.animation = lv_timer_create(animation_tick, animation_ms, nullptr);
     scene.behavior = lv_timer_create(behavior_tick, behavior_ms, nullptr);
     if (scene.animation && scene.behavior) {
@@ -374,7 +542,7 @@ bool stop()
 bool light(bool night)
 {
     LvglLock lock;
-    if (!lock.held || !scene.pixels) return false;
+    if (!lock.held || !scene.animation) return false;
     scene.night = night;
     scene.dirty_all = true;
     return true;
@@ -383,7 +551,7 @@ bool light(bool night)
 const char *tap(int x, int y)
 {
     LvglLock lock;
-    if (!lock.held || !foreground() || !scene.pixels) return nullptr;
+    if (!lock.held || !foreground() || !scene.animation) return nullptr;
     for (const auto &fish : scene.fish) {
         const auto &spec = species[fish.kind];
         if (std::abs(fish.x - x) < spec.w * spec.scale * .28f &&
@@ -400,7 +568,8 @@ boost::json::object profile()
 {
     LvglLock lock;
     if (!lock.held) return {};
-    return {{"active",bool(scene.pixels)}, {"frames",scene.frames}, {"decisions",scene.decisions},
-            {"last_paint_us",scene.last_paint_us}, {"pixels",scene.painted_pixels}};
+    return {{"active",scene.animation != nullptr}, {"frames",scene.frames}, {"decisions",scene.decisions},
+            {"last_paint_us",scene.last_paint_us}, {"pixels",scene.painted_pixels},
+            {"grass_active",bool(scene.grass)}, {"grass_moves",scene.grass_moves}, {"bubble_moves",scene.bubble_moves}};
 }
 }
