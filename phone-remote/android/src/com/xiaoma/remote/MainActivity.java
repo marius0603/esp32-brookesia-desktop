@@ -11,8 +11,10 @@ import android.graphics.drawable.GradientDrawable;
 import android.view.*;
 import android.widget.*;
 import org.json.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Supplier;
 
 /** Five native pages share one serialized authenticated GATT session. */
 public class MainActivity extends Activity {
@@ -20,7 +22,7 @@ public class MainActivity extends Activity {
  static UUID endpoint(int n){return UUID.fromString(String.format("1775ff%02x-6b43-439b-877c-060f2d9bed07",n));}
  final Handler ui=new Handler(Looper.getMainLooper());final ExecutorService jobs=Executors.newSingleThreadExecutor();
  final Object gate=new Object();byte[] reply;boolean finished;int ioStatus;
- BluetoothAdapter adapter;BluetoothLeScanner scanner;BluetoothGatt gatt,workerGatt;Protocol protocol;
+ BluetoothAdapter adapter;BluetoothLeScanner scanner;volatile BluetoothGatt gatt;BluetoothGatt workerGatt;Protocol protocol;
  volatile boolean connected=false,busy=false,destroyed=false;boolean resumed=false,tracking=false;int selectedTab=0;
  boolean navigationSupported=false;
  final NavigationLink.Transport navigationTransport=new NavigationLink.Transport(){
@@ -38,6 +40,13 @@ public class MainActivity extends Activity {
  };
  LinearLayout root,devices,apps,stories,connectionForm,pairedRow;TextView status,storyTitle,storyState,storyTime,appPages,storyPages;EditText code;
  Button speedButton,radioToggle,radioTimer;TextView radioTitle,radioState,radioDetail,radioNetwork,radioEmpty;
+ Button feedButton;
+ TextView feedStatus;
+ FeedHold feedHold;
+ int feedPointer=-1, feedThreshold=0;
+ BluetoothGatt rssiOwner;
+ boolean rssiFinished;
+ int lastRssi;
  LinearLayout radioStations;SeekBar radioVolume;Button[] radioCategories=new Button[3];
  final ArrayList<String> radioIds=new ArrayList<>(),radioNames=new ArrayList<>(),radioGroups=new ArrayList<>(),radioSubs=new ArrayList<>();
  String radioSelected="",radioCategory="儿童";boolean radioReady=false,radioSupported=false;
@@ -68,6 +77,7 @@ public class MainActivity extends Activity {
   pairedRow=row();connection.addView(pairedRow);TextView paired=label("蓝牙已连接",16);paired.setTextColor(accent);pairedRow.addView(paired,new LinearLayout.LayoutParams(0,-2,1));cell(pairedRow,"断开",()->disconnect());pairedRow.setVisibility(View.GONE);
   FrameLayout body=new FrameLayout(this);root.addView(body,new LinearLayout.LayoutParams(-1,0,1));LinearLayout[] content=new LinearLayout[5];
   for(int i=0;i<5;i++){pages[i]=new ScrollView(this);pages[i].setFillViewport(true);pages[i].setClipToPadding(false);content[i]=column();content[i].setPadding(0,dp(6),0,dp(12));pages[i].addView(content[i]);body.addView(pages[i]);}
+  createFeedCard(content[0]);
   LinearLayout sound=card(content[0]);sound.addView(label("声音与屏幕",20));volume=slider(sound,"音量",0,"volume");brightness=slider(sound,"亮度",10,"brightness");
   LinearLayout screen=card(content[0]);screen.addView(label("屏幕控制",20));LinearLayout screenActions=row();screen.addView(screenActions);cell(screenActions,"息屏",()->simple("sleep"));cell(screenActions,"唤醒",()->simple("wake"));cell(screenActions,"锁屏",()->new AlertDialog.Builder(this).setTitle("锁定设备屏幕？").setMessage("解锁时，在设备上快速连按两次音量＋。").setPositiveButton("锁屏",(d,w)->simple("lock")).setNegativeButton("取消",null).show());button(screen,"刷新状态",()->refreshStatus());
   LinearLayout now=card(content[1]);now.setBackground(shape(Color.rgb(19,57,56),22));TextView playing=label("听书",14);playing.setTextColor(accent);now.addView(playing);storyTitle=label("选择一篇故事",25);storyTitle.setTypeface(null,1);now.addView(storyTitle);storyState=label("等待播放",15);storyState.setTextColor(muted);now.addView(storyState);storyTime=label("00:00",18);now.addView(storyTime);
@@ -80,8 +90,8 @@ public class MainActivity extends Activity {
   LinearLayout launcher=card(content[4]);launcher.addView(label("设备应用",21));apps=column();launcher.addView(apps);appPages=label("连接设备后查看应用",14);appPages.setTextColor(muted);launcher.addView(appPages);LinearLayout appNav=row();launcher.addView(appNav);cell(appNav,"上一页",()->loadAppsPage(Math.max(0,appPage-1)));cell(appNav,"下一页",()->loadAppsPage(Math.min(Math.max(0,(appTotal-1)/3),Math.max(0,appPage+1))));
   LinearLayout navigation=row();root.addView(navigation);String[] labels={"遥控","听书","儿歌","电台","应用"};for(int i=0;i<5;i++){final int tab=i;tabs[i]=cell(navigation,labels[i],()->showTab(tab));tabs[i].setTextSize(13);tabs[i].setMinWidth(0);tabs[i].setPadding(dp(2),0,dp(2),0);}selectMode("sequence");showTab(0);adapter=((BluetoothManager)getSystemService(BLUETOOTH_SERVICE)).getAdapter();
  }
- void showTab(int tab){selectedTab=tab;for(int i=0;i<5;i++){pages[i].setVisibility(i==tab?View.VISIBLE:View.GONE);tabs[i].setTextColor(i==tab?accent:muted);tabs[i].setBackground(shape(i==tab?Color.rgb(24,57,59):back,16));}if(connected){if(tab==1&&storyPage<0)loadStoriesPage(0);if(tab==2){if(songsSupported&&songPage<0)loadSongsPage(0);else laterRefresh();}if(tab==3){if(radioSupported&&!radioReady)loadRadioStations();else laterRefresh();}if(tab==4&&appPage<0)loadAppsPage(0);}}
- void setConnectedUi(boolean value){connectionForm.setVisibility(value?View.GONE:View.VISIBLE);pairedRow.setVisibility(value?View.VISIBLE:View.GONE);}
+ void showTab(int tab){if(tab!=0)releaseFeed();selectedTab=tab;for(int i=0;i<5;i++){pages[i].setVisibility(i==tab?View.VISIBLE:View.GONE);tabs[i].setTextColor(i==tab?accent:muted);tabs[i].setBackground(shape(i==tab?Color.rgb(24,57,59):back,16));}if(connected){if(tab==1&&storyPage<0)loadStoriesPage(0);if(tab==2){if(songsSupported&&songPage<0)loadSongsPage(0);else laterRefresh();}if(tab==3){if(radioSupported&&!radioReady)loadRadioStations();else laterRefresh();}if(tab==4&&appPage<0)loadAppsPage(0);}}
+ void setConnectedUi(boolean value){connectionForm.setVisibility(value?View.GONE:View.VISIBLE);pairedRow.setVisibility(value?View.VISIBLE:View.GONE);if(!value){releaseFeed();feedThreshold=0;}updateFeedAvailability();}
  SeekBar slider(LinearLayout parent,String title,int minimum,String cmd){TextView t=label(title,16);parent.addView(t);SeekBar bar=new SeekBar(this);bar.setMax(100);bar.setMin(minimum);bar.setProgressTintList(ColorStateList.valueOf(accent));bar.setThumbTintList(ColorStateList.valueOf(accent));parent.addView(bar,new LinearLayout.LayoutParams(-1,dp(52)));bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){public void onStartTrackingTouch(SeekBar b){tracking=true;}public void onProgressChanged(SeekBar b,int p,boolean user){t.setText(title+"  "+p+"%");}public void onStopTrackingTouch(SeekBar b){tracking=false;command(json("cmd",cmd,"value",b.getProgress()),r->{});}});return bar;}
  static JSONObject json(Object... parts){JSONObject r=new JSONObject();try{for(int i=0;i<parts.length;i+=2)r.put((String)parts[i],parts[i+1]);}catch(Exception e){throw new IllegalArgumentException(e);}return r;}
  interface Result{void accept(JSONObject response)throws Exception;}
@@ -89,8 +99,13 @@ public class MainActivity extends Activity {
  void laterRefresh(){ui.postDelayed(()->{if(connected&&!busy)refreshStatus();},250);}
  interface RemoteWork{JSONObject run()throws Exception;}
  JSONObject sendRequest(JSONObject request)throws Exception{
-  byte[] raw=exchange(0x55,protocol.crypt(request.toString().getBytes("UTF-8")));
-  JSONObject response=new JSONObject(new String(protocol.crypt(raw),"UTF-8"));
+  return sendRequest(request,null);
+ }
+ JSONObject sendRequest(JSONObject request,FeedHold hold)throws Exception{
+  byte[] data=request.toString().getBytes(StandardCharsets.UTF_8);
+  byte[] raw=exchange(0x55,()->protocol.crypt(data),hold);
+  if(raw==null)return null;
+  JSONObject response=new JSONObject(new String(protocol.crypt(raw),StandardCharsets.UTF_8));
   if(!response.optBoolean("ok"))throw new IllegalArgumentException(response.optString("error","操作未完成"));
   return response;
  }
@@ -110,10 +125,120 @@ public class MainActivity extends Activity {
  void runCommand(RemoteWork work,Result action){if(!connected){text("请先输入配对码并连接设备");return;}if(busy){text("正在处理，请稍候");return;}busy=true;BluetoothGatt owner=gatt;
   jobs.execute(()->{workerGatt=owner;try{JSONObject response=work.run();ui.post(()->{if(gatt!=owner)return;try{status.setText("已连接");action.accept(response);}catch(Exception e){text("设备回复格式异常");}});}catch(IllegalArgumentException e){text(e.getMessage());}catch(Exception e){if(gatt==owner){disconnect();text("连接中断，请重新扫描并输入配对码");}}finally{busy=false;}});
  }
+ void createFeedCard(LinearLayout parent) {
+  LinearLayout aquarium=card(parent);
+  TextView heading=label("鱼缸投喂",20);
+  heading.setTypeface(null,1);
+  aquarium.addView(heading);
+  feedStatus=label("连接设备后可投喂",15);
+  feedStatus.setTextColor(muted);
+  aquarium.addView(feedStatus);
+  feedButton=button(aquarium,"按住喂食",()->{});
+  feedButton.setTextSize(24);
+  feedButton.getLayoutParams().height=dp(92);
+  feedButton.setBackground(shape(Color.rgb(26,103,96),18));
+  feedButton.setOnTouchListener((view,event)->feedTouch(event));
+  updateFeedAvailability();
+ }
+ void updateFeedAvailability() {
+  boolean supported=connected&&feedThreshold>=-127&&feedThreshold<0;
+  if (!supported) feedStatus.setText(connected?"鱼缸投喂需要设备固件 s3.96":"连接设备后可投喂");
+  else if (!feedButton.isEnabled()) feedStatus.setText("在设备上打开鱼缸，按住并靠近");
+  feedButton.setEnabled(supported);
+  feedButton.setAlpha(supported?1f:.5f);
+ }
+ boolean feedTouch(MotionEvent event) {
+  int action=event.getActionMasked();
+  if (action==MotionEvent.ACTION_DOWN) {
+   feedButton.getParent().requestDisallowInterceptTouchEvent(true);
+   beginFeed(event.getPointerId(0));
+  } else if (action==MotionEvent.ACTION_UP || action==MotionEvent.ACTION_CANCEL ||
+      (action==MotionEvent.ACTION_POINTER_UP && event.getPointerId(event.getActionIndex())==feedPointer)) {
+   releaseFeed();
+  } else if (action==MotionEvent.ACTION_MOVE && feedPointer>=0) {
+   int i=event.findPointerIndex(feedPointer), margin=dp(12);
+   if (i<0 || event.getX(i)<-margin || event.getX(i)>feedButton.getWidth()+margin ||
+       event.getY(i)<-margin || event.getY(i)>feedButton.getHeight()+margin) releaseFeed();
+  }
+  return true;
+ }
+ void beginFeed(int pointer) {
+  BluetoothGatt owner=gatt;
+  if (!resumed || !connected || owner==null || feedHold!=null || feedThreshold>=0) return;
+  FeedHold hold=new FeedHold(feedThreshold);
+  feedHold=hold;
+  feedPointer=pointer;
+  feedButton.setPressed(true);
+  feedButton.setText("继续按住");
+  feedStatus.setText("检测距离中，请靠近设备");
+  sampleFeed(owner,hold);
+ }
+ void sampleFeed(BluetoothGatt owner,FeedHold hold) {
+  if (!hold.held() || !resumed || owner!=gatt || !connected) return;
+  if (busy) {
+   ui.postDelayed(()->sampleFeed(owner,hold),140);
+   return;
+  }
+  busy=true;
+  jobs.execute(()->{
+   workerGatt=owner;
+   String outcome=null;
+   try {
+    while (hold.held() && owner==gatt && connected) {
+     int rssi=readRssi(owner);
+     if (hold.observe(rssi)) {
+      if (sendRequest(json("cmd","aquarium_feed","rssi",rssi),hold)!=null) outcome="已投喂";
+      break;
+     }
+     if (hold.held()) Thread.sleep(350);
+    }
+   } catch (IllegalArgumentException error) {
+    outcome=error.getMessage();
+   } catch (Exception error) {
+    if (gatt==owner && !destroyed) disconnect();
+   } finally {
+    busy=false;
+    final String result=outcome;
+    ui.post(()->{
+     if (result!=null && owner==gatt && (feedHold==hold || (feedHold==null && hold.sent()))) {
+      feedStatus.setText(result);
+      if (feedHold==hold) feedButton.setText("松开喂食键");
+     }
+    });
+   }
+  });
+ }
+ void releaseFeed() {
+  FeedHold hold=feedHold;
+  if (hold==null) return;
+  hold.release();
+  feedHold=null;
+  feedPointer=-1;
+  feedButton.setPressed(false);
+  feedButton.setText("按住喂食");
+  if (!hold.sent()) feedStatus.setText("在设备上打开鱼缸，按住并靠近");
+ }
+ int readRssi(BluetoothGatt owner)throws Exception {
+  synchronized(gate) {
+   if (owner!=gatt || !connected) return 0;
+   rssiOwner=owner;
+   rssiFinished=false;
+   try {
+    if (!owner.readRemoteRssi()) return 0;
+    long deadline=SystemClock.elapsedRealtime()+2000;
+    while (!rssiFinished && owner==gatt) {
+     long remaining=deadline-SystemClock.elapsedRealtime();
+     if (remaining<=0) throw new TimeoutException("RSSI read timed out");
+     gate.wait(remaining);
+    }
+    return rssiFinished?lastRssi:0;
+   } finally { rssiOwner=null; }
+  }
+ }
  void refreshStatus(){final int tab=selectedTab;runCommand(()->{JSONObject r=sendRequest(json("cmd","status"));if(tab==3&&r.optBoolean("radio_supported"))r.put("radio",sendRequest(json("cmd","radio_status")));if(tab==2&&r.optBoolean("songs_supported"))r.put("song",sendRequest(json("cmd","song_status")));return r;},r->{update(r);if(r.has("song"))updateSong(r.getJSONObject("song"));if(r.has("radio"))updateRadio(r.getJSONObject("radio"));ui.post(()->{if(selectedTab==1&&storyPage<0)loadStoriesPage(0);else if(selectedTab==2&&songsSupported&&songPage<0)loadSongsPage(0);else if(selectedTab==3&&radioSupported&&!radioReady)loadRadioStations();else if(selectedTab==4&&appPage<0)loadAppsPage(0);});});}
  void selectMode(String value){for(int i=0;i<3;i++){boolean chosen=modes[i].equals(value);modeButtons[i].setTextColor(chosen?accent:muted);modeButtons[i].setBackground(shape(chosen?Color.rgb(25,66,62):Color.rgb(30,46,65),13));}}
  String clock(int value){return String.format(Locale.ROOT,"%02d:%02d",Math.max(0,value)/60,Math.max(0,value)%60);}
- void update(JSONObject r){navigationSupported=r.optBoolean("navigation_supported");if(navigationSupported)NavigationKeepAliveService.ensure(this);songsSupported=r.optBoolean("songs_supported");if(!songsSupported)songState.setText("儿歌遥控需开发板 s3.48 或更新固件");radioSupported=r.optBoolean("radio_supported");if(!radioSupported){radioState.setText("电台遥控需开发板 s3.45 或更新固件");radioNetwork.setText("请先更新开发板，再重新连接");}if(!tracking){volume.setProgress(r.optInt("volume",75));radioVolume.setProgress(r.optInt("volume",75));songVolume.setProgress(r.optInt("volume",75));brightness.setProgress(r.optInt("brightness",80));}selectMode(r.optString("play_mode","sequence"));speedButton.setText("播放速度  "+r.optDouble("story_speed",1)+"x");String title=r.optString("story_title","");if(!title.isEmpty())storyTitle.setText(title);storyTime.setText(clock(r.optInt("story_position",0)));String state=r.optString("story_state","");storyState.setText(state.equals("Paused")?"已暂停":r.optBoolean("story_active")?"正在播放":"已停止");if(r.optBoolean("locked"))text("设备已锁屏，需双按设备音量＋解锁");}
+ void update(JSONObject r){feedThreshold=r.optInt("aquarium_feed_rssi",0);updateFeedAvailability();navigationSupported=r.optBoolean("navigation_supported");if(navigationSupported)NavigationKeepAliveService.ensure(this);songsSupported=r.optBoolean("songs_supported");if(!songsSupported)songState.setText("儿歌遥控需开发板 s3.48 或更新固件");radioSupported=r.optBoolean("radio_supported");if(!radioSupported){radioState.setText("电台遥控需开发板 s3.45 或更新固件");radioNetwork.setText("请先更新开发板，再重新连接");}if(!tracking){volume.setProgress(r.optInt("volume",75));radioVolume.setProgress(r.optInt("volume",75));songVolume.setProgress(r.optInt("volume",75));brightness.setProgress(r.optInt("brightness",80));}selectMode(r.optString("play_mode","sequence"));speedButton.setText("播放速度  "+r.optDouble("story_speed",1)+"x");String title=r.optString("story_title","");if(!title.isEmpty())storyTitle.setText(title);storyTime.setText(clock(r.optInt("story_position",0)));String state=r.optString("story_state","");storyState.setText(state.equals("Paused")?"已暂停":r.optBoolean("story_active")?"正在播放":"已停止");if(r.optBoolean("locked"))text("设备已锁屏，需双按设备音量＋解锁");}
  void loadAppsPage(int page){command(json("cmd","apps","page",page),r->{appPage=page;appTotal=r.optInt("total",page*3+r.getJSONArray("items").length());apps.removeAllViews();JSONArray items=r.getJSONArray("items");for(int i=0;i<items.length();i++){JSONObject item=items.getJSONObject(i);int id=item.getInt("id");button(apps,item.getString("name"),()->command(json("cmd","open","id",id),v->{}));}appPages.setText("第 "+(page+1)+" / "+Math.max(1,(appTotal+2)/3)+" 页");});}
  void loadStoriesPage(int page){command(json("cmd","stories","page",page),r->{storyPage=page;storyTotal=r.optInt("total",page*3+r.getJSONArray("items").length());stories.removeAllViews();JSONArray items=r.getJSONArray("items");for(int i=0;i<items.length();i++){JSONObject item=items.getJSONObject(i);int id=item.getInt("id");button(stories,String.format(Locale.ROOT,"%02d  %s",id+1,item.getString("name")),()->command(json("cmd","play","id",id),v->{storyTitle.setText(item.optString("name"));laterRefresh();}));}storyPages.setText("第 "+(page+1)+" / "+Math.max(1,(storyTotal+2)/3)+" 页");});}
  void createSongsPage(LinearLayout parent){
@@ -205,7 +330,7 @@ public class MainActivity extends Activity {
  }
  final Runnable poller=new Runnable(){public void run(){if(resumed&&!destroyed){if(connected&&!busy&&!tracking)refreshStatus();ui.postDelayed(this,3000);}}};
  protected void onResume(){super.onResume();resumed=true;ui.removeCallbacks(poller);ui.postDelayed(poller,1000);}
- protected void onPause(){resumed=false;ui.removeCallbacks(poller);super.onPause();}
+ protected void onPause(){resumed=false;releaseFeed();ui.removeCallbacks(poller);super.onPause();}
  final Set<String> found=new HashSet<>();
  final ScanCallback scans=new ScanCallback(){public void onScanResult(int type,ScanResult result){BluetoothDevice device=result.getDevice();String name=result.getScanRecord()==null?null:result.getScanRecord().getDeviceName();if(name==null||!name.startsWith("CTRL_")||!found.add(device.getAddress()))return;String title=name;ui.post(()->button(devices,title,()->connect(device)));}public void onScanFailed(int error){text("扫描失败，请检查蓝牙开关和附近设备权限");}};
  void scan(){if(Build.VERSION.SDK_INT>=31){if(checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN)!=PackageManager.PERMISSION_GRANTED||checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)!=PackageManager.PERMISSION_GRANTED){requestPermissions(new String[]{Manifest.permission.BLUETOOTH_SCAN,Manifest.permission.BLUETOOTH_CONNECT},7);return;}}
@@ -221,9 +346,46 @@ public class MainActivity extends Activity {
   public void onCharacteristicWrite(BluetoothGatt g,BluetoothGattCharacteristic c,int status){if(g!=gatt)return;if(status!=0||!g.readCharacteristic(c))signal(null,-1);}
   public void onCharacteristicRead(BluetoothGatt g,BluetoothGattCharacteristic c,byte[] value,int status){if(g==gatt)signal(value,status);}
   @SuppressWarnings("deprecation") public void onCharacteristicRead(BluetoothGatt g,BluetoothGattCharacteristic c,int status){if(g==gatt)signal(c.getValue(),status);}
+  @Override public void onReadRemoteRssi(BluetoothGatt g,int rssi,int status) {
+   synchronized(gate) {
+    if (g!=gatt || g!=rssiOwner) return;
+    lastRssi=status==BluetoothGatt.GATT_SUCCESS?rssi:0;
+    rssiFinished=true;
+    gate.notifyAll();
+   }
+  }
  };
  void signal(byte[] value,int status){synchronized(gate){reply=value;ioStatus=status;finished=true;gate.notifyAll();}}
- @SuppressWarnings("deprecation") byte[] exchange(int ep,byte[] data)throws Exception{synchronized(gate){finished=false;reply=null;BluetoothGatt g=workerGatt;if(g==null||g!=gatt)throw new Exception();BluetoothGattCharacteristic c=g.getService(SERVICE).getCharacteristic(endpoint(ep));c.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);c.setValue(data);if(!g.writeCharacteristic(c))throw new Exception();long deadline=SystemClock.elapsedRealtime()+15000;while(!finished){long left=deadline-SystemClock.elapsedRealtime();if(left<=0)throw new Exception("timeout");gate.wait(left);}if(ioStatus!=0||reply==null)throw new Exception("GATT");return reply;}}
+ byte[] exchange(int ep,byte[] data)throws Exception { return exchange(ep,()->data,null); }
+ byte[] exchange(int ep,Supplier<byte[]> payload,FeedHold hold)throws Exception {
+  synchronized(gate) {
+   finished=false;
+   reply=null;
+   BluetoothGatt g=workerGatt;
+   if(g==null||g!=gatt)throw new Exception("GATT disconnected");
+   BluetoothGattCharacteristic c=g.getService(SERVICE).getCharacteristic(endpoint(ep));
+   if (hold==null) writeGatt(g,c,payload.get());
+   else synchronized(hold) {
+    // Claim before encryption so cancelling a pending touch cannot advance the CTR stream.
+    if (!hold.claimSend()) return null;
+    writeGatt(g,c,payload.get());
+   }
+   long deadline=SystemClock.elapsedRealtime()+15000;
+   while(!finished) {
+    long left=deadline-SystemClock.elapsedRealtime();
+    if(left<=0)throw new TimeoutException("GATT response timed out");
+    gate.wait(left);
+   }
+   if(ioStatus!=0||reply==null)throw new Exception("GATT read");
+   return reply;
+  }
+ }
+ @SuppressWarnings("deprecation")
+ void writeGatt(BluetoothGatt g,BluetoothGattCharacteristic c,byte[] data)throws Exception {
+  c.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+  c.setValue(data);
+  if(!g.writeCharacteristic(c))throw new Exception("GATT write");
+ }
  void disconnect(){stopScan();connected=false;BluetoothGatt g=gatt;gatt=null;if(g!=null){try{g.disconnect();g.close();}catch(Exception e){}}signal(null,-1);if(!destroyed){text("已断开连接");ui.post(()->setConnectedUi(false));}}
  @Override public void onBackPressed(){if(NavigationKeepAliveService.running){moveTaskToBack(true);return;}super.onBackPressed();}
  protected void onDestroy(){NavigationKeepAliveService.stop(this);destroyed=true;if(NavigationLink.transport==navigationTransport)NavigationLink.transport=null;ui.removeCallbacks(poller);disconnect();jobs.shutdownNow();super.onDestroy();}

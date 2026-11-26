@@ -68,6 +68,9 @@ struct Bubble {
     bool operator==(const Bubble &) const = default;
 };
 constexpr size_t bubble_count = 3;
+constexpr int64_t food_us = 3400000, feed_cooldown_us = 5000000;
+constexpr int food_x = width / 2;
+constexpr int food_dx[] = {-23, -14, -5, 4, 13, 22, 28};
 
 struct Fish {
     int kind;
@@ -107,14 +110,17 @@ struct Scene {
     Assets grass{nullptr, heap_caps_free};
     std::array<std::array<GrassRow, background_width>, grass_boxes.size()> grass_rows{};
     std::array<Bubble, bubble_count> bubbles{};
+    std::array<Rect, std::size(food_dx)> pellets{};
     std::array<Fish, initial.size()> fish = initial;
     std::array<Pose, initial.size()> previous{};
     Rect previous_ripple{};
     int ripple_x = 0, ripple_y = 0;
     int64_t started = 0, last_motion = 0, ripple_at = 0;
+    int64_t food_at = 0, last_feed = 0;
     uint64_t painted_pixels = 0;
     uint32_t frames = 0, decisions = 0, last_paint_us = 0;
     uint32_t grass_moves = 0, bubble_moves = 0;
+    uint32_t feed_count = 0;
     bool night = false, dirty_all = true;
 } scene;
 
@@ -138,6 +144,8 @@ void clean(bool deleting = false)
     if (scene.animation) lv_timer_delete(scene.animation);
     if (scene.behavior) lv_timer_delete(scene.behavior);
     scene.animation = scene.behavior = nullptr;
+    scene.food_at = 0;
+    scene.pellets = {};
     if (scene.surface && !deleting) lv_obj_add_flag(scene.surface, LV_OBJ_FLAG_HIDDEN);
     for (auto &band : scene.canvas) {
         if (band.view && !deleting) lv_obj_delete(band.view);
@@ -249,6 +257,7 @@ void decide(int64_t now)
 {
     const float t = (now - scene.started) * .000001f;
     const bool attract = scene.ripple_at && now - scene.ripple_at < 3100000;
+    const bool feeding = scene.food_at && now - scene.food_at < food_us;
     const Fish leader = scene.fish[2];
     constexpr float school_y[] = {27, -10, -34};
     for (size_t i = 0; i < scene.fish.size(); ++i) {
@@ -270,7 +279,11 @@ void decide(int64_t now)
             next_y = leader.y + school_y[i - 3] + std::sin(t + i) * 7;
         }
         const float dx = scene.ripple_x - fish.x, dy = scene.ripple_y - fish.y;
-        if (attract && dx * dx + dy * dy < 315 * 315) {
+        if (feeding) {
+            const float offset = float(int(i) - 3) * 15;
+            fish.vx = std::clamp((food_x + offset - fish.x) * 1.6f, -90.f, 90.f);
+            next_y = 95 + (now - scene.food_at) * .00005f + float(i % 3) * 12;
+        } else if (attract && dx * dx + dy * dy < 315 * 315) {
             if (fish.kind != 1) {
                 const float offset = fish.kind == 0 ? -27 : (int(i) - 3) * 21;
                 fish.vx = std::clamp((dx + offset) * 1.6f, -88.f, 88.f);
@@ -378,6 +391,14 @@ void repaint(Rect dirty, const std::array<Pose, initial.size()> &poses, int ripp
         const auto color = scene.night ? 0x4BD0 : 0x7DF5;
         draw_ring(dirty, bubble.x, bubble.y, bubble.radius, color, 1);
     }
+    for (const auto &pellet : scene.pellets) {
+        const auto area = intersect(pellet, dirty);
+        if (area.empty()) continue;
+        for (int y = area.y; y < area.bottom; ++y) {
+            std::fill(row_pixels(y) + area.x, row_pixels(y) + area.right,
+                      scene.night ? uint16_t{0xD64F} : uint16_t{0xFE37});
+        }
+    }
     if (ripple_radius) draw_ring(dirty, scene.ripple_x, scene.ripple_y, ripple_radius, 0xA75B);
     for (size_t i = 0; i < poses.size(); ++i) draw_sprite(dirty, poses[i], scene.fish[i].kind);
     draw_grass(dirty);
@@ -396,7 +417,7 @@ void animate(int64_t now)
     scene.last_motion = now;
     const auto elapsed_ms = (now - scene.started) / 1000;
     std::array<Pose, initial.size()> poses{};
-    std::array<Rect, initial.size() + 1 + 2 * bubble_count + grass_boxes.size()> dirty{};
+    std::array<Rect, initial.size() + 2 + 2 * bubble_count + grass_boxes.size()> dirty{};
     for (size_t i = 0; i < scene.fish.size(); ++i) {
         auto &fish = scene.fish[i];
         const auto &spec = species[fish.kind];
@@ -436,6 +457,19 @@ void animate(int64_t now)
         dirty[next] = move_grass(0, 4.8f * std::sin(t * 1.17f));
         dirty[next + 1] = move_grass(1, -5.1f * std::sin(t * .93f));
         scene.grass_moves += !dirty[next].empty() || !dirty[next + 1].empty();
+    }
+    const auto age = now - scene.food_at;
+    for (size_t i = 0; i < scene.pellets.size(); ++i) {
+        Rect pellet{};
+        const auto delay = int64_t(i) * 120000;
+        if (scene.food_at && age >= delay && age < food_us - delay) {
+            const float fall = (age - delay) * .000001f;
+            const int x = food_x + food_dx[i] + int(std::sin(fall * 4 + i) * 5);
+            const int y = 62 + int(fall * (44 + i * 2));
+            pellet = {x, y, x + 3, y + 3};
+        }
+        if (pellet != scene.pellets[i]) dirty.back() = unite(dirty.back(), unite(pellet, scene.pellets[i]));
+        scene.pellets[i] = pellet;
     }
     if (scene.dirty_all) {
         repaint({0,0,width,height}, poses, radius);
@@ -564,12 +598,27 @@ const char *tap(int x, int y)
     return "";
 }
 
+FeedResult feed()
+{
+    LvglLock lock;
+    if (!lock.held || !foreground() || !scene.animation) return FeedResult::NotOpen;
+    const auto now = esp_timer_get_time();
+    if (scene.last_feed && now - scene.last_feed < feed_cooldown_us) return FeedResult::Cooldown;
+    scene.last_feed = scene.food_at = now;
+    ++scene.feed_count;
+    lv_timer_ready(scene.behavior);
+    lv_timer_ready(scene.animation);
+    return FeedResult::Accepted;
+}
+
 boost::json::object profile()
 {
     LvglLock lock;
     if (!lock.held) return {};
     return {{"active",scene.animation != nullptr}, {"frames",scene.frames}, {"decisions",scene.decisions},
             {"last_paint_us",scene.last_paint_us}, {"pixels",scene.painted_pixels},
-            {"grass_active",bool(scene.grass)}, {"grass_moves",scene.grass_moves}, {"bubble_moves",scene.bubble_moves}};
+            {"grass_active",bool(scene.grass)}, {"grass_moves",scene.grass_moves}, {"bubble_moves",scene.bubble_moves},
+            {"feed_count",scene.feed_count}, {"food_visible",std::any_of(scene.pellets.begin(), scene.pellets.end(),
+                [](Rect pellet) { return !pellet.empty(); })}};
 }
 }

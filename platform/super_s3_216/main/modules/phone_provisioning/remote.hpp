@@ -1,6 +1,7 @@
 #pragma once
 #include "brookesia/service_manager/service/manager.hpp"
 #include "brookesia/hal_interface.hpp"
+#include "../aquarium/aquarium.hpp"
 #include "../child_mode/child_mode.hpp"
 #include "navigation.hpp"
 #include "navigation_data.hpp"
@@ -44,6 +45,7 @@ inline boost::json::object execute(const boost::json::object &request) {
    }
   }
   answer["navigation_supported"]=true;
+  answer["aquarium_feed_rssi"]=aquarium::feed_rssi_dbm;
   return answer;
  }
  if(command=="radio_status") {
@@ -76,6 +78,16 @@ inline boost::json::object execute(const boost::json::object &request) {
   return answer;
  }
  if(locked && command!="lock")return fail("设备已锁屏，请双按音量＋解锁");
+ if(command=="aquarium_feed") {
+  const auto *rssi=request.if_contains("rssi");
+  if(!rssi||!rssi->is_int64()||rssi->as_int64()<aquarium::feed_rssi_dbm||rssi->as_int64()>=0)
+   return fail("请按住并靠近鱼缸");
+  switch(aquarium::feed()) {
+   case aquarium::FeedResult::Accepted: return {{"ok",true}};
+   case aquarium::FeedResult::Cooldown: return fail("刚投喂过，请稍后再试");
+   case aquarium::FeedResult::NotOpen: return fail("请先在设备上打开口袋鱼缸");
+  }
+ }
  FunctionResult result{.success=false,.error_message="不支持的指令"};
  auto integer=[&](const char *key,int low,int high)->int {
   const auto *v=request.if_contains(key);if(!v || !v->is_number())return -1;
