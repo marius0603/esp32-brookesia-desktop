@@ -131,6 +131,7 @@
     "packages/resources/square-control-themes/shell/screens/app_launcher.json": "573ef2039c0df68a1beb8b6a18345152aefbc342e35d15d6fbc894a2d7ca941e",
     "packages/resources/square-control-themes/shell/templates/launcher_app_button.json": "f40ae0d234c7ad39b8b86d11233bd40ceac2f8cb664bea68af062954267a29ff",
     "platform/super_s3_216/littlefs/system/fonts/desktop-theme-extra.ttf": "b6a73716482fd756a1516229bfac73ddd07c8736171d8d6b8340d18a99beff28",
+    "platform/super_s3_216/littlefs/system/fonts/aquarium-extra.ttf": "5426044a6d1df60ee7053586c3e27a8edfed8c662ea6f55ac8cbab3e8b6c4d26",
     "patches/square-status-bar.patch": "db42505f7a364b8e657f0fb24dfabe9c31e4232fe2d6c22c0df59419fc0fa735",
     "patches/square-control-actions.patch": "4669df44b3ea8e061eea767a52fcb584cf182225888026eea88516ba21c32efb",
     "patches/square-files-browser.patch": "234a9f006ba16eb708a7514320d6fd938a4f975ed1659dfe46e84c89ba01e64c",

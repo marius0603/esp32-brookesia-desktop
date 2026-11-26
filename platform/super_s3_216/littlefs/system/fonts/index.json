@@ -10,12 +10,23 @@
       ]
     },
     {
+      "id": "zh_CN_aquarium",
+      "kind": "file",
+      "src": "aquarium-extra.ttf",
+      "languages": [
+        "zh_CN"
+      ]
+    },
+    {
       "id": "zh_CN",
       "kind": "file",
       "src": "NotoSansSC-Regular.subset.ttf",
       "languages": [
         "en",
         "zh_CN"
+      ],
+      "fallbacks": [
+        "${font.zh_CN_aquarium}"
       ]
     },
     {

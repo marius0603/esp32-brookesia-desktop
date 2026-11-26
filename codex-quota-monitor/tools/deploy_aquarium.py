@@ -14,6 +14,56 @@ RUNTIME = ROOT / "codex-quota-monitor/runtime"
 APP_ID = "local.aquarium"
 INSTALL_DIR = f"/sdcard/apps/{APP_ID}"
 SETTINGS = "/littlefs/aquarium-settings.json"
+FONT_ROOT = ROOT / "platform/super_s3_216/littlefs/system/fonts"
+FONT_ID = "zh_CN_aquarium"
+FONT_DIR = "/littlefs/system/fonts"
+
+
+def install_font(client, call):
+    """Leave other font registrations intact and verify the supplement before enabling it."""
+    fonts = json.loads((FONT_ROOT / "index.json").read_bytes())["fonts"]
+    supplement = next(entry for entry in fonts if entry["id"] == FONT_ID)
+    source = FONT_ROOT / supplement["src"]
+    payload = source.read_bytes()
+    target = f"{FONT_DIR}/{source.name}"
+    index_path = f"{FONT_DIR}/index.json"
+    original = call("Storage", "FSReadText", Path=index_path)
+    index = json.loads(original)
+    registered = next((entry for entry in index["fonts"] if entry["id"] == FONT_ID), None)
+    chinese = next(entry for entry in index["fonts"] if entry["id"] == "zh_CN")
+    reference = "${font." + FONT_ID + "}"
+    stat = call("Storage", "FSStat", Path=target)
+    if registered == supplement and reference in chinese.get("fallbacks", []) and stat.get("size") == len(payload):
+        print("Aquarium glyph supplement already installed.", flush=True)
+        return
+
+    stamp = f"aquarium-font-{time.time_ns()}"
+    backup = f"/sdcard/resource-backups/{stamp}"
+    call("Storage", "FSCopyTree", From=index_path, To=f"{backup}/index.json", Overwrite=False)
+    if stat["exists"]:
+        call("Storage", "FSCopyTree", From=target, To=f"{backup}/{source.name}", Overwrite=False)
+    staged = f"{stamp}.ttf"
+    transfer = client.transfer("put", source, staged, False)
+    assert transfer["ok"] and transfer["sha256"] == hashlib.sha256(payload).hexdigest()
+    try:
+        call("Storage", "FSRename", From=f"/littlefs/usb/{staged}", To=target)
+        check = f"{backup}/verified"
+        call("Storage", "FSCopyTree", From=target, To=f"{check}/{source.name}", Overwrite=False)
+        assert call("SdResources", "InspectTree", Path=check)["sha256"] == tree_hash({source.name: payload})
+        index["fonts"] = [entry for entry in index["fonts"] if entry["id"] != FONT_ID] + [supplement]
+        fallbacks = chinese.setdefault("fallbacks", [])
+        if reference not in fallbacks:
+            fallbacks.append(reference)
+        call("Storage", "FSWriteText", Path=index_path, Data=json.dumps(index, ensure_ascii=False, indent=2) + "\n")
+        assert json.loads(call("Storage", "FSReadText", Path=index_path)) == index
+    except Exception:
+        call("Storage", "FSWriteText", Path=index_path, Data=original)
+        if stat["exists"]:
+            call("Storage", "FSCopyTree", From=f"{backup}/{source.name}", To=target, Overwrite=True)
+        elif call("Storage", "FSStat", Path=target)["exists"]:
+            call("Storage", "FSRemove", Path=target)
+        raise
+    print(f"Aquarium glyph supplement verified. Restart to load it. Backup: {backup}", flush=True)
 
 
 def read_package():
@@ -33,8 +83,8 @@ def read_package():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", required=True)
+    parser.add_argument("--font-only", action="store_true", help="Install the glyph supplement without replacing the BPK")
     args = parser.parse_args()
-    package, version, files = read_package()
     with SharedPowerDiagnosticClient(args.port, timeout=35) as client:
         client.hello()
 
@@ -48,6 +98,11 @@ def main():
             return call("SdResources", "InspectTree", Path=path)["sha256"]
 
         assert not call("DeviceModes", "GetState")["screen_locked"]
+        if args.font_only:
+            install_font(client, call)
+            return
+
+        package, version, files = read_package()
         before = list_apps()
         preference = None
         if call("Storage", "FSStat", Path=SETTINGS)["exists"]:
@@ -76,6 +131,7 @@ def main():
         assert installed_hash == tree_hash(files)
         if preference is not None:
             assert call("Storage", "FSReadText", Path=SETTINGS) == preference
+        install_font(client, call)
     RUNTIME.mkdir(parents=True, exist_ok=True)
     (RUNTIME / "aquarium-deployment.json").write_text(
         json.dumps({"version": version, "backup": backup, "installed_tree_sha256": installed_hash}, indent=2)

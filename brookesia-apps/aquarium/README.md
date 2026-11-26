@@ -22,6 +22,8 @@ python codex-quota-monitor/tools/deploy_aquarium.py --port COM5
 
 用设备的实际串口替换 `COM5`。BPK 通过现有安装器写入 SD。
 
+鱼册的「鲨」和说明中的「鳍」由系统中文补充字库提供。已有 0.1.9 的设备可运行 `python codex-quota-monitor/tools/deploy_aquarium.py --port COM5 --font-only`，重启后加载字库。字库使用 Noto Sans SC，授权见 [SIL Open Font License](../../licenses/notosanssc-OFL.txt)。可通过 `tools/build_font.py --font` 指定 Noto Sans SC 可变字体重新生成。
+
 0.1.4 在 s3.93 上使用固件的显示行缓存。水草、岩石、光束和装饰气泡固定。空闲时只重绘鱼和水母移动过的区域，点水面时更新水纹。切换日夜时更新底图。屏幕始终接收完整行，较早固件上由应用请求整行重画。
 
 0.1.5 搭配 s3.94 使用原生 RGB565 合成。背景和鱼图一次读入，动画定时器更新位置并重画变化区域，行为定时器独立计算游动方向与触水反应。现有行缓存和 DMA 条带负责送屏，应用继续提供鱼册、日夜偏好及触摸。固件缺少原生渲染能力或原生画布无法启动时使用原来的绘制路径。
