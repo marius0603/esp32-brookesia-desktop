@@ -19,6 +19,7 @@ const bookButton = views.get('/main/book').placement;
 assert.deepEqual(bookButton, { mode: 'absolute', x: 18, y: 16, width: 68, height: 46 });
 assert(!views.has('/main/light') && !actions.has('light'));
 assert.equal(views.get('/main/sheet').commonProps.hidden, true);
+assert(!views.has('/main/sheet/toggle') && !actions.has('toggle'));
 assert.equal(views.get('/main/legacy/bubble').bindings['placement.y'], 'y');
 const legacy = views.get('/main/legacy');
 assert.equal(legacy.commonProps.hidden, true);
@@ -35,8 +36,11 @@ const mask = grass.subarray(16, 16 + 54 * 66 + 41 * 61);
 assert(mask.every(ink => ink <= 3));
 assert(mask.some(ink => ink > 0));
 assert.equal(grass.length, 16 + mask.length + 4 * mask.filter(Boolean).length);
-assert.equal([...views.keys()].filter(id => /^\/main\/legacy\/fish\d$/.test(id)).length, 7);
-const groups = { gold: [0], moon: [1], school: [2, 3, 4, 5], jelly: [6] };
+const reef = fs.readFileSync(path.join(src, 'res/reef-fish.bin'));
+assert.equal(reef.subarray(0, 4).toString(), 'AQX1');
+assert.equal(reef.length, 4 + 6 * (62 * 28 + 42 * 28 + 24 * 18 + 36 * 24));
+assert.equal([...views.keys()].filter(id => /^\/main\/legacy\/fish\d+$/.test(id)).length, 11);
+const groups = { gold: [0], moon: [1], school: [2, 3, 4, 5], jelly: [6], shark: [7], ray: [8], clown: [9], turtle: [10] };
 for (const [i, kind] of Object.keys(groups).entries()) {
   const rows = views.get('/main/legacy/' + kind + 'Rows');
   assert.equal(legacy.children[i], rows);
@@ -53,7 +57,7 @@ for (const [id, resource] of images) {
   const file = fs.readFileSync(path.join(src, 'res/images', resource.src));
   assert(file.length > 100);
   assert(resource.preload);
-  if (id === 'launcher_icon' || /^(gold_[lr]|moon_[lr]|jelly)[01]$/.test(id)) {
+  if (id === 'launcher_icon' || /^(gold_[lr]|moon_[lr]|jelly|shark_[lr]|ray_[lr]|clown_[lr]|turtle_[lr])[01]$/.test(id)) {
     assert.equal(path.extname(resource.src), '.png');
     assert.equal(file.subarray(1, 4).toString(), 'PNG');
     assert.equal(file.readUInt32BE(16), resource.width);
@@ -93,6 +97,8 @@ let now = local('12:00:00'), timer = false, lightTimer = false, batches = 0, row
 let firmwareRowCache = false;
 let nativeStartAvailable = true;
 let firmwareNative = false, nativeActive = false, nativeNight = false, nativeTap = '', lightChanges = 0;
+const stockSettings = '/littlefs/aquarium-stock.json';
+let nativeStock = 0;
 const positions = new Map(), sources = new Map(), words = new Map();
 class Clock extends Date { static now() { return now; } }
 const context = vm.createContext({
@@ -106,13 +112,18 @@ const context = vm.createContext({
         case 'SubscribeAction': assert(actions.has(args.Action)); break;
         case 'GetState':
           assert.equal(service, 'DeviceModes');
-          data = { aquarium_row_cache: firmwareRowCache, aquarium_native_render: firmwareNative };
+          data = { aquarium_row_cache: firmwareRowCache, aquarium_stock: firmwareNative };
           break;
         case 'AquariumStart':
           assert(firmwareNative);
           nativeActive = nativeStartAvailable;
           nativeNight = args.Night;
+          nativeStock = args.Stock;
           data = nativeStartAvailable;
+          break;
+        case 'AquariumStock':
+          assert(nativeActive);
+          nativeStock = args.Stock;
           break;
         case 'AquariumStop': nativeActive = false; break;
         case 'AquariumLight':
@@ -140,6 +151,10 @@ const context = vm.createContext({
           else { assert.equal(args.TimerId, 1); timer = false; }
           break;
         case 'FSReadText': data = files.get(args.Path); break;
+        case 'FSWriteText':
+          assert.equal(args.Path, stockSettings);
+          files.set(args.Path, args.Data);
+          break;
         case 'ExecuteBatch':
           assert.equal(service, 'SystemGui');
           batches++;
@@ -181,13 +196,14 @@ const y = () => fishState().y;
 const rowBinding = (kind, key) => positions.get('/main/legacy/' + kind + 'Rows:' + key);
 function advance(count) {
   for (let i = 0; i < count; i++) {
-    const prior = Array.from({ length: 7 }, (_, index) => fishState(index));
+    const prior = Array.from({ length: 11 }, (_, index) => fishState(index));
     const paints = Object.fromEntries(Object.keys(groups).map(kind => [kind, rowBinding(kind, 'color')]));
     now += 50;
     app.on_timer();
     for (const [kind, members] of Object.entries(groups)) {
       const changedRows = [];
       for (const member of members) {
+        if (!visible('legacy/fish' + member)) continue;
         const current = fishState(member);
         const last = prior[member];
         if (current.x !== last.x || current.y !== last.y || current.pose !== last.pose) {
@@ -212,6 +228,14 @@ function assertBackdrop(mode) {
 app.on_start();
 assert(timer && lightTimer);
 assertBackdrop('day');
+for (const name of Object.keys(groups)) {
+  for (const member of groups[name]) {
+    assert.equal(visible('legacy/fish' + member), ['school', 'shark', 'ray', 'clown', 'turtle'].includes(name));
+  }
+}
+app.on_stop();
+files.set(stockSettings, '{"stock":79}');
+app.on_start();
 const originalGold = fishState(), initialJelly = fishState(6);
 const initialBubble = Number(positions.get('/main/legacy/bubble:y'));
 advance(7);
@@ -240,8 +264,12 @@ assert(visible('sheet'));
 assert.match(words.get('/main/sheet/description'), /好奇/);
 action('moon');
 assert.match(words.get('/main/sheet/description'), /慢热/);
+assert(!visible('sheet/moon/chosen'));
+action('moon');
+assert(visible('sheet/moon/chosen'));
 action('jelly');
 assert.match(words.get('/main/sheet/description'), /漂浮/);
+action('jelly');
 action('dismiss');
 assert(!visible('sheet'));
 action('waterPress', {x: 240, y: 458});
@@ -253,6 +281,17 @@ assert(!visible('legacy/ripple'), 'A drag is not misread as a tap');
 
 action('book');
 assert(visible('sheet'));
+assert.equal(words.get('/main/sheet/stockStatus'), '5/5 种 · 已选');
+action('shark');
+assert.match(words.get('/main/sheet/stockStatus'), /最多 5 种，请先取消一种/);
+assert(!visible('sheet/shark/chosen'));
+assert.equal(JSON.parse(files.get(stockSettings)).stock, 79);
+action('school');
+for (const member of groups.school) assert(!visible('legacy/fish' + member));
+action('turtle');
+assert(visible('legacy/fish10'));
+assert(visible('sheet/turtle/chosen'));
+assert.equal(JSON.parse(files.get(stockSettings)).stock, 203);
 action('dismiss');
 now = local('16:54:59');
 checkLight();
@@ -288,6 +327,7 @@ app.on_stop();
 firmwareNative = true;
 app.on_start();
 assert(nativeActive && nativeNight);
+assert.equal(nativeStock, 203, 'Reload the saved species selection in the native renderer');
 assert(!timer && lightTimer, 'Native rendering only needs the lighting timer');
 assert(visible('nativeSurface'));
 assert(!visible('legacy'));
@@ -297,6 +337,10 @@ assert.equal(batches, nativeBatches, 'The native animation submits no JavaScript
 nativeTap = 'jelly';
 tap(120, 153);
 assert.match(words.get('/main/sheet/description'), /伞盖/);
+action('turtle');
+action('ray');
+assert.equal(nativeStock, 107);
+assert.equal(JSON.parse(files.get(stockSettings)).stock, nativeStock);
 action('dismiss');
 now = local('06:34:59');
 checkLight();
@@ -349,4 +393,4 @@ for (let i = 0; i < 10; i++) {
 assert(timer && visible('legacy') && !visible('nativeSurface'));
 assertBackdrop('day');
 app.on_stop();
-console.log('Aquarium passed: native lifecycle and controls, cached and fallback rows, seven creatures and catalog.');
+console.log('Aquarium passed: native lifecycle, fallback rows, lighting, and the five-species catalog limit.');

@@ -36,7 +36,8 @@ async def verify(port, tools, classes):
             raise TimeoutError(value)
 
         boot = call('DeviceModes', 'GetState')
-        assert boot['firmware_version'] == '0.8.3-s3.96' and not boot['screen_locked']
+        version = json.loads((ROOT / 'versions.json').read_bytes())['firmware']
+        assert boot['firmware_version'] == version and not boot['screen_locked']
         assert not call('PhoneProvisioning', 'GetState')['active'], 'Close the current Bluetooth session first'
         def catalog():
             return {row['manifest']['id']: row for row in call('SystemCore', 'ListApps')}

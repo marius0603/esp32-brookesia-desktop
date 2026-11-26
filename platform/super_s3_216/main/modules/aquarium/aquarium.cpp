@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -23,6 +24,7 @@ constexpr size_t band_bytes = width * band_height * sizeof(uint16_t);
 constexpr int animation_ms = 40, behavior_ms = 120;
 constexpr int background_bytes = background_width * background_width * 2;
 constexpr const char *asset_path = "/sdcard/apps/local.aquarium/res/scene.bin";
+constexpr const char *reef_fish_path = "/sdcard/apps/local.aquarium/res/reef-fish.bin";
 constexpr const char *grass_path = "/sdcard/apps/local.aquarium/res/grass.bin";
 constexpr uint32_t ram_caps = MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT;
 
@@ -34,9 +36,15 @@ struct Species {
 constexpr Species species[] = {
     {"gold", 50, 39, 3, 30, 60, 378}, {"moon", 38, 40, 3, 18, 75, 370},
     {"school", 25, 14, 2, 32, 66, 365}, {"jelly", 30, 33, 2, 0, 77, 337},
+    {"shark", 62, 28, 3, 41, 68, 245}, {"ray", 42, 28, 3, 21, 162, 376},
+    {"clown", 24, 18, 2, 24, 145, 351},
+    {"turtle", 36, 24, 2, 15, 184, 377},
 };
+constexpr unsigned original_stock = 15, all_stock = (1u << std::size(species)) - 1;
+constexpr int max_species = 5;
 constexpr size_t asset_bytes = 4 + 2 * background_bytes +
     6 * (50 * 39 + 38 * 40 + 25 * 14 + 30 * 33);
+constexpr size_t reef_fish_bytes = 4 + 6 * (62 * 28 + 42 * 28 + 24 * 18 + 36 * 24);
 
 struct Rect {
     int x, y, right, bottom;
@@ -82,6 +90,8 @@ constexpr std::array initial{
     Fish{0,234,204,204,1}, Fish{1,315,315,315,-1},
     Fish{2,333,129,129,1}, Fish{2,372,156,156,1},
     Fish{2,402,120,120,1}, Fish{2,363,96,96,1}, Fish{3,123,153,153,1},
+    Fish{4,144,111,111,1}, Fish{5,168,330,330,-1}, Fish{6,264,339,339,1},
+    Fish{7,282,362,362,-1},
 };
 struct Pose {
     Rect area{};
@@ -107,6 +117,7 @@ struct Scene {
     lv_timer_t *animation = nullptr, *behavior = nullptr;
     std::array<CanvasBand, canvas_bands> canvas{};
     Assets assets{nullptr, heap_caps_free};
+    Assets reef_fish{nullptr, heap_caps_free};
     Assets grass{nullptr, heap_caps_free};
     std::array<std::array<GrassRow, background_width>, grass_boxes.size()> grass_rows{};
     std::array<Bubble, bubble_count> bubbles{};
@@ -121,8 +132,12 @@ struct Scene {
     uint32_t frames = 0, decisions = 0, last_paint_us = 0;
     uint32_t grass_moves = 0, bubble_moves = 0;
     uint32_t feed_count = 0;
+    unsigned stock = original_stock;
     bool night = false, dirty_all = true;
 } scene;
+
+bool stocked(int kind) { return (scene.stock & (1u << kind)) != 0; }
+bool valid_stock(unsigned stock) { return stock <= all_stock && std::popcount(stock) <= max_species; }
 
 uint16_t *row_pixels(int y)
 {
@@ -153,7 +168,19 @@ void clean(bool deleting = false)
         band = {};
     }
     scene.assets.reset();
+    scene.reef_fish.reset();
     scene.grass.reset();
+}
+
+Assets read_pack(const char *path, size_t bytes, const char *magic)
+{
+    Assets result{nullptr, heap_caps_free};
+    const std::unique_ptr<FILE, decltype(&std::fclose)> file(std::fopen(path, "rb"), std::fclose);
+    if (!file) return result;
+    result.reset(static_cast<uint8_t *>(heap_caps_malloc(bytes, ram_caps)));
+    if (!result || std::fread(result.get(), 1, bytes, file.get()) != bytes ||
+        std::fgetc(file.get()) != EOF || std::memcmp(result.get(), magic, 4) != 0) result.reset();
+    return result;
 }
 
 bool build_canvas()
@@ -262,6 +289,7 @@ void decide(int64_t now)
     constexpr float school_y[] = {27, -10, -34};
     for (size_t i = 0; i < scene.fish.size(); ++i) {
         auto &fish = scene.fish[i];
+        if (!stocked(fish.kind)) continue;
         const auto &spec = species[fish.kind];
         if (fish.kind == 3) {
             fish.vx = std::sin(t * .34f + .6f) * 6;
@@ -283,11 +311,15 @@ void decide(int64_t now)
             const float offset = float(int(i) - 3) * 15;
             fish.vx = std::clamp((food_x + offset - fish.x) * 1.6f, -90.f, 90.f);
             next_y = 95 + (now - scene.food_at) * .00005f + float(i % 3) * 12;
+        } else if (fish.kind == 6) {
+            const float reef_x = 270 + std::sin(t * .48f) * 60;
+            fish.vx = std::clamp((reef_x - fish.x) * 1.6f, -spec.speed, spec.speed);
+            next_y = fish.home + std::sin(t * 1.55f) * 12;
         } else if (attract && dx * dx + dy * dy < 315 * 315) {
             if (fish.kind != 1) {
-                const float offset = fish.kind == 0 ? -27 : (int(i) - 3) * 21;
+                const float offset = fish.kind == 2 ? (int(i) - 3) * 21 : -27;
                 fish.vx = std::clamp((dx + offset) * 1.6f, -88.f, 88.f);
-                next_y = scene.ripple_y + (fish.kind == 0 ? 11 : (int(i) - 3) * 19);
+                next_y = scene.ripple_y + (fish.kind == 2 ? (int(i) - 3) * 19 : 11);
             } else if (std::abs(dx) < 110) {
                 fish.vx = dx > 0 ? -36 : 36;
                 next_y = 345;
@@ -305,8 +337,9 @@ void behavior_tick(lv_timer_t *)
 
 const uint8_t *sprite_data(int kind, int frame)
 {
-    const auto *pixels = scene.assets.get() + 4 + 2 * background_bytes;
-    for (int i = 0; i < kind; ++i) pixels += species[i].w * species[i].h * 6;
+    const int first = kind < 4 ? 0 : 4;
+    const auto *pixels = first == 0 ? scene.assets.get() + 4 + 2 * background_bytes : scene.reef_fish.get() + 4;
+    for (int i = first; i < kind; ++i) pixels += species[i].w * species[i].h * 6;
     return pixels + frame * species[kind].w * species[kind].h * 3;
 }
 
@@ -420,13 +453,17 @@ void animate(int64_t now)
     std::array<Rect, initial.size() + 2 + 2 * bubble_count + grass_boxes.size()> dirty{};
     for (size_t i = 0; i < scene.fish.size(); ++i) {
         auto &fish = scene.fish[i];
+        if (!stocked(fish.kind)) {
+            dirty[i] = scene.previous[i].area;
+            continue;
+        }
         const auto &spec = species[fish.kind];
         const float edge = left_edge(i, spec);
         fish.x = std::clamp(fish.x + fish.vx * delta, edge, width - edge);
         fish.y = std::clamp(fish.y + fish.vy * delta, spec.top, spec.bottom);
         const int w = spec.w * spec.scale, h = spec.h * spec.scale;
         const int x = std::lround(fish.x - w * .5f), y = std::lround(fish.y - h * .5f);
-        const int period = fish.kind == 3 ? (scene.night ? 820 : 570) : (scene.night ? 370 : 265);
+        const int period = fish.kind == 3 || fish.kind == 7 ? (scene.night ? 820 : 570) : (scene.night ? 370 : 265);
         const bool mirror = fish.kind != 3 && (std::abs(fish.vx) > 6 ? fish.vx < 0 : scene.previous[i].mirror);
         poses[i] = {{x,y,x+w,y+h}, int((elapsed_ms + i * 43) / period % 2), mirror};
         if (poses[i] != scene.previous[i]) dirty[i] = unite(poses[i].area, scene.previous[i].area);
@@ -517,15 +554,12 @@ extern "C" bool brookesia_board_attach_native_frame(const char *name, lv_obj_t *
 }
 
 namespace aquarium {
-bool start(bool night)
+bool start(bool night, int stock)
 {
-    Assets assets(static_cast<uint8_t *>(heap_caps_malloc(asset_bytes, ram_caps)), heap_caps_free);
-    auto *file = assets ? std::fopen(asset_path, "rb") : nullptr;
-    if (!file) return false;
-    const bool valid = std::fread(assets.get(), 1, asset_bytes, file) == asset_bytes &&
-                       std::fgetc(file) == EOF && std::memcmp(assets.get(), "AQF1", 4) == 0;
-    std::fclose(file);
-    if (!valid) return false;
+    auto assets = read_pack(asset_path, asset_bytes, "AQF1");
+    if (!assets) return false;
+    auto reef_fish = read_pack(reef_fish_path, reef_fish_bytes, "AQX1");
+    if (stock >= 0 && (!reef_fish || !valid_stock(unsigned(stock)))) return false;
     auto grass = read_grass();
     LvglLock lock;
     if (!lock.held || !scene.surface) return false;
@@ -535,9 +569,11 @@ bool start(bool night)
         return false;
     }
     scene.assets = std::move(assets);
+    scene.reef_fish = std::move(reef_fish);
     scene.grass = std::move(grass);
     mount_grass();
     scene.fish = initial;
+    scene.stock = stock < 0 ? original_stock : unsigned(stock);
     scene.previous = {};
     for (size_t i = 0; i < scene.fish.size(); ++i) scene.previous[i].mirror = scene.fish[i].direction < 0;
     scene.night = night;
@@ -565,6 +601,21 @@ bool start(bool night)
     return false;
 }
 
+bool choose_stock(unsigned stock)
+{
+    LvglLock lock;
+    if (!lock.held || !scene.animation || !valid_stock(stock) || (!scene.reef_fish && (stock & ~original_stock)))
+        return false;
+    if (stock == scene.stock) return true;
+    for (size_t i = 0; i < scene.fish.size(); ++i) {
+        if ((stock & (1u << initial[i].kind)) && !stocked(initial[i].kind)) scene.fish[i] = initial[i];
+    }
+    scene.stock = stock;
+    lv_timer_ready(scene.behavior);
+    lv_timer_ready(scene.animation);
+    return true;
+}
+
 bool stop()
 {
     LvglLock lock;
@@ -587,6 +638,7 @@ const char *tap(int x, int y)
     LvglLock lock;
     if (!lock.held || !foreground() || !scene.animation) return nullptr;
     for (const auto &fish : scene.fish) {
+        if (!stocked(fish.kind)) continue;
         const auto &spec = species[fish.kind];
         if (std::abs(fish.x - x) < spec.w * spec.scale * .28f &&
             std::abs(fish.y - y) < spec.h * spec.scale * .31f) return spec.name;
@@ -618,6 +670,8 @@ boost::json::object profile()
     return {{"active",scene.animation != nullptr}, {"frames",scene.frames}, {"decisions",scene.decisions},
             {"last_paint_us",scene.last_paint_us}, {"pixels",scene.painted_pixels},
             {"grass_active",bool(scene.grass)}, {"grass_moves",scene.grass_moves}, {"bubble_moves",scene.bubble_moves},
+            {"stock",scene.stock}, {"creatures",std::count_if(scene.fish.begin(), scene.fish.end(),
+                [](const Fish &fish) { return stocked(fish.kind); })},
             {"feed_count",scene.feed_count}, {"food_visible",std::any_of(scene.pellets.begin(), scene.pellets.end(),
                 [](Rect pellet) { return !pellet.empty(); })}};
 }

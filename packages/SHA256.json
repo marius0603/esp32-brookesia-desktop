@@ -209,5 +209,7 @@
   "packages/android/xiaoma-rssi-calibration-0.1.0.apk": "80a66a93e35f21f21b5bbf39c1bfa3628b61d44746312537ff9ef43be033c53a",
   "packages/android/xiaoma-rssi-calibration-0.1.1.apk": "44aac110ba83f35b6d023de9dda7c76ca9c2e92ac425ff22701e7f1180e31e8c",
   "packages/android/xiaoma-remote-0.5.7.apk": "3af137263b0c797c509fcfe425eb60ca041723643df77ee47848cba782568298",
-  "packages/firmware/brookesia-0.8.3-s3.96-app-only.zip": "6ae2d9d379d821c8d238d31350e1954579e7f86bf2b75f1ef926b64dd92e0f68"
+  "packages/firmware/brookesia-0.8.3-s3.96-app-only.zip": "6ae2d9d379d821c8d238d31350e1954579e7f86bf2b75f1ef926b64dd92e0f68",
+  "packages/apps/local.aquarium.debug.0.1.9.bpk": "6a49e2aa43b49b6b6ad16d035c8c2950339591fa1152604089937c9ce5d68124",
+  "packages/firmware/brookesia-0.8.3-s3.97-app-only.zip": "9518c4aa62a9efb1c054b287df2f7845bd207614b3abe45b65e6b0a868736975"
 }

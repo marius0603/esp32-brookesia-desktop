@@ -86,7 +86,7 @@ private:
         const auto uptime_ms = esp_timer_get_time() / 1000;
         const auto idle_ms = static_cast<uint32_t>(uptime_ms) - last_touch;
         return {{"firmware_version",esp_app_get_description()->version},{"maze_canvas_cache",true},
-                {"aquarium_row_cache",true},{"aquarium_native_render",true},
+                {"aquarium_row_cache",true},{"aquarium_native_render",true},{"aquarium_stock",true},
                 {"reset_reason",static_cast<int>(esp_reset_reason())},{"uptime_ms",uptime_ms},
                 {"clock_unix",std::time(nullptr)},{"clock_restored_from_rtc",board_clock::restored_from_rtc()},
                 {"clock_rtc_current",board_clock::rtc_current()},{"app_background_follows_theme",true},
@@ -214,7 +214,8 @@ private:
                 {"GetLauncherProfile","Read the last controlled desktop page sweep",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Frame timing"}},
                 {"GetWeatherLayers","Read visible native layer opacity for weather diagnostics",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Visible surfaces"}},
                 {"GetState","Get screen and sound mode state",{},true,std::nullopt,FunctionReturnSchema{FunctionValueType::Object,"Modes"}},
-                {"AquariumStart","Start the mounted aquarium animation",{{"Night","Use night artwork",FunctionValueType::Boolean}},false,std::nullopt,FunctionReturnSchema{FunctionValueType::Boolean,"Native surface started"}},
+                {"AquariumStart","Start the mounted aquarium animation",{{"Night","Use night artwork",FunctionValueType::Boolean},{"Stock","Species mask, or -1 for the original species",FunctionValueType::Number,-1.0}},false,std::nullopt,FunctionReturnSchema{FunctionValueType::Boolean,"Native surface started"}},
+                {"AquariumStock","Change the visible species",{{"Stock","Species mask",FunctionValueType::Number}}},
                 {"AquariumStop","Stop the mounted aquarium animation",{}},
                 {"AquariumLight","Select aquarium lighting",{{"Night","Use night artwork",FunctionValueType::Boolean}}},
                 {"AquariumTap","Hit test a creature or create a ripple",{{"X","Horizontal pixel",FunctionValueType::Number},{"Y","Vertical pixel",FunctionValueType::Number}},false,std::nullopt,FunctionReturnSchema{FunctionValueType::String,"Creature key"}},
@@ -259,7 +260,16 @@ private:
                 {"GetWeatherLayers",[this](FunctionParameterMap &&)->FunctionResult{return visual_layers();}},
                 {"GetState",[this](FunctionParameterMap &&)->FunctionResult{return {.success=true,.data=FunctionValue(state())};}},
                 {"AquariumStart",[](FunctionParameterMap &&p)->FunctionResult{
-                    return {.success=true,.data=FunctionValue(aquarium::start(std::get<bool>(p.at("Night"))))};}},
+                    const auto value=p.find("Stock");
+                    const double stock=value==p.end()?-1:std::get<double>(value->second);
+                    if(!std::isfinite(stock)||stock<-1||stock>255||std::floor(stock)!=stock)
+                        return {.success=false,.error_message="Invalid aquarium species mask"};
+                    return {.success=true,.data=FunctionValue(aquarium::start(std::get<bool>(p.at("Night")),int(stock)))};}},
+                {"AquariumStock",[](FunctionParameterMap &&p)->FunctionResult{
+                    const double stock=std::get<double>(p.at("Stock"));
+                    if(!std::isfinite(stock)||stock<0||stock>255||std::floor(stock)!=stock)
+                        return {.success=false,.error_message="Invalid aquarium species mask"};
+                    return {.success=aquarium::choose_stock(unsigned(stock)),.error_message="Aquarium stock unavailable"};}},
                 {"AquariumStop",[](FunctionParameterMap &&)->FunctionResult{
                     return {.success=aquarium::stop(),.error_message="Aquarium stop failed"};}},
                 {"AquariumLight",[](FunctionParameterMap &&p)->FunctionResult{

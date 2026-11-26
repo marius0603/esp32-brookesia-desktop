@@ -212,6 +212,118 @@
       "preload": true
     },
     {
+      "id": "shark_r0",
+      "src": "shark_r0.png",
+      "width": 186,
+      "height": 84,
+      "preload": true
+    },
+    {
+      "id": "shark_l0",
+      "src": "shark_l0.png",
+      "width": 186,
+      "height": 84,
+      "preload": true
+    },
+    {
+      "id": "shark_r1",
+      "src": "shark_r1.png",
+      "width": 186,
+      "height": 84,
+      "preload": true
+    },
+    {
+      "id": "shark_l1",
+      "src": "shark_l1.png",
+      "width": 186,
+      "height": 84,
+      "preload": true
+    },
+    {
+      "id": "ray_r0",
+      "src": "ray_r0.png",
+      "width": 126,
+      "height": 84,
+      "preload": true
+    },
+    {
+      "id": "ray_l0",
+      "src": "ray_l0.png",
+      "width": 126,
+      "height": 84,
+      "preload": true
+    },
+    {
+      "id": "ray_r1",
+      "src": "ray_r1.png",
+      "width": 126,
+      "height": 84,
+      "preload": true
+    },
+    {
+      "id": "ray_l1",
+      "src": "ray_l1.png",
+      "width": 126,
+      "height": 84,
+      "preload": true
+    },
+    {
+      "id": "clown_r0",
+      "src": "clown_r0.png",
+      "width": 48,
+      "height": 36,
+      "preload": true
+    },
+    {
+      "id": "clown_l0",
+      "src": "clown_l0.png",
+      "width": 48,
+      "height": 36,
+      "preload": true
+    },
+    {
+      "id": "clown_r1",
+      "src": "clown_r1.png",
+      "width": 48,
+      "height": 36,
+      "preload": true
+    },
+    {
+      "id": "clown_l1",
+      "src": "clown_l1.png",
+      "width": 48,
+      "height": 36,
+      "preload": true
+    },
+    {
+      "id": "turtle_r0",
+      "src": "turtle_r0.png",
+      "width": 72,
+      "height": 48,
+      "preload": true
+    },
+    {
+      "id": "turtle_l0",
+      "src": "turtle_l0.png",
+      "width": 72,
+      "height": 48,
+      "preload": true
+    },
+    {
+      "id": "turtle_r1",
+      "src": "turtle_r1.png",
+      "width": 72,
+      "height": 48,
+      "preload": true
+    },
+    {
+      "id": "turtle_l1",
+      "src": "turtle_l1.png",
+      "width": 72,
+      "height": 48,
+      "preload": true
+    },
+    {
       "id": "launcher_icon",
       "src": "launcher_icon.png",
       "width": 92,

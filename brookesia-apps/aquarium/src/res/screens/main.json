@@ -136,6 +136,110 @@
         },
         {
           "type": "container",
+          "id": "sharkRows",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 69,
+            "width": 480,
+            "height": 84
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0,
+            "bgColor": "#000000"
+          },
+          "bindings": {
+            "placement.y": "y",
+            "placement.height": "h",
+            "style.bgColor": "color"
+          }
+        },
+        {
+          "type": "container",
+          "id": "rayRows",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 288,
+            "width": 480,
+            "height": 84
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0,
+            "bgColor": "#000000"
+          },
+          "bindings": {
+            "placement.y": "y",
+            "placement.height": "h",
+            "style.bgColor": "color"
+          }
+        },
+        {
+          "type": "container",
+          "id": "clownRows",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 321,
+            "width": 480,
+            "height": 36
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0,
+            "bgColor": "#000000"
+          },
+          "bindings": {
+            "placement.y": "y",
+            "placement.height": "h",
+            "style.bgColor": "color"
+          }
+        },
+        {
+          "type": "container",
+          "id": "turtleRows",
+          "placement": {
+            "mode": "absolute",
+            "x": 0,
+            "y": 339,
+            "width": 480,
+            "height": 48
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0,
+            "bgColor": "#000000"
+          },
+          "bindings": {
+            "placement.y": "y",
+            "placement.height": "h",
+            "style.bgColor": "color"
+          }
+        },
+        {
+          "type": "container",
           "id": "bubbleRows",
           "placement": {
             "mode": "absolute",
@@ -432,7 +536,8 @@
           },
           "bindings": {
             "placement.x": "x",
-            "placement.y": "y"
+            "placement.y": "y",
+            "commonProps.hidden": "hidden"
           }
         },
         {
@@ -460,7 +565,8 @@
           },
           "bindings": {
             "placement.x": "x",
-            "placement.y": "y"
+            "placement.y": "y",
+            "commonProps.hidden": "hidden"
           }
         },
         {
@@ -488,7 +594,8 @@
           },
           "bindings": {
             "placement.x": "x",
-            "placement.y": "y"
+            "placement.y": "y",
+            "commonProps.hidden": "hidden"
           }
         },
         {
@@ -516,7 +623,8 @@
           },
           "bindings": {
             "placement.x": "x",
-            "placement.y": "y"
+            "placement.y": "y",
+            "commonProps.hidden": "hidden"
           }
         },
         {
@@ -544,7 +652,8 @@
           },
           "bindings": {
             "placement.x": "x",
-            "placement.y": "y"
+            "placement.y": "y",
+            "commonProps.hidden": "hidden"
           }
         },
         {
@@ -572,7 +681,8 @@
           },
           "bindings": {
             "placement.x": "x",
-            "placement.y": "y"
+            "placement.y": "y",
+            "commonProps.hidden": "hidden"
           }
         },
         {
@@ -600,7 +710,124 @@
           },
           "bindings": {
             "placement.x": "x",
-            "placement.y": "y"
+            "placement.y": "y",
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "image",
+          "id": "fish7",
+          "placement": {
+            "mode": "absolute",
+            "x": 51,
+            "y": 69,
+            "width": 186,
+            "height": 84
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.shark_r0}",
+            "innerAlign": "center"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y",
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "image",
+          "id": "fish8",
+          "placement": {
+            "mode": "absolute",
+            "x": 105,
+            "y": 288,
+            "width": 126,
+            "height": 84
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.ray_l0}",
+            "innerAlign": "center"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y",
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "image",
+          "id": "fish9",
+          "placement": {
+            "mode": "absolute",
+            "x": 240,
+            "y": 321,
+            "width": 48,
+            "height": 36
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.clown_r0}",
+            "innerAlign": "center"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y",
+            "commonProps.hidden": "hidden"
+          }
+        },
+        {
+          "type": "image",
+          "id": "fish10",
+          "placement": {
+            "mode": "absolute",
+            "x": 246,
+            "y": 339,
+            "width": 72,
+            "height": 48
+          },
+          "commonProps": {
+            "clickable": false,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 0,
+            "padding": 0,
+            "borderWidth": 0
+          },
+          "imageProps": {
+            "src": "${image.turtle_l0}",
+            "innerAlign": "center"
+          },
+          "bindings": {
+            "placement.x": "x",
+            "placement.y": "y",
+            "commonProps.hidden": "hidden"
           }
         }
       ],
@@ -729,9 +956,9 @@
       "placement": {
         "mode": "absolute",
         "x": 0,
-        "y": 292,
+        "y": 222,
         "width": 480,
-        "height": 148
+        "height": 218
       },
       "commonProps": {
         "clickable": true,
@@ -751,8 +978,8 @@
           "id": "heading",
           "placement": {
             "mode": "absolute",
-            "x": 22,
-            "y": 12,
+            "x": 18,
+            "y": 7,
             "width": 128,
             "height": 32
           },
@@ -771,10 +998,10 @@
           "id": "dismiss",
           "placement": {
             "mode": "absolute",
-            "x": 376,
+            "x": 373,
             "y": 3,
             "width": 82,
-            "height": 46
+            "height": 42
           },
           "commonProps": {
             "clickable": true,
@@ -822,10 +1049,10 @@
           "id": "gold",
           "placement": {
             "mode": "absolute",
-            "x": 22,
-            "y": 50,
-            "width": 101,
-            "height": 48
+            "x": 18,
+            "y": 48,
+            "width": 105,
+            "height": 42
           },
           "commonProps": {
             "clickable": true,
@@ -847,7 +1074,7 @@
                 "mode": "absolute",
                 "x": 0,
                 "y": 10,
-                "width": 101,
+                "width": 105,
                 "height": 30
               },
               "style": {
@@ -859,6 +1086,32 @@
               "labelProps": {
                 "text": "金鳞"
               }
+            },
+            {
+              "type": "container",
+              "id": "chosen",
+              "placement": {
+                "mode": "absolute",
+                "x": 91,
+                "y": 7,
+                "width": 7,
+                "height": 7
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": true
+              },
+              "style": {
+                "bgOpacity": 255,
+                "padding": 0,
+                "borderWidth": 0,
+                "bgColor": "#A0D2B2",
+                "radius": 4
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              }
             }
           ],
           "events": [
@@ -868,7 +1121,8 @@
             }
           ],
           "bindings": {
-            "style.bgColor": "color"
+            "style.bgColor": "color",
+            "style.borderColor": "edge"
           }
         },
         {
@@ -876,10 +1130,10 @@
           "id": "moon",
           "placement": {
             "mode": "absolute",
-            "x": 133,
-            "y": 50,
-            "width": 101,
-            "height": 48
+            "x": 129,
+            "y": 48,
+            "width": 105,
+            "height": 42
           },
           "commonProps": {
             "clickable": true,
@@ -901,7 +1155,7 @@
                 "mode": "absolute",
                 "x": 0,
                 "y": 10,
-                "width": 101,
+                "width": 105,
                 "height": 30
               },
               "style": {
@@ -913,6 +1167,32 @@
               "labelProps": {
                 "text": "月影"
               }
+            },
+            {
+              "type": "container",
+              "id": "chosen",
+              "placement": {
+                "mode": "absolute",
+                "x": 91,
+                "y": 7,
+                "width": 7,
+                "height": 7
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": true
+              },
+              "style": {
+                "bgOpacity": 255,
+                "padding": 0,
+                "borderWidth": 0,
+                "bgColor": "#A0D2B2",
+                "radius": 4
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              }
             }
           ],
           "events": [
@@ -922,7 +1202,8 @@
             }
           ],
           "bindings": {
-            "style.bgColor": "color"
+            "style.bgColor": "color",
+            "style.borderColor": "edge"
           }
         },
         {
@@ -930,10 +1211,10 @@
           "id": "school",
           "placement": {
             "mode": "absolute",
-            "x": 244,
-            "y": 50,
-            "width": 101,
-            "height": 48
+            "x": 240,
+            "y": 48,
+            "width": 105,
+            "height": 42
           },
           "commonProps": {
             "clickable": true,
@@ -955,7 +1236,7 @@
                 "mode": "absolute",
                 "x": 0,
                 "y": 10,
-                "width": 101,
+                "width": 105,
                 "height": 30
               },
               "style": {
@@ -967,6 +1248,32 @@
               "labelProps": {
                 "text": "蓝线"
               }
+            },
+            {
+              "type": "container",
+              "id": "chosen",
+              "placement": {
+                "mode": "absolute",
+                "x": 91,
+                "y": 7,
+                "width": 7,
+                "height": 7
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": true
+              },
+              "style": {
+                "bgOpacity": 255,
+                "padding": 0,
+                "borderWidth": 0,
+                "bgColor": "#A0D2B2",
+                "radius": 4
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              }
             }
           ],
           "events": [
@@ -976,7 +1283,8 @@
             }
           ],
           "bindings": {
-            "style.bgColor": "color"
+            "style.bgColor": "color",
+            "style.borderColor": "edge"
           }
         },
         {
@@ -984,10 +1292,10 @@
           "id": "jelly",
           "placement": {
             "mode": "absolute",
-            "x": 355,
-            "y": 50,
-            "width": 101,
-            "height": 48
+            "x": 351,
+            "y": 48,
+            "width": 105,
+            "height": 42
           },
           "commonProps": {
             "clickable": true,
@@ -1009,7 +1317,7 @@
                 "mode": "absolute",
                 "x": 0,
                 "y": 10,
-                "width": 101,
+                "width": 105,
                 "height": 30
               },
               "style": {
@@ -1021,6 +1329,32 @@
               "labelProps": {
                 "text": "水母"
               }
+            },
+            {
+              "type": "container",
+              "id": "chosen",
+              "placement": {
+                "mode": "absolute",
+                "x": 91,
+                "y": 7,
+                "width": 7,
+                "height": 7
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": true
+              },
+              "style": {
+                "bgOpacity": 255,
+                "padding": 0,
+                "borderWidth": 0,
+                "bgColor": "#A0D2B2",
+                "radius": 4
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              }
             }
           ],
           "events": [
@@ -1030,7 +1364,332 @@
             }
           ],
           "bindings": {
-            "style.bgColor": "color"
+            "style.bgColor": "color",
+            "style.borderColor": "edge"
+          }
+        },
+        {
+          "type": "container",
+          "id": "shark",
+          "placement": {
+            "mode": "absolute",
+            "x": 18,
+            "y": 94,
+            "width": 105,
+            "height": 42
+          },
+          "commonProps": {
+            "clickable": true,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 255,
+            "padding": 0,
+            "borderWidth": 1,
+            "bgColor": "#0B353E",
+            "radius": 6,
+            "borderColor": "#467D78"
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 10,
+                "width": 105,
+                "height": 30
+              },
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 22,
+                "textColor": "#dcf4e6",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "鲨鱼"
+              }
+            },
+            {
+              "type": "container",
+              "id": "chosen",
+              "placement": {
+                "mode": "absolute",
+                "x": 91,
+                "y": 7,
+                "width": 7,
+                "height": 7
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": true
+              },
+              "style": {
+                "bgOpacity": 255,
+                "padding": 0,
+                "borderWidth": 0,
+                "bgColor": "#A0D2B2",
+                "radius": 4
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "shark"
+            }
+          ],
+          "bindings": {
+            "style.bgColor": "color",
+            "style.borderColor": "edge"
+          }
+        },
+        {
+          "type": "container",
+          "id": "ray",
+          "placement": {
+            "mode": "absolute",
+            "x": 129,
+            "y": 94,
+            "width": 105,
+            "height": 42
+          },
+          "commonProps": {
+            "clickable": true,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 255,
+            "padding": 0,
+            "borderWidth": 1,
+            "bgColor": "#0B353E",
+            "radius": 6,
+            "borderColor": "#467D78"
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 10,
+                "width": 105,
+                "height": 30
+              },
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 22,
+                "textColor": "#dcf4e6",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "魔鬼鱼"
+              }
+            },
+            {
+              "type": "container",
+              "id": "chosen",
+              "placement": {
+                "mode": "absolute",
+                "x": 91,
+                "y": 7,
+                "width": 7,
+                "height": 7
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": true
+              },
+              "style": {
+                "bgOpacity": 255,
+                "padding": 0,
+                "borderWidth": 0,
+                "bgColor": "#A0D2B2",
+                "radius": 4
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "ray"
+            }
+          ],
+          "bindings": {
+            "style.bgColor": "color",
+            "style.borderColor": "edge"
+          }
+        },
+        {
+          "type": "container",
+          "id": "clown",
+          "placement": {
+            "mode": "absolute",
+            "x": 240,
+            "y": 94,
+            "width": 105,
+            "height": 42
+          },
+          "commonProps": {
+            "clickable": true,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 255,
+            "padding": 0,
+            "borderWidth": 1,
+            "bgColor": "#0B353E",
+            "radius": 6,
+            "borderColor": "#467D78"
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 10,
+                "width": 105,
+                "height": 30
+              },
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 22,
+                "textColor": "#dcf4e6",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "小丑鱼"
+              }
+            },
+            {
+              "type": "container",
+              "id": "chosen",
+              "placement": {
+                "mode": "absolute",
+                "x": 91,
+                "y": 7,
+                "width": 7,
+                "height": 7
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": true
+              },
+              "style": {
+                "bgOpacity": 255,
+                "padding": 0,
+                "borderWidth": 0,
+                "bgColor": "#A0D2B2",
+                "radius": 4
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "clown"
+            }
+          ],
+          "bindings": {
+            "style.bgColor": "color",
+            "style.borderColor": "edge"
+          }
+        },
+        {
+          "type": "container",
+          "id": "turtle",
+          "placement": {
+            "mode": "absolute",
+            "x": 351,
+            "y": 94,
+            "width": 105,
+            "height": 42
+          },
+          "commonProps": {
+            "clickable": true,
+            "scrollable": false
+          },
+          "style": {
+            "bgOpacity": 255,
+            "padding": 0,
+            "borderWidth": 1,
+            "bgColor": "#0B353E",
+            "radius": 6,
+            "borderColor": "#467D78"
+          },
+          "children": [
+            {
+              "type": "label",
+              "id": "label",
+              "placement": {
+                "mode": "absolute",
+                "x": 0,
+                "y": 10,
+                "width": 105,
+                "height": 30
+              },
+              "style": {
+                "font": "${font.zh_CN}",
+                "fontSize": 22,
+                "textColor": "#dcf4e6",
+                "textAlign": "center"
+              },
+              "labelProps": {
+                "text": "海龟"
+              }
+            },
+            {
+              "type": "container",
+              "id": "chosen",
+              "placement": {
+                "mode": "absolute",
+                "x": 91,
+                "y": 7,
+                "width": 7,
+                "height": 7
+              },
+              "commonProps": {
+                "clickable": false,
+                "scrollable": false,
+                "hidden": true
+              },
+              "style": {
+                "bgOpacity": 255,
+                "padding": 0,
+                "borderWidth": 0,
+                "bgColor": "#A0D2B2",
+                "radius": 4
+              },
+              "bindings": {
+                "commonProps.hidden": "hidden"
+              }
+            }
+          ],
+          "events": [
+            {
+              "type": "clicked",
+              "action": "turtle"
+            }
+          ],
+          "bindings": {
+            "style.bgColor": "color",
+            "style.borderColor": "edge"
           }
         },
         {
@@ -1038,19 +1697,42 @@
           "id": "description",
           "placement": {
             "mode": "absolute",
-            "x": 22,
-            "y": 112,
-            "width": 430,
-            "height": 32
+            "x": 18,
+            "y": 141,
+            "width": 444,
+            "height": 30
           },
           "style": {
             "font": "${font.zh_CN}",
-            "fontSize": 22,
+            "fontSize": 20,
             "textColor": "#dcf4e6",
             "textAlign": "left"
           },
           "labelProps": {
             "text": "好奇 · 喜欢靠近水波"
+          },
+          "bindings": {
+            "labelProps.text": "text"
+          }
+        },
+        {
+          "type": "label",
+          "id": "stockStatus",
+          "placement": {
+            "mode": "absolute",
+            "x": 18,
+            "y": 178,
+            "width": 444,
+            "height": 27
+          },
+          "style": {
+            "font": "${font.zh_CN}",
+            "fontSize": 20,
+            "textColor": "#dcf4e6",
+            "textAlign": "left"
+          },
+          "labelProps": {
+            "text": ""
           },
           "bindings": {
             "labelProps.text": "text"

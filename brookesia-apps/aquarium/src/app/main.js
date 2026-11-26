@@ -2,6 +2,7 @@
 'use strict';
 
 const WEATHER_SETTINGS = '/littlefs/weather-settings.json';
+const STOCK_SETTINGS = '/littlefs/aquarium-stock.json';
 const SOLAR_CITIES = {
   shanghai: { latitude: 31.2304, longitude: 121.4737, cache: '/littlefs/weather-cache.json' },
   qingdao: { latitude: 36.0671, longitude: 120.3826, cache: '/littlefs/weather-cache-qingdao.json' },
@@ -19,25 +20,42 @@ const NOTES = {
   moon: '慢热 · 常停在水草附近',
   school: '合群 · 会和同伴一起转向',
   jelly: '随水漂浮 · 伞盖会缓慢收放',
+  shark: '巡游 · 喜欢开阔水域',
+  ray: '滑翔 · 扇动宽大的胸鳍',
+  clown: '活跃 · 常在礁石附近游动',
+  turtle: '慢游 · 用前鳍划水',
 };
+const KINDS = Object.keys(NOTES);
+const ALL_STOCK = (1 << KINDS.length) - 1;
+const MAX_SPECIES = 5;
+const kindBit = kind => 1 << KINDS.indexOf(kind);
+const DEFAULT_STOCK = kindBit('school') | kindBit('shark') | kindBit('ray') | kindBit('clown') | kindBit('turtle');
+const speciesCount = mask => KINDS.filter(kind => (mask & kindBit(kind)) !== 0).length;
 const SPECIES = {
   gold: { width: 150, height: 117, speed: 30, top: 60, bottom: 378 },
   moon: { width: 114, height: 120, speed: 18, top: 75, bottom: 370 },
   school: { width: 50, height: 28, speed: 32, top: 66, bottom: 365 },
   jelly: { width: 60, height: 66, top: 77, bottom: 337 },
+  shark: { width: 186, height: 84, speed: 41, top: 68, bottom: 245 },
+  ray: { width: 126, height: 84, speed: 21, top: 162, bottom: 376 },
+  clown: { width: 48, height: 36, speed: 24, top: 145, bottom: 346 },
+  turtle: { width: 72, height: 48, speed: 15, top: 184, bottom: 377 },
 };
 const START = [
   ['gold', 234, 204, 1], ['moon', 315, 315, -1],
   ['school', 333, 129, 1], ['school', 372, 156, 1], ['school', 402, 120, 1], ['school', 363, 96, 1],
   ['jelly', 123, 153, 1],
+  ['shark', 144, 111, 1], ['ray', 168, 330, -1], ['clown', 264, 339, 1], ['turtle', 282, 363, -1],
 ];
-const ACTIONS = ['waterPress', 'waterRelease', 'waterCancel', 'book', 'dismiss', ...Object.keys(NOTES)];
+const ACTIONS = ['waterPress', 'waterRelease', 'waterCancel', 'book', 'dismiss', ...KINDS];
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 let gui, timer, storage, modes;
 let nativeAvailable = false, nativeRendering = false;
 let nativeRetryAt = 0;
 let cachedRows = false;
 let timerId = 0, lightTimer = 0, paused = true, night = false, panel = false, selected = 'gold';
+let stock = DEFAULT_STOCK, stockError = '';
+const inTank = kind => (stock & kindBit(kind)) !== 0;
 let fish = [], touch = null, ripple = null, lastTick = 0, started = 0, rendered = {};
 
 function call(service, name, params = {}) {
@@ -126,6 +144,13 @@ function draw(now) {
     commands.push({ Name: 'SetViewSrc', Params: { Path: pathOf(node), Src: src } });
     return true;
   }
+  function markRows(kind, y, oldY, height) {
+    const bounds = rowBounds[kind];
+    rowBounds[kind] = {
+      top: Math.min(y, oldY, bounds?.top ?? Infinity),
+      bottom: Math.max(Math.max(y, oldY) + height, bounds?.bottom ?? -Infinity),
+    };
+  }
   bind('nativeSurface', 'hidden', !nativeRendering);
   const legacyVisible = !nativeRendering && !nativeRetryAt;
   bind('legacy', 'hidden', !legacyVisible);
@@ -139,8 +164,13 @@ function draw(now) {
   }
   bind('sheet', 'hidden', !panel);
   bind('sheet/description', 'text', NOTES[selected]);
-  for (const name of Object.keys(NOTES)) {
-    bind('sheet/' + name, 'color', name === selected ? '#23564F' : '#103740');
+  bind('sheet/stockStatus', 'text', stockError ||
+    speciesCount(stock) + '/' + MAX_SPECIES + ' 种 · ' + (inTank(selected) ? '已选' : '未选'));
+  for (const name of KINDS) {
+    const stocked = inTank(name);
+    bind('sheet/' + name, 'color', stocked ? '#23564F' : '#103740');
+    bind('sheet/' + name, 'edge', stocked ? '#A0D2B2' : '#467D78');
+    bind('sheet/' + name + '/chosen', 'hidden', !stocked);
   }
   const rippleAge = legacyVisible && ripple ? now - ripple.at : Infinity;
   bind('legacy/ripple', 'hidden', rippleAge >= 680);
@@ -155,21 +185,21 @@ function draw(now) {
     const sprite = SPECIES[item.kind];
     const node = 'legacy/fish' + i;
     const y = Math.round(item.y - sprite.height / 2);
+    const oldY = rendered[node + ':y'] ?? y;
+    const visible = inTank(item.kind);
+    const visibilityChanged = bind(node, 'hidden', !visible);
+    if (!visible) {
+      if (!cachedRows && visibilityChanged) markRows(item.kind, oldY, oldY, sprite.height);
+      return;
+    }
     const movedX = bind(node, 'x', Math.round(item.x - sprite.width / 2));
     const movedY = bind(node, 'y', y);
     const jelly = item.kind === 'jelly';
-    const period = jelly ? (night ? 820 : 570) : (night ? 370 : 265);
+    const period = jelly || item.kind === 'turtle' ? (night ? 820 : 570) : (night ? 370 : 265);
     const phase = Math.floor((elapsed + i * 43) / period) % 2;
     const source = jelly ? 'jelly' + phase : item.kind + '_' + (item.facing > 0 ? 'r' : 'l') + phase;
     const changedPose = image(node, source);
-    if (!cachedRows && (movedX || movedY || changedPose)) {
-      const oldY = rendered[node + ':y'] ?? y;
-      const bounds = rowBounds[item.kind];
-      rowBounds[item.kind] = {
-        top: Math.min(y, oldY, bounds?.top ?? Infinity),
-        bottom: Math.max(Math.max(y, oldY) + sprite.height, bounds?.bottom ?? -Infinity),
-      };
-    }
+    if (!cachedRows && (visibilityChanged || movedX || movedY || changedPose)) markRows(item.kind, y, oldY, sprite.height);
   });
   // CO5300 can leave seams on partial-width writes. Repaint complete rows
   // behind moving sprites, grouping the school to avoid overlapping updates.
@@ -194,6 +224,7 @@ function swim(now, delta) {
   const attract = ripple && now - ripple.at < 3100;
   const pace = night ? 0.57 : 1;
   fish.forEach((item, i) => {
+    if (!inTank(item.kind)) return;
     const sprite = SPECIES[item.kind];
     const margin = sprite.width / 2 + 7;
     if (item.kind === 'jelly') {
@@ -201,6 +232,15 @@ function swim(now, delta) {
       const buoyancy = (item.home + Math.sin(time * .66) * 27 - item.y) * 1.4;
       item.x = clamp(item.x + drift * delta * pace, margin, 480 - margin);
       item.y = clamp(item.y + buoyancy * delta * pace, sprite.top, sprite.bottom);
+      return;
+    }
+    if (item.kind === 'clown') {
+      const reefX = 270 + Math.sin(time * .48) * 60;
+      const reefY = item.home + Math.sin(time * 1.55) * 12;
+      const vx = clamp((reefX - item.x) * 1.6, -sprite.speed, sprite.speed);
+      item.x += vx * delta * pace;
+      item.y += (reefY - item.y) * 1.35 * delta * pace;
+      if (Math.abs(vx) > 6) item.facing = vx < 0 ? -1 : 1;
       return;
     }
     let vx = item.cruise * sprite.speed;
@@ -253,7 +293,25 @@ function tick(now) {
 
 function openBook(kind) {
   if (kind) selected = kind;
+  stockError = '';
   panel = true;
+}
+
+function toggleStock(kind) {
+  selected = kind;
+  const next = stock ^ kindBit(kind);
+  if (speciesCount(next) > MAX_SPECIES) {
+    stockError = '最多 5 种，请先取消一种';
+    return;
+  }
+  if (nativeRendering) {
+    try { call(modes, 'AquariumStock', { Stock: next }); }
+    catch (_) { stockError = '请稍后重试'; return; }
+  }
+  stock = next;
+  stockError = '';
+  try { call(storage, 'FSWriteText', {Path: STOCK_SETTINGS, Data: JSON.stringify({stock})}); }
+  catch (_) { stockError = '本次选择未保存'; }
 }
 
 function tap(point, now) {
@@ -267,6 +325,7 @@ function tap(point, now) {
     return;
   }
   const chosen = fish.find(item => {
+    if (!inTank(item.kind)) return false;
     const sprite = SPECIES[item.kind];
     return Math.abs(item.x - point.x) < sprite.width * .28 &&
       Math.abs(item.y - point.y) < sprite.height * .31;
@@ -279,7 +338,7 @@ function action(name, payload, now) {
   if (paused) return;
   if (name === 'book') openBook();
   if (name === 'dismiss') panel = false;
-  if (Object.prototype.hasOwnProperty.call(NOTES, name)) openBook(name);
+  if (panel && Object.prototype.hasOwnProperty.call(NOTES, name)) toggleStock(name);
   if (name === 'waterCancel') touch = null;
   if (name === 'waterPress' || name === 'waterRelease') {
     let point;
@@ -297,7 +356,7 @@ function action(name, payload, now) {
 }
 
 function startNative(now) {
-  try { nativeRendering = call(modes, 'AquariumStart', { Night: night }) === true; }
+  try { nativeRendering = call(modes, 'AquariumStart', { Night: night, Stock: stock }) === true; }
   catch (_) { nativeRendering = false; }
   nativeRetryAt = !nativeRendering && now - started < NATIVE_RETRY_LIMIT_MS ? now + NATIVE_RETRY_MS : 0;
 }
@@ -344,11 +403,14 @@ globalThis.brookesia_app = {
     gui = brookesia.start_service('SystemGui');
     timer = brookesia.start_service('SystemTimer');
     storage = brookesia.start_service('Storage');
+    const saved = readJson(STOCK_SETTINGS)?.stock;
+    stock = Number.isInteger(saved) && saved >= 0 && saved <= ALL_STOCK && speciesCount(saved) <= MAX_SPECIES ?
+      saved : DEFAULT_STOCK;
     try {
       modes = brookesia.start_service('DeviceModes');
       const state = call(modes, 'GetState');
       cachedRows = state.aquarium_row_cache === true;
-      nativeAvailable = state.aquarium_native_render === true;
+      nativeAvailable = state.aquarium_stock === true;
     } catch (_) { cachedRows = nativeAvailable = false; }
     fish = START.map(([kind, x, y, facing]) => ({ kind, x, y, home: y, facing, cruise: facing }));
     for (const action of ACTIONS) call(gui, 'SubscribeAction', { Action: action });

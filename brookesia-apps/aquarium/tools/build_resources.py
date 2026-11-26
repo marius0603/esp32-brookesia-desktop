@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw, ImageOps
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP.parents[1] / "tools"))
 from build_wallpaper_render import rle_pixels
+from reef_art import REEF_FISH, fish_image, with_coral
 
 ART = APP / "art"
 RES = APP / "src/res"
@@ -22,8 +23,14 @@ FISH = [
     ("school", 134, 40, 1),
     ("school", 121, 32, 1),
     ("jelly", 41, 51, 1),
+    ("shark", 48, 37, 1),
+    ("ray", 56, 110, -1),
+    ("clown", 88, 113, 1),
+    ("turtle", 94, 121, -1),
 ]
-FISH_SCALE = {"gold": 3, "moon": 3, "school": 2, "jelly": 2}
+FISH_SCALE = {"gold": 3, "moon": 3, "school": 2, "jelly": 2,
+              "shark": 3, "ray": 3, "clown": 2, "turtle": 2}
+FISH_SIZE = {"gold": (50, 39), "moon": (38, 40), "school": (25, 14), "jelly": (30, 33), **REEF_FISH}
 GRASS_BOXES = [(0, 93, 54, 159), (119, 99, 160, 160)]
 GRASS_COLORS = [("#185345", "#1c8977", "#65b04e"), ("#193c48", "#216075", "#4b8993")]
 
@@ -110,7 +117,7 @@ def picture(name, image, x, y, w, h, moves=False):
     node = container(name, x, y, w, h)
     node.update(type="image", imageProps={"src": "${image." + image + "}", "innerAlign": "center"})
     if moves:
-        node["bindings"] = {"placement.x": "x", "placement.y": "y"}
+        node["bindings"] = {"placement.x": "x", "placement.y": "y", "commonProps.hidden": "hidden"}
     return node
 
 
@@ -119,6 +126,7 @@ def main():
     images_dir.mkdir(parents=True, exist_ok=True)
     images = []
     packed_scene = bytearray(b"AQF1")
+    packed_reef = bytearray(b"AQX1")
 
     def export(name, art, extension, compressed=True):
         filename = name + extension
@@ -132,19 +140,21 @@ def main():
     for light in ("day", "night"):
         with Image.open(ART / (light + ".png")) as art:
             assert art.size == (160, 160)
-            packed_scene.extend(rgb565(art))
-            scene = art.convert("RGB").resize((480, 480), Image.Resampling.NEAREST)
+            backdrop = with_coral(art.convert("RGB"), light == "night")
+            packed_scene.extend(rgb565(backdrop))
+            scene = backdrop.resize((480, 480), Image.Resampling.NEAREST)
             for band, y in enumerate(range(0, 480, BAND_HEIGHT)):
                 export(f"{light}{band}", scene.crop((0, y, 480, y + BAND_HEIGHT)), ".bin")
 
     sizes = {}
     for kind, scale in FISH_SCALE.items():
         for phase in range(2):
-            with Image.open(ART / f"{kind}{phase}.png") as art:
-                assert art.size == {"gold": (50, 39), "moon": (38, 40),
-                                    "school": (25, 14), "jelly": (30, 33)}[kind]
-                packed_scene.extend(rgb565(art))
-                packed_scene.extend(art.getchannel("A").tobytes())
+            source_art = fish_image(kind, phase) if kind in REEF_FISH else Image.open(ART / f"{kind}{phase}.png")
+            with source_art as art:
+                assert art.size == FISH_SIZE[kind]
+                packed = packed_reef if kind in REEF_FISH else packed_scene
+                packed.extend(rgb565(art))
+                packed.extend(art.getchannel("A").tobytes())
                 size = (art.width * scale, art.height * scale)
                 sizes[kind] = size
                 expanded = art.resize(size, Image.Resampling.NEAREST)
@@ -155,6 +165,7 @@ def main():
                     export(f"{kind}_r{phase}", expanded, extension, compressed=False)
                     export(f"{kind}_l{phase}", ImageOps.mirror(expanded), extension, compressed=False)
     (RES / "scene.bin").write_bytes(packed_scene)
+    (RES / "reef-fish.bin").write_bytes(packed_reef)
     write_grass()
 
     icon = Image.new("RGBA", (46, 46))
@@ -217,17 +228,26 @@ def main():
     book["children"][0]["style"]["textColor"] = "#BFE8C6"
     nodes.extend([touch, book])
 
-    options = [button(name, text, 22 + i * 111, 50, 101) for i, (name, text) in enumerate((
-        ("gold", "金鳞"), ("moon", "月影"), ("school", "蓝线"), ("jelly", "水母")))]
+    options = [button(name, text, 18 + i % 4 * 111, 48 + i // 4 * 46, 105, 42)
+               for i, (name, text) in enumerate((
+                   ("gold", "金鳞"), ("moon", "月影"), ("school", "蓝线"), ("jelly", "水母"),
+                   ("shark", "鲨鱼"), ("ray", "魔鬼鱼"), ("clown", "小丑鱼"), ("turtle", "海龟")))]
     for option in options:
-        option["bindings"] = {"style.bgColor": "color"}
-    description = label("description", "好奇 · 喜欢靠近水波", 22, 112, 430, 32)
+        option["bindings"] = {"style.bgColor": "color", "style.borderColor": "edge"}
+        chosen = container("chosen", 91, 7, 7, 7, bindings={"commonProps.hidden": "hidden"})
+        chosen["commonProps"]["hidden"] = True
+        chosen["style"].update(bgColor="#A0D2B2", bgOpacity=255, radius=4)
+        option["children"].append(chosen)
+    description = label("description", "好奇 · 喜欢靠近水波", 18, 141, 444, 30, 20)
     description["bindings"] = {"labelProps.text": "text"}
-    panel = container("sheet", 0, 292, 480, 148, children=[
-        label("heading", "鱼册", 22, 12, 128, 32, 25),
-        button("dismiss", "关闭", 376, 3, 82, 46),
+    stock_status = label("stockStatus", "", 18, 178, 444, 27, 20)
+    stock_status["bindings"] = {"labelProps.text": "text"}
+    panel = container("sheet", 0, 222, 480, 218, children=[
+        label("heading", "鱼册", 18, 7, 128, 32, 25),
+        button("dismiss", "关闭", 373, 3, 82, 42),
         *options,
         description,
+        stock_status,
     ])
     panel["commonProps"].update(clickable=True, hidden=True)
     panel["style"].update(bgColor="#082831", bgOpacity=255, borderColor="#3F7A74", borderWidth=1)
