@@ -205,5 +205,6 @@
   "packages/apps/local.aquarium.debug.0.1.6.bpk": "6b374181922abb41de2b0606ed842ce99858693774beb542a632c53bbb999bb5",
   "packages/firmware/brookesia-0.8.3-s3.95-app-only.zip": "933254c27fef83de8b4b694e5cf3e4e77f0efbaacbbc7454e6e1aa59e3bfb2a3",
   "packages/apps/local.aquarium.debug.0.1.7.bpk": "d2dc260811c99532590aef16f17dd5a460383b0b690edd36c48741cc2c0caec6",
-  "packages/apps/local.aquarium.debug.0.1.8.bpk": "fa13de7c4eb08a21328743fac799d1804a95fc6ff311f419598752ef710e637f"
+  "packages/apps/local.aquarium.debug.0.1.8.bpk": "fa13de7c4eb08a21328743fac799d1804a95fc6ff311f419598752ef710e637f",
+  "packages/android/xiaoma-rssi-calibration-0.1.0.apk": "80a66a93e35f21f21b5bbf39c1bfa3628b61d44746312537ff9ef43be033c53a"
 }
