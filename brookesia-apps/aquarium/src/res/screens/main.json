@@ -674,65 +674,11 @@
     },
     {
       "type": "container",
-      "id": "light",
-      "placement": {
-        "mode": "absolute",
-        "x": 18,
-        "y": 16,
-        "width": 68,
-        "height": 46
-      },
-      "commonProps": {
-        "clickable": true,
-        "scrollable": false
-      },
-      "style": {
-        "bgOpacity": 255,
-        "padding": 0,
-        "borderWidth": 1,
-        "bgColor": "#072B36",
-        "radius": 9,
-        "borderColor": "#15515C"
-      },
-      "children": [
-        {
-          "type": "label",
-          "id": "label",
-          "placement": {
-            "mode": "absolute",
-            "x": 0,
-            "y": 10,
-            "width": 68,
-            "height": 30
-          },
-          "style": {
-            "font": "${font.zh_CN}",
-            "fontSize": 22,
-            "textColor": "#BFE8C6",
-            "textAlign": "center"
-          },
-          "labelProps": {
-            "text": "日景"
-          },
-          "bindings": {
-            "labelProps.text": "text"
-          }
-        }
-      ],
-      "events": [
-        {
-          "type": "clicked",
-          "action": "light"
-        }
-      ]
-    },
-    {
-      "type": "container",
       "id": "book",
       "placement": {
         "mode": "absolute",
         "x": 18,
-        "y": 68,
+        "y": 16,
         "width": 68,
         "height": 46
       },

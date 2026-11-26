@@ -15,12 +15,9 @@ function visit(node, parent = '') {
 }
 visit(screen);
 assert.equal(views.get('/main/water').placement.height, 440);
-const lightButton = views.get('/main/light').placement;
 const bookButton = views.get('/main/book').placement;
-assert.equal(bookButton.x, lightButton.x);
-assert.equal(bookButton.width, lightButton.width);
-assert.equal(bookButton.height, lightButton.height);
-assert.equal(bookButton.y, lightButton.y + lightButton.height + 6);
+assert.deepEqual(bookButton, { mode: 'absolute', x: 18, y: 16, width: 68, height: 46 });
+assert(!views.has('/main/light') && !actions.has('light'));
 assert.equal(views.get('/main/sheet').commonProps.hidden, true);
 assert.equal(views.get('/main/legacy/bubble').bindings['placement.y'], 'y');
 const legacy = views.get('/main/legacy');
@@ -79,10 +76,23 @@ for (const [id, resource] of images) {
   }
 }
 
-let now = 100000, stored = '', timer = false, batches = 0, rowUpdates = 0, backdropUpdates = 0;
+const day = '2026-11-26';
+const local = time => Date.parse(day + 'T' + time + '+08:00');
+const weather = '/littlefs/weather-settings.json';
+const shanghai = '/littlefs/weather-cache.json', qingdao = '/littlefs/weather-cache-qingdao.json';
+const forecast = (mode, sunrise, sunset) => JSON.stringify({version:2, mode, data:{daily:{
+  time:[day], sunrise:[day+'T'+sunrise], sunset:[day+'T'+sunset],
+}}});
+const files = new Map([
+  [weather, '{"mode":"shanghai"}'],
+  [shanghai, forecast('shanghai','06:35:00','16:55')],
+  [qingdao, forecast('qingdao','06:47','16:44:00')],
+  ['/littlefs/aquarium-settings.json', '{"night":true}'],
+]);
+let now = local('12:00:00'), timer = false, lightTimer = false, batches = 0, rowUpdates = 0, backdropUpdates = 0;
 let firmwareRowCache = false;
 let nativeStartAvailable = true;
-let firmwareNative = false, nativeActive = false, nativeNight = false, nativeTap = '';
+let firmwareNative = false, nativeActive = false, nativeNight = false, nativeTap = '', lightChanges = 0;
 const positions = new Map(), sources = new Map(), words = new Map();
 class Clock extends Date { static now() { return now; } }
 const context = vm.createContext({
@@ -108,19 +118,28 @@ const context = vm.createContext({
         case 'AquariumLight':
           assert(nativeActive);
           nativeNight = args.Night;
+          lightChanges++;
           break;
         case 'AquariumTap':
           assert(nativeActive);
           data = nativeTap;
           break;
         case 'StartPeriodic':
-          assert(!timer && args.IntervalMs === 50);
-          timer = true;
-          data = 1;
+          if (args.Name === 'aquarium_light') {
+            assert(!lightTimer && args.IntervalMs === 30000);
+            lightTimer = true;
+            data = 2;
+          } else {
+            assert(args.Name === 'aquarium' && !timer && args.IntervalMs === 50);
+            timer = true;
+            data = 1;
+          }
           break;
-        case 'Stop': timer = false; break;
-        case 'FSReadText': data = stored; break;
-        case 'FSWriteText': stored = args.Data; break;
+        case 'Stop':
+          if (args.TimerId === 2) lightTimer = false;
+          else { assert.equal(args.TimerId, 1); timer = false; }
+          break;
+        case 'FSReadText': data = files.get(args.Path); break;
         case 'ExecuteBatch':
           assert.equal(service, 'SystemGui');
           batches++;
@@ -150,6 +169,7 @@ const context = vm.createContext({
 });
 vm.runInContext(fs.readFileSync(path.join(src, 'app/main.js'), 'utf8'), context);
 const app = context.brookesia_app;
+const checkLight = () => app.on_timer(2, 'aquarium_light');
 const action = (name, value) => app.on_action(name, '/main/water', JSON.stringify(value));
 const tap = (x, y) => { action('waterPress', { x, y }); action('waterRelease', { x, y }); };
 const fishState = (i = 0) => {
@@ -190,9 +210,8 @@ function assertBackdrop(mode) {
   for (let band = 0; band < 8; band++) assert.equal(sources.get('/main/legacy/backdrop' + band), mode + band);
 }
 app.on_start();
-assert(timer);
+assert(timer && lightTimer);
 assertBackdrop('day');
-assert.equal(stored, '');
 const originalGold = fishState(), initialJelly = fishState(6);
 const initialBubble = Number(positions.get('/main/legacy/bubble:y'));
 advance(7);
@@ -232,23 +251,28 @@ action('waterPress', {x: 65, y: 85});
 action('waterRelease', {x: 65, y: 140});
 assert(!visible('legacy/ripple'), 'A drag is not misread as a tap');
 
-action('light');
+action('book');
+assert(visible('sheet'));
+action('dismiss');
+now = local('16:54:59');
+checkLight();
+assertBackdrop('day');
+now = local('16:55:00');
+checkLight();
 assertBackdrop('night');
-assert.equal(words.get('/main/light/label'), '夜景');
-assert.deepEqual(JSON.parse(stored), { night: true });
 app.on_pause();
-assert(!timer);
+assert(!timer && !lightTimer);
 const stopped = batches;
 advance(10);
 assert.equal(batches, stopped, 'Closing the app stops all drawing work');
 app.on_resume();
-assert(timer);
+assert(timer && lightTimer);
 assertBackdrop('night');
 app.on_stop();
 app.on_start();
 assertBackdrop('night');
 app.on_stop();
-assert(!timer);
+assert(!timer && !lightTimer);
 firmwareRowCache = true;
 const fallbackUpdates = rowUpdates;
 app.on_start();
@@ -264,7 +288,7 @@ app.on_stop();
 firmwareNative = true;
 app.on_start();
 assert(nativeActive && nativeNight);
-assert(!timer, 'The native animation does not start a JavaScript frame timer');
+assert(!timer && lightTimer, 'Native rendering only needs the lighting timer');
 assert(visible('nativeSurface'));
 assert(!visible('legacy'));
 const nativeBatches = batches;
@@ -274,13 +298,38 @@ nativeTap = 'jelly';
 tap(120, 153);
 assert.match(words.get('/main/sheet/description'), /伞盖/);
 action('dismiss');
-action('light');
+now = local('06:34:59');
+checkLight();
+assert(nativeNight);
+now = local('06:35:00');
+checkLight();
 assert(!nativeNight);
-assert.equal(words.get('/main/light/label'), '日景');
+assert.equal(lightChanges, 1);
+checkLight();
+assert.equal(lightChanges, 1, 'Unchanged lighting leaves the native frame untouched');
 app.on_pause();
-assert(!nativeActive);
+assert(!nativeActive && !lightTimer);
+now = local('16:50:00');
+files.set(weather, '{"mode":"qingdao"}');
 app.on_resume();
+assert(nativeActive && nativeNight, 'Qingdao uses its own sunset on resume');
+files.set(weather, '{"mode":"shanghai"}');
+checkLight();
 assert(nativeActive && !nativeNight);
+now = 100000;
+checkLight();
+assert(!nativeNight, 'An unset device clock preserves the current scene');
+files.set(shanghai, forecast('shanghai','23:80','23:99'));
+now = local('12:00:00');
+checkLight();
+assert(!nativeNight, 'Malformed cached boundaries fall back to local solar time');
+files.delete(shanghai);
+now = local('02:00:00');
+checkLight();
+assert(nativeNight, 'Local solar calculation works without a cache');
+now = local('12:00:00');
+checkLight();
+assert(!nativeNight);
 app.on_stop();
 assert(!nativeActive);
 nativeStartAvailable = false;

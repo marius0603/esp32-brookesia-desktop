@@ -1,7 +1,14 @@
 (function () {
 'use strict';
 
-const SETTINGS = '/littlefs/aquarium-settings.json';
+const WEATHER_SETTINGS = '/littlefs/weather-settings.json';
+const SOLAR_CITIES = {
+  shanghai: { latitude: 31.2304, longitude: 121.4737, cache: '/littlefs/weather-cache.json' },
+  qingdao: { latitude: 36.0671, longitude: 120.3826, cache: '/littlefs/weather-cache-qingdao.json' },
+};
+const CITY_OFFSET_HOURS = 8;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const LIGHT_INTERVAL_MS = 30000;
 const RETURN_EDGE = 440;
 const BACKDROP_BANDS = 8;
 const BUBBLE_DIAMETER = 7;
@@ -24,13 +31,13 @@ const START = [
   ['school', 333, 129, 1], ['school', 372, 156, 1], ['school', 402, 120, 1], ['school', 363, 96, 1],
   ['jelly', 123, 153, 1],
 ];
-const ACTIONS = ['waterPress', 'waterRelease', 'waterCancel', 'light', 'book', 'dismiss', ...Object.keys(NOTES)];
+const ACTIONS = ['waterPress', 'waterRelease', 'waterCancel', 'book', 'dismiss', ...Object.keys(NOTES)];
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 let gui, timer, storage, modes;
 let nativeAvailable = false, nativeRendering = false;
 let nativeRetryAt = 0;
 let cachedRows = false;
-let timerId = 0, paused = true, night = false, panel = false, selected = 'gold';
+let timerId = 0, lightTimer = 0, paused = true, night = false, panel = false, selected = 'gold';
 let fish = [], touch = null, ripple = null, lastTick = 0, started = 0, rendered = {};
 
 function call(service, name, params = {}) {
@@ -39,9 +46,64 @@ function call(service, name, params = {}) {
   return result.data;
 }
 
-function readLight() {
-  try { return JSON.parse(call(storage, 'FSReadText', { Path: SETTINGS })).night === true; }
-  catch (_) { return false; }
+function readJson(path) {
+  try { return JSON.parse(call(storage, 'FSReadText', { Path: path })); }
+  catch (_) { return null; }
+}
+
+function cachedNight(cache, city, localTime) {
+  const daily = cache?.data?.daily;
+  if (cache?.version !== 2 || cache.mode !== city || !Array.isArray(daily?.time)) return null;
+  const date = localTime.slice(0, 10);
+  const i = daily.time.indexOf(date);
+  if (i < 0) return null;
+  const rise = daily.sunrise?.[i], set = daily.sunset?.[i];
+  const valid = time => typeof time === 'string' && time.slice(0, 10) === date &&
+    /^\d{4}-\d\d-\d\dT(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(time);
+  if (!valid(rise) || !valid(set)) return null;
+  const seconds = time => time.length === 16 ? time + ':00' : time;
+  if (seconds(rise) >= seconds(set)) return null;
+  return localTime < seconds(rise) || localTime >= seconds(set);
+}
+
+// NOAA solar position equations, including the apparent sunrise/sunset zenith.
+// https://gml.noaa.gov/grad/solcalc/solareqns.PDF
+function estimatedNight(localMs, localDate, city) {
+  const minutes = (localMs % DAY_MS) / 60000;
+  const year = localDate.getUTCFullYear();
+  const jan1 = Date.UTC(year, 0, 1);
+  const yearDays = (Date.UTC(year + 1, 0, 1) - jan1) / DAY_MS;
+  const angle = 2 * Math.PI * ((localMs - jan1) / DAY_MS - 0.5) / yearDays;
+  const equationOfTime = 229.18 * (0.000075 + 0.001868 * Math.cos(angle) - 0.032077 * Math.sin(angle) -
+    0.014615 * Math.cos(2 * angle) - 0.040849 * Math.sin(2 * angle));
+  const declination = 0.006918 - 0.399912 * Math.cos(angle) + 0.070257 * Math.sin(angle) -
+    0.006758 * Math.cos(2 * angle) + 0.000907 * Math.sin(2 * angle) -
+    0.002697 * Math.cos(3 * angle) + 0.00148 * Math.sin(3 * angle);
+  const radians = Math.PI / 180;
+  const latitude = city.latitude * radians;
+  const solarMinutes = minutes + equationOfTime + 4 * city.longitude - CITY_OFFSET_HOURS * 60;
+  const hourAngle = (solarMinutes / 4 - 180) * radians;
+  const cosineZenith = Math.sin(latitude) * Math.sin(declination) +
+    Math.cos(latitude) * Math.cos(declination) * Math.cos(hourAngle);
+  return cosineZenith < Math.cos(90.833 * radians);
+}
+
+function syncLighting(now) {
+  // The board may start with an unset clock while its RTC or Wi-Fi time sync loads.
+  if (now < Date.UTC(2024, 0, 1) || now >= Date.UTC(2100, 0, 1)) return false;
+  const mode = readJson(WEATHER_SETTINGS)?.mode === 'qingdao' ? 'qingdao' : 'shanghai';
+  const city = SOLAR_CITIES[mode];
+  const localMs = now + CITY_OFFSET_HOURS * 3600000;
+  const localDate = new Date(localMs);
+  const cached = cachedNight(readJson(city.cache), mode, localDate.toISOString().slice(0, 19));
+  const next = cached ?? estimatedNight(localMs, localDate, city);
+  if (night === next) return false;
+  if (nativeRendering) {
+    try { call(modes, 'AquariumLight', { Night: next }); }
+    catch (_) { return false; }
+  }
+  night = next;
+  return true;
 }
 
 function draw(now) {
@@ -75,7 +137,6 @@ function draw(now) {
       rowBounds.bubble = { top: Math.min(y, oldY), bottom: Math.max(y, oldY) + BUBBLE_DIAMETER };
     }
   }
-  bind('light/label', 'text', night ? '夜景' : '日景');
   bind('sheet', 'hidden', !panel);
   bind('sheet/description', 'text', NOTES[selected]);
   for (const name of Object.keys(NOTES)) {
@@ -216,14 +277,6 @@ function tap(point, now) {
 
 function action(name, payload, now) {
   if (paused) return;
-  if (name === 'light') {
-    const next = !night;
-    if (nativeRendering) call(modes, 'AquariumLight', { Night: next });
-    night = next;
-    draw(now);
-    try { call(storage, 'FSWriteText', { Path: SETTINGS, Data: JSON.stringify({ night }) }); } catch (_) {}
-    return;
-  }
   if (name === 'book') openBook();
   if (name === 'dismiss') panel = false;
   if (Object.prototype.hasOwnProperty.call(NOTES, name)) openBook(name);
@@ -255,9 +308,11 @@ function resume() {
   panel = false;
   started = lastTick = Date.now();
   rendered = {};
+  syncLighting(started);
   if (nativeAvailable) startNative(started);
   draw(started);
   if (!nativeRendering) timerId = call(timer, 'StartPeriodic', { Name: 'aquarium', IntervalMs: 50 });
+  lightTimer = call(timer, 'StartPeriodic', { Name: 'aquarium_light', IntervalMs: LIGHT_INTERVAL_MS });
 }
 
 function stopTimer() {
@@ -277,6 +332,11 @@ function pause() {
     try { call(modes, 'AquariumStop'); } catch (_) {}
   }
   stopTimer();
+  if (lightTimer) {
+    const existing = lightTimer;
+    lightTimer = 0;
+    try { call(timer, 'Stop', { TimerId: existing }); } catch (_) {}
+  }
 }
 
 globalThis.brookesia_app = {
@@ -290,13 +350,19 @@ globalThis.brookesia_app = {
       cachedRows = state.aquarium_row_cache === true;
       nativeAvailable = state.aquarium_native_render === true;
     } catch (_) { cachedRows = nativeAvailable = false; }
-    night = readLight();
     fish = START.map(([kind, x, y, facing]) => ({ kind, x, y, home: y, facing, cruise: facing }));
     for (const action of ACTIONS) call(gui, 'SubscribeAction', { Action: action });
     resume();
     return true;
   },
-  on_timer() { if (!nativeRendering) tick(Date.now()); return true; },
+  on_timer(id, name) {
+    if (paused) return true;
+    const now = Date.now();
+    if (name === 'aquarium_light') {
+      if (syncLighting(now) && !nativeRendering) draw(now);
+    } else if (!nativeRendering) tick(now);
+    return true;
+  },
   on_action(name, path, payload) { action(name, payload, Date.now()); return true; },
   on_pause() { pause(); return true; },
   on_resume() { resume(); return true; },
