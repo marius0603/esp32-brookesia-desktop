@@ -33,7 +33,9 @@ def load_samples(stream):
     return groups
 
 
-def suggest(groups, near_cm=30, margin_db=6):
+def suggest(groups, near_cm=10, margin_db=6):
+    if near_cm not in groups:
+        raise ValueError(f'需要在目标距离 {near_cm} 厘米处实测')
     near = [values for distance, values in groups.items() if distance <= near_cm]
     far = [values for distance, values in groups.items() if distance > near_cm]
     if not near or not far:
@@ -54,7 +56,7 @@ def suggest(groups, near_cm=30, margin_db=6):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('csv', help='手机复制的 CSV 文件。用 - 从标准输入读取')
-    parser.add_argument('--near-cm', type=int, default=30, help='目标投喂距离，默认 30 厘米')
+    parser.add_argument('--near-cm', type=int, default=10, help='目标投喂距离，默认 10 厘米')
     args = parser.parse_args()
     if args.near_cm <= 0:
         parser.error('--near-cm 必须大于零')

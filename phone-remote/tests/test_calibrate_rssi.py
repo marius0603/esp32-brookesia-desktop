@@ -10,26 +10,30 @@ from calibrate_rssi import load_samples, suggest
 
 class CalibrationTests(unittest.TestCase):
     def test_separated_groups(self):
-        groups = {300: [-83] * 16, 200: [-76] * 16, 100: [-68] * 16,
-                  50: [-61, -59, -60, -60] * 4, 30: [-49, -51, -50, -50] * 4}
+        groups = {50: [-83] * 16, 30: [-76] * 16, 20: [-68] * 16,
+                  15: [-61, -59, -60, -60] * 4, 10: [-49, -51, -50, -50] * 4, 5: [-45] * 16}
         cutoff, gap = suggest(groups)
         self.assertEqual(cutoff, -55)
         self.assertEqual(gap, 8)
 
     def test_overlapping_nearby_groups(self):
-        cutoff, gap = suggest({30: [-61] * 16, 50: [-59] * 16, 100: [-70] * 16})
+        cutoff, gap = suggest({10: [-61] * 16, 15: [-59] * 16, 50: [-70] * 16})
         self.assertIsNone(cutoff)
         self.assertEqual(gap, -2)
 
     def test_consecutive_far_bursts_reject_threshold(self):
         far = [-70] * 18 + [-50] * 3 + [-70] * 19
-        cutoff, gap = suggest({30: [-50] * 16, 50: far})
+        cutoff, gap = suggest({10: [-50] * 16, 15: far})
         self.assertGreaterEqual(gap, 6)
         self.assertIsNone(cutoff)
 
     def test_require_both_sides(self):
         with self.assertRaisesRegex(ValueError, '距离内外'):
-            suggest({30: [-50] * 16})
+            suggest({10: [-50] * 16})
+
+    def test_require_samples_at_exact_target_distance(self):
+        with self.assertRaisesRegex(ValueError, '目标距离 10 厘米'):
+            suggest({5: [-50] * 16, 15: [-70] * 16})
 
     def test_parse_samples_and_reject_invalid_rows(self):
         data = 'distance_cm,rssi_dbm\n' + '30,-51\n' * 16

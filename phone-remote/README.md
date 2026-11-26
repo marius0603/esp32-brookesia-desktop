@@ -2,15 +2,15 @@
 
 ## 鱼缸投喂距离校准
 
-安装[小马距离校准 APK](../packages/android/xiaoma-rssi-calibration-0.1.0.apk)，可与「小马遥控」并存。先断开手机原有的遥控连接，在开发板上开启「蓝牙遥控」。在校准 App 里扫描并选择开发板。这个测试只读取已连接设备的 RSSI，可直接测量。 [Android RSSI 接口](https://developer.android.com/reference/android/bluetooth/BluetoothGatt#readRemoteRssi())
+安装[小马距离校准 APK](../packages/android/xiaoma-rssi-calibration-0.1.1.apk)，可与「小马遥控」并存。先断开手机原有的遥控连接，在开发板上开启「蓝牙遥控」。在校准 App 里扫描并选择开发板。这个测试只读取已连接设备的 RSSI，可直接测量。[Android RSSI 接口](https://developer.android.com/reference/android/bluetooth/BluetoothGatt#readRemoteRssi())
 
-用平时的方式握住手机，按 3 米、2 米、1 米、50 厘米和 30 厘米的顺序站稳采样。每档收集 16 个读数。五档测完后复制结果，粘贴为 `rssi.csv`，或者把结果直接发到 Codex。
+从 50 厘米处用平时的方式握住手机，按住大号「按住喂食键测试」。保持按住，按倒计时提示依次移到 30、20、15、10 和 5 厘米。每档移动有 5 秒时间，到位后停稳等 16 个读数。松手时保留已完成档位，从当前档重新按住可继续。六档测完后复制结果，粘贴为 `rssi.csv`，或者把结果直接发到 Codex。
 
 ```powershell
 python phone-remote/tools/calibrate_rssi.py rssi.csv
 ```
 
-脚本以 30 厘米作为默认目标，比较内外两侧的信号分布。近远余量达到 6 dB 且较远样本里没有连续三次跨过阈值时，才输出建议的 dBm 阈值。可以用 `--near-cm` 改变目标距离。已通过 APK 签名检查及五项样本分析测试，实际数值取决于手机、开发板和握持姿势。
+脚本以 10 厘米作为默认目标，要求在目标距离实测，并比较内外两侧的信号分布。近远余量达到 6 dB 且较远样本里没有连续三次跨过阈值时，才输出建议的 dBm 阈值。可以用 `--near-cm` 指定已有单独测量的其他目标距离。实际数值取决于手机、开发板和握持姿势。
 
 现场确认：系统通知使用权关闭、等5秒再开启后，0.5.6监听恢复在线，设备已收到新的有效导航数据。自动重新绑定仍未单独验证成功；遇到同样情况可先使用上述系统开关恢复，无需重复安装或烧录。 用户当前的高德系统通知仅含转向和距离，不含剩余时间，因此小马保留未知值“--”；通知转发不能补出未提供的全程余程/时间，不进行速度推算或额外API调用。
 

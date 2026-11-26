@@ -23,6 +23,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelUuid;
+import android.view.HapticFeedbackConstants;
+import android.view.MotionEvent;
 import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -36,7 +38,7 @@ import java.util.UUID;
 
 public final class CalibrationActivity extends Activity {
     private static final UUID REMOTE_SERVICE = UUID.fromString("1775244d-6b43-439b-877c-060f2d9bed07");
-    private static final int[] DISTANCES = {300, 200, 100, 50, 30};
+    private static final int[] DISTANCES = {50, 30, 20, 15, 10, 5};
     private static final int SAMPLES = 16;
     private static final int SAMPLE_DELAY_MS = 400;
     private static final int PERMISSIONS = 1;
@@ -55,6 +57,8 @@ public final class CalibrationActivity extends Activity {
     private boolean ready;
     private boolean collecting;
     private boolean awaiting;
+    private int holdPointer = -1;
+    private int moveSeconds;
     private int point;
     private int count;
     private int failedReads;
@@ -69,6 +73,7 @@ public final class CalibrationActivity extends Activity {
     private final Runnable connectionTimeout = () -> linkLost("连接超时，请重新扫描。");
     private final Runnable sampleTimeout = () -> linkLost("读取超时。重新连接后测这一档。");
     private final Runnable nextSample = this::sample;
+    private final Runnable nextPosition = this::moveNext;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -98,11 +103,13 @@ public final class CalibrationActivity extends Activity {
         devices = new LinearLayout(this);
         devices.setOrientation(LinearLayout.VERTICAL);
         page.addView(devices);
+        sampleButton = button(page, "按住喂食键测试", 88, () -> {});
+        sampleButton.setTextSize(23);
+        sampleButton.setOnTouchListener((view, event) -> handleHold(event));
         text(page, "手机离设备外壳的距离", 19, ink);
         for (int i = 0; i < rows.length; i++) {
             rows[i] = text(page, distance(i) + " · 待测", 16, muted);
         }
-        sampleButton = button(page, "开始测量", 66, () -> startPoint());
         copyButton = button(page, "复制测试结果", 52, () -> copy());
         button(page, "清空读数", 52, () -> resetSamples());
         updateButtons();
@@ -140,20 +147,21 @@ public final class CalibrationActivity extends Activity {
     }
 
     private String distance(int index) {
-        return DISTANCES[index] >= 100 ? (DISTANCES[index] / 100) + " 米" : DISTANCES[index] + " 厘米";
+        return DISTANCES[index] + " 厘米";
     }
 
     private void updateButtons() {
-        sampleButton.setEnabled(ready && !collecting && point < DISTANCES.length);
+        sampleButton.setEnabled(holdPointer >= 0 || (ready && !awaiting && point < DISTANCES.length));
         sampleButton.setAlpha(sampleButton.isEnabled() ? 1f : .5f);
-        sampleButton.setText(point < DISTANCES.length ? "测量 " + distance(point) : "采样完成");
-        scanButton.setEnabled(!collecting);
-        copyButton.setEnabled(point == DISTANCES.length);
+        sampleButton.setText(point == DISTANCES.length ? "采样完成" :
+                holdPointer >= 0 ? "继续按住" : "按住喂食键测试");
+        scanButton.setEnabled(holdPointer < 0);
+        copyButton.setEnabled(point == DISTANCES.length && holdPointer < 0);
         copyButton.setAlpha(copyButton.isEnabled() ? 1f : .5f);
     }
 
     private void resetSamples() {
-        if (collecting) return;
+        if (holdPointer >= 0) return;
         point = count = 0;
         for (int i = 0; i < rows.length; i++) rows[i].setText(distance(i) + " · 待测");
         updateButtons();
@@ -256,7 +264,8 @@ public final class CalibrationActivity extends Activity {
                 if (code == BluetoothGatt.GATT_SUCCESS && owner.getService(REMOTE_SERVICE) != null) {
                     ui.removeCallbacks(connectionTimeout);
                     ready = true;
-                    status.setText("已连接。到对应距离站稳，再点测量。保持平时的握持方式。");
+                    status.setText(point == DISTANCES.length ? "采样完成，可以复制结果。" :
+                            "先到 " + distance(point) + "，按住测试键。按提示移动，采样时停稳。");
                     updateButtons();
                 } else linkLost("设备的遥控服务不可用。");
             });
@@ -268,15 +277,55 @@ public final class CalibrationActivity extends Activity {
                 ui.removeCallbacks(sampleTimeout);
                 awaiting = false;
                 if (collecting) acceptSample(code == BluetoothGatt.GATT_SUCCESS ? rssi : 127);
+                else updateButtons();
             });
         }
     };
 
+    private boolean handleHold(MotionEvent event) {
+        int action = event.getActionMasked();
+        if (action == MotionEvent.ACTION_DOWN && ready && !awaiting && point < DISTANCES.length) {
+            holdPointer = event.getPointerId(0);
+            sampleButton.getParent().requestDisallowInterceptTouchEvent(true);
+            sampleButton.setPressed(true);
+            startPoint();
+        } else if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP ||
+                (action == MotionEvent.ACTION_POINTER_UP && event.getPointerId(event.getActionIndex()) == holdPointer)) {
+            releaseHold();
+        }
+        return true;
+    }
+
+    private void releaseHold() {
+        if (holdPointer < 0) return;
+        holdPointer = -1;
+        sampleButton.setPressed(false);
+        ui.removeCallbacks(nextSample);
+        ui.removeCallbacks(nextPosition);
+        if (collecting) rows[point].setText(distance(point) + " · 待重测");
+        collecting = false;
+        status.setText(point == DISTANCES.length ? "采样完成。复制结果进行阈值分析。" :
+                "已暂停。到 " + distance(point) + " 再按住，可继续测量。");
+        updateButtons();
+    }
+
+    private void moveNext() {
+        if (holdPointer < 0) return;
+        if (moveSeconds == 0) {
+            startPoint();
+            return;
+        }
+        status.setText("继续按住，移到 " + distance(point) + " · " + moveSeconds + " 秒后测量");
+        moveSeconds--;
+        ui.postDelayed(nextPosition, 1000);
+    }
+
     private void startPoint() {
-        if (!ready || collecting || point >= DISTANCES.length) return;
+        if (!ready || holdPointer < 0 || collecting || point >= DISTANCES.length) return;
         collecting = true;
         count = failedReads = 0;
-        status.setText("正在测量 " + distance(point) + " · 保持稳定");
+        status.setText("正在测量 " + distance(point) + " · 按住并停稳");
+        sampleButton.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
         updateButtons();
         sample();
     }
@@ -298,10 +347,8 @@ public final class CalibrationActivity extends Activity {
             samples[point][count++] = rssi;
             rows[point].setText(distance(point) + " · " + count + "/" + SAMPLES + " · " + rssi + " dBm");
         } else if (++failedReads >= 4) {
-            rows[point].setText(distance(point) + " · 待重测");
-            collecting = false;
-            status.setText("有效读数不足，请重测这一档。");
-            updateButtons();
+            releaseHold();
+            status.setText("有效读数不足，请松手后重测这一档。");
             return;
         }
         if (count < SAMPLES) {
@@ -311,8 +358,13 @@ public final class CalibrationActivity extends Activity {
         collecting = false;
         rows[point].setText(distance(point) + " · 已记录 " + SAMPLES + " 次");
         point++;
-        status.setText(point < DISTANCES.length ? "移到 " + distance(point) + " 再测下一档。" : "五档测量完成。复制结果进行阈值分析。");
         updateButtons();
+        if (point == DISTANCES.length) {
+            status.setText("采样完成。松手后复制结果。");
+        } else {
+            moveSeconds = 5;
+            moveNext();
+        }
     }
 
     private void copy() {
@@ -334,10 +386,13 @@ public final class CalibrationActivity extends Activity {
     private void closeLink() {
         if (collecting) rows[point].setText(distance(point) + " · 待重测");
         ready = collecting = awaiting = false;
+        holdPointer = -1;
+        sampleButton.setPressed(false);
         count = 0;
         ui.removeCallbacks(connectionTimeout);
         ui.removeCallbacks(sampleTimeout);
         ui.removeCallbacks(nextSample);
+        ui.removeCallbacks(nextPosition);
         BluetoothGatt previous = gatt;
         gatt = null;
         if (previous != null) {
