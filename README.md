@@ -4,7 +4,7 @@
 
 | 内容 | 版本与当前行为 |
 | --- | --- |
-| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.98；基础功能保留Flash、附加App脚本与资源使用SD；手机BLE加密配网与独立蓝牙遥控；方屏桌面提供六套色板及统一应用图标，顶部显示 CPU、RAM、音量和电量，时间和天气卡片旁设单一「控制」入口；图标原生预载、跟手分页并按拖动距离和松手速度吸附，每页3×3九个应用；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转；迷宫运动租约临时锁方向，超时自动释放 |
+| 桌面固件 | ESP-IDF 6.0.2，ESP-Brookesia 本地适配 0.8.3-s3.99；基础功能保留Flash、附加App脚本与资源使用SD；手机BLE加密配网与独立蓝牙遥控；方屏桌面提供六套色板及统一应用图标，顶部显示 CPU、RAM、音量和电量，时间和天气卡片旁设单一「控制」入口；图标原生预载、跟手分页并按拖动距离和松手速度吸附，每页3×3九个应用；保留应用前台恢复、离线轻学习、电脑语音助手、公网WSS、听书锁屏、双击音量＋解锁、离线命令、音量及息屏设置、儿童模式和重力旋转；迷宫运动租约临时锁方向，超时自动释放 |
 | 额度显示 | 0.2.6，跟随系统深浅配色的双卡片、左侧大数字与紧跟百分号、右侧倒计时及独立天数、底部吃豆人轨道；保留60秒请求/15秒超时与Codex联动 |
 | 天气 | 0.2.15，总览、预报曲线、城市选项及 24 小时详情跟随桌面主题，卡片与页面保持轻微明暗差。可选择上海或青岛并记住选择，两地分别保存缓存，开发板直接联网。天气图标和动效仍按城市日出日落与天气状况更新 |
 | 听书 | 0.3.6，六档保持音高倍速、开机默认1倍；64KiB PCM缓冲修复周期性卡顿，手机与设备通过内存同步播放模式；30篇故事使用统一响度目标，移出月亮灯并分两批新增21篇中文朗读，保留双声道抵消修正；图标切换顺序播放、随机播放与单故事循环，自动保存模式；音量与锁屏置顶、Q版图标、中文书名、大号播放按钮、睡眠选择框、语音控制、章节与书签；连按两次音量＋解锁，最后2分钟声音/亮度渐弱，到时离线“晚安”并停播 |
@@ -156,7 +156,7 @@ s3.92 恢复 s3.90 的深墨绿桌面和控制色板，底色为 `#101714`。天
 
 ## 固件文件与备份
 
-`packages/apps` 保存可安装 BPK，当前天气为 [0.2.15](packages/apps/local.weather.debug.0.2.15.bpk)，听书为 [0.3.8](packages/apps/local.audiobook.debug.0.3.8.bpk)，小马助手为 [0.2.4](packages/apps/local.voiceassistant.debug.0.2.4.bpk)，儿歌为 [0.1.4](packages/apps/local.nurserysongs.debug.0.1.4.bpk)，鱼缸为 [0.1.9](packages/apps/local.aquarium.debug.0.1.9.bpk)。`packages/firmware` 包含 [s3.98 应用分区固件](packages/firmware/brookesia-0.8.3-s3.98-app-only.zip) 及历史版本，更新步骤见 [资源监控](codex-quota-monitor/RESOURCE_MONITOR.md)。历史 [s3.58 更新包](packages/firmware/brookesia-0.8.3-s3.58-app-only.zip) 附带只用于核对的分区表。校验值见 `packages/SHA256.json`。
+`packages/apps` 保存可安装 BPK，当前天气为 [0.2.15](packages/apps/local.weather.debug.0.2.15.bpk)，听书为 [0.3.8](packages/apps/local.audiobook.debug.0.3.8.bpk)，小马助手为 [0.2.4](packages/apps/local.voiceassistant.debug.0.2.4.bpk)，儿歌为 [0.1.4](packages/apps/local.nurserysongs.debug.0.1.4.bpk)，鱼缸为 [0.1.9](packages/apps/local.aquarium.debug.0.1.9.bpk)。`packages/firmware` 包含 [s3.99 应用分区固件](packages/firmware/brookesia-0.8.3-s3.99-app-only.zip) 及历史版本，更新步骤见 [资源监控](codex-quota-monitor/RESOURCE_MONITOR.md)。历史 [s3.58 更新包](packages/firmware/brookesia-0.8.3-s3.58-app-only.zip) 附带只用于核对的分区表。校验值见 `packages/SHA256.json`。
 它们不包含用户 NVS、Wi-Fi 数据或设备系统资源分区，不能当成任意新设备的完整恢复镜像。
 
 原电脑的恢复工具会检查完整备份和设备身份，新电脑没有备份时会拒绝直接烧录。这是已有防误刷机制。

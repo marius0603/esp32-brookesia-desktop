@@ -9,6 +9,7 @@
 #include <cstring>
 #include <memory>
 
+#include "boost/json/array.hpp"
 #include "esp_heap_caps.h"
 #include "esp_lv_adapter.h"
 #include "esp_timer.h"
@@ -72,6 +73,10 @@ struct GrassRow {
     int first = 0, end = 0;
     std::array<int8_t, background_scale> offsets{};
 };
+struct GrassClump {
+    std::array<GrassRow, background_width> rows{};
+    int top = height, bottom = 0;
+};
 struct Bubble {
     int x, y, radius;
     Rect bounds() const { return {x-radius,y-radius,x+radius+1,y+radius+1}; }
@@ -121,7 +126,7 @@ struct Scene {
     Assets assets{nullptr, heap_caps_free};
     Assets reef_fish{nullptr, heap_caps_free};
     Assets grass{nullptr, heap_caps_free};
-    std::array<std::array<GrassRow, background_width>, grass_boxes.size()> grass_rows{};
+    std::array<GrassClump, grass_boxes.size()> grass_clumps{};
     std::array<Bubble, bubble_count> bubbles{};
     std::array<Rect, std::size(food_dx)> pellets{};
     std::array<Fish, initial.size()> fish = initial;
@@ -232,15 +237,16 @@ Assets read_grass()
 
 void mount_grass()
 {
-    scene.grass_rows = {};
+    scene.grass_clumps = {};
     if (!scene.grass) return;
     const auto *mask = scene.grass.get() + grass_header;
     const auto *underpaint = mask + grass_cells;
     auto *day = scene.assets.get() + 4;
     for (size_t group = 0; group < grass_boxes.size(); ++group) {
         const auto box = grass_boxes[group];
+        auto &clump = scene.grass_clumps[group];
         for (int y = box.y; y < box.bottom; ++y) {
-            auto &row = scene.grass_rows[group][y];
+            auto &row = clump.rows[y];
             row.first = box.right;
             for (int x = box.x; x < box.right; ++x) {
                 if (!*mask++) continue;
@@ -251,22 +257,27 @@ void mount_grass()
                 std::memcpy(base + background_bytes, underpaint + 2, 2);
                 underpaint += 4;
             }
+            if (row.first < row.end) {
+                clump.top = std::min(clump.top, y * background_scale);
+                clump.bottom = (y + 1) * background_scale;
+            }
         }
     }
 }
 
 Rect move_grass(size_t group, float sway)
 {
-    const auto box = grass_boxes[group];
-    const int top = box.y * background_scale;
-    const int root = box.bottom * background_scale - 16;
-    const float inverse_height = 1.f / (root - top);
+    auto &clump = scene.grass_clumps[group];
+    if (clump.top >= clump.bottom) return {};
+    // The crop also contains empty pixels. Anchor and bend the plant itself.
+    const int root = std::max(clump.top + 1, clump.bottom - 16);
+    const float inverse_height = 1.f / (root - clump.top);
     Rect changed{};
-    for (int y = top; y < box.bottom * background_scale; ++y) {
-        auto &row = scene.grass_rows[group][y / background_scale];
+    for (int y = clump.top; y < root; ++y) {
+        auto &row = clump.rows[y / background_scale];
         if (row.first >= row.end) continue;
-        const float rise = std::max(0, root - y) * inverse_height;
-        const int offset = std::lround(sway * rise * rise);
+        const float rise = (root - y) * inverse_height;
+        const int offset = std::lround(sway * rise * rise * (1.6f - .6f * rise));
         auto &previous = row.offsets[y % background_scale];
         if (offset == previous) continue;
         changed = unite(changed, {row.first * background_scale + std::min(offset, int(previous)), y,
@@ -394,11 +405,11 @@ void draw_grass(Rect dirty)
     const auto *mask = scene.grass.get() + grass_header;
     for (size_t group = 0; group < grass_boxes.size(); ++group) {
         const auto box = grass_boxes[group];
+        const auto &clump = scene.grass_clumps[group];
         const int stride = box.right - box.x;
-        for (int y = std::max(dirty.y, box.y * background_scale);
-             y < std::min(dirty.bottom, box.bottom * background_scale); ++y) {
+        for (int y = std::max(dirty.y, clump.top); y < std::min(dirty.bottom, clump.bottom); ++y) {
             const int source_y = y / background_scale;
-            const auto &row = scene.grass_rows[group][source_y];
+            const auto &row = clump.rows[source_y];
             const int offset = row.offsets[y % background_scale];
             const int left = std::max(dirty.x, row.first * background_scale + offset);
             const int right = std::min(dirty.right, row.end * background_scale + offset);
@@ -454,7 +465,8 @@ void repaint(Rect dirty, const std::array<Pose, initial.size()> &poses, int ripp
 void animate(int64_t now)
 {
     const float pace = scene.night ? .57f : 1.f;
-    const float delta = std::clamp((now - scene.last_motion) * .000001f, 0.f, .14f) * pace;
+    const float elapsed = std::clamp((now - scene.last_motion) * .000001f, 0.f, .14f);
+    const float delta = elapsed * pace;
     scene.last_motion = now;
     const auto elapsed_ms = (now - scene.started) / 1000;
     std::array<Pose, initial.size()> poses{};
@@ -499,10 +511,11 @@ void animate(int64_t now)
     }
     scene.bubble_moves += bubbles_moved;
     if (scene.grass) {
-        // Follow the capped animation clock so a slow flush or a sleeping screen cannot snap the leaves.
-        scene.grass_time += delta;
-        dirty[next] = move_grass(0, 9.f * std::sin(scene.grass_time * .67f));
-        dirty[next + 1] = move_grass(1, 9.5f * std::sin(scene.grass_time * .58f - .85f));
+        // Water movement keeps the same pace after dark. Cap the step after a slow refresh or screen wake.
+        scene.grass_time += std::min(elapsed, .115f);
+        dirty[next] = move_grass(0, 22.f * std::sin(scene.grass_time * .96f));
+        // The right tip starts next to the bezel, so most of its swing is inward.
+        dirty[next + 1] = move_grass(1, -18.f + 26.f * std::sin(scene.grass_time * .8f - .45f));
         scene.grass_moves += !dirty[next].empty() || !dirty[next + 1].empty();
     }
     const auto age = now - scene.food_at;
@@ -678,9 +691,15 @@ boost::json::object profile()
 {
     LvglLock lock;
     if (!lock.held) return {};
+    boost::json::array grass_tip_offsets;
+    for (const auto &clump : scene.grass_clumps) {
+        grass_tip_offsets.emplace_back(scene.grass && clump.top < clump.bottom ?
+            int(clump.rows[clump.top / background_scale].offsets[0]) : 0);
+    }
     return {{"active",scene.animation != nullptr}, {"frames",scene.frames}, {"decisions",scene.decisions},
             {"last_paint_us",scene.last_paint_us}, {"pixels",scene.painted_pixels},
             {"grass_active",bool(scene.grass)}, {"grass_moves",scene.grass_moves}, {"bubble_moves",scene.bubble_moves},
+            {"grass_tip_offsets",std::move(grass_tip_offsets)},
             {"stock",scene.stock}, {"creatures",std::count_if(scene.fish.begin(), scene.fish.end(),
                 [](const Fish &fish) { return stocked(fish.kind); })},
             {"feed_count",scene.feed_count}, {"food_visible",std::any_of(scene.pellets.begin(), scene.pellets.end(),
