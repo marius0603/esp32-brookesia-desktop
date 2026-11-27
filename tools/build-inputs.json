@@ -68,7 +68,7 @@
     "patches/bounded-display-dma.patch": "b1e6eb13627718506036f14f94f0a9cb3bac0a893094068084707bb29152e290",
     "patches/persistent-display-dma.patch": "cc8c6cf3dbe36d4089abff0242a3f740cca31e111138ea88df3a341b09d8c264",
     "patches/aligned-display-strips.patch": "1629b23605921dd00fab60995969fd3ad5c5243cb540b9f20a64da4841d25dc2",
-    "platform/super_s3_216/CMakeLists.txt": "d680678176a5235528d04d56a58b0e5e8b69caf3163daeb2bfc1da2eb09bd417",
+    "platform/super_s3_216/CMakeLists.txt": "e7b76f95b96fca233238bf6cdfc11af08bc82de75ad2ffd680518a706080c378",
     "platform/super_s3_216/main/modules/display.cpp": "a96534257a704811cc3b48cceff803efc2d6f31d3b59c8861541340e9e40e172",
     "platform/super_s3_216/main/modules/device_modes/device_modes.cpp": "d184ce8aa0e9580400fd571ddc207e2ee7a48ac6fa75faad85bf32803f7984a1",
     "platform/super_s3_216/main/modules/device_modes/resource_monitor.cpp": "0f4d6b9c6fa5d4247a4e74e3335a0c82a46d8080ec6f2c191149df38c558a85f",
@@ -199,7 +199,7 @@
     "patches/restore-dark-moss-palette.patch": "aefaee6730ee03c07f3411470e073db35f1608f44aeff2af7a04db5868765f5c",
     "patches/row-cache-frame-batching.patch": "83cab4bba0f07f56274e7779c3a390de03521688bd109abf723eb1cb855abdd1",
     "patches/native-frame-surface.patch": "fde51fc658cae3851426febe1c41144e7a158b3c60badef6dce0e6442c59ab99",
-    "platform/super_s3_216/main/modules/aquarium/aquarium.cpp": "44e1095fb3d426512ea6095c4b7e60a57c525e28b38a95a64f19f96969c735e4",
+    "platform/super_s3_216/main/modules/aquarium/aquarium.cpp": "c43a6fcd936d4351b941dcebe77046e121d2270c8aaec07234cafe188d7b9ade",
     "platform/super_s3_216/main/modules/aquarium/aquarium.hpp": "e2e0efc5e22e7d4a38cf2c262fde5e5809ea8704e7446eeeb6ca5a4d72d48e04",
     "platform/super_s3_216/main/modules/phone_provisioning/remote.hpp": "292df1e4f013942730e213617839f72a09f02002762190bddf7ce5f276121496"
   }

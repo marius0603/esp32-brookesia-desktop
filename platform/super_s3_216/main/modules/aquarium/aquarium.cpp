@@ -4,6 +4,7 @@
 #include <array>
 #include <bit>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <memory>
@@ -18,7 +19,7 @@ extern "C" bool brookesia_board_aquarium_visible();
 extern "C" bool brookesia_board_screen_asleep();
 
 namespace {
-constexpr int width = 480, height = 480, background_width = width / 3;
+constexpr int width = 480, height = 480, background_scale = 3, background_width = width / background_scale;
 constexpr int band_height = 60, canvas_bands = height / band_height;
 constexpr size_t band_bytes = width * band_height * sizeof(uint16_t);
 constexpr int animation_ms = 40, behavior_ms = 120;
@@ -68,7 +69,8 @@ constexpr std::array grass_boxes{Rect{0,93,54,159}, Rect{119,99,160,160}};
 constexpr size_t grass_header = 4 + 6 * sizeof(uint16_t);
 constexpr size_t grass_cells = grass_boxes[0].size() + grass_boxes[1].size();
 struct GrassRow {
-    int first = 0, end = 0, bend = 0;
+    int first = 0, end = 0;
+    std::array<int8_t, background_scale> offsets{};
 };
 struct Bubble {
     int x, y, radius;
@@ -133,6 +135,7 @@ struct Scene {
     uint32_t grass_moves = 0, bubble_moves = 0;
     uint32_t feed_count = 0;
     unsigned stock = original_stock;
+    float grass_time = 0;
     bool night = false, dirty_all = true;
 } scene;
 
@@ -255,17 +258,20 @@ void mount_grass()
 Rect move_grass(size_t group, float sway)
 {
     const auto box = grass_boxes[group];
-    const float height = box.bottom - box.y - 1;
+    const int top = box.y * background_scale;
+    const int root = box.bottom * background_scale - 16;
+    const float inverse_height = 1.f / (root - top);
     Rect changed{};
-    for (int y = box.y; y < box.bottom; ++y) {
-        auto &row = scene.grass_rows[group][y];
+    for (int y = top; y < box.bottom * background_scale; ++y) {
+        auto &row = scene.grass_rows[group][y / background_scale];
         if (row.first >= row.end) continue;
-        const float height_fraction = (box.bottom - 1 - y) / height;
-        const int bend = std::lround(sway * height_fraction * height_fraction);
-        if (bend == row.bend) continue;
-        changed = unite(changed, {(row.first + std::min(bend, row.bend)) * 3, y * 3,
-                                  (row.end + std::max(bend, row.bend)) * 3, (y + 1) * 3});
-        row.bend = bend;
+        const float rise = std::max(0, root - y) * inverse_height;
+        const int offset = std::lround(sway * rise * rise);
+        auto &previous = row.offsets[y % background_scale];
+        if (offset == previous) continue;
+        changed = unite(changed, {row.first * background_scale + std::min(offset, int(previous)), y,
+                                  row.end * background_scale + std::max(offset, int(previous)), y + 1});
+        previous = offset;
     }
     return changed;
 }
@@ -389,17 +395,19 @@ void draw_grass(Rect dirty)
     for (size_t group = 0; group < grass_boxes.size(); ++group) {
         const auto box = grass_boxes[group];
         const int stride = box.right - box.x;
-        for (int y = std::max(dirty.y, box.y * 3); y < std::min(dirty.bottom, box.bottom * 3); ++y) {
-            const int source_y = y / 3;
+        for (int y = std::max(dirty.y, box.y * background_scale);
+             y < std::min(dirty.bottom, box.bottom * background_scale); ++y) {
+            const int source_y = y / background_scale;
             const auto &row = scene.grass_rows[group][source_y];
-            const int left = std::max(dirty.x, (row.first + row.bend) * 3);
-            const int right = std::min(dirty.right, (row.end + row.bend) * 3);
+            const int offset = row.offsets[y % background_scale];
+            const int left = std::max(dirty.x, row.first * background_scale + offset);
+            const int right = std::min(dirty.right, row.end * background_scale + offset);
             const auto *src = mask + (source_y - box.y) * stride;
             auto *dst = row_pixels(y);
             for (int x = left; x < right;) {
-                const int world_x = x / 3;
-                const int end = std::min(right, (world_x + 1) * 3);
-                const auto ink = src[world_x - row.bend - box.x];
+                const int source_x = (x - offset) / background_scale;
+                const int end = std::min(right, (source_x + 1) * background_scale + offset);
+                const auto ink = src[source_x - box.x];
                 if (ink) std::fill(dst + x, dst + end, palette[ink - 1]);
                 x = end;
             }
@@ -491,8 +499,10 @@ void animate(int64_t now)
     }
     scene.bubble_moves += bubbles_moved;
     if (scene.grass) {
-        dirty[next] = move_grass(0, 4.8f * std::sin(t * 1.17f));
-        dirty[next + 1] = move_grass(1, -5.1f * std::sin(t * .93f));
+        // Follow the capped animation clock so a slow flush or a sleeping screen cannot snap the leaves.
+        scene.grass_time += delta;
+        dirty[next] = move_grass(0, 9.f * std::sin(scene.grass_time * .67f));
+        dirty[next + 1] = move_grass(1, 9.5f * std::sin(scene.grass_time * .58f - .85f));
         scene.grass_moves += !dirty[next].empty() || !dirty[next + 1].empty();
     }
     const auto age = now - scene.food_at;
@@ -584,6 +594,7 @@ bool start(bool night, int stock)
     scene.started = scene.last_motion = esp_timer_get_time();
     scene.frames = scene.decisions = scene.last_paint_us = 0;
     scene.grass_moves = scene.bubble_moves = 0;
+    scene.grass_time = 0;
     scene.painted_pixels = 0;
     decide(scene.started);
     animate(scene.started);

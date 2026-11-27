@@ -211,5 +211,6 @@
   "packages/android/xiaoma-remote-0.5.7.apk": "3af137263b0c797c509fcfe425eb60ca041723643df77ee47848cba782568298",
   "packages/firmware/brookesia-0.8.3-s3.96-app-only.zip": "6ae2d9d379d821c8d238d31350e1954579e7f86bf2b75f1ef926b64dd92e0f68",
   "packages/apps/local.aquarium.debug.0.1.9.bpk": "6a49e2aa43b49b6b6ad16d035c8c2950339591fa1152604089937c9ce5d68124",
-  "packages/firmware/brookesia-0.8.3-s3.97-app-only.zip": "9518c4aa62a9efb1c054b287df2f7845bd207614b3abe45b65e6b0a868736975"
+  "packages/firmware/brookesia-0.8.3-s3.97-app-only.zip": "9518c4aa62a9efb1c054b287df2f7845bd207614b3abe45b65e6b0a868736975",
+  "packages/firmware/brookesia-0.8.3-s3.98-app-only.zip": "b93980ebe574c254da494fed03421fd48d62d30c93e55ab3c2a74b9eb9f536e6"
 }
